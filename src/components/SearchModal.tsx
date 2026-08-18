@@ -3,6 +3,7 @@ import type { ContentItem, SearchFilters } from '../types/content'
 import { getAllGenres, getAllYears, searchContent } from '../utils/search'
 import { ContentCard } from './ContentCard'
 import { useContent } from '../context/ContentContext'
+import { CONTENT_TYPES } from '../constants/contentTypes'
 import { useSearchUI } from '../context/SearchContext'
 
 interface SearchModalProps {
@@ -86,8 +87,14 @@ export function SearchModal({ onSelect }: SearchModalProps) {
 
         <div className="mt-4 flex flex-wrap gap-2">
           <FilterChip label="Tümü" active={type === null} onClick={() => setType(null)} />
-          <FilterChip label="Film" active={type === 'film'} onClick={() => setType('film')} />
-          <FilterChip label="Dizi" active={type === 'dizi'} onClick={() => setType('dizi')} />
+          {CONTENT_TYPES.map((entry) => (
+            <FilterChip
+              key={entry.value}
+              label={entry.label}
+              active={type === entry.value}
+              onClick={() => setType(entry.value)}
+            />
+          ))}
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">

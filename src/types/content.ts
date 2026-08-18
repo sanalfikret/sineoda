@@ -1,4 +1,6 @@
-export type ContentType = 'film' | 'dizi'
+import type { ContentType } from '../constants/contentTypes'
+
+export type { ContentType }
 
 export type ContentFormat = 'standard' | 'vertical'
 
@@ -6,6 +8,15 @@ export interface SubtitleTrack {
   lang: string
   label: string
   url: string
+}
+
+export interface ContentCredits {
+  directors?: string[]
+  producers?: string[]
+  cast?: string[]
+  studio?: string
+  audioLanguages?: string[]
+  subtitleLanguages?: string[]
 }
 
 export interface ContentItem {
@@ -27,6 +38,7 @@ export interface ContentItem {
   newUntil?: string | null
   featured?: boolean
   subtitles?: SubtitleTrack[]
+  credits?: ContentCredits
 }
 
 export interface Episode {

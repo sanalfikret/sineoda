@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { resolveMediaUrl } from '../../api/client'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { useContent } from '../../context/ContentContext'
+import { CONTENT_TYPES, getContentTypeLabel } from '../../constants/contentTypes'
 import type { ContentType } from '../../types/content'
 import { fuzzySearchMatch, sortByTurkishTitle } from '../../utils/search'
 
@@ -54,22 +55,29 @@ export function AdminContentListPage() {
       />
 
       <div className="flex flex-wrap gap-2">
-        {([
-          ['all', 'Tümü'],
-          ['film', 'Filmler'],
-          ['dizi', 'Diziler'],
-        ] as const).map(([value, label]) => (
+        <button
+          type="button"
+          onClick={() => setTypeFilter('all')}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+            typeFilter === 'all'
+              ? 'bg-sineoda-gold text-sineoda-bg'
+              : 'bg-white/10 text-white/85 hover:bg-white/15'
+          }`}
+        >
+          Tümü
+        </button>
+        {CONTENT_TYPES.map((entry) => (
           <button
-            key={value}
+            key={entry.value}
             type="button"
-            onClick={() => setTypeFilter(value)}
+            onClick={() => setTypeFilter(entry.value)}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-              typeFilter === value
+              typeFilter === entry.value
                 ? 'bg-sineoda-gold text-sineoda-bg'
                 : 'bg-white/10 text-white/85 hover:bg-white/15'
             }`}
           >
-            {label}
+            {entry.label}
           </button>
         ))}
       </div>
@@ -104,7 +112,7 @@ export function AdminContentListPage() {
                       <p className="font-medium text-white">{item.title}</p>
                       <p className="text-xs text-sineoda-muted">{item.id}</p>
                     </td>
-                    <td className="px-4 py-3 capitalize text-white/80">{item.type}</td>
+                    <td className="px-4 py-3 text-white/80">{getContentTypeLabel(item.type)}</td>
                     <td className="px-4 py-3 text-white/80">{item.year}</td>
                     <td className="px-4 py-3">
                       {item.featured ? (

@@ -1,3 +1,4 @@
+import { parseCredits } from './services/credits.js'
 import type { ContentRow, EpisodeRow, ProfileRow, UserRow } from './types.js'
 
 export interface SubtitleTrack {
@@ -76,6 +77,7 @@ export function mapContent(row: ContentRow) {
     newUntil,
     featured: Boolean(row.featured),
     subtitles: parseSubtitles(row.subtitles_json),
+    credits: parseCredits(row.credits_json),
   }
 }
 

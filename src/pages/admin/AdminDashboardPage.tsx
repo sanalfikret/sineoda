@@ -8,6 +8,7 @@ import {
   type WatchStat,
 } from '../../api/client'
 import { useContent } from '../../context/ContentContext'
+import { CONTENT_TYPES } from '../../constants/contentTypes'
 
 export function AdminDashboardPage() {
   const { catalog, categories, featuredContent } = useContent()
@@ -39,13 +40,14 @@ export function AdminDashboardPage() {
     return () => window.clearInterval(interval)
   }, [])
 
-  const filmCount = catalog.filter((item) => item.type === 'film').length
-  const seriesCount = catalog.filter((item) => item.type === 'dizi').length
+  const typeCounts = CONTENT_TYPES.map((entry) => ({
+    label: entry.label,
+    value: catalog.filter((item) => item.type === entry.value).length,
+  }))
 
   const stats = [
     { label: 'Toplam İçerik', value: catalog.length },
-    { label: 'Film', value: filmCount },
-    { label: 'Dizi', value: seriesCount },
+    ...typeCounts,
     { label: 'Kategori', value: categories.length },
   ]
 

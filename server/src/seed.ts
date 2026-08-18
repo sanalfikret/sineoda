@@ -21,13 +21,13 @@ const SEED_CONTENT = [
   ['silent-forest', 'Sessiz Orman', 'Kaybolan bir köyün sırrını çözen belgesel ekibi.', 2023, '1s 42dk', '18+', 'film', '["Gerilim","Korku","Gizem"]', 'https://images.unsplash.com/photo-1509281373367-fa7cf25a27f8?w=400&h=600&fit=crop', 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1600&h=900&fit=crop', V.elephants, 0],
   ['ocean-whispers', 'Okyanus Fısıltıları', 'Derin denizlerde keşfedilen antik medeniyet.', 2025, '2s 5dk', '13+', 'film', '["Macera","Fantastik"]', 'https://images.unsplash.com/photo-1535016120720-40c6464ebe02?w=400&h=600&fit=crop', 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1600&h=900&fit=crop', V.escapes, 0],
   ['code-breakers', 'Kod Kırıcılar', 'Hacker ekibi küresel siber saldırıyı durdurmaya çalışır.', 2024, '8 bölüm', '13+', 'dizi', '["Aksiyon","Dizi"]', 'https://images.unsplash.com/photo-1611162617474-5b21e939e113?w=400&h=600&fit=crop', 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1600&h=900&fit=crop', V.blazes, 0],
-  ['golden-era', 'Altın Çağ', '1950ler sinemasının perde arkası.', 2022, '1s 28dk', 'Genel', 'film', '["Belgesel","Tarih"]', 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=400&h=600&fit=crop', 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=1600&h=900&fit=crop', V.bunny, 0],
+  ['golden-era', 'Altın Çağ', '1950ler sinemasının perde arkası.', 2022, '1s 28dk', 'Genel', 'belgesel', '["Belgesel","Tarih"]', 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=400&h=600&fit=crop', 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=1600&h=900&fit=crop', V.bunny, 0],
   ['wind-road', 'Rüzgar Yolu', 'Anadoluda geçen sıcak bir aile draması.', 2023, '1s 52dk', '13+', 'film', '["Dram","Yerli"]', 'https://images.unsplash.com/photo-1594909128353-aa2d4ae0e8fb?w=400&h=600&fit=crop', 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&h=900&fit=crop', V.subaru, 0],
   ['neon-pulse', 'Neon Nabız', 'Geleceğin şehrinde bir dedektifin vakası.', 2025, '10 bölüm', '16+', 'dizi', '["Noir","Dizi"]', 'https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=400&h=600&fit=crop', 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1600&h=900&fit=crop', V.meltdowns, 0],
   ['little-stars', 'Küçük Yıldızlar', 'Genç bir astronot adayının hikayesi.', 2024, '1s 36dk', 'Genel', 'film', '["Aile","Komedi","Macera"]', 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=400&h=600&fit=crop', 'https://images.unsplash.com/photo-1419242902214-272b4f66ee7a?w=1600&h=900&fit=crop', V.fun, 0],
   ['chef-table', 'Şef Masası', 'Dünyadan şeflerin mutfak felsefeleri.', 2023, '6 bölüm', 'Genel', 'dizi', '["Belgesel","Komedi","Yemek"]', 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=600&fit=crop', 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&h=900&fit=crop', V.joyrides, 0],
   ['stage-lights', 'Sahne Işıkları', 'Türkiye\'nin en sevilen komedyenlerinden unutulmaz bir stand-up gecesi.', 2024, '1s 12dk', '16+', 'film', '["Stand-up","Komedi"]', 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=400&h=600&fit=crop', 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1600&h=900&fit=crop', V.fun, 0],
-  ['wild-planet', 'Vahşi Gezegen', 'Dünyanın en uzak köşelerinde doğanın sırları.', 2023, '1s 35dk', 'Genel', 'film', '["Belgesel","Doğa"]', 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=600&fit=crop', 'https://images.unsplash.com/photo-1518173946687-a4c036bc2ee0?w=1600&h=900&fit=crop', V.elephants, 0],
+  ['wild-planet', 'Vahşi Gezegen', 'Dünyanın en uzak köşelerinde doğanın sırları.', 2023, '1s 35dk', 'Genel', 'belgesel', '["Belgesel","Doğa"]', 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=600&fit=crop', 'https://images.unsplash.com/photo-1518173946687-a4c036bc2ee0?w=1600&h=900&fit=crop', V.elephants, 0],
   ['anime-horizon', 'Anime Ufku', 'Geleceğin savaşçılarının epik macerası.', 2025, '12 bölüm', '13+', 'dizi', '["Anime","Aksiyon","Bilim Kurgu"]', 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400&h=600&fit=crop', 'https://images.unsplash.com/photo-1612036782180-6f0b06ea7512?w=1600&h=900&fit=crop', V.sintel, 0],
 ] as const
 
@@ -120,7 +120,7 @@ export function ensureCatalogCategories() {
 export function ensureExtraSeedContent() {
   const extras = [
     ['stage-lights', 'Sahne Işıkları', 'Türkiye\'nin en sevilen komedyenlerinden unutulmaz bir stand-up gecesi.', 2024, '1s 12dk', '16+', 'film', '["Stand-up","Komedi"]', 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=400&h=600&fit=crop', 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1600&h=900&fit=crop', V.fun, 0],
-    ['wild-planet', 'Vahşi Gezegen', 'Dünyanın en uzak köşelerinde doğanın sırları.', 2023, '1s 35dk', 'Genel', 'film', '["Belgesel","Doğa"]', 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=600&fit=crop', 'https://images.unsplash.com/photo-1518173946687-a4c036bc2ee0?w=1600&h=900&fit=crop', V.elephants, 0],
+    ['wild-planet', 'Vahşi Gezegen', 'Dünyanın en uzak köşelerinde doğanın sırları.', 2023, '1s 35dk', 'Genel', 'belgesel', '["Belgesel","Doğa"]', 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=600&fit=crop', 'https://images.unsplash.com/photo-1518173946687-a4c036bc2ee0?w=1600&h=900&fit=crop', V.elephants, 0],
     ['anime-horizon', 'Anime Ufku', 'Geleceğin savaşçılarının epik macerası.', 2025, '12 bölüm', '13+', 'dizi', '["Anime","Aksiyon","Bilim Kurgu"]', 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400&h=600&fit=crop', 'https://images.unsplash.com/photo-1612036782180-6f0b06ea7512?w=1600&h=900&fit=crop', V.sintel, 0],
   ] as const
 
@@ -211,6 +211,76 @@ export function ensureContentMeta() {
       new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       id,
     ])
+  }
+
+  ensureSeedCredits()
+  ensureContentTypes()
+}
+
+function ensureContentTypes() {
+  const updates: Array<[string, string]> = [
+    ['golden-era', 'belgesel'],
+    ['wild-planet', 'belgesel'],
+  ]
+  for (const [id, type] of updates) {
+    const exists = dbGet('SELECT id FROM content WHERE id = ?', [id])
+    if (!exists) continue
+    dbRun('UPDATE content SET type = ? WHERE id = ?', [type, id])
+  }
+}
+
+const SEED_CREDITS: Record<string, string> = {
+  'aurora-dreams': JSON.stringify({
+    directors: ['Elif Yılmaz'],
+    producers: ['Sineoda Originals'],
+    cast: ['Deniz Aksoy', 'Merve Çelik', 'Burak Kaya'],
+    studio: 'Sineoda Studios',
+    audioLanguages: ['Türkçe'],
+    subtitleLanguages: ['Türkçe', 'Türkçe [CC]', 'English'],
+  }),
+  'midnight-istanbul': JSON.stringify({
+    directors: ['Can Demir'],
+    producers: ['İstanbul Yapım'],
+    cast: ['Ayşe Arslan', 'Kerem Öztürk', 'Selin Aydın'],
+    studio: 'Gece Yapım',
+    audioLanguages: ['Türkçe'],
+    subtitleLanguages: ['Türkçe', 'English'],
+  }),
+  'code-breakers': JSON.stringify({
+    directors: ['Mert Şahin', 'Zeynep Koç'],
+    producers: ['Cyber Films'],
+    cast: ['Emre Yıldız', 'Cansu Polat', 'Onur Tekin'],
+    studio: 'Sineoda Originals',
+    audioLanguages: ['Türkçe'],
+    subtitleLanguages: ['Türkçe', 'Türkçe [CC]'],
+  }),
+  'neon-pulse': JSON.stringify({
+    directors: ['Arda Güneş'],
+    producers: ['Neon Media'],
+    cast: ['Gizem Er', 'Tolga Aslan', 'Ece Baran'],
+    studio: 'Neon Media',
+    audioLanguages: ['Türkçe'],
+    subtitleLanguages: ['Türkçe', 'English'],
+  }),
+  'kalp-satirlari': JSON.stringify({
+    directors: ['Selin Kara'],
+    producers: ['Dikey Yapım'],
+    cast: ['Buse Nur', 'Kaan Efe', 'Melis Ar'],
+    studio: 'Dikey Yapım',
+    audioLanguages: ['Türkçe'],
+    subtitleLanguages: ['Türkçe', 'Türkçe [CC]'],
+  }),
+}
+
+function ensureSeedCredits() {
+  for (const [id, creditsJson] of Object.entries(SEED_CREDITS)) {
+    const row = dbGet<{ credits_json?: string }>(
+      'SELECT credits_json FROM content WHERE id = ?',
+      [id],
+    )
+    if (!row) continue
+    if (row.credits_json && row.credits_json !== '{}') continue
+    dbRun('UPDATE content SET credits_json = ? WHERE id = ?', [creditsJson, id])
   }
 }
 

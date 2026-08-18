@@ -335,6 +335,17 @@ export async function bulkCreateEpisodes(
   })
 }
 
+export async function fetchReaction(contentId: string) {
+  return api<{ reaction: 'like' | 'dislike' | null }>(`/api/reactions/${contentId}`)
+}
+
+export async function setReaction(contentId: string, reaction: 'like' | 'dislike' | null) {
+  return api<{ reaction: 'like' | 'dislike' | null }>(`/api/reactions/${contentId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ reaction }),
+  })
+}
+
 export async function fetchWatchProgress(contentId: string, episodeId?: string) {
   const query = episodeId
     ? `?contentId=${encodeURIComponent(contentId)}&episodeId=${encodeURIComponent(episodeId)}`

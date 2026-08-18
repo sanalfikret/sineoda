@@ -4,6 +4,7 @@ import { LandingFeatures } from '../components/landing/LandingFeatures'
 import { LandingHeader } from '../components/landing/LandingHeader'
 import { LandingHero } from '../components/landing/LandingHero'
 import { LandingHubs } from '../components/landing/LandingHubs'
+import { LandingFaq } from '../components/landing/LandingFaq'
 import { LandingPricing } from '../components/landing/LandingPricing'
 import { fetchBootstrap, resolveMediaUrl } from '../api/client'
 import type { ContentItem } from '../types/content'
@@ -51,6 +52,7 @@ export function LandingPage() {
       <LandingHubs />
       <LandingFeatures />
       <LandingPricing />
+      <LandingFaq />
       <SiteFooter />
     </div>
   )

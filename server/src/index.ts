@@ -10,6 +10,7 @@ import episodeRoutes from './routes/episodes.js'
 import authRoutes from './routes/auth.js'
 import categoryRoutes from './routes/categories.js'
 import contentRoutes from './routes/content.js'
+import reactionsRoutes from './routes/reactions.js'
 import uploadRoutes from './routes/upload.js'
 import userRoutes from './routes/users.js'
 import watchlistRoutes from './routes/watchlist.js'
@@ -86,6 +87,7 @@ app.use('/api/categories', categoryRoutes)
 app.use('/api/watch-progress', watchProgressRoutes)
 app.use('/api/admin/analytics', analyticsRoutes)
 app.use('/api/watchlist', watchlistRoutes)
+app.use('/api/reactions', reactionsRoutes)
 app.use('/api/admin/users', userRoutes)
 app.use('/api/admin/upload', uploadRoutes)
 
