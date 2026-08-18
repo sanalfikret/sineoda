@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { Link } from 'react-router-dom'
 import type { ContentItem } from '../types/content'
 import { ContentCard } from './ContentCard'
 
@@ -7,9 +8,11 @@ interface ContentRowProps {
   items: ContentItem[]
   onSelect: (item: ContentItem) => void
   progressMap?: Record<string, number>
+  viewAllHref?: string
+  prominent?: boolean
 }
 
-export function ContentRow({ title, items, onSelect, progressMap }: ContentRowProps) {
+export function ContentRow({ title, items, onSelect, progressMap, viewAllHref, prominent }: ContentRowProps) {
   const rowRef = useRef<HTMLDivElement>(null)
 
   const scroll = (direction: 'left' | 'right') => {
@@ -22,16 +25,27 @@ export function ContentRow({ title, items, onSelect, progressMap }: ContentRowPr
   return (
     <section className="mb-8 sm:mb-10">
       <div className="mb-3 flex items-center justify-between px-4 sm:px-6 lg:px-8">
-        <h2 className="text-lg font-semibold text-white sm:text-xl">{title}</h2>
-        <div className="hidden gap-2 sm:flex">
-          <ScrollButton direction="left" onClick={() => scroll('left')} />
-          <ScrollButton direction="right" onClick={() => scroll('right')} />
+        <h2 className={`font-semibold text-white ${prominent ? 'text-xl sm:text-2xl' : 'text-lg sm:text-xl'}`}>
+          {title}
+        </h2>
+        <div className="flex items-center gap-2">
+          {viewAllHref && (
+            <Link to={viewAllHref} className="text-sm font-medium text-sineoda-gold hover:underline">
+              Tümünü gör
+            </Link>
+          )}
+          <div className="hidden gap-2 sm:flex">
+            <ScrollButton direction="left" onClick={() => scroll('left')} />
+            <ScrollButton direction="right" onClick={() => scroll('right')} />
+          </div>
         </div>
       </div>
 
       <div
         ref={rowRef}
-        className="hide-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:gap-4 sm:px-6 lg:px-8"
+        className={`hide-scrollbar flex snap-x snap-mandatory overflow-x-auto px-4 pb-2 sm:px-6 lg:px-8 ${
+          prominent ? 'gap-4 sm:gap-5' : 'gap-3 sm:gap-4'
+        }`}
       >
         {items.map((item) => (
           <ContentCard
@@ -39,6 +53,7 @@ export function ContentRow({ title, items, onSelect, progressMap }: ContentRowPr
             item={item}
             onSelect={onSelect}
             progressPercent={progressMap?.[item.id]}
+            size={prominent && item.videoFormat === 'vertical' ? 'large' : 'default'}
           />
         ))}
       </div>

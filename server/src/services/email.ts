@@ -45,3 +45,47 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string) {
 
   return { devMode: false }
 }
+
+const CONTACT_SUBJECT_LABELS: Record<string, string> = {
+  oneri: 'Öneri',
+  istek: 'İstek',
+  sikayet: 'Şikayet',
+  diger: 'Diğer',
+}
+
+export async function sendContactEmail(payload: {
+  name: string
+  email: string
+  subject: string
+  message: string
+}) {
+  const transport = getTransporter()
+  const subjectLabel = CONTACT_SUBJECT_LABELS[payload.subject] ?? payload.subject
+  const to = process.env.CONTACT_EMAIL ?? config.smtp.user ?? 'destek@sineoda.com'
+  const subject = `Sineoda İletişim — ${subjectLabel}`
+  const html = `
+    <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px">
+      <h2 style="color:#e8b84a">Sineoda İletişim Formu</h2>
+      <p><strong>Konu:</strong> ${subjectLabel}</p>
+      <p><strong>Ad:</strong> ${payload.name}</p>
+      <p><strong>E-posta:</strong> ${payload.email}</p>
+      <hr style="border:none;border-top:1px solid #333;margin:16px 0" />
+      <p style="white-space:pre-wrap">${payload.message}</p>
+    </div>
+  `
+
+  if (!transport) {
+    console.log('[email-dev] İletişim formu:', { ...payload, subjectLabel, to })
+    return { devMode: true }
+  }
+
+  await transport.sendMail({
+    from: config.smtp.from,
+    to,
+    replyTo: payload.email,
+    subject,
+    html,
+  })
+
+  return { devMode: false }
+}

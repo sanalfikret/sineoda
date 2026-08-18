@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { SiteFooter } from '../components/SiteFooter'
 import { PROFILE_AVATARS } from '../types/auth'
 
 export function ProfilesPage() {
@@ -120,6 +121,8 @@ export function ProfilesPage() {
           Hesaptan çıkış yap
         </button>
       </div>
+
+      <SiteFooter />
     </div>
   )
 }
