@@ -91,7 +91,7 @@ function makeItem(
     genres: options.genres ?? [type === 'film' ? 'Dram' : 'Dizi'],
     poster: poster(photoId, options.vertical),
     backdrop: poster(photoId, false),
-    videoUrl: options.vertical ? DEMO_VIDEOS[index % DEMO_VIDEOS.length] : DEMO_VIDEOS[index % DEMO_VIDEOS.length],
+    videoUrl: DEMO_VIDEOS[index % DEMO_VIDEOS.length],
     trailerUrl: DEMO_VIDEOS[index % DEMO_VIDEOS.length],
     videoFormat: options.vertical ? 'vertical' : 'standard',
   }

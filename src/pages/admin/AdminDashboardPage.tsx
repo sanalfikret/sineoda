@@ -1,50 +1,34 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  fetchAnalyticsOverview,
-  fetchExpiringLicenses,
-  fetchWatchStats,
-  resolveMediaUrl,
-  type AnalyticsOverview,
-  type WatchStat,
-} from '../../api/client'
+import { fetchExpiringLicenses, resolveMediaUrl } from '../../api/client'
 import { useContent } from '../../context/ContentContext'
 import { CONTENT_TYPES } from '../../constants/contentTypes'
+import { useAdminAnalytics } from '../../hooks/useAdminAnalytics'
 import type { AdminContentItem } from '../../types/content'
 import { formatLicenseDate } from '../../utils/license'
 
 export function AdminDashboardPage() {
   const { catalog, categories, featuredContent } = useContent()
-  const [watchStats, setWatchStats] = useState<WatchStat[]>([])
-  const [overview, setOverview] = useState<AnalyticsOverview | null>(null)
+  const {
+    watchStats,
+    overview,
+    loading: statsLoading,
+    watchStatsError,
+    overviewError,
+  } = useAdminAnalytics()
   const [expiringItems, setExpiringItems] = useState<AdminContentItem[]>([])
-  const [statsLoading, setStatsLoading] = useState(true)
-
-  const loadStats = async () => {
-    try {
-      const [watchData, overviewData, expiringData] = await Promise.all([
-        fetchWatchStats(),
-        fetchAnalyticsOverview(),
-        fetchExpiringLicenses(30),
-      ])
-      setWatchStats(watchData.stats)
-      setOverview(overviewData)
-      setExpiringItems(expiringData.items)
-    } catch {
-      setWatchStats([])
-      setOverview(null)
-      setExpiringItems([])
-    } finally {
-      setStatsLoading(false)
-    }
-  }
+  const [expiringError, setExpiringError] = useState(false)
 
   useEffect(() => {
-    void loadStats()
-    const interval = window.setInterval(() => {
-      void loadStats()
-    }, 30_000)
-    return () => window.clearInterval(interval)
+    void fetchExpiringLicenses(30)
+      .then((data) => {
+        setExpiringItems(data.items)
+        setExpiringError(false)
+      })
+      .catch(() => {
+        setExpiringItems([])
+        setExpiringError(true)
+      })
   }, [])
 
   const typeCounts = CONTENT_TYPES.map((entry) => ({
@@ -79,6 +63,12 @@ export function AdminDashboardPage() {
         </p>
       </div>
 
+      {overviewError && (
+        <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          Canlı özet yüklenemedi. API güncel değilse Render&apos;dan yeniden deploy edin.
+        </p>
+      )}
+
       {!statsLoading && overview && (
         <section className="rounded-2xl border border-sineoda-gold/20 bg-gradient-to-br from-sineoda-gold/10 to-transparent p-5">
           <h2 className="font-semibold text-white">Canlı Özet</h2>
@@ -95,6 +85,12 @@ export function AdminDashboardPage() {
             {overview.totals.activeSubscriptions} aktif abonelik · {overview.totals.users} kullanıcı
           </p>
         </section>
+      )}
+
+      {expiringError && (
+        <p className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-sineoda-muted">
+          Telif uyarıları yüklenemedi; izleme istatistikleri etkilenmez.
+        </p>
       )}
 
       {expiringItems.length > 0 && (
@@ -169,6 +165,10 @@ export function AdminDashboardPage() {
 
         {statsLoading ? (
           <p className="mt-4 text-sm text-sineoda-muted">Yükleniyor...</p>
+        ) : watchStatsError ? (
+          <p className="mt-4 text-sm text-amber-200">
+            İzleme verileri yüklenemedi. API&apos;nin güncel olduğundan emin olun.
+          </p>
         ) : watchStats.length === 0 ? (
           <p className="mt-4 text-sm text-sineoda-muted">Henüz izleme verisi yok.</p>
         ) : (
