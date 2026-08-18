@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { getProfileId, getToken, resolveMediaUrl, saveWatchProgress } from '../api/client'
 import type { PlayTarget } from '../types/content'
 import { getYoutubeEmbedUrl, isYoutubeUrl } from '../utils/media'
+import { ContentActionButtons } from './ContentActionButtons'
 
 interface VideoPlayerProps {
   target: PlayTarget | null
@@ -273,7 +274,13 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
           Geri
         </button>
         <h2 className="truncate px-4 text-sm font-semibold text-white sm:text-base">{target.title}</h2>
-        <div className="w-20" />
+        <ContentActionButtons
+          contentId={target.item.id}
+          title={target.title}
+          variant="overlay"
+          showWatchlist={false}
+          className="pointer-events-auto shrink-0"
+        />
       </div>
 
       {!youtubeEmbedUrl && !playing && (
@@ -295,6 +302,14 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
           showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
+        <div className="pointer-events-auto flex justify-end sm:hidden">
+          <ContentActionButtons
+            contentId={target.item.id}
+            title={target.title}
+            variant="overlay"
+            showWatchlist={false}
+          />
+        </div>
         <input
           type="range"
           min={0}

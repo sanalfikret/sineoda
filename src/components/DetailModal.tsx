@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { fetchEpisodes, fetchReaction, fetchWatchProgress, resolveMediaUrl, setReaction } from '../api/client'
+import { fetchEpisodes, fetchWatchProgress, resolveMediaUrl } from '../api/client'
 import type { ContentItem, Episode } from '../types/content'
-import { useWatchlist } from '../context/WatchlistContext'
 import { FEEDBACK_EMAIL } from '../constants/site'
 import { getContentTypeLabel, isSeriesContent } from '../constants/contentTypes'
-import { shareContent } from '../utils/share'
+import { ContentActionButtons } from './ContentActionButtons'
 
 interface DetailModalProps {
   item: ContentItem | null
@@ -14,7 +13,6 @@ interface DetailModalProps {
 }
 
 type DetailTab = 'overview' | 'details'
-type Reaction = 'like' | 'dislike' | null
 
 function formatResumeTime(seconds: number) {
   const mins = Math.floor(seconds / 60)
@@ -32,14 +30,10 @@ function CreditList({ label, items }: { label: string; items: string[] }) {
 }
 
 export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
-  const { isInWatchlist, toggleWatchlist } = useWatchlist()
   const [episodes, setEpisodes] = useState<Episode[]>([])
   const [season, setSeason] = useState(1)
   const [resumePosition, setResumePosition] = useState<number | null>(null)
   const [tab, setTab] = useState<DetailTab>('overview')
-  const [reaction, setReactionState] = useState<Reaction>(null)
-  const [reactionLoading, setReactionLoading] = useState(false)
-  const [shareBusy, setShareBusy] = useState(false)
 
   useEffect(() => {
     if (!item || !isSeriesContent(item.type)) {
@@ -58,7 +52,6 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
   useEffect(() => {
     if (!item) {
       setResumePosition(null)
-      setReactionState(null)
       setTab('overview')
       return
     }
@@ -77,10 +70,6 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
         }
       })
       .catch(() => setResumePosition(null))
-
-    fetchReaction(item.id)
-      .then(({ reaction: value }) => setReactionState(value))
-      .catch(() => setReactionState(null))
   }, [item])
 
   useEffect(() => {
@@ -106,7 +95,6 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
 
   if (!item) return null
 
-  const inList = isInWatchlist(item.id)
   const seasons = [...new Set(episodes.map((ep) => ep.season))].sort((a, b) => a - b)
   const seasonEpisodes = episodes.filter((ep) => ep.season === season)
   const firstEpisode = sortedEpisodes[0]
@@ -118,30 +106,6 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
     (item.subtitles?.length
       ? item.subtitles.map((track) => track.label || track.lang)
       : ['Türkçe'])
-
-  const handleReaction = async (next: Reaction) => {
-    if (reactionLoading) return
-    const value = reaction === next ? null : next
-    setReactionLoading(true)
-    try {
-      const result = await setReaction(item.id, value)
-      setReactionState(result.reaction)
-    } catch {
-      // sessizce geç
-    } finally {
-      setReactionLoading(false)
-    }
-  }
-
-  const handleShare = async () => {
-    if (shareBusy) return
-    setShareBusy(true)
-    try {
-      await shareContent(item.title, item.id)
-    } finally {
-      setShareBusy(false)
-    }
-  }
 
   return (
     <div
@@ -241,45 +205,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
               </button>
             )}
 
-            <button
-              type="button"
-              onClick={() => void toggleWatchlist(item.id)}
-              className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition ${
-                inList
-                  ? 'border-sineoda-gold bg-sineoda-gold/10 text-sineoda-gold'
-                  : 'border-white/20 text-white hover:bg-white/10'
-              }`}
-              aria-label={inList ? 'Listeden çıkar' : 'Listeme ekle'}
-              title={inList ? 'Listemde' : 'Listeme ekle'}
-            >
-              {inList ? '✓' : '+'}
-            </button>
-
-            <ActionIconButton
-              label="Beğen"
-              active={reaction === 'like'}
-              disabled={reactionLoading}
-              onClick={() => void handleReaction('like')}
-            >
-              <ThumbsUpIcon />
-            </ActionIconButton>
-
-            <ActionIconButton
-              label="Beğenme"
-              active={reaction === 'dislike'}
-              disabled={reactionLoading}
-              onClick={() => void handleReaction('dislike')}
-            >
-              <ThumbsDownIcon />
-            </ActionIconButton>
-
-            <ActionIconButton
-              label="Paylaş"
-              disabled={shareBusy}
-              onClick={() => void handleShare()}
-            >
-              <ShareIcon />
-            </ActionIconButton>
+            <ContentActionButtons contentId={item.id} title={item.title} />
           </div>
 
           <div className="mt-6 flex gap-4 border-b border-white/10">
@@ -427,80 +353,10 @@ function TabButton({
   )
 }
 
-function ActionIconButton({
-  label,
-  active,
-  disabled,
-  onClick,
-  children,
-}: {
-  label: string
-  active?: boolean
-  disabled?: boolean
-  onClick: () => void
-  children: ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      disabled={disabled}
-      onClick={onClick}
-      className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition disabled:opacity-50 ${
-        active
-          ? 'border-sineoda-gold bg-sineoda-gold/15 text-sineoda-gold'
-          : 'border-white/20 text-white hover:bg-white/10'
-      }`}
-    >
-      {children}
-    </button>
-  )
-}
-
 function PlaySmallIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <path d="M8 5v14l11-7z" />
-    </svg>
-  )
-}
-
-function ThumbsUpIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M7 10v12M7 10l4-6 2 4h6a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-4l-1 5H7"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-function ThumbsDownIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M17 14V2M17 14l-4 6-2-4H5a2 2 0 0 0-2 2v1a2 2 0 0 0 2 2h4l1 5h6"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-function ShareIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="18" cy="5" r="3" stroke="currentColor" strokeWidth="1.8" />
-      <circle cx="6" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
-      <circle cx="18" cy="19" r="3" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M8.6 10.7l6.8-3.9M8.6 13.3l6.8 3.9" stroke="currentColor" strokeWidth="1.8" />
     </svg>
   )
 }
