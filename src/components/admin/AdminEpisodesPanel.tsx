@@ -4,6 +4,7 @@ import type { Episode } from '../../types/content'
 
 interface AdminEpisodesPanelProps {
   contentId: string
+  isVertical?: boolean
 }
 
 const EMPTY = {
@@ -15,15 +16,16 @@ const EMPTY = {
   videoUrl: '',
 }
 
-export function AdminEpisodesPanel({ contentId }: AdminEpisodesPanelProps) {
+export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpisodesPanelProps) {
   const [episodes, setEpisodes] = useState<Episode[]>([])
   const [form, setForm] = useState(EMPTY)
   const [loading, setLoading] = useState(true)
   const [bulkSeason, setBulkSeason] = useState(1)
-  const [bulkCount, setBulkCount] = useState(8)
-  const [bulkDuration, setBulkDuration] = useState('45 dk')
+  const [bulkCount, setBulkCount] = useState(isVertical ? 40 : 8)
+  const [bulkDuration, setBulkDuration] = useState(isVertical ? '4 dk' : '45 dk')
   const [bulkPrefix, setBulkPrefix] = useState('Bölüm')
   const [bulkLoading, setBulkLoading] = useState(false)
+  const [bulkTitles, setBulkTitles] = useState('')
 
   const load = async () => {
     const data = await fetchEpisodes(contentId)
@@ -34,6 +36,11 @@ export function AdminEpisodesPanel({ contentId }: AdminEpisodesPanelProps) {
   useEffect(() => {
     void load()
   }, [contentId])
+
+  useEffect(() => {
+    setBulkCount(isVertical ? 40 : 8)
+    setBulkDuration(isVertical ? '4 dk' : '45 dk')
+  }, [isVertical])
 
   const handleAdd = async () => {
     if (!form.title.trim() || !form.videoUrl.trim()) return
@@ -46,13 +53,20 @@ export function AdminEpisodesPanel({ contentId }: AdminEpisodesPanelProps) {
     if (bulkCount < 1 || bulkCount > 100) return
     setBulkLoading(true)
     try {
+      const customTitles = bulkTitles
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
+
       await bulkCreateEpisodes(contentId, {
         season: bulkSeason,
         count: bulkCount,
         titlePrefix: bulkPrefix.trim() || 'Bölüm',
-        duration: bulkDuration.trim() || '45 dk',
+        duration: bulkDuration.trim() || (isVertical ? '4 dk' : '45 dk'),
+        titles: customTitles.length > 0 ? customTitles : undefined,
       })
       await load()
+      setBulkTitles('')
     } finally {
       setBulkLoading(false)
     }
@@ -68,12 +82,16 @@ export function AdminEpisodesPanel({ contentId }: AdminEpisodesPanelProps) {
 
   return (
     <div className="space-y-4 rounded-2xl border border-white/10 bg-[#11141c] p-5">
-      <h2 className="text-lg font-semibold text-white">Dizi Bölümleri</h2>
+      <h2 className="text-lg font-semibold text-white">
+        {isVertical ? 'Dikey Dizi Bölümleri' : 'Dizi Bölümleri'}
+      </h2>
 
       <div className="rounded-xl border border-sineoda-gold/20 bg-sineoda-gold/5 p-4">
         <h3 className="text-sm font-semibold text-sineoda-gold">Toplu Bölüm Oluştur</h3>
         <p className="mt-1 text-xs text-sineoda-muted">
-          Sezon başına istediğiniz kadar bölüm oluşturun (ör. 8, 10 veya 12). Video URL&apos;lerini sonra tek tek güncelleyebilirsiniz.
+          {isVertical
+            ? 'Dikey diziler için 20–80 kısa bölüm oluşturabilirsiniz. Video URL\'lerini sonra tek tek güncelleyin.'
+            : 'Sezon başına istediğiniz kadar bölüm oluşturun. Video URL\'lerini sonra tek tek güncelleyebilirsiniz.'}
         </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-4">
           <input
@@ -106,6 +124,13 @@ export function AdminEpisodesPanel({ contentId }: AdminEpisodesPanelProps) {
             className={inputClass}
           />
         </div>
+        <textarea
+          value={bulkTitles}
+          onChange={(e) => setBulkTitles(e.target.value)}
+          rows={4}
+          placeholder={'İsteğe bağlı: Her satıra bir bölüm başlığı\nİlk Mesaj\nKampüs\nSır'}
+          className={`${inputClass} mt-3 resize-y`}
+        />
         <button
           type="button"
           disabled={bulkLoading}
@@ -142,7 +167,7 @@ export function AdminEpisodesPanel({ contentId }: AdminEpisodesPanelProps) {
         <input
           value={form.duration}
           onChange={(e) => setForm((f) => ({ ...f, duration: e.target.value }))}
-          placeholder="Süre"
+          placeholder={isVertical ? 'Süre (ör. 4 dk)' : 'Süre'}
           className={inputClass}
         />
         <input
@@ -171,7 +196,7 @@ export function AdminEpisodesPanel({ contentId }: AdminEpisodesPanelProps) {
               <p className="text-sm font-medium text-white">
                 S{episode.season} B{episode.episode} · {episode.title}
               </p>
-              <p className="text-xs text-sineoda-muted truncate max-w-md">{episode.videoUrl}</p>
+              <p className="max-w-md truncate text-xs text-sineoda-muted">{episode.videoUrl}</p>
             </div>
             <button
               type="button"

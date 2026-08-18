@@ -17,7 +17,9 @@ import watchlistRoutes from './routes/watchlist.js'
 import watchProgressRoutes from './routes/watchProgress.js'
 import analyticsRoutes from './routes/analytics.js'
 import analyticsPublicRoutes from './routes/analyticsPublic.js'
-import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent } from './seed.js'
+import landingRoutes from './routes/landing.js'
+import contactRoutes from './routes/contact.js'
+import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureDikeyShowcase } from './seed.js'
 import type { ContentRow } from './types.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -29,6 +31,8 @@ ensureContentMeta()
 ensureExtraSeedContent()
 ensureVerticalSeries()
 ensureGenreCategories()
+seedLandingData()
+ensureDikeyShowcase()
 
 const app = express()
 
@@ -79,6 +83,8 @@ app.get('/api/bootstrap', (_req, res) => {
 })
 
 app.use('/api/analytics', analyticsPublicRoutes)
+app.use('/api/landing', landingRoutes)
+app.use('/api/contact', contactRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/billing', billingRoutes)
 app.use('/api/episodes', episodeRoutes)
@@ -88,6 +94,7 @@ app.use('/api/watch-progress', watchProgressRoutes)
 app.use('/api/admin/analytics', analyticsRoutes)
 app.use('/api/watchlist', watchlistRoutes)
 app.use('/api/reactions', reactionsRoutes)
+app.use('/api/admin/landing', landingRoutes)
 app.use('/api/admin/users', userRoutes)
 app.use('/api/admin/upload', uploadRoutes)
 

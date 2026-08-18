@@ -11,6 +11,7 @@ import { AdminContentFormPage } from './pages/admin/AdminContentFormPage'
 import { AdminContentListPage } from './pages/admin/AdminContentListPage'
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage'
 import { AdminLoginPage } from './pages/admin/AdminLoginPage'
+import { AdminLandingPage } from './pages/admin/AdminLandingPage'
 import { AdminUsersPage } from './pages/admin/AdminUsersPage'
 import { BrowsePage } from './pages/BrowsePage'
 import { LandingPage } from './pages/LandingPage'
@@ -23,6 +24,7 @@ import { PaymentFailPage } from './pages/PaymentFailPage'
 import { ProfilesPage } from './pages/ProfilesPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { LegalPage } from './pages/LegalPage'
+import { ContactPage } from './pages/ContactPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { SignupPage } from './pages/SignupPage'
 
@@ -70,6 +72,7 @@ function App() {
       <Route path="/sifre-sifirla" element={<ResetPasswordPage />} />
       <Route path="/planlar" element={<PricingPage />} />
       <Route path="/yasal/:slug" element={<LegalPage />} />
+      <Route path="/iletisim" element={<ContactPage />} />
       <Route path="/odeme/paytr" element={<PaytrCheckoutPage />} />
       <Route path="/odeme/basarili" element={<PaymentSuccessPage />} />
       <Route path="/odeme/basarisiz" element={<PaymentFailPage />} />
@@ -122,6 +125,16 @@ function App() {
         }
       />
       <Route
+        path="/dikey-diziler"
+        element={
+          <ProtectedRoute requireProfile>
+            <AuthenticatedProviders>
+              <BrowsePage verticalOnly pageTitle="Dikey Diziler" />
+            </AuthenticatedProviders>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/kisa-filmler"
         element={
           <ProtectedRoute requireProfile>
@@ -146,6 +159,7 @@ function App() {
         <Route path="icerikler/yeni" element={<AdminContentFormPage />} />
         <Route path="icerikler/:id" element={<AdminContentFormPage />} />
         <Route path="kategoriler" element={<AdminCategoriesPage />} />
+        <Route path="ana-sayfa" element={<AdminLandingPage />} />
         <Route path="kullanicilar" element={<AdminUsersPage />} />
       </Route>
 

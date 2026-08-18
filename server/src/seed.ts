@@ -368,4 +368,94 @@ export function resetContent() {
       ])
     })
   }
+  seedLandingData(true)
+}
+
+const DEFAULT_LANDING_SLIDER = [
+  'aurora-dreams',
+  'neon-pulse',
+  'code-breakers',
+  'ocean-whispers',
+  'midnight-istanbul',
+]
+
+const DEFAULT_LANDING_SHOWCASES = [
+  {
+    id: 'landing-dizi',
+    title: 'Dizi',
+    icon: 'dizi',
+    description: 'Sezon sezon sürükleyici hikayeler ve orijinal diziler.',
+    items: ['code-breakers', 'neon-pulse', 'chef-table', 'anime-horizon'],
+  },
+  {
+    id: 'landing-film',
+    title: 'Film',
+    icon: 'film',
+    description: 'Ödüllü yapımlar, festival favorileri ve seçkin sinema.',
+    items: ['aurora-dreams', 'midnight-istanbul', 'wind-road', 'ocean-whispers'],
+  },
+  {
+    id: 'landing-belgesel',
+    title: 'Belgesel',
+    icon: 'belgesel',
+    description: 'Gerçek hikayeler, derin keşifler ve doğa belgeselleri.',
+    items: ['golden-era', 'wild-planet', 'chef-table'],
+  },
+  {
+    id: 'landing-cocuk',
+    title: 'Çocuk',
+    icon: 'cocuk',
+    description: 'Ailece izlenebilecek güvenli ve eğlenceli içerikler.',
+    items: ['little-stars'],
+  },
+  {
+    id: 'landing-dikey',
+    title: 'Dikey',
+    icon: 'dikey',
+    description: 'Mobil öncelikli kısa bölümler — kaydır, izle, devam et.',
+    items: ['kalp-satirlari'],
+  },
+] as const
+
+export function ensureDikeyShowcase() {
+  const exists = dbGet<{ id: string }>('SELECT id FROM landing_showcases WHERE id = ?', ['landing-dikey'])
+  if (exists) return
+
+  const maxOrder = dbGet<{ max: number | null }>('SELECT MAX(sort_order) as max FROM landing_showcases')
+  const order = (maxOrder?.max ?? -1) + 1
+
+  dbRun(
+    'INSERT INTO landing_showcases (id, title, icon, description, sort_order) VALUES (?, ?, ?, ?, ?)',
+    ['landing-dikey', 'Dikey', 'dikey', 'Mobil öncelikli kısa bölümler — kaydır, izle, devam et.', order],
+  )
+  dbRun(
+    'INSERT INTO landing_showcase_items (showcase_id, content_id, sort_order) VALUES (?, ?, ?)',
+    ['landing-dikey', 'kalp-satirlari', 0],
+  )
+}
+
+export function seedLandingData(force = false) {
+  const existing = dbGet<{ count: number }>('SELECT COUNT(*) as count FROM landing_showcases')
+  if (!force && (existing?.count ?? 0) > 0) return
+
+  dbRun('DELETE FROM landing_showcase_items')
+  dbRun('DELETE FROM landing_showcases')
+  dbRun('DELETE FROM landing_slider')
+
+  DEFAULT_LANDING_SLIDER.forEach((contentId, index) => {
+    dbRun('INSERT INTO landing_slider (content_id, sort_order) VALUES (?, ?)', [contentId, index])
+  })
+
+  DEFAULT_LANDING_SHOWCASES.forEach((showcase, index) => {
+    dbRun(
+      'INSERT INTO landing_showcases (id, title, icon, description, sort_order) VALUES (?, ?, ?, ?, ?)',
+      [showcase.id, showcase.title, showcase.icon, showcase.description, index],
+    )
+    showcase.items.forEach((contentId, itemIndex) => {
+      dbRun(
+        'INSERT INTO landing_showcase_items (showcase_id, content_id, sort_order) VALUES (?, ?, ?)',
+        [showcase.id, contentId, itemIndex],
+      )
+    })
+  })
 }

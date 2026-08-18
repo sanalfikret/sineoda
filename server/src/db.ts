@@ -200,6 +200,32 @@ function runMigrations() {
       PRIMARY KEY (profile_id, content_id)
     );
   `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS landing_slider (
+      content_id TEXT PRIMARY KEY,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    );
+  `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS landing_showcases (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      icon TEXT NOT NULL DEFAULT 'film',
+      description TEXT NOT NULL DEFAULT '',
+      sort_order INTEGER NOT NULL DEFAULT 0
+    );
+  `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS landing_showcase_items (
+      showcase_id TEXT NOT NULL,
+      content_id TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (showcase_id, content_id)
+    );
+  `)
 }
 
 function ensureColumn(table: string, column: string, definition: string) {

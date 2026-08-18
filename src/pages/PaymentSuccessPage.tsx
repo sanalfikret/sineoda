@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
+import { SiteFooter } from '../components/SiteFooter'
 
 export function PaymentSuccessPage() {
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-sineoda-bg px-4">
+    <div className="min-h-dvh bg-sineoda-bg">
+      <div className="flex min-h-[70dvh] items-center justify-center px-4">
       <div className="max-w-md rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center">
         <p className="text-4xl">✓</p>
         <h1 className="mt-4 text-2xl font-bold text-white">Ödeme başarılı</h1>
@@ -16,6 +18,8 @@ export function PaymentSuccessPage() {
           İzlemeye Başla
         </Link>
       </div>
+      </div>
+      <SiteFooter />
     </div>
   )
 }
