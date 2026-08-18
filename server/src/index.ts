@@ -16,6 +16,7 @@ import userRoutes from './routes/users.js'
 import watchlistRoutes from './routes/watchlist.js'
 import watchProgressRoutes from './routes/watchProgress.js'
 import analyticsRoutes from './routes/analytics.js'
+import adminContentRoutes from './routes/adminContent.js'
 import analyticsPublicRoutes from './routes/analyticsPublic.js'
 import landingRoutes, { getLandingConfig } from './routes/landing.js'
 import contactRoutes from './routes/contact.js'
@@ -107,6 +108,7 @@ app.use('/api/content', contentRoutes)
 app.use('/api/categories', categoryRoutes)
 app.use('/api/watch-progress', watchProgressRoutes)
 app.use('/api/admin/analytics', analyticsRoutes)
+app.use('/api/admin/content', adminContentRoutes)
 app.use('/api/watchlist', watchlistRoutes)
 app.use('/api/reactions', reactionsRoutes)
 app.use('/api/admin/landing', landingRoutes)

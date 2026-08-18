@@ -1,43 +1,115 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { resolveMediaUrl } from '../../api/client'
+import { fetchAdminCatalog, resolveMediaUrl } from '../../api/client'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { useContent } from '../../context/ContentContext'
 import { CONTENT_TYPES, getContentDisplayLabel } from '../../constants/contentTypes'
-import type { ContentType } from '../../types/content'
+import type { AdminContentItem, ContentType } from '../../types/content'
+import { formatLicenseDate } from '../../utils/license'
 import { isVerticalContent } from '../../utils/vertical'
-import { fuzzySearchMatch, sortByTurkishTitle } from '../../utils/search'
+import { fuzzySearchMatch } from '../../utils/search'
 
-type TypeFilter = 'all' | ContentType | 'dikey'
+type TypeFilter = 'all' | ContentType | 'dikey' | 'expiring'
 
 const NEW_VERTICAL_HREF = '/admin/icerikler/yeni?dikey=1'
 
+function LicenseStatusBadge({ item }: { item: AdminContentItem }) {
+  if (item.licenseUnlimited) {
+    return (
+      <span className="rounded-full bg-white/10 px-2 py-1 text-xs text-white/70">Sınırsız</span>
+    )
+  }
+
+  if (item.licenseExpired) {
+    return (
+      <span className="rounded-full bg-red-500/15 px-2 py-1 text-xs font-medium text-red-300">
+        Süresi doldu
+      </span>
+    )
+  }
+
+  if (item.licenseExpiringSoon) {
+    return (
+      <span className="rounded-full bg-amber-500/15 px-2 py-1 text-xs font-medium text-amber-300">
+        {item.licenseDaysRemaining} gün kaldı
+      </span>
+    )
+  }
+
+  return (
+    <span className="text-xs text-white/70">{formatLicenseDate(item.licenseExpiresAt)}</span>
+  )
+}
+
+function sortAdminItems(items: AdminContentItem[]) {
+  return [...items].sort((a, b) => {
+    const rank = (item: AdminContentItem) => {
+      if (item.licenseExpired) return 0
+      if (item.licenseExpiringSoon) return 1
+      return 2
+    }
+    const rankDiff = rank(a) - rank(b)
+    if (rankDiff !== 0) return rankDiff
+
+    const aDays = a.licenseDaysRemaining
+    const bDays = b.licenseDaysRemaining
+    if (aDays !== null && bDays !== null && aDays !== bDays) return aDays - bDays
+
+    return a.title.localeCompare(b.title, 'tr')
+  })
+}
+
 export function AdminContentListPage() {
-  const { catalog, deleteContent, setFeatured } = useContent()
+  const { deleteContent, setFeatured } = useContent()
+  const [adminCatalog, setAdminCatalog] = useState<AdminContentItem[]>([])
+  const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
 
-  const verticalCount = useMemo(() => catalog.filter(isVerticalContent).length, [catalog])
+  const loadCatalog = () => {
+    return fetchAdminCatalog()
+      .then(({ catalog }) => setAdminCatalog(catalog))
+      .catch(() => setAdminCatalog([]))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    void loadCatalog()
+  }, [])
+
+  const verticalCount = useMemo(() => adminCatalog.filter(isVerticalContent).length, [adminCatalog])
+  const expiringCount = useMemo(
+    () => adminCatalog.filter((item) => item.licenseExpiringSoon).length,
+    [adminCatalog],
+  )
 
   const filteredItems = useMemo(() => {
-    const searched = catalog.filter((item) => {
-      if (typeFilter === 'dikey') {
+    const searched = adminCatalog.filter((item) => {
+      if (typeFilter === 'expiring') {
+        if (!item.licenseExpiringSoon && !item.licenseExpired) return false
+      } else if (typeFilter === 'dikey') {
         if (!isVerticalContent(item)) return false
       } else if (typeFilter !== 'all' && item.type !== typeFilter) {
         return false
       }
       return fuzzySearchMatch(query, item.title, item.id, item.genres.join(' '))
     })
-    return sortByTurkishTitle(searched, (item) => item.title)
-  }, [catalog, query, typeFilter])
+    return sortAdminItems(searched)
+  }, [adminCatalog, query, typeFilter])
 
   const handleDelete = async (id: string, title: string) => {
     if (!window.confirm(`"${title}" içeriğini silmek istediğine emin misin?`)) return
     try {
       await deleteContent(id)
+      await loadCatalog()
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Silme başarısız.')
     }
+  }
+
+  const handleFeatured = async (id: string) => {
+    await setFeatured(id)
+    await loadCatalog()
   }
 
   return (
@@ -46,8 +118,9 @@ export function AdminContentListPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">İçerikler</h1>
           <p className="mt-1 text-sm text-sineoda-muted">
-            Alfabetik sıralı · {catalog.length} kayıt
+            Telif uyarıları önce · {adminCatalog.length} kayıt
             {verticalCount > 0 && ` · ${verticalCount} dikey dizi`}
+            {expiringCount > 0 && ` · ${expiringCount} telif bitiyor`}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -66,12 +139,25 @@ export function AdminContentListPage() {
         </div>
       </div>
 
+      {expiringCount > 0 && typeFilter !== 'expiring' && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          <strong>{expiringCount} içeriğin</strong> telif süresi önümüzdeki 30 gün içinde bitiyor.{' '}
+          <button
+            type="button"
+            onClick={() => setTypeFilter('expiring')}
+            className="font-semibold text-amber-300 underline underline-offset-2 hover:text-white"
+          >
+            Listeyi göster
+          </button>
+        </div>
+      )}
+
       <AdminSearchBar
         value={query}
         onChange={setQuery}
         placeholder="Film veya dizi ara... (ör. kap krg → Kalp Kırığı)"
         resultCount={filteredItems.length}
-        totalCount={catalog.length}
+        totalCount={adminCatalog.length}
       />
 
       <div className="flex flex-wrap gap-2">
@@ -85,6 +171,20 @@ export function AdminContentListPage() {
           }`}
         >
           Tümü
+        </button>
+        <button
+          type="button"
+          onClick={() => setTypeFilter('expiring')}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+            typeFilter === 'expiring'
+              ? 'bg-amber-500 text-sineoda-bg'
+              : 'bg-amber-500/15 text-amber-200 hover:bg-amber-500/25'
+          }`}
+        >
+          Telif Bitiyor
+          {expiringCount > 0 && (
+            <span className="ml-1.5 text-xs opacity-90">({expiringCount})</span>
+          )}
         </button>
         {CONTENT_TYPES.map((entry) => (
           <button
@@ -124,15 +224,22 @@ export function AdminContentListPage() {
                 <th className="px-4 py-3 font-medium">Poster</th>
                 <th className="px-4 py-3 font-medium">Başlık</th>
                 <th className="px-4 py-3 font-medium">Tür</th>
-                <th className="px-4 py-3 font-medium">Yıl</th>
+                <th className="px-4 py-3 font-medium">Eklenme</th>
+                <th className="px-4 py-3 font-medium">Telif</th>
                 <th className="px-4 py-3 font-medium">Öne Çıkan</th>
                 <th className="px-4 py-3 font-medium">İşlemler</th>
               </tr>
             </thead>
             <tbody>
-              {filteredItems.length === 0 ? (
+              {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-sineoda-muted">
+                  <td colSpan={7} className="px-4 py-10 text-center text-sineoda-muted">
+                    Yükleniyor...
+                  </td>
+                </tr>
+              ) : filteredItems.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-10 text-center text-sineoda-muted">
                     {typeFilter === 'dikey' ? (
                       <div className="space-y-3">
                         <p>Henüz dikey dizi eklenmemiş.</p>
@@ -143,6 +250,8 @@ export function AdminContentListPage() {
                           + İlk Dikey Diziyi Ekle
                         </Link>
                       </div>
+                    ) : typeFilter === 'expiring' ? (
+                      'Önümüzdeki 30 gün içinde bitecek telif bulunamadı.'
                     ) : (
                       'Aramanızla eşleşen içerik bulunamadı.'
                     )}
@@ -150,7 +259,12 @@ export function AdminContentListPage() {
                 </tr>
               ) : (
                 filteredItems.map((item) => (
-                  <tr key={item.id} className="border-b border-white/5 last:border-0">
+                  <tr
+                    key={item.id}
+                    className={`border-b border-white/5 last:border-0 ${
+                      item.licenseExpiringSoon || item.licenseExpired ? 'bg-amber-500/5' : ''
+                    }`}
+                  >
                     <td className="px-4 py-3">
                       <img
                         src={resolveMediaUrl(item.poster)}
@@ -175,7 +289,12 @@ export function AdminContentListPage() {
                         {getContentDisplayLabel(item)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-white/80">{item.year}</td>
+                    <td className="px-4 py-3 text-xs text-white/70">
+                      {formatLicenseDate(item.contentAddedAt)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <LicenseStatusBadge item={item} />
+                    </td>
                     <td className="px-4 py-3">
                       {item.featured ? (
                         <span className="rounded-full bg-sineoda-gold/15 px-2 py-1 text-xs text-sineoda-gold">
@@ -184,7 +303,7 @@ export function AdminContentListPage() {
                       ) : (
                         <button
                           type="button"
-                          onClick={() => void setFeatured(item.id)}
+                          onClick={() => void handleFeatured(item.id)}
                           className="text-xs text-sineoda-muted hover:text-white"
                         >
                           Öne çıkar
