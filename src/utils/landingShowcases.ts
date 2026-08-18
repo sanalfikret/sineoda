@@ -2,9 +2,12 @@ import type { ContentItem } from '../types/content'
 import type { LandingShowcase } from '../components/landing/LandingCategoryShowcase'
 
 export function buildFallbackShowcases(catalog: ContentItem[]): LandingShowcase[] {
-  const byType = (type: string) => catalog.filter((item) => item.type === type).slice(0, 8)
-  const vertical = catalog.filter((item) => item.videoFormat === 'vertical').slice(0, 8)
-  const family = catalog.filter((item) => item.genres.includes('Aile') || item.rating === 'Genel').slice(0, 8)
+  const byType = (type: string) => catalog.filter((item) => item.type === type).slice(0, 20)
+  const vertical = catalog.filter((item) => item.videoFormat === 'vertical').slice(0, 20)
+  const family = catalog
+    .filter((item) => item.genres.includes('Aile') || item.rating === 'Genel')
+    .slice(0, 20)
+  const kisa = catalog.filter((item) => item.type === 'kisa-film').slice(0, 20)
 
   return [
     {
@@ -41,6 +44,13 @@ export function buildFallbackShowcases(catalog: ContentItem[]): LandingShowcase[
       icon: 'dikey',
       description: 'Mobil öncelikli kısa bölümler — kaydır, izle, devam et.',
       items: vertical,
+    },
+    {
+      id: 'fallback-kisa-film',
+      title: 'Kısa Film',
+      icon: 'film',
+      description: 'Festival ödüllü kısa metraj yapımlar.',
+      items: kisa,
     },
   ].filter((showcase) => showcase.items.length > 0)
 }
