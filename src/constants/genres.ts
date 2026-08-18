@@ -1,19 +1,23 @@
-/** Ana sayfa tür filtreleri ve katalog satırları */
-export const BROWSE_GENRES = [
+/** Ana sayfa tür filtreleri ve katalog satırları — öncelik sırası */
+export const BROWSE_GENRES_PRIORITY = [
   'Aksiyon',
-  'Komedi',
   'Dram',
-  'Romantik',
+  'Suç',
   'Gerilim',
-  'Korku',
+  'Komedi',
+  'Romantik',
+  'Aile',
   'Belgesel',
+  'Gizem',
   'Stand-up',
+  'Din Temalı',
+] as const
+
+export const BROWSE_GENRES_EXTRA = [
+  'Korku',
   'Bilim Kurgu',
   'Fantastik',
   'Macera',
-  'Suç',
-  'Gizem',
-  'Aile',
   'Animasyon',
   'Anime',
   'Müzikal',
@@ -21,6 +25,8 @@ export const BROWSE_GENRES = [
   'Yerli',
   'Spor',
 ] as const
+
+export const BROWSE_GENRES = [...BROWSE_GENRES_PRIORITY, ...BROWSE_GENRES_EXTRA] as const
 
 /** Admin içerik formunda önerilen tüm tür etiketleri */
 export const CONTENT_GENRES = [
