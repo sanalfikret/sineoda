@@ -11,6 +11,7 @@ interface ContentRowProps {
   viewAllHref?: string
   prominent?: boolean
   layout?: 'landscape' | 'portrait'
+  variant?: 'carousel' | 'stack'
 }
 
 export function ContentRow({
@@ -21,6 +22,7 @@ export function ContentRow({
   viewAllHref,
   prominent,
   layout = 'landscape',
+  variant = 'carousel',
 }: ContentRowProps) {
   const rowRef = useRef<HTMLDivElement>(null)
 
@@ -30,6 +32,8 @@ export function ContentRow({
     const amount = direction === 'left' ? -container.clientWidth * 0.8 : container.clientWidth * 0.8
     container.scrollBy({ left: amount, behavior: 'smooth' })
   }
+
+  const isStacked = variant === 'stack'
 
   return (
     <section className="mb-5">
@@ -43,18 +47,24 @@ export function ContentRow({
               Tümünü gör
             </Link>
           )}
-          <div className="hidden gap-2 sm:flex">
-            <ScrollButton direction="left" onClick={() => scroll('left')} />
-            <ScrollButton direction="right" onClick={() => scroll('right')} />
-          </div>
+          {!isStacked && (
+            <div className="hidden gap-2 sm:flex">
+              <ScrollButton direction="left" onClick={() => scroll('left')} />
+              <ScrollButton direction="right" onClick={() => scroll('right')} />
+            </div>
+          )}
         </div>
       </div>
 
       <div
         ref={rowRef}
-        className={`hide-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden px-4 sm:px-6 lg:px-8 ${
-          prominent ? 'gap-3 sm:gap-4' : 'gap-2.5 sm:gap-3'
-        }`}
+        className={
+          isStacked
+            ? 'flex flex-col gap-3 px-4 sm:gap-4 sm:px-6 lg:px-8'
+            : `hide-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden px-4 sm:px-6 lg:px-8 ${
+                prominent ? 'gap-3 sm:gap-4' : 'gap-2.5 sm:gap-3'
+              }`
+        }
       >
         {items.map((item) => (
           <ContentCard
@@ -64,6 +74,7 @@ export function ContentRow({
             progressPercent={progressMap?.[item.id]}
             size={prominent ? 'large' : 'default'}
             layout={layout}
+            variant={variant}
           />
         ))}
       </div>
