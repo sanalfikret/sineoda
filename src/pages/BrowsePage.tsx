@@ -121,12 +121,6 @@ function BrowseContent({ contentType = null, pageTitle }: BrowsePageProps) {
         eyebrow={pageTitle ?? (contentType === 'dizi' ? 'Diziler' : contentType === 'film' ? 'Filmler' : 'Senin İçin')}
       />
 
-      {!contentType && (
-        <p className="px-4 pt-2 text-sm text-sineoda-muted sm:px-6 lg:px-8">
-          Kategoriler ve tüm katalog yalnızca üyelere özeldir.
-        </p>
-      )}
-
       <GenreFilterBar activeGenre={activeGenre} onChange={setActiveGenre} />
 
       <div className="space-y-2 pb-24 pt-4">
