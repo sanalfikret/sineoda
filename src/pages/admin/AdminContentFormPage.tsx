@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ImageUpload } from '../../components/admin/ImageUpload'
 import { VideoUpload } from '../../components/admin/VideoUpload'
 import { SubtitleUpload } from '../../components/admin/SubtitleUpload'
@@ -37,12 +37,39 @@ const EMPTY_FORM = {
   studio: '',
 }
 
+const VERTICAL_PRESET = {
+  type: 'dizi' as ContentType,
+  videoFormat: 'vertical' as const,
+  genres: 'Dikey, Romantik, Dram',
+  duration: '8 bölüm',
+}
+
+type ContentPreset = 'film' | 'dizi' | 'belgesel' | 'kisa-film' | 'dikey'
+
+function buildInitialForm(isVertical: boolean) {
+  if (!isVertical) return EMPTY_FORM
+  return { ...EMPTY_FORM, ...VERTICAL_PRESET }
+}
+
+function applyPreset(preset: ContentPreset) {
+  if (preset === 'dikey') {
+    return { ...EMPTY_FORM, ...VERTICAL_PRESET }
+  }
+  return {
+    ...EMPTY_FORM,
+    type: preset,
+    videoFormat: 'standard' as const,
+  }
+}
+
 export function AdminContentFormPage() {
   const { id } = useParams()
+  const [searchParams] = useSearchParams()
+  const isVerticalNew = searchParams.get('dikey') === '1'
   const isEdit = Boolean(id)
   const navigate = useNavigate()
   const { getContentById, addContent, updateContent } = useContent()
-  const [form, setForm] = useState(EMPTY_FORM)
+  const [form, setForm] = useState(() => buildInitialForm(isVerticalNew && !id))
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -123,6 +150,16 @@ export function AdminContentFormPage() {
     setForm((current) => ({ ...current, [key]: value }))
   }
 
+  const applyContentPreset = (preset: ContentPreset) => {
+    setForm(applyPreset(preset))
+  }
+
+  const activePreset: ContentPreset | null = !isEdit
+    ? form.videoFormat === 'vertical'
+      ? 'dikey'
+      : form.type
+    : null
+
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
@@ -130,7 +167,13 @@ export function AdminContentFormPage() {
           ← İçeriklere dön
         </Link>
         <h1 className="mt-2 text-2xl font-bold text-white">
-          {isEdit ? 'İçeriği Düzenle' : 'Yeni İçerik'}
+          {isEdit
+            ? form.videoFormat === 'vertical'
+              ? 'Dikey Diziyi Düzenle'
+              : 'İçeriği Düzenle'
+            : isVerticalNew || form.videoFormat === 'vertical'
+              ? 'Yeni Dikey Dizi'
+              : 'Yeni İçerik'}
         </h1>
       </div>
 
@@ -141,6 +184,40 @@ export function AdminContentFormPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-white/10 bg-[#11141c] p-5 sm:p-6">
+        {!isEdit && (
+          <section className="space-y-2">
+            <p className="text-sm font-medium text-white">İçerik türü seç</p>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  { id: 'film', label: 'Film' },
+                  { id: 'dizi', label: 'Dizi' },
+                  { id: 'belgesel', label: 'Belgesel' },
+                  { id: 'kisa-film', label: 'Kısa Film' },
+                  { id: 'dikey', label: 'Dikey Dizi' },
+                ] as const
+              ).map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => applyContentPreset(preset.id)}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                    activePreset === preset.id
+                      ? preset.id === 'dikey'
+                        ? 'bg-sineoda-gold text-sineoda-bg'
+                        : 'bg-white text-sineoda-bg'
+                      : preset.id === 'dikey'
+                        ? 'border border-sineoda-gold/50 bg-sineoda-gold/10 text-sineoda-gold hover:bg-sineoda-gold/20'
+                        : 'bg-white/10 text-white/85 hover:bg-white/15'
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Başlık *">
             <input
@@ -153,7 +230,17 @@ export function AdminContentFormPage() {
           <Field label="İçerik Türü">
             <select
               value={form.type}
-              onChange={(event) => update('type', event.target.value as ContentType)}
+              onChange={(event) => {
+                const type = event.target.value as ContentType
+                setForm((current) => ({
+                  ...current,
+                  type,
+                  videoFormat:
+                    current.videoFormat === 'vertical' && type !== 'dizi'
+                      ? 'standard'
+                      : current.videoFormat,
+                }))
+              }}
               className={inputClass}
             >
               {CONTENT_TYPES.map((entry) => (
@@ -360,7 +447,24 @@ export function AdminContentFormPage() {
         <Field label="Video Formatı">
           <select
             value={form.videoFormat}
-            onChange={(event) => update('videoFormat', event.target.value as 'standard' | 'vertical')}
+            onChange={(event) => {
+              const videoFormat = event.target.value as 'standard' | 'vertical'
+              setForm((current) => {
+                if (videoFormat !== 'vertical') {
+                  return { ...current, videoFormat }
+                }
+                const genres = current.genres
+                  .split(',')
+                  .map((value) => value.trim())
+                  .filter(Boolean)
+                return {
+                  ...current,
+                  videoFormat,
+                  type: 'dizi',
+                  genres: genres.includes('Dikey') ? current.genres : [...genres, 'Dikey'].join(', '),
+                }
+              })
+            }}
             className={inputClass}
           >
             <option value="standard">Standart (yatay 16:9)</option>
@@ -424,7 +528,7 @@ export function AdminContentFormPage() {
         </div>
       </form>
 
-      {isEdit && id && isSeriesContent(form.type) && (
+      {isEdit && id && (isSeriesContent(form.type) || form.videoFormat === 'vertical') && (
         <AdminEpisodesPanel contentId={id} isVertical={form.videoFormat === 'vertical'} />
       )}
     </div>
