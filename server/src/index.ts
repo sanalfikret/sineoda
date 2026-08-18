@@ -21,6 +21,7 @@ import analyticsPublicRoutes from './routes/analyticsPublic.js'
 import landingRoutes, { getLandingConfig } from './routes/landing.js'
 import contactRoutes from './routes/contact.js'
 import { ensureDemoCatalog } from './demoCatalog.js'
+import { ensureGenreCatalog } from './genreCatalog.js'
 import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureLandingShowcases } from './seed.js'
 import type { ContentRow } from './types.js'
 
@@ -36,6 +37,7 @@ ensureGenreCategories()
 seedLandingData()
 ensureLandingShowcases()
 ensureDemoCatalog()
+ensureGenreCatalog()
 
 const app = express()
 
