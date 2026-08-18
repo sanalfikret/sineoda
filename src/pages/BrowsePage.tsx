@@ -123,6 +123,10 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
     openPlayer(item)
   }
 
+  const handleSelect = verticalOnly
+    ? (item: ContentItem) => void openPlayer(item)
+    : openDetail
+
   if (isLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -147,7 +151,7 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
       <Hero
         item={displayHero}
         onPlay={openPlayer}
-        onDetails={openDetail}
+        onDetails={verticalOnly ? (item) => void openPlayer(item) : openDetail}
         eyebrow={
           activeGenre
             ? activeGenre
@@ -163,7 +167,7 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
           <ContentRow
             title="Dikey Diziler"
             items={verticalItems}
-            onSelect={openDetail}
+            onSelect={(item) => void openPlayer(item)}
             progressMap={progressMap}
             viewAllHref="/dikey-diziler"
             prominent
@@ -180,14 +184,14 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
         )}
 
         {!activeGenre && !contentType && filteredNewReleases.length > 0 && (
-          <ContentRow title="Yeni Eklenenler" items={filteredNewReleases} onSelect={openDetail} />
+          <ContentRow title="Yeni Eklenenler" items={filteredNewReleases} onSelect={handleSelect} />
         )}
 
         {!activeGenre && !contentType && !verticalOnly && trendingRow && (
           <ContentRow
             title={trendingRow.title}
             items={trendingRow.items}
-            onSelect={openDetail}
+            onSelect={handleSelect}
             progressMap={progressMap}
           />
         )}
@@ -206,7 +210,7 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
               key={row.id}
               title={row.title}
               items={row.items}
-              onSelect={openDetail}
+              onSelect={handleSelect}
               progressMap={progressMap}
             />
           ))

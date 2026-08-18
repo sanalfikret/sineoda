@@ -55,6 +55,17 @@ const VERTICAL_POSTERS = [
   'photo-1438761681033-6461ffad8d80',
 ]
 
+const DEMO_VIDEOS = [
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+]
+
 function poster(photoId: string, vertical = false) {
   const size = vertical ? 'w=400&h=711' : 'w=400&h=600'
   return `https://images.unsplash.com/${photoId}?${size}&fit=crop&q=80`
@@ -79,7 +90,8 @@ function makeItem(
     genres: options.genres ?? [type === 'film' ? 'Dram' : 'Dizi'],
     poster: poster(photoId, options.vertical),
     backdrop: poster(photoId, false),
-    videoUrl: '',
+    videoUrl: options.vertical ? DEMO_VIDEOS[index % DEMO_VIDEOS.length] : '',
+    trailerUrl: options.vertical ? DEMO_VIDEOS[index % DEMO_VIDEOS.length] : undefined,
     videoFormat: options.vertical ? 'vertical' : 'standard',
   }
 }
