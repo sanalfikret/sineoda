@@ -139,7 +139,7 @@ interface DemoItem {
   vertical?: boolean
 }
 
-function buildDemoItems(): DemoItem[] {
+export function buildDemoItems(): DemoItem[] {
   const items: DemoItem[] = []
 
   FILM_TITLES.forEach((title, index) => {
@@ -382,6 +382,16 @@ function syncBrowseCategories() {
   replaceCategoryItems('filmler-row', 'Filmler', 9, film.slice(0, TARGET_PER_TYPE))
   replaceCategoryItems('kisa-filmler-row', 'Kısa Filmler', 10, kisa.slice(0, TARGET_PER_TYPE))
   replaceCategoryItems('family', 'Aile İçin', 5, getKidsIds().slice(0, TARGET_PER_TYPE))
+}
+
+export function ensureDemoContentById(contentId: string): boolean {
+  const items = buildDemoItems()
+  const index = items.findIndex((item) => item.id === contentId)
+  if (index === -1) return false
+  const exists = dbGet('SELECT id FROM content WHERE id = ?', [contentId])
+  if (exists) return true
+  upsertDemoContent(items[index], index)
+  return true
 }
 
 export function ensureDemoCatalog() {
