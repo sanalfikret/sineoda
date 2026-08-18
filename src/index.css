@@ -66,4 +66,18 @@
   .focus-ring {
     @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold;
   }
+
+  .landing-hero-image {
+    animation: landing-ken-burns 24s ease-in-out infinite alternate;
+    transform-origin: center center;
+  }
+
+  @keyframes landing-ken-burns {
+    from {
+      transform: scale(1.02);
+    }
+    to {
+      transform: scale(1.1);
+    }
+  }
 }
