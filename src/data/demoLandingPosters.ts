@@ -1,3 +1,4 @@
+import { GENRE_CATALOG_ITEMS } from './genreCatalog'
 import type { ContentItem } from '../types/content'
 import type { LandingShowcase } from '../components/landing/LandingCategoryShowcase'
 
@@ -90,8 +91,8 @@ function makeItem(
     genres: options.genres ?? [type === 'film' ? 'Dram' : 'Dizi'],
     poster: poster(photoId, options.vertical),
     backdrop: poster(photoId, false),
-    videoUrl: options.vertical ? DEMO_VIDEOS[index % DEMO_VIDEOS.length] : '',
-    trailerUrl: options.vertical ? DEMO_VIDEOS[index % DEMO_VIDEOS.length] : undefined,
+    videoUrl: options.vertical ? DEMO_VIDEOS[index % DEMO_VIDEOS.length] : DEMO_VIDEOS[index % DEMO_VIDEOS.length],
+    trailerUrl: DEMO_VIDEOS[index % DEMO_VIDEOS.length],
     videoFormat: options.vertical ? 'vertical' : 'standard',
   }
 }
@@ -205,17 +206,16 @@ export const DEMO_LANDING_SHOWCASES: LandingShowcase[] = [
 
 export function getDemoCatalog(): ContentItem[] {
   const seen = new Set<string>()
-  return DEMO_LANDING_SHOWCASES.flatMap((showcase) => showcase.items).filter((item) => {
+  const all = [...DEMO_LANDING_SHOWCASES.flatMap((showcase) => showcase.items), ...GENRE_CATALOG_ITEMS]
+  return all.filter((item) => {
     if (seen.has(item.id)) return false
     seen.add(item.id)
     return true
   })
 }
 
-/** API kataloğu zayıfsa demo posterleri ekle (üye ana sayfası / dikey / belgesel) */
+/** API kataloğu eksikse veya tür satırları için demo + tür kataloğunu ekle */
 export function mergeWithDemoCatalog(apiCatalog: ContentItem[]): ContentItem[] {
-  if (apiCatalog.length >= 80) return apiCatalog
-
   const demo = getDemoCatalog()
   const apiIds = new Set(apiCatalog.map((item) => item.id))
   const merged = [...apiCatalog]
