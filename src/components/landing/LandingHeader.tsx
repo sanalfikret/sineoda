@@ -22,6 +22,9 @@ export function LandingHeader({ scrolled }: LandingHeaderProps) {
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
+          <Link to="/dergi" className="text-sm font-medium text-white/70 transition hover:text-white">
+            Dergi
+          </Link>
           <Link to="/planlar" className="text-sm font-medium text-white/70 transition hover:text-white">
             Planlar
           </Link>
