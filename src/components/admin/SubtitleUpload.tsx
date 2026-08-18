@@ -37,7 +37,7 @@ export function SubtitleUpload({ label, value, onChange }: SubtitleUploadProps) 
           onClick={() => inputRef.current?.click()}
           className="rounded-lg bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/15 disabled:opacity-60"
         >
-          {uploading ? 'Yükleniyor...' : '.vtt Dosyası Yükle'}
+          {uploading ? 'Yükleniyor...' : '.srt / .vtt Yükle'}
         </button>
         <input
           ref={inputRef}
