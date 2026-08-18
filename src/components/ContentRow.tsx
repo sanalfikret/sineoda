@@ -11,7 +11,7 @@ interface ContentRowProps {
   viewAllHref?: string
   prominent?: boolean
   layout?: 'landscape' | 'portrait'
-  variant?: 'carousel' | 'stack'
+  variant?: 'carousel' | 'grid'
 }
 
 export function ContentRow({
@@ -25,6 +25,7 @@ export function ContentRow({
   variant = 'carousel',
 }: ContentRowProps) {
   const rowRef = useRef<HTMLDivElement>(null)
+  const isGrid = variant === 'grid'
 
   const scroll = (direction: 'left' | 'right') => {
     const container = rowRef.current
@@ -32,8 +33,6 @@ export function ContentRow({
     const amount = direction === 'left' ? -container.clientWidth * 0.8 : container.clientWidth * 0.8
     container.scrollBy({ left: amount, behavior: 'smooth' })
   }
-
-  const isStacked = variant === 'stack'
 
   return (
     <section className="mb-5">
@@ -47,7 +46,7 @@ export function ContentRow({
               Tümünü gör
             </Link>
           )}
-          {!isStacked && (
+          {!isGrid && (
             <div className="hidden gap-2 sm:flex">
               <ScrollButton direction="left" onClick={() => scroll('left')} />
               <ScrollButton direction="right" onClick={() => scroll('right')} />
@@ -59,8 +58,8 @@ export function ContentRow({
       <div
         ref={rowRef}
         className={
-          isStacked
-            ? 'flex flex-col gap-3 px-4 sm:gap-4 sm:px-6 lg:px-8'
+          isGrid
+            ? 'grid grid-cols-2 gap-3 px-4 sm:grid-cols-3 sm:gap-4 sm:px-6 md:grid-cols-4 lg:grid-cols-5 lg:px-8'
             : `hide-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden px-4 sm:px-6 lg:px-8 ${
                 prominent ? 'gap-3 sm:gap-4' : 'gap-2.5 sm:gap-3'
               }`
