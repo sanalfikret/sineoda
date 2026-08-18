@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import { api, fetchBootstrap } from '../api/client'
+import { mergeWithDemoCatalog } from '../data/demoLandingPosters'
 import type { ContentCategory, ContentItem } from '../types/content'
 
 interface ContentContextValue {
@@ -44,7 +45,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     const data = await fetchBootstrap()
-    setCatalog(data.catalog)
+    setCatalog(mergeWithDemoCatalog(data.catalog))
     setCategories(data.categories)
     setFeaturedContent(data.featuredContent)
     setTrailers(data.trailers ?? [])
