@@ -31,6 +31,7 @@ import { JournalLayout } from './components/journal/JournalLayout'
 import { JournalListPage } from './pages/JournalListPage'
 import { JournalPostPage } from './pages/JournalPostPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
+import { ContentDetailPage } from './pages/ContentDetailPage'
 import { SignupPage } from './pages/SignupPage'
 
 function AuthenticatedProviders({ children }: { children: ReactNode }) {
@@ -99,6 +100,16 @@ function App() {
           <ProtectedRoute requireProfile>
             <AuthenticatedProviders>
               <MyListPage />
+            </AuthenticatedProviders>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/icerik/:id"
+        element={
+          <ProtectedRoute requireProfile>
+            <AuthenticatedProviders>
+              <ContentDetailPage />
             </AuthenticatedProviders>
           </ProtectedRoute>
         }

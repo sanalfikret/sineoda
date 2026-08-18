@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import type { ContentItem, ContentType } from '../types/content'
 import { fetchAllWatchProgress, fetchEpisodes } from '../api/client'
 import { AppShell, useContentUI } from '../components/AppShell'
@@ -9,6 +10,7 @@ import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
 import { useWatchlist } from '../context/WatchlistContext'
 import { buildBrowseRows, filterCatalog, pickCategoryRow, pickFeatured } from '../utils/browse'
+import { restoreBrowseScroll } from '../utils/browseState'
 import { filterVerticalCatalog } from '../utils/vertical'
 import { getContentTypeLabel } from '../constants/contentTypes'
 
@@ -20,12 +22,26 @@ interface BrowsePageProps {
 
 function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: BrowsePageProps) {
   const { openDetail, openPlayer } = useContentUI()
+  const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { categories, featuredContent, catalog, newReleases, getContentById, isLoading } = useContent()
   const { watchlistItems } = useWatchlist()
   const { activeProfile } = useAuth()
-  const [activeGenre, setActiveGenre] = useState<string | null>(null)
+  const activeGenre = searchParams.get('tur')
   const [progressMap, setProgressMap] = useState<Record<string, number>>({})
   const [resumeEpisodeMap, setResumeEpisodeMap] = useState<Record<string, string>>({})
+
+  const setActiveGenre = (genre: string | null) => {
+    const next = new URLSearchParams(searchParams)
+    if (genre) next.set('tur', genre)
+    else next.delete('tur')
+    setSearchParams(next, { replace: true })
+  }
+
+  useEffect(() => {
+    if (isLoading) return
+    restoreBrowseScroll(location.pathname, location.search)
+  }, [isLoading, location.pathname, location.search])
 
   useEffect(() => {
     if (!activeProfile) {
