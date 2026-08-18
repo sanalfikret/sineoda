@@ -285,17 +285,17 @@ export function AdminContentFormPage() {
         </p>
 
         <SubtitleUpload
-          label="Türkçe altyazı (.vtt)"
+          label="Türkçe altyazı (.srt / .vtt)"
           value={form.subtitleTr}
           onChange={(url) => update('subtitleTr', url)}
         />
         <SubtitleUpload
-          label="İngilizce altyazı (.vtt)"
+          label="İngilizce altyazı (.srt / .vtt)"
           value={form.subtitleEn}
           onChange={(url) => update('subtitleEn', url)}
         />
         <p className="-mt-3 text-xs text-sineoda-muted">
-          Altyazı dosyası .vtt formatında olmalı. İzlerken CC butonuyla açılır.
+          .srt dosyası yüklersen otomatik .vtt&apos;ye çevrilir. İzlerken CC butonuyla açılır.
         </p>
 
         <Field label="Video Formatı">
