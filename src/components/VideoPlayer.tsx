@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { getProfileId, getToken, resolveMediaUrl, saveWatchProgress } from '../api/client'
 import type { PlayTarget } from '../types/content'
+import { getYoutubeEmbedUrl, isYoutubeUrl } from '../utils/media'
 
 interface VideoPlayerProps {
   target: PlayTarget | null
@@ -35,6 +36,7 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
   const hideTimerRef = useRef<number | null>(null)
 
   const mediaUrl = target ? resolveMediaUrl(target.videoUrl) : ''
+  const youtubeEmbedUrl = mediaUrl && isYoutubeUrl(mediaUrl) ? getYoutubeEmbedUrl(mediaUrl, { autoplay: true, controls: true }) : null
   const isVertical = target?.item.videoFormat === 'vertical'
   const canTrack = Boolean(getToken() && getProfileId() && target)
 
@@ -50,7 +52,7 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
   }
 
   useEffect(() => {
-    if (!target || !mediaUrl) return
+    if (!target || !mediaUrl || youtubeEmbedUrl) return
 
     const video = videoRef.current
     if (!video) return
@@ -96,7 +98,7 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
         hlsRef.current = null
       }
     }
-  }, [target, mediaUrl])
+  }, [target, mediaUrl, youtubeEmbedUrl])
 
   useEffect(() => {
     if (!target) return
@@ -195,7 +197,9 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
         className={
           isVertical
             ? 'h-full max-h-[100dvh] w-auto max-w-full object-contain'
-            : 'h-full w-full object-contain'
+            : youtubeEmbedUrl
+              ? 'hidden'
+              : 'h-full w-full object-contain'
         }
         playsInline
         muted={muted}
@@ -209,6 +213,20 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
           persistProgress(0, duration)
         }}
       />
+
+      {youtubeEmbedUrl && (
+        <iframe
+          src={youtubeEmbedUrl}
+          title={target.title}
+          className={
+            isVertical
+              ? 'aspect-[9/16] h-full max-h-[100dvh] w-auto max-w-full'
+              : 'h-full w-full'
+          }
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+        />
+      )}
 
       <div
         className={`pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/50 transition-opacity duration-300 ${
@@ -235,7 +253,7 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
         <div className="w-20" />
       </div>
 
-      {!playing && (
+      {!youtubeEmbedUrl && !playing && (
         <button
           type="button"
           aria-label="Oynat"
@@ -248,6 +266,7 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
         </button>
       )}
 
+      {!youtubeEmbedUrl && (
       <div
         className={`absolute inset-x-0 bottom-0 space-y-3 px-4 pb-6 transition-opacity duration-300 sm:px-6 ${
           showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -284,6 +303,7 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
           </span>
         </div>
       </div>
+      )}
     </div>
   )
 }
