@@ -1,21 +1,8 @@
 import type { ContentItem } from '../types/content'
 
-export const FEATURED_BROWSE_GENRES = [
-  'Aksiyon',
-  'Dram',
-  'Suç',
-  'Gerilim',
-  'Komedi',
-  'Romantik',
-  'Aile',
-  'Belgesel',
-  'Gizem',
-  'Stand-up',
-  'Din Temalı',
-  'Korku',
-  'Bilim Kurgu',
-  'Fantastik',
-] as const
+import { BROWSE_GENRES } from '../constants/genres'
+
+export const FEATURED_BROWSE_GENRES = BROWSE_GENRES
 
 const POSTERS = [
   'photo-1536440136628-849c177e76a1',
@@ -83,7 +70,7 @@ const DEMO_VIDEOS = [
   'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
 ]
 
-const GENRE_TITLES: Record<(typeof FEATURED_BROWSE_GENRES)[number], string[]> = {
+const GENRE_TITLES: Partial<Record<(typeof FEATURED_BROWSE_GENRES)[number], string[]>> = {
   Aksiyon: [
     'Hızlı Takip', 'Son Mermi', 'Kaçış Planı', 'Tehlike Hattı', 'Çarpışma',
     'Gece Operasyonu', 'Ölümcül Yarış', 'Gölge Savaşçı', 'İntikam Yolu', 'Son Hesaplaşma',
@@ -142,6 +129,12 @@ const GENRE_TITLES: Record<(typeof FEATURED_BROWSE_GENRES)[number], string[]> = 
   ],
 }
 
+function titlesForGenre(genre: (typeof FEATURED_BROWSE_GENRES)[number]) {
+  const titles = GENRE_TITLES[genre]
+  if (titles?.length) return titles
+  return Array.from({ length: 10 }, (_, index) => `${genre} Hikayesi ${index + 1}`)
+}
+
 function genreSlug(genre: string) {
   return genre
     .toLocaleLowerCase('tr')
@@ -198,7 +191,7 @@ function buildItem(genre: string, title: string, genreIndex: number, titleIndex:
 
 export function buildGenreCatalogItems(): ContentItem[] {
   return FEATURED_BROWSE_GENRES.flatMap((genre, genreIndex) =>
-    GENRE_TITLES[genre].map((title, titleIndex) => buildItem(genre, title, genreIndex, titleIndex)),
+    titlesForGenre(genre).map((title, titleIndex) => buildItem(genre, title, genreIndex, titleIndex)),
   )
 }
 

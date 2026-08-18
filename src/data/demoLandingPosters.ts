@@ -1,4 +1,5 @@
 import { GENRE_CATALOG_ITEMS } from './genreCatalog'
+import { enrichContentImages } from '../utils/contentImages'
 import type { ContentItem } from '../types/content'
 import type { LandingShowcase } from '../components/landing/LandingCategoryShowcase'
 
@@ -72,6 +73,10 @@ function poster(photoId: string, vertical = false) {
   return `https://images.unsplash.com/${photoId}?${size}&fit=crop&q=80`
 }
 
+function backdrop(photoId: string) {
+  return `https://images.unsplash.com/${photoId}?w=1600&h=900&fit=crop&q=80`
+}
+
 function makeItem(
   id: string,
   title: string,
@@ -90,7 +95,7 @@ function makeItem(
     type,
     genres: options.genres ?? [type === 'film' ? 'Dram' : 'Dizi'],
     poster: poster(photoId, options.vertical),
-    backdrop: poster(photoId, false),
+    backdrop: options.vertical ? poster(photoId, true) : backdrop(photoId),
     videoUrl: DEMO_VIDEOS[index % DEMO_VIDEOS.length],
     trailerUrl: DEMO_VIDEOS[index % DEMO_VIDEOS.length],
     videoFormat: options.vertical ? 'vertical' : 'standard',
@@ -217,11 +222,12 @@ export function getDemoCatalog(): ContentItem[] {
 /** API kataloğu eksikse veya tür satırları için demo + tür kataloğunu ekle */
 export function mergeWithDemoCatalog(apiCatalog: ContentItem[]): ContentItem[] {
   const demo = getDemoCatalog()
+  const demoById = new Map(demo.map((item) => [item.id, item]))
   const apiIds = new Set(apiCatalog.map((item) => item.id))
-  const merged = [...apiCatalog]
+  const merged = apiCatalog.map((item) => enrichContentImages(item, demoById.get(item.id)))
 
   for (const item of demo) {
-    if (!apiIds.has(item.id)) merged.push(item)
+    if (!apiIds.has(item.id)) merged.push(enrichContentImages(item))
   }
 
   return merged

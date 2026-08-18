@@ -18,21 +18,42 @@ export function ContentActionButtons({
   showLabels = false,
   className = '',
 }: ContentActionButtonsProps) {
-  const { isInWatchlist, toggleWatchlist } = useWatchlist()
-  const { reaction, reactionLoading, handleReaction } = useContentReactions(contentId)
+  const { isInWatchlist, toggleWatchlist, actionError, clearActionError } = useWatchlist()
+  const { reaction, reactionLoading, reactionError, clearReactionError, handleReaction } =
+    useContentReactions(contentId)
   const [shareOpen, setShareOpen] = useState(false)
+  const [localError, setLocalError] = useState<string | null>(null)
 
   const inList = isInWatchlist(contentId)
+  const feedback = localError || actionError || reactionError
+
+  const runWatchlist = async () => {
+    clearActionError()
+    clearReactionError()
+    setLocalError(null)
+    try {
+      await toggleWatchlist(contentId)
+    } catch (error) {
+      setLocalError(error instanceof Error ? error.message : 'Liste güncellenemedi.')
+    }
+  }
+
+  const runReaction = async (next: 'like' | 'dislike') => {
+    clearActionError()
+    clearReactionError()
+    setLocalError(null)
+    await handleReaction(next)
+  }
 
   return (
     <div className={`relative ${className}`}>
-      <div className="flex items-center gap-2.5" role="toolbar" aria-label="İçerik işlemleri">
+      <div className="flex flex-wrap items-center gap-2.5" role="toolbar" aria-label="İçerik işlemleri">
         {showWatchlist && (
           <ClassicButton
             label={inList ? 'Listemde' : 'Listeme ekle'}
             active={inList}
             showLabel={showLabels}
-            onClick={() => void toggleWatchlist(contentId)}
+            onClick={() => void runWatchlist()}
           >
             <PlusIcon active={inList} />
           </ClassicButton>
@@ -43,7 +64,7 @@ export function ContentActionButtons({
           active={reaction === 'like'}
           disabled={reactionLoading}
           showLabel={showLabels}
-          onClick={() => void handleReaction('like')}
+          onClick={() => void runReaction('like')}
         >
           <ThumbsUpIcon active={reaction === 'like'} />
         </ClassicButton>
@@ -53,7 +74,7 @@ export function ContentActionButtons({
           active={reaction === 'dislike'}
           disabled={reactionLoading}
           showLabel={showLabels}
-          onClick={() => void handleReaction('dislike')}
+          onClick={() => void runReaction('dislike')}
         >
           <ThumbsDownIcon active={reaction === 'dislike'} />
         </ClassicButton>
@@ -67,6 +88,12 @@ export function ContentActionButtons({
           <ShareIcon />
         </ClassicButton>
       </div>
+
+      {feedback && (
+        <p className="mt-2 text-xs text-red-300" role="alert">
+          {feedback}
+        </p>
+      )}
 
       {shareOpen && (
         <ShareMenu contentId={contentId} title={title} onClose={() => setShareOpen(false)} />
@@ -94,6 +121,7 @@ function ClassicButton({
     <button
       type="button"
       aria-label={label}
+      aria-pressed={active}
       title={label}
       disabled={disabled}
       onClick={onClick}

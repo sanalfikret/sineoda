@@ -22,7 +22,7 @@ import landingRoutes, { getLandingConfig } from './routes/landing.js'
 import contactRoutes from './routes/contact.js'
 import journalRoutes from './routes/journal.js'
 import adminJournalRoutes from './routes/adminJournal.js'
-import { ensureDemoCatalog } from './demoCatalog.js'
+import { backfillMissingImages } from './backfillImages.js'
 import { ensureGenreCatalog } from './genreCatalog.js'
 import { ensureJournalPosts } from './journalSeed.js'
 import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureLandingShowcases } from './seed.js'
@@ -42,6 +42,7 @@ ensureLandingShowcases()
 ensureDemoCatalog()
 ensureGenreCatalog()
 ensureJournalPosts()
+backfillMissingImages()
 
 const app = express()
 

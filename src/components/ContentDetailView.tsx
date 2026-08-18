@@ -268,7 +268,7 @@ export function ContentDetailView({ item, onPlay, onBack, mode = 'page' }: Conte
             </p>
           )}
 
-          <ContentActionButtons contentId={item.id} title={item.title} />
+          <ContentActionButtons contentId={item.id} title={item.title} showLabels />
         </div>
 
         <div className="mt-6 flex gap-4 border-b border-white/10">

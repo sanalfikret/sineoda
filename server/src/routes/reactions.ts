@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { ensureContentById } from '../catalogEnsure.js'
 import { dbGet, dbRun } from '../db.js'
 import { requireAuth, type AuthRequest } from '../middleware/auth.js'
 
@@ -38,6 +39,11 @@ router.put('/:contentId', requireAuth, (req: AuthRequest, res) => {
       req.params.contentId,
     ])
     res.json({ reaction: null })
+    return
+  }
+
+  if (!ensureContentById(req.params.contentId)) {
+    res.status(404).json({ error: 'İçerik bulunamadı.' })
     return
   }
 
