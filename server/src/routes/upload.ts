@@ -1,10 +1,12 @@
 import { Router } from 'express'
+import fs from 'node:fs'
 import multer from 'multer'
 import path from 'node:path'
 import { v4 as uuid } from 'uuid'
 import { publicAssetUrl } from '../config.js'
 import { uploadsDir } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
+import { subtitleToVtt } from '../services/subtitles.js'
 
 function createUploader(allowed: 'image' | 'video') {
   const maxSize = allowed === 'video' ? 500 * 1024 * 1024 : 10 * 1024 * 1024
@@ -76,8 +78,18 @@ router.post('/subtitle', requireAdmin, subtitleUpload.single('file'), (req: Auth
     res.status(400).json({ error: 'Dosya gerekli.' })
     return
   }
-  const url = publicAssetUrl(`/uploads/${req.file.filename}`)
-  res.status(201).json({ url, filename: req.file.filename })
+
+  const originalPath = path.join(uploadsDir, req.file.filename)
+  const raw = fs.readFileSync(originalPath, 'utf8')
+  const vtt = subtitleToVtt(raw, req.file.originalname)
+  const filename = `${path.parse(req.file.filename).name}.vtt`
+  const vttPath = path.join(uploadsDir, filename)
+
+  fs.writeFileSync(vttPath, vtt, 'utf8')
+  if (vttPath !== originalPath) fs.unlinkSync(originalPath)
+
+  const url = publicAssetUrl(`/uploads/${filename}`)
+  res.status(201).json({ url, filename })
 })
 
 // Geriye dönük uyumluluk
