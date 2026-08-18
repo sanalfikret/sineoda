@@ -1,6 +1,9 @@
 import { BROWSE_GENRES, genreToCategoryId } from '../constants/genres'
 import type { ContentCategory, ContentItem, ContentType } from '../types/content'
 
+/** BrowsePage'de ayrı satır olarak gösterildiği için kategori listesinden çıkarılır */
+const EXCLUSIVE_BROWSE_ROW_TITLES = new Set(['Yeni Eklenenler', 'Dikey Diziler'])
+
 export function filterCatalog(
   catalog: ContentItem[],
   options: { type?: ContentType | null; genre?: string | null; verticalOnly?: boolean },
@@ -43,7 +46,9 @@ export function buildBrowseRows(
         .map((id) => getContentById(id))
         .filter((item): item is ContentItem => Boolean(item && filteredIds.has(item.id))),
     }))
-    .filter((row) => row.items.length > 0)
+    .filter(
+      (row) => row.items.length > 0 && !EXCLUSIVE_BROWSE_ROW_TITLES.has(row.title),
+    )
 
   const genreRows = BROWSE_GENRES.map((genre) => ({
     id: genreToCategoryId(genre),
