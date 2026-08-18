@@ -171,7 +171,8 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
             ))}
           </div>
 
-          <div className="mt-5 flex flex-wrap items-center gap-2">
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap gap-3">
             {canResume && !isSeriesContent(item.type) && (
               <button
                 type="button"
@@ -206,6 +207,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
             )}
 
             <ContentActionButtons contentId={item.id} title={item.title} />
+            </div>
           </div>
 
           <div className="mt-6 flex gap-4 border-b border-white/10">

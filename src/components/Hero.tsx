@@ -1,5 +1,4 @@
 import { TrailerBackdrop } from './TrailerBackdrop'
-import { ContentActionButtons } from './ContentActionButtons'
 import type { ContentItem } from '../types/content'
 
 interface HeroProps {
@@ -88,12 +87,6 @@ export function Hero({ item, onPlay, onDetails, eyebrow = 'Öne Çıkan' }: Hero
               </button>
             )}
           </div>
-          <ContentActionButtons
-            contentId={item.id}
-            title={item.title}
-            variant="overlay"
-            className="mt-4"
-          />
         </div>
       </div>
     </section>
