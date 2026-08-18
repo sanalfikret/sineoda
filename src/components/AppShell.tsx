@@ -73,6 +73,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         title,
         episodeId: episode?.id,
         startPosition,
+        subtitles: episode?.subtitles?.length ? episode.subtitles : item.subtitles,
       })
     },
     [isAdmin],

@@ -2,10 +2,12 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ImageUpload } from '../../components/admin/ImageUpload'
 import { VideoUpload } from '../../components/admin/VideoUpload'
+import { SubtitleUpload } from '../../components/admin/SubtitleUpload'
 import { AdminEpisodesPanel } from '../../components/admin/AdminEpisodesPanel'
 import { resolveMediaUrl } from '../../api/client'
 import { useContent } from '../../context/ContentContext'
 import { BROWSE_GENRES, CONTENT_GENRES, STREAM_PROVIDERS } from '../../constants/genres'
+import { buildSubtitles, subtitlesToForm } from '../../utils/subtitles'
 import type { ContentType } from '../../types/content'
 
 const RATINGS = ['Genel', '7+', '13+', '16+', '18+']
@@ -25,6 +27,8 @@ const EMPTY_FORM = {
   videoFormat: 'standard' as 'standard' | 'vertical',
   isNew: false,
   featured: false,
+  subtitleTr: '',
+  subtitleEn: '',
 }
 
 export function AdminContentFormPage() {
@@ -57,6 +61,7 @@ export function AdminContentFormPage() {
       videoFormat: item.videoFormat ?? 'standard',
       isNew: item.isNew ?? false,
       featured: item.featured ?? false,
+      ...subtitlesToForm(item.subtitles),
     })
   }, [id, getContentById])
 
@@ -88,6 +93,7 @@ export function AdminContentFormPage() {
       videoFormat: form.videoFormat,
       isNew: form.isNew,
       featured: form.featured,
+      subtitles: buildSubtitles(form.subtitleTr, form.subtitleEn),
     }
 
     setSaving(true)
@@ -276,6 +282,20 @@ export function AdminContentFormPage() {
         />
         <p className="-mt-3 text-xs text-sineoda-muted">
           Ana sayfa ve öne çıkan alanda oynatılır. Boş bırakılırsa ana video kullanılır.
+        </p>
+
+        <SubtitleUpload
+          label="Türkçe altyazı (.vtt)"
+          value={form.subtitleTr}
+          onChange={(url) => update('subtitleTr', url)}
+        />
+        <SubtitleUpload
+          label="İngilizce altyazı (.vtt)"
+          value={form.subtitleEn}
+          onChange={(url) => update('subtitleEn', url)}
+        />
+        <p className="-mt-3 text-xs text-sineoda-muted">
+          Altyazı dosyası .vtt formatında olmalı. İzlerken CC butonuyla açılır.
         </p>
 
         <Field label="Video Formatı">

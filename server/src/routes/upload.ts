@@ -32,6 +32,24 @@ function createUploader(allowed: 'image' | 'video') {
 
 const imageUpload = createUploader('image')
 const videoUpload = createUploader('video')
+const subtitleUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadsDir),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase() || '.vtt'
+      cb(null, `${uuid()}${ext}`)
+    },
+  }),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase()
+    if (ext === '.vtt' || ext === '.srt' || file.mimetype.includes('text')) {
+      cb(null, true)
+    } else {
+      cb(new Error('Sadece .vtt veya .srt altyazı dosyaları yüklenebilir.'))
+    }
+  },
+})
 
 const router = Router()
 
@@ -45,6 +63,15 @@ router.post('/image', requireAdmin, imageUpload.single('file'), (req: AuthReques
 })
 
 router.post('/video', requireAdmin, videoUpload.single('file'), (req: AuthRequest, res) => {
+  if (!req.file) {
+    res.status(400).json({ error: 'Dosya gerekli.' })
+    return
+  }
+  const url = publicAssetUrl(`/uploads/${req.file.filename}`)
+  res.status(201).json({ url, filename: req.file.filename })
+})
+
+router.post('/subtitle', requireAdmin, subtitleUpload.single('file'), (req: AuthRequest, res) => {
   if (!req.file) {
     res.status(400).json({ error: 'Dosya gerekli.' })
     return

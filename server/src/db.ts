@@ -101,11 +101,13 @@ function runMigrations() {
   ensureColumn('content', 'video_format', "TEXT DEFAULT 'standard'")
   ensureColumn('content', 'is_new', 'INTEGER DEFAULT 0')
   ensureColumn('content', 'new_until', 'TEXT')
+  ensureColumn('content', 'subtitles_json', "TEXT DEFAULT '[]'")
   ensureColumn('users', 'subscription_status', "TEXT DEFAULT 'free'")
   ensureColumn('users', 'subscription_plan', 'TEXT')
   ensureColumn('users', 'subscription_expires_at', 'TEXT')
   ensureColumn('users', 'phone', 'TEXT')
   ensureColumn('users', 'phone_verified', 'INTEGER DEFAULT 0')
+  ensureColumn('episodes', 'subtitles_json', "TEXT DEFAULT '[]'")
 
   db.run(`
     CREATE TABLE IF NOT EXISTS phone_verification_codes (

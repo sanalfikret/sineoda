@@ -107,6 +107,16 @@ export async function uploadVideo(file: File): Promise<string> {
   return result.url
 }
 
+export async function uploadSubtitle(file: File): Promise<string> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const result = await api<{ url: string }>('/api/admin/upload/subtitle', {
+    method: 'POST',
+    body: formData,
+  })
+  return result.url
+}
+
 export interface AuthResponse {
   token: string
   user: User

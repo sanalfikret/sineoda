@@ -2,6 +2,12 @@ export type ContentType = 'film' | 'dizi'
 
 export type ContentFormat = 'standard' | 'vertical'
 
+export interface SubtitleTrack {
+  lang: string
+  label: string
+  url: string
+}
+
 export interface ContentItem {
   id: string
   title: string
@@ -20,6 +26,7 @@ export interface ContentItem {
   isNew?: boolean
   newUntil?: string | null
   featured?: boolean
+  subtitles?: SubtitleTrack[]
 }
 
 export interface Episode {
@@ -32,6 +39,7 @@ export interface Episode {
   duration: string
   videoUrl: string
   streamProvider?: string
+  subtitles?: SubtitleTrack[]
 }
 
 export interface PlayTarget {
@@ -40,6 +48,7 @@ export interface PlayTarget {
   title: string
   episodeId?: string
   startPosition?: number
+  subtitles?: SubtitleTrack[]
 }
 
 export interface ContentCategory {
