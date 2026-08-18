@@ -10,9 +10,18 @@ interface ContentRowProps {
   progressMap?: Record<string, number>
   viewAllHref?: string
   prominent?: boolean
+  layout?: 'landscape' | 'portrait'
 }
 
-export function ContentRow({ title, items, onSelect, progressMap, viewAllHref, prominent }: ContentRowProps) {
+export function ContentRow({
+  title,
+  items,
+  onSelect,
+  progressMap,
+  viewAllHref,
+  prominent,
+  layout = 'landscape',
+}: ContentRowProps) {
   const rowRef = useRef<HTMLDivElement>(null)
 
   const scroll = (direction: 'left' | 'right') => {
@@ -23,7 +32,7 @@ export function ContentRow({ title, items, onSelect, progressMap, viewAllHref, p
   }
 
   return (
-    <section className="mb-8 sm:mb-10">
+    <section className="mb-8 overflow-visible sm:mb-10">
       <div className="mb-3 flex items-center justify-between px-4 sm:px-6 lg:px-8">
         <h2 className={`font-semibold text-white ${prominent ? 'text-xl sm:text-2xl' : 'text-lg sm:text-xl'}`}>
           {title}
@@ -43,7 +52,7 @@ export function ContentRow({ title, items, onSelect, progressMap, viewAllHref, p
 
       <div
         ref={rowRef}
-        className={`hide-scrollbar flex snap-x snap-mandatory overflow-x-auto px-4 pb-2 sm:px-6 lg:px-8 ${
+        className={`hide-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-visible px-4 pb-6 pt-2 sm:px-6 lg:px-8 ${
           prominent ? 'gap-4 sm:gap-5' : 'gap-3 sm:gap-4'
         }`}
       >
@@ -53,7 +62,8 @@ export function ContentRow({ title, items, onSelect, progressMap, viewAllHref, p
             item={item}
             onSelect={onSelect}
             progressPercent={progressMap?.[item.id]}
-            size={prominent && item.videoFormat === 'vertical' ? 'large' : 'default'}
+            size={prominent ? 'large' : 'default'}
+            layout={layout}
           />
         ))}
       </div>

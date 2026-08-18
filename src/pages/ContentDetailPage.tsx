@@ -11,7 +11,16 @@ function ContentDetailContent() {
   const { openPlayer } = useContentUI()
 
   const item = getContentById(id)
-  const from = (location.state as { from?: string } | null)?.from ?? '/'
+  const storedFrom = sessionStorage.getItem('content-detail-from')
+  const from = (location.state as { from?: string } | null)?.from ?? storedFrom ?? '/'
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1)
+      return
+    }
+    navigate(from)
+  }
 
   if (isLoading) {
     return (
@@ -29,7 +38,7 @@ function ContentDetailContent() {
     <ContentDetailView
       item={item}
       onPlay={openPlayer}
-      onBack={() => navigate(from)}
+      onBack={handleBack}
       mode="page"
     />
   )
