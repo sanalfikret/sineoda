@@ -2,12 +2,13 @@
 
 @theme {
   --font-sans: 'Outfit', system-ui, sans-serif;
-  --color-sineoda-bg: #080a12;
-  --color-sineoda-surface: #12151f;
-  --color-sineoda-elevated: #1a1e2e;
-  --color-sineoda-gold: #e8b84a;
-  --color-sineoda-blue: #5b8def;
-  --color-sineoda-muted: #8b93a8;
+  --color-sineoda-bg: #090a0e;
+  --color-sineoda-surface: #111318;
+  --color-sineoda-elevated: #181b24;
+  --color-sineoda-gold: #c9a962;
+  --color-sineoda-accent: #c9a962;
+  --color-sineoda-blue: #6b8fc7;
+  --color-sineoda-muted: #9aa3b5;
   --breakpoint-tv: 120rem;
 }
 
@@ -26,7 +27,7 @@
     min-height: 100dvh;
     font-family: var(--font-sans);
     background: var(--color-sineoda-bg);
-    color: #f4f6fb;
+    color: #e8eaef;
     overflow-x: hidden;
   }
 
@@ -68,16 +69,16 @@
   }
 
   .landing-hero-image {
-    animation: landing-ken-burns 24s ease-in-out infinite alternate;
+    animation: landing-ken-burns 32s ease-in-out infinite alternate;
     transform-origin: center center;
   }
 
   @keyframes landing-ken-burns {
     from {
-      transform: scale(1.02);
+      transform: scale(1.01);
     }
     to {
-      transform: scale(1.1);
+      transform: scale(1.05);
     }
   }
 }

@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom'
 const hubs = [
   {
     title: 'Filmler',
-    text: 'Ödüllü yapımlar, festival favorileri ve seçkin sinema.',
+    text: 'Festival ödüllü bağımsız filmler ve seçkin sinema.',
     image: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=900&h=1200&fit=crop&q=80',
     accent: 'from-purple-900/90',
   },
   {
     title: 'Diziler',
-    text: 'Sezon sezon sürükleyici hikayeler ve orijinal diziler.',
+    text: 'Bağımsız yapımcıların özgün dizi yapımları.',
     image: 'https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=900&h=1200&fit=crop&q=80',
     accent: 'from-blue-900/90',
   },
@@ -26,10 +26,10 @@ export function LandingHubs() {
     <section className="relative bg-sineoda-bg px-5 py-20 sm:px-8">
       <div className="mx-auto max-w-[1400px]">
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          Tek platformda her türden içerik
+          Dünya bağımsız sineması, tek adreste
         </h2>
         <p className="mt-3 max-w-2xl text-base text-white/55">
-          Disney+ evrenleri, HBO Max sinematiği ve Netflix akıcılığı — hepsi Sineoda&apos;da.
+          Bağımsız sinemacıların filmleri ve dizileri — festival seçkisi, küratörlü katalog.
         </p>
 
         <div className="mt-12 grid gap-5 md:grid-cols-3">
