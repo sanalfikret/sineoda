@@ -8,7 +8,7 @@ import { Hero } from '../components/Hero'
 import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
 import { useWatchlist } from '../context/WatchlistContext'
-import { buildBrowseRows, pickFeatured } from '../utils/browse'
+import { buildBrowseRows, filterCatalog, pickFeatured } from '../utils/browse'
 import { getContentTypeLabel } from '../constants/contentTypes'
 
 interface BrowsePageProps {
@@ -55,38 +55,47 @@ function BrowseContent({ contentType = null, pageTitle }: BrowsePageProps) {
       })
   }, [activeProfile])
 
-  const heroItem = useMemo(
-    () => pickFeatured(catalog, featuredContent, contentType),
-    [catalog, featuredContent, contentType],
+  const browseOptions = useMemo(
+    () => ({ type: contentType, genre: activeGenre }),
+    [contentType, activeGenre],
   )
 
+  const filteredCatalog = useMemo(
+    () => filterCatalog(catalog, browseOptions),
+    [catalog, browseOptions],
+  )
+
+  const heroItem = useMemo(() => {
+    if (activeGenre) {
+      return filteredCatalog[0] ?? null
+    }
+    return pickFeatured(catalog, featuredContent, contentType)
+  }, [catalog, featuredContent, contentType, activeGenre, filteredCatalog])
+
   const rows = useMemo(
-    () =>
-      buildBrowseRows(categories, catalog, getContentById, {
-        type: contentType,
-        genre: activeGenre,
-      }),
-    [categories, catalog, getContentById, contentType, activeGenre],
+    () => buildBrowseRows(categories, catalog, getContentById, browseOptions),
+    [categories, catalog, getContentById, browseOptions],
   )
 
   const filteredWatchlist = useMemo(() => {
-    if (!contentType) return watchlistItems
-    return watchlistItems.filter((item) => item.type === contentType)
-  }, [watchlistItems, contentType])
+    let items = watchlistItems
+    if (contentType) items = items.filter((item) => item.type === contentType)
+    if (activeGenre) items = items.filter((item) => item.genres.includes(activeGenre))
+    return items
+  }, [watchlistItems, contentType, activeGenre])
 
   const continueWatching = useMemo(() => {
     if (!activeProfile) return []
-    return catalog.filter((item) => {
+    return filteredCatalog.filter((item) => {
       const percent = progressMap[item.id]
       return percent !== undefined && percent > 2
     })
-  }, [catalog, progressMap, activeProfile])
+  }, [filteredCatalog, progressMap, activeProfile])
 
   const filteredNewReleases = useMemo(() => {
     const items = newReleases.length > 0 ? newReleases : catalog.filter((item) => item.isNew)
-    if (!contentType) return items
-    return items.filter((item) => item.type === contentType)
-  }, [newReleases, catalog, contentType])
+    return filterCatalog(items, browseOptions)
+  }, [newReleases, catalog, browseOptions])
 
   const handleContinue = async (item: ContentItem) => {
     const episodeId = resumeEpisodeMap[item.id]
@@ -105,7 +114,17 @@ function BrowseContent({ contentType = null, pageTitle }: BrowsePageProps) {
     openPlayer(item)
   }
 
-  if (isLoading || !heroItem) {
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-sineoda-gold border-t-transparent" />
+      </div>
+    )
+  }
+
+  const displayHero = activeGenre ? filteredCatalog[0] : heroItem ?? catalog[0] ?? null
+
+  if (!displayHero && !activeGenre) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-sineoda-gold border-t-transparent" />
@@ -115,17 +134,23 @@ function BrowseContent({ contentType = null, pageTitle }: BrowsePageProps) {
 
   return (
     <main className="bg-sineoda-bg">
+      {displayHero && (
       <Hero
-        item={heroItem}
+        item={displayHero}
         onPlay={openPlayer}
         onDetails={openDetail}
-        eyebrow={pageTitle ?? (contentType ? getContentTypeLabel(contentType) : 'Senin İçin')}
+        eyebrow={
+          activeGenre
+            ? activeGenre
+            : pageTitle ?? (contentType ? getContentTypeLabel(contentType) : 'Senin İçin')
+        }
       />
+      )}
 
       <GenreFilterBar activeGenre={activeGenre} onChange={setActiveGenre} />
 
       <div className="space-y-2 pb-24 pt-4">
-        {!contentType && continueWatching.length > 0 && (
+        {!activeGenre && !contentType && continueWatching.length > 0 && (
           <ContentRow
             title="Kaldığın Yerden Devam Et"
             items={continueWatching}
@@ -134,11 +159,11 @@ function BrowseContent({ contentType = null, pageTitle }: BrowsePageProps) {
           />
         )}
 
-        {!contentType && filteredNewReleases.length > 0 && (
+        {!activeGenre && !contentType && filteredNewReleases.length > 0 && (
           <ContentRow title="Yeni Eklenenler" items={filteredNewReleases} onSelect={openDetail} />
         )}
 
-        {!contentType && filteredWatchlist.length > 0 && (
+        {!activeGenre && !contentType && filteredWatchlist.length > 0 && (
           <ContentRow title="Listem" items={filteredWatchlist} onSelect={openDetail} />
         )}
 

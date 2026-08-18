@@ -18,6 +18,21 @@ export function buildBrowseRows(
   getContentById: (id: string) => ContentItem | undefined,
   options: { type?: ContentType | null; genre?: string | null },
 ) {
+  if (options.genre) {
+    const items = filterCatalog(catalog, options).sort((a, b) =>
+      a.title.localeCompare(b.title, 'tr'),
+    )
+    if (items.length === 0) return []
+    return [
+      {
+        id: genreToCategoryId(options.genre),
+        title: options.genre,
+        itemIds: items.map((item) => item.id),
+        items,
+      },
+    ]
+  }
+
   const filteredIds = new Set(filterCatalog(catalog, options).map((item) => item.id))
 
   const editorialRows = categories
@@ -29,11 +44,10 @@ export function buildBrowseRows(
     }))
     .filter((row) => row.items.length > 0)
 
-  if (options.genre) return editorialRows
-
   const genreRows = BROWSE_GENRES.map((genre) => ({
     id: genreToCategoryId(genre),
     title: genre,
+    itemIds: [] as string[],
     items: filterCatalog(catalog, { ...options, genre }),
   })).filter((row) => row.items.length > 0)
 
