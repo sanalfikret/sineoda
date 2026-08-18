@@ -219,7 +219,7 @@ export function dbRun(sql: string, params: unknown[] = []) {
   persist()
 }
 
-export function dbGet<T extends Record<string, unknown>>(sql: string, params: unknown[] = []) {
+export function dbGet<T extends object>(sql: string, params: unknown[] = []) {
   const stmt = db.prepare(sql)
   stmt.bind(params as (string | number | null)[])
   if (stmt.step()) {
@@ -231,7 +231,7 @@ export function dbGet<T extends Record<string, unknown>>(sql: string, params: un
   return undefined
 }
 
-export function dbAll<T extends Record<string, unknown>>(sql: string, params: unknown[] = []) {
+export function dbAll<T extends object>(sql: string, params: unknown[] = []) {
   const stmt = db.prepare(sql)
   stmt.bind(params as (string | number | null)[])
   const rows: T[] = []
