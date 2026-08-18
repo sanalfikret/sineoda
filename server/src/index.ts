@@ -17,7 +17,7 @@ import watchlistRoutes from './routes/watchlist.js'
 import watchProgressRoutes from './routes/watchProgress.js'
 import analyticsRoutes from './routes/analytics.js'
 import analyticsPublicRoutes from './routes/analyticsPublic.js'
-import landingRoutes from './routes/landing.js'
+import landingRoutes, { getLandingConfig } from './routes/landing.js'
 import contactRoutes from './routes/contact.js'
 import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureLandingShowcases } from './seed.js'
 import type { ContentRow } from './types.js'
@@ -59,7 +59,13 @@ app.use(express.urlencoded({ extended: true }))
 app.use('/uploads', express.static(uploadsDir))
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'sineoda-api', email: config.isEmailConfigured() })
+  res.json({
+    ok: true,
+    service: 'sineoda-api',
+    version: 2,
+    features: { landing: true, contact: true },
+    email: config.isEmailConfigured(),
+  })
 })
 
 app.get('/api/bootstrap', (_req, res) => {
@@ -79,7 +85,14 @@ app.get('/api/bootstrap', (_req, res) => {
     ).map((row) => row.content_id),
   }))
 
-  res.json({ catalog, categories, featuredContent: featured, trailers, newReleases })
+  let landing = { slider: [] as ReturnType<typeof mapContent>[], showcases: [] as Array<{ id: string; title: string; icon: string; description: string; items: ReturnType<typeof mapContent>[] }> }
+  try {
+    landing = getLandingConfig()
+  } catch {
+    // landing tabloları henüz yoksa bootstrap yine de çalışsın
+  }
+
+  res.json({ catalog, categories, featuredContent: featured, trailers, newReleases, landing })
 })
 
 app.use('/api/analytics', analyticsPublicRoutes)

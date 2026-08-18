@@ -128,6 +128,7 @@ export interface BootstrapResponse {
   featuredContent: ContentItem | null
   trailers: ContentItem[]
   newReleases: ContentItem[]
+  landing?: LandingConfigResponse
 }
 
 export interface LandingShowcaseResponse {
