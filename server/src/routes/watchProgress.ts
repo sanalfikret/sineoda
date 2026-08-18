@@ -1,0 +1,131 @@
+import { Router } from 'express'
+import { v4 as uuid } from 'uuid'
+import { dbAll, dbGet, dbRun } from '../db.js'
+import { getProfileId, requireAuth, type AuthRequest } from '../middleware/auth.js'
+
+const router = Router()
+
+function episodeKey(episodeId?: string | null) {
+  return episodeId ?? ''
+}
+
+router.get('/', requireAuth, (req: AuthRequest, res) => {
+  const profileId = getProfileId(req)
+  if (!profileId) {
+    res.status(400).json({ error: 'Profil gerekli.' })
+    return
+  }
+
+  const contentId = String(req.query.contentId ?? '')
+  const episodeId = episodeKey(req.query.episodeId ? String(req.query.episodeId) : null)
+
+  if (!contentId) {
+    res.status(400).json({ error: 'contentId gerekli.' })
+    return
+  }
+
+  const row = dbGet<{
+    position_seconds: number
+    duration_seconds: number
+    total_watched_seconds: number
+    updated_at: string
+  }>(
+    'SELECT position_seconds, duration_seconds, total_watched_seconds, updated_at FROM watch_progress WHERE profile_id = ? AND content_id = ? AND episode_id = ?',
+    [profileId, contentId, episodeId],
+  )
+
+  res.json({
+    progress: row
+      ? {
+          position: row.position_seconds,
+          duration: row.duration_seconds,
+          totalWatched: row.total_watched_seconds,
+          updatedAt: row.updated_at,
+        }
+      : null,
+  })
+})
+
+router.get('/all', requireAuth, (req: AuthRequest, res) => {
+  const profileId = getProfileId(req)
+  if (!profileId) {
+    res.status(400).json({ error: 'Profil gerekli.' })
+    return
+  }
+
+  const rows = dbAll<{
+    content_id: string
+    episode_id: string
+    position_seconds: number
+    duration_seconds: number
+    total_watched_seconds: number
+  }>(
+    'SELECT content_id, episode_id, position_seconds, duration_seconds, total_watched_seconds FROM watch_progress WHERE profile_id = ?',
+    [profileId],
+  )
+
+  res.json({
+    items: rows.map((row) => ({
+      contentId: row.content_id,
+      episodeId: row.episode_id || null,
+      position: row.position_seconds,
+      duration: row.duration_seconds,
+      totalWatched: row.total_watched_seconds,
+    })),
+  })
+})
+
+router.post('/', requireAuth, (req: AuthRequest, res) => {
+  const profileId = getProfileId(req)
+  if (!profileId) {
+    res.status(400).json({ error: 'Profil gerekli.' })
+    return
+  }
+
+  const contentId = String(req.body.contentId ?? '')
+  const episodeId = episodeKey(req.body.episodeId ? String(req.body.episodeId) : null)
+  const position = Number(req.body.position ?? 0)
+  const duration = Number(req.body.duration ?? 0)
+
+  if (!contentId || !Number.isFinite(position)) {
+    res.status(400).json({ error: 'Geçersiz veri.' })
+    return
+  }
+
+  const existing = dbGet<{ position_seconds: number; total_watched_seconds: number }>(
+    'SELECT position_seconds, total_watched_seconds FROM watch_progress WHERE profile_id = ? AND content_id = ? AND episode_id = ?',
+    [profileId, contentId, episodeId],
+  )
+
+  const delta = existing ? Math.max(0, position - existing.position_seconds) : position
+  const totalWatched = (existing?.total_watched_seconds ?? 0) + delta
+
+  if (delta > 0) {
+    dbRun(
+      'INSERT INTO watch_activity (id, profile_id, seconds_watched, activity_date, created_at) VALUES (?, ?, ?, ?, ?)',
+      [uuid(), profileId, delta, new Date().toISOString().slice(0, 10), new Date().toISOString()],
+    )
+  }
+
+  const existingRow = dbGet('SELECT profile_id FROM watch_progress WHERE profile_id = ? AND content_id = ? AND episode_id = ?', [
+    profileId,
+    contentId,
+    episodeId,
+  ])
+
+  if (existingRow) {
+    dbRun(
+      'UPDATE watch_progress SET position_seconds = ?, duration_seconds = ?, total_watched_seconds = ?, updated_at = ? WHERE profile_id = ? AND content_id = ? AND episode_id = ?',
+      [position, duration, totalWatched, new Date().toISOString(), profileId, contentId, episodeId],
+    )
+  } else {
+    dbRun(
+      'INSERT INTO watch_progress (profile_id, content_id, episode_id, position_seconds, duration_seconds, total_watched_seconds, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [profileId, contentId, episodeId, position, duration, totalWatched, new Date().toISOString()],
+    )
+  }
+
+  res.json({ ok: true, totalWatched })
+})
+
+export default router
