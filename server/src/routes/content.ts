@@ -2,6 +2,8 @@ import { Router } from 'express'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import { mapContent, serializeSubtitles, slugify } from '../mappers.js'
+import { serializeCredits } from '../services/credits.js'
+import { normalizeContentType } from '../constants/contentTypes.js'
 import type { ContentRow } from '../types.js'
 
 const router = Router()
@@ -14,7 +16,10 @@ function contentFields(body: Record<string, unknown>, existing?: ContentRow) {
     year: body.year !== undefined ? Number(body.year) : existing!.year,
     duration: body.duration !== undefined ? String(body.duration) : existing!.duration,
     rating: body.rating !== undefined ? String(body.rating) : existing!.rating,
-    type: body.type !== undefined ? (body.type === 'dizi' ? 'dizi' : 'film') : existing!.type,
+    type:
+      body.type !== undefined
+        ? normalizeContentType(body.type, existing?.type ?? 'film')
+        : existing!.type,
     genres: body.genres !== undefined ? JSON.stringify(body.genres) : existing!.genres,
     poster: body.poster !== undefined ? String(body.poster) : existing!.poster,
     backdrop: body.backdrop !== undefined ? String(body.backdrop) : existing!.backdrop,
@@ -42,6 +47,12 @@ function contentFields(body: Record<string, unknown>, existing?: ContentRow) {
         : body.subtitlesJson !== undefined
           ? serializeSubtitles(body.subtitlesJson)
           : existing?.subtitles_json ?? '[]',
+    creditsJson:
+      body.credits !== undefined
+        ? serializeCredits(body.credits)
+        : body.creditsJson !== undefined
+          ? serializeCredits(body.creditsJson)
+          : existing?.credits_json ?? '{}',
   }
 }
 
@@ -89,13 +100,13 @@ router.post('/', requireAdmin, (req: AuthRequest, res) => {
   if (fields.featured) dbRun('UPDATE content SET featured = 0')
 
   dbRun(
-    `INSERT INTO content (id, title, description, year, duration, rating, type, genres, poster, backdrop, video_url, stream_provider, trailer_url, video_format, is_new, new_until, featured, subtitles_json)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO content (id, title, description, year, duration, rating, type, genres, poster, backdrop, video_url, stream_provider, trailer_url, video_format, is_new, new_until, featured, subtitles_json, credits_json)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id, fields.title, fields.description, fields.year, fields.duration, fields.rating, fields.type,
       fields.genres, fields.poster, fields.backdrop || fields.poster, fields.videoUrl, fields.streamProvider,
       fields.trailerUrl, fields.videoFormat, fields.isNew, fields.newUntil, fields.featured ? 1 : 0,
-      fields.subtitlesJson,
+      fields.subtitlesJson, fields.creditsJson,
     ],
   )
 
@@ -113,12 +124,12 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
   if (fields.featured) dbRun('UPDATE content SET featured = 0')
 
   dbRun(
-    `UPDATE content SET title=?, description=?, year=?, duration=?, rating=?, type=?, genres=?, poster=?, backdrop=?, video_url=?, stream_provider=?, trailer_url=?, video_format=?, is_new=?, new_until=?, featured=?, subtitles_json=? WHERE id=?`,
+    `UPDATE content SET title=?, description=?, year=?, duration=?, rating=?, type=?, genres=?, poster=?, backdrop=?, video_url=?, stream_provider=?, trailer_url=?, video_format=?, is_new=?, new_until=?, featured=?, subtitles_json=?, credits_json=? WHERE id=?`,
     [
       fields.title, fields.description, fields.year, fields.duration, fields.rating, fields.type,
       fields.genres, fields.poster, fields.backdrop, fields.videoUrl, fields.streamProvider,
       fields.trailerUrl, fields.videoFormat, fields.isNew, fields.newUntil, fields.featured ? 1 : 0,
-      fields.subtitlesJson,
+      fields.subtitlesJson, fields.creditsJson,
       existing.id,
     ],
   )
