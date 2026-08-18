@@ -1,5 +1,5 @@
 import type { Profile, User } from '../types/auth'
-import type { ContentCategory, ContentItem, Episode } from '../types/content'
+import type { AdminContentItem, ContentCategory, ContentItem, Episode } from '../types/content'
 
 const TOKEN_KEY = 'sineoda_token'
 const PROFILE_KEY = 'sineoda_profile_id'
@@ -245,6 +245,19 @@ export async function submitContactForm(payload: {
     method: 'POST',
     body: JSON.stringify(payload),
   })
+}
+
+export async function fetchAdminCatalog(): Promise<{ catalog: AdminContentItem[] }> {
+  return api<{ catalog: AdminContentItem[] }>('/api/admin/content')
+}
+
+export async function fetchExpiringLicenses(withinDays = 30): Promise<{
+  items: AdminContentItem[]
+  withinDays: number
+}> {
+  return api<{ items: AdminContentItem[]; withinDays: number }>(
+    `/api/admin/content/expiring?days=${withinDays}`,
+  )
 }
 
 export async function fetchWatchlist(): Promise<{ items: ContentItem[] }> {

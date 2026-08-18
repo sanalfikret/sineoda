@@ -103,6 +103,14 @@ function runMigrations() {
   ensureColumn('content', 'new_until', 'TEXT')
   ensureColumn('content', 'subtitles_json', "TEXT DEFAULT '[]'")
   ensureColumn('content', 'credits_json', "TEXT DEFAULT '{}'")
+  ensureColumn('content', 'content_added_at', 'TEXT')
+  ensureColumn('content', 'license_expires_at', 'TEXT')
+
+  db.run(`
+    UPDATE content
+    SET content_added_at = COALESCE(content_added_at, datetime('now'))
+    WHERE content_added_at IS NULL OR content_added_at = ''
+  `)
   ensureColumn('users', 'subscription_status', "TEXT DEFAULT 'free'")
   ensureColumn('users', 'subscription_plan', 'TEXT')
   ensureColumn('users', 'subscription_expires_at', 'TEXT')

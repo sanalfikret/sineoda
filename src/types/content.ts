@@ -69,6 +69,18 @@ export interface ContentCategory {
   itemIds: string[]
 }
 
+/** Yalnızca admin API'sinde döner — kullanıcıya gösterilmez */
+export interface AdminContentMeta {
+  contentAddedAt: string | null
+  licenseExpiresAt: string | null
+  licenseUnlimited: boolean
+  licenseExpired: boolean
+  licenseExpiringSoon: boolean
+  licenseDaysRemaining: number | null
+}
+
+export type AdminContentItem = ContentItem & AdminContentMeta
+
 export interface SearchFilters {
   query: string
   genre: string | null
