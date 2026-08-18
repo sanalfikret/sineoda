@@ -67,6 +67,21 @@ export interface CategoryRow {
   sort_order: number
 }
 
+export interface JournalPostRow {
+  id: string
+  slug: string
+  title: string
+  excerpt: string
+  body: string
+  cover_image: string
+  author: string
+  content_id: string | null
+  status: 'draft' | 'published'
+  published_at: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface JwtPayload {
   userId: string
   role: UserRole

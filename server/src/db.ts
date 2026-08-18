@@ -234,6 +234,23 @@ function runMigrations() {
       PRIMARY KEY (showcase_id, content_id)
     );
   `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS journal_posts (
+      id TEXT PRIMARY KEY,
+      slug TEXT UNIQUE NOT NULL,
+      title TEXT NOT NULL,
+      excerpt TEXT NOT NULL DEFAULT '',
+      body TEXT NOT NULL DEFAULT '',
+      cover_image TEXT NOT NULL DEFAULT '',
+      author TEXT NOT NULL DEFAULT 'Sineoda',
+      content_id TEXT,
+      status TEXT NOT NULL DEFAULT 'draft',
+      published_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+  `)
 }
 
 function ensureColumn(table: string, column: string, definition: string) {

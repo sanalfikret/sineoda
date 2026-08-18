@@ -493,3 +493,39 @@ export async function sendPresenceHeartbeat(sessionId: string, profileId?: strin
     body: JSON.stringify({ sessionId, profileId }),
   })
 }
+
+export type { JournalPost } from '../types/journal'
+
+export async function fetchJournalPosts() {
+  return api<{ posts: import('../types/journal').JournalPost[] }>('/api/journal')
+}
+
+export async function fetchJournalPost(slug: string) {
+  return api<{ post: import('../types/journal').JournalPost }>(`/api/journal/${encodeURIComponent(slug)}`)
+}
+
+export async function fetchAdminJournalPosts() {
+  return api<{ posts: import('../types/journal').JournalPost[] }>('/api/admin/journal')
+}
+
+export async function fetchAdminJournalPost(id: string) {
+  return api<{ post: import('../types/journal').JournalPost }>(`/api/admin/journal/${id}`)
+}
+
+export async function createJournalPost(data: Record<string, unknown>) {
+  return api<{ post: import('../types/journal').JournalPost }>('/api/admin/journal', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function updateJournalPost(id: string, data: Record<string, unknown>) {
+  return api<{ post: import('../types/journal').JournalPost }>(`/api/admin/journal/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteJournalPost(id: string) {
+  return api<{ ok: boolean }>(`/api/admin/journal/${id}`, { method: 'DELETE' })
+}

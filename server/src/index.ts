@@ -20,8 +20,11 @@ import adminContentRoutes from './routes/adminContent.js'
 import analyticsPublicRoutes from './routes/analyticsPublic.js'
 import landingRoutes, { getLandingConfig } from './routes/landing.js'
 import contactRoutes from './routes/contact.js'
+import journalRoutes from './routes/journal.js'
+import adminJournalRoutes from './routes/adminJournal.js'
 import { ensureDemoCatalog } from './demoCatalog.js'
 import { ensureGenreCatalog } from './genreCatalog.js'
+import { ensureJournalPosts } from './journalSeed.js'
 import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureLandingShowcases } from './seed.js'
 import type { ContentRow } from './types.js'
 
@@ -38,6 +41,7 @@ seedLandingData()
 ensureLandingShowcases()
 ensureDemoCatalog()
 ensureGenreCatalog()
+ensureJournalPosts()
 
 const app = express()
 
@@ -68,7 +72,7 @@ app.get('/api/health', (_req, res) => {
     ok: true,
     service: 'sineoda-api',
     version: 2,
-    features: { landing: true, contact: true },
+    features: { landing: true, contact: true, journal: true },
     email: config.isEmailConfigured(),
   })
 })
@@ -103,6 +107,7 @@ app.get('/api/bootstrap', (_req, res) => {
 app.use('/api/analytics', analyticsPublicRoutes)
 app.use('/api/landing', landingRoutes)
 app.use('/api/contact', contactRoutes)
+app.use('/api/journal', journalRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/billing', billingRoutes)
 app.use('/api/episodes', episodeRoutes)
@@ -111,6 +116,7 @@ app.use('/api/categories', categoryRoutes)
 app.use('/api/watch-progress', watchProgressRoutes)
 app.use('/api/admin/analytics', analyticsRoutes)
 app.use('/api/admin/content', adminContentRoutes)
+app.use('/api/admin/journal', adminJournalRoutes)
 app.use('/api/watchlist', watchlistRoutes)
 app.use('/api/reactions', reactionsRoutes)
 app.use('/api/admin/landing', landingRoutes)

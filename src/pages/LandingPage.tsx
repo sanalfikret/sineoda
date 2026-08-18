@@ -8,6 +8,7 @@ import { LandingCategoryShowcase } from '../components/landing/LandingCategorySh
 import { LandingSlider } from '../components/landing/LandingSlider'
 import { LandingEmailSignup } from '../components/landing/LandingEmailSignup'
 import { LandingFaq } from '../components/landing/LandingFaq'
+import { LandingJournalTeaser } from '../components/landing/LandingJournalTeaser'
 import { LandingPricing } from '../components/landing/LandingPricing'
 import {
   DEMO_LANDING_SHOWCASES,
@@ -76,6 +77,7 @@ export function LandingPage() {
       <LandingManifesto />
       <LandingSlider items={sliderItems} />
       <LandingCategoryShowcase showcases={showcases} />
+      <LandingJournalTeaser />
       <LandingFeatures />
       <LandingPricing />
       <LandingFaq />

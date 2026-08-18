@@ -7,6 +7,9 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
         <p className="text-sm text-sineoda-muted">© {new Date().getFullYear()} Sineoda</p>
         <nav className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm">
+          <Link to="/dergi" className="text-sineoda-muted transition hover:text-white">
+            Dergi
+          </Link>
           <Link to="/iletisim" className="text-sineoda-muted transition hover:text-white">
             İletişim
           </Link>
