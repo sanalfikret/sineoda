@@ -27,6 +27,7 @@ import { ProfilesPage } from './pages/ProfilesPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { LegalPage } from './pages/LegalPage'
 import { ContactPage } from './pages/ContactPage'
+import { JournalLayout } from './components/journal/JournalLayout'
 import { JournalListPage } from './pages/JournalListPage'
 import { JournalPostPage } from './pages/JournalPostPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
@@ -77,8 +78,10 @@ function App() {
       <Route path="/planlar" element={<PricingPage />} />
       <Route path="/yasal/:slug" element={<LegalPage />} />
       <Route path="/iletisim" element={<ContactPage />} />
-      <Route path="/dergi" element={<JournalListPage />} />
-      <Route path="/dergi/:slug" element={<JournalPostPage />} />
+      <Route path="/dergi" element={<JournalLayout />}>
+        <Route index element={<JournalListPage />} />
+        <Route path=":slug" element={<JournalPostPage />} />
+      </Route>
       <Route path="/odeme/paytr" element={<PaytrCheckoutPage />} />
       <Route path="/odeme/basarili" element={<PaymentSuccessPage />} />
       <Route path="/odeme/basarisiz" element={<PaymentFailPage />} />
