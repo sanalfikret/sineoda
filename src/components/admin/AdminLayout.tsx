@@ -6,6 +6,7 @@ const navItems = [
   { to: '/admin', label: 'Dashboard', end: true },
   { to: '/admin/icerikler', label: 'İçerikler', end: false },
   { to: '/admin/kategoriler', label: 'Kategoriler', end: false },
+  { to: '/admin/ana-sayfa', label: 'Ana Sayfa', end: false },
   { to: '/admin/kullanicilar', label: 'Kullanıcılar', end: false },
 ]
 

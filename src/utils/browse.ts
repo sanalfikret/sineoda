@@ -3,9 +3,10 @@ import type { ContentCategory, ContentItem, ContentType } from '../types/content
 
 export function filterCatalog(
   catalog: ContentItem[],
-  options: { type?: ContentType | null; genre?: string | null },
+  options: { type?: ContentType | null; genre?: string | null; verticalOnly?: boolean },
 ) {
   return catalog.filter((item) => {
+    if (options.verticalOnly && item.videoFormat !== 'vertical') return false
     if (options.type && item.type !== options.type) return false
     if (options.genre && !item.genres.includes(options.genre)) return false
     return true
@@ -16,7 +17,7 @@ export function buildBrowseRows(
   categories: ContentCategory[],
   catalog: ContentItem[],
   getContentById: (id: string) => ContentItem | undefined,
-  options: { type?: ContentType | null; genre?: string | null },
+  options: { type?: ContentType | null; genre?: string | null; verticalOnly?: boolean },
 ) {
   if (options.genre) {
     const items = filterCatalog(catalog, options).sort((a, b) =>
@@ -61,9 +62,16 @@ export function pickFeatured(
   catalog: ContentItem[],
   featured: ContentItem | null,
   type?: ContentType | null,
+  verticalOnly?: boolean,
 ) {
-  if (!type) return featured ?? catalog[0] ?? null
-  const typed = catalog.filter((item) => item.type === type)
-  const featuredTyped = featured && featured.type === type ? featured : null
+  const pool = verticalOnly ? catalog.filter((item) => item.videoFormat === 'vertical') : catalog
+  if (!type) {
+    if (verticalOnly) {
+      return pool[0] ?? null
+    }
+    return featured ?? catalog[0] ?? null
+  }
+  const typed = pool.filter((item) => item.type === type)
+  const featuredTyped = featured && featured.type === type && (!verticalOnly || featured.videoFormat === 'vertical') ? featured : null
   return featuredTyped ?? typed[0] ?? null
 }

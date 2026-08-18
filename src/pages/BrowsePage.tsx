@@ -9,14 +9,16 @@ import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
 import { useWatchlist } from '../context/WatchlistContext'
 import { buildBrowseRows, filterCatalog, pickFeatured } from '../utils/browse'
+import { filterVerticalCatalog } from '../utils/vertical'
 import { getContentTypeLabel } from '../constants/contentTypes'
 
 interface BrowsePageProps {
   contentType?: ContentType | null
   pageTitle?: string
+  verticalOnly?: boolean
 }
 
-function BrowseContent({ contentType = null, pageTitle }: BrowsePageProps) {
+function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: BrowsePageProps) {
   const { openDetail, openPlayer } = useContentUI()
   const { categories, featuredContent, catalog, newReleases, getContentById, isLoading } = useContent()
   const { watchlistItems } = useWatchlist()
@@ -56,8 +58,8 @@ function BrowseContent({ contentType = null, pageTitle }: BrowsePageProps) {
   }, [activeProfile])
 
   const browseOptions = useMemo(
-    () => ({ type: contentType, genre: activeGenre }),
-    [contentType, activeGenre],
+    () => ({ type: contentType, genre: activeGenre, verticalOnly }),
+    [contentType, activeGenre, verticalOnly],
   )
 
   const filteredCatalog = useMemo(
@@ -69,8 +71,10 @@ function BrowseContent({ contentType = null, pageTitle }: BrowsePageProps) {
     if (activeGenre) {
       return filteredCatalog[0] ?? null
     }
-    return pickFeatured(catalog, featuredContent, contentType)
-  }, [catalog, featuredContent, contentType, activeGenre, filteredCatalog])
+    return pickFeatured(catalog, featuredContent, contentType, verticalOnly)
+  }, [catalog, featuredContent, contentType, activeGenre, filteredCatalog, verticalOnly])
+
+  const verticalItems = useMemo(() => filterVerticalCatalog(catalog), [catalog])
 
   const rows = useMemo(
     () => buildBrowseRows(categories, catalog, getContentById, browseOptions),
@@ -142,7 +146,7 @@ function BrowseContent({ contentType = null, pageTitle }: BrowsePageProps) {
         eyebrow={
           activeGenre
             ? activeGenre
-            : pageTitle ?? (contentType ? getContentTypeLabel(contentType) : 'Senin İçin')
+            : pageTitle ?? (verticalOnly ? 'Dikey Diziler' : contentType ? getContentTypeLabel(contentType) : 'Senin İçin')
         }
       />
       )}
@@ -150,6 +154,17 @@ function BrowseContent({ contentType = null, pageTitle }: BrowsePageProps) {
       <GenreFilterBar activeGenre={activeGenre} onChange={setActiveGenre} />
 
       <div className="space-y-2 pb-24 pt-4">
+        {!activeGenre && !contentType && !verticalOnly && verticalItems.length > 0 && (
+          <ContentRow
+            title="Dikey Diziler"
+            items={verticalItems}
+            onSelect={openDetail}
+            progressMap={progressMap}
+            viewAllHref="/dikey-diziler"
+            prominent
+          />
+        )}
+
         {!activeGenre && !contentType && continueWatching.length > 0 && (
           <ContentRow
             title="Kaldığın Yerden Devam Et"

@@ -299,6 +299,11 @@ export function AdminContentFormPage() {
           value={form.poster}
           onChange={(url) => update('poster', url)}
         />
+        {form.videoFormat === 'vertical' && (
+          <p className="-mt-3 text-xs text-sineoda-gold">
+            Dikey dizi için portre (9:16) poster kullanın.
+          </p>
+        )}
 
         <ImageUpload
           label="Arka Plan"
@@ -362,6 +367,16 @@ export function AdminContentFormPage() {
             <option value="vertical">Dikey dizi (9:16)</option>
           </select>
         </Field>
+        {form.videoFormat === 'vertical' && (
+          <div className="rounded-xl border border-sineoda-gold/20 bg-sineoda-gold/5 px-4 py-3 text-sm text-white/80">
+            <p className="font-semibold text-sineoda-gold">Dikey dizi ipuçları</p>
+            <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-sineoda-muted">
+              <li>Poster ve kapak görseli 9:16 (dikey) oranında olmalı — örn. 400×711 px</li>
+              <li>Bölümler genelde 1–5 dakika; süre alanına &quot;4 dk&quot; gibi kısa değerler girin</li>
+              <li>İzleyici yukarı/aşağı kaydırarak bölümler arasında geçiş yapar</li>
+            </ul>
+          </div>
+        )}
 
         <label className="flex items-center gap-3 text-sm text-white/85">
           <input
@@ -409,7 +424,9 @@ export function AdminContentFormPage() {
         </div>
       </form>
 
-      {isEdit && id && isSeriesContent(form.type) && <AdminEpisodesPanel contentId={id} />}
+      {isEdit && id && isSeriesContent(form.type) && (
+        <AdminEpisodesPanel contentId={id} isVertical={form.videoFormat === 'vertical'} />
+      )}
     </div>
   )
 }

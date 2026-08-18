@@ -13,8 +13,11 @@ import { Header } from './Header'
 import { InstallPrompt } from './InstallPrompt'
 import { PaywallModal } from './PaywallModal'
 import { SearchModal } from './SearchModal'
+import { SiteFooter } from './SiteFooter'
 import { VideoPlayer } from './VideoPlayer'
+import { VerticalPlayer } from './VerticalPlayer'
 import { useAuth } from '../context/AuthContext'
+import { isVerticalContent } from '../utils/vertical'
 
 interface ContentUIContextValue {
   openDetail: (item: ContentItem) => void
@@ -86,12 +89,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="min-h-dvh bg-sineoda-bg">
         <Header />
         {children}
+        <SiteFooter />
         <DetailModal
           item={detailItem}
           onClose={() => setDetailItem(null)}
           onPlay={openPlayer}
         />
-        <VideoPlayer target={playingTarget} onClose={() => setPlayingTarget(null)} />
+        <VideoPlayer target={playingTarget && !isVerticalContent(playingTarget.item) ? playingTarget : null} onClose={() => setPlayingTarget(null)} />
+        <VerticalPlayer target={playingTarget && isVerticalContent(playingTarget.item) ? playingTarget : null} onClose={() => setPlayingTarget(null)} />
         <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} />
         <SearchModal onSelect={openDetail} />
         <InstallPrompt />

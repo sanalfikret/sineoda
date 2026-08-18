@@ -130,6 +130,19 @@ export interface BootstrapResponse {
   newReleases: ContentItem[]
 }
 
+export interface LandingShowcaseResponse {
+  id: string
+  title: string
+  icon: string
+  description: string
+  items: ContentItem[]
+}
+
+export interface LandingConfigResponse {
+  slider: ContentItem[]
+  showcases: LandingShowcaseResponse[]
+}
+
 export async function loginRequest(
   email: string,
   password: string,
@@ -199,6 +212,38 @@ export async function createProfileRequest(
 
 export async function fetchBootstrap(): Promise<BootstrapResponse> {
   return api<BootstrapResponse>('/api/bootstrap')
+}
+
+export async function fetchLandingConfig(): Promise<LandingConfigResponse> {
+  return api<LandingConfigResponse>('/api/landing')
+}
+
+export async function updateLandingConfig(payload: {
+  sliderIds: string[]
+  showcases: Array<{
+    id: string
+    title: string
+    icon: string
+    description: string
+    itemIds: string[]
+  }>
+}): Promise<LandingConfigResponse> {
+  return api<LandingConfigResponse>('/api/admin/landing', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function submitContactForm(payload: {
+  name: string
+  email: string
+  subject: string
+  message: string
+}): Promise<{ message: string }> {
+  return api<{ message: string }>('/api/contact', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
 }
 
 export async function fetchWatchlist(): Promise<{ items: ContentItem[] }> {
@@ -327,7 +372,14 @@ export async function deleteEpisode(id: string) {
 
 export async function bulkCreateEpisodes(
   contentId: string,
-  data: { season?: number; count?: number; titlePrefix?: string; duration?: string; startEpisode?: number },
+  data: {
+    season?: number
+    count?: number
+    titlePrefix?: string
+    duration?: string
+    startEpisode?: number
+    titles?: string[]
+  },
 ) {
   return api<{ episodes: Episode[]; createdCount: number }>(`/api/episodes/content/${contentId}/bulk`, {
     method: 'POST',

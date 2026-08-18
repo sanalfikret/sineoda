@@ -5,18 +5,25 @@ interface ContentCardProps {
   item: ContentItem
   onSelect: (item: ContentItem) => void
   progressPercent?: number
+  size?: 'default' | 'large'
 }
 
-export function ContentCard({ item, onSelect, progressPercent }: ContentCardProps) {
+export function ContentCard({ item, onSelect, progressPercent, size = 'default' }: ContentCardProps) {
   const isVertical = item.videoFormat === 'vertical'
+
+  const widthClass = isVertical
+    ? size === 'large'
+      ? 'w-[140px] sm:w-[160px] lg:w-[180px]'
+      : 'w-[120px] sm:w-[140px] lg:w-[160px]'
+    : size === 'large'
+      ? 'w-[160px] sm:w-[190px] lg:w-[210px]'
+      : 'w-[140px] sm:w-[170px] lg:w-[190px] tv:w-[220px]'
 
   return (
     <button
       type="button"
       onClick={() => onSelect(item)}
-      className={`group relative shrink-0 snap-start overflow-hidden rounded-xl bg-sineoda-surface text-left transition duration-300 hover:z-10 hover:scale-105 focus-visible:z-10 focus-visible:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold ${
-        isVertical ? 'w-[120px] sm:w-[140px] lg:w-[160px]' : 'w-[140px] sm:w-[170px] lg:w-[190px] tv:w-[220px]'
-      }`}
+      className={`group relative shrink-0 snap-start overflow-hidden rounded-xl bg-sineoda-surface text-left transition duration-300 hover:z-10 hover:scale-105 focus-visible:z-10 focus-visible:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold ${widthClass}`}
     >
       <div className={isVertical ? 'aspect-[9/16] overflow-hidden' : 'aspect-[2/3] overflow-hidden'}>
         <img

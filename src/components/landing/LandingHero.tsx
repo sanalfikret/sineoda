@@ -1,5 +1,4 @@
-import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { resolveMediaUrl } from '../../api/client'
 import type { ContentItem } from '../../types/content'
 
@@ -10,21 +9,12 @@ interface LandingHeroProps {
 }
 
 export function LandingHero({ heroItem, teaserPosters, fallbackImage }: LandingHeroProps) {
-  const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-
   const heroImage = heroItem
     ? resolveMediaUrl(heroItem.backdrop || heroItem.poster)
     : fallbackImage
 
-  const handleEmailSubmit = (event: FormEvent) => {
-    event.preventDefault()
-    const query = email.trim() ? `?email=${encodeURIComponent(email.trim())}` : ''
-    navigate(`/kayit${query}`)
-  }
-
   return (
-    <section className="relative min-h-dvh overflow-hidden">
+    <section className="relative min-h-[85dvh] overflow-hidden sm:min-h-dvh">
       <div className="absolute inset-0">
         <img
           src={heroImage}
@@ -53,9 +43,9 @@ export function LandingHero({ heroItem, teaserPosters, fallbackImage }: LandingH
         </div>
       )}
 
-      <div className="relative mx-auto flex min-h-dvh max-w-[1400px] flex-col justify-center px-5 pb-16 pt-28 sm:px-8">
+      <div className="relative mx-auto flex min-h-[85dvh] max-w-[1400px] flex-col items-center justify-center px-5 pb-16 pt-28 text-center sm:min-h-dvh sm:px-8">
         {heroItem && (
-          <div className="mb-6 flex items-center gap-3">
+          <div className="mb-6 flex items-center justify-center gap-3">
             <span className="rounded bg-sineoda-gold/15 px-2.5 py-1 text-[11px] font-bold uppercase tracking-widest text-sineoda-gold">
               Öne Çıkan
             </span>
@@ -63,11 +53,11 @@ export function LandingHero({ heroItem, teaserPosters, fallbackImage }: LandingH
           </div>
         )}
 
-        <h1 className="max-w-4xl text-[2.75rem] font-extrabold leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
+        <h1 className="max-w-4xl text-[2.25rem] font-extrabold leading-[1] tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl">
           {heroItem ? (
             <>
               <span className="block text-white/90">{heroItem.title}</span>
-              <span className="mt-2 block text-2xl font-semibold text-white/55 sm:text-3xl lg:text-4xl">
+              <span className="mt-3 block text-xl font-semibold text-white/55 sm:text-2xl lg:text-3xl">
                 ve daha fazlası seni bekliyor.
               </span>
             </>
@@ -80,28 +70,26 @@ export function LandingHero({ heroItem, teaserPosters, fallbackImage }: LandingH
           Türkiye&apos;nin premium yayın platformu. Üye ol, profilini seç ve kişisel kataloğuna geç.
         </p>
 
-        <form onSubmit={handleEmailSubmit} className="mt-8 flex max-w-2xl flex-col gap-3 sm:flex-row">
-          <input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="E-posta adresin"
-            className="h-14 flex-1 rounded-md border border-white/20 bg-black/50 px-4 text-base text-white outline-none backdrop-blur-sm placeholder:text-white/40 focus:border-white"
-          />
-          <button
-            type="submit"
-            className="h-14 rounded-md bg-sineoda-gold px-8 text-base font-bold text-sineoda-bg transition hover:brightness-110"
+        <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
+          <Link
+            to="/kayit"
+            className="inline-flex h-14 min-w-[200px] items-center justify-center rounded-md bg-sineoda-gold px-10 text-base font-bold text-sineoda-bg transition hover:brightness-110"
           >
-            Başla
-          </button>
-        </form>
-
-        <p className="mt-3 text-sm text-white/45">
-          Hazır mısın?{' '}
-          <Link to="/kayit" className="text-white underline underline-offset-2 hover:text-sineoda-gold">
-            Üyeliğe hemen başla
+            Üye Ol
           </Link>
-          .
+          <Link
+            to="/giris"
+            className="inline-flex h-14 min-w-[200px] items-center justify-center rounded-md border border-white/25 bg-white/5 px-10 text-base font-semibold text-white backdrop-blur-sm transition hover:bg-white/10"
+          >
+            Giriş Yap
+          </Link>
+        </div>
+
+        <p className="mt-5 text-sm text-white/45">
+          Zaten üye misin?{' '}
+          <Link to="/giris" className="text-white underline underline-offset-2 hover:text-sineoda-gold">
+            Giriş yap
+          </Link>
         </p>
       </div>
     </section>

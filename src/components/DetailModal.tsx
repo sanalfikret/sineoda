@@ -191,7 +191,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
                 className="inline-flex items-center gap-2 rounded-lg bg-sineoda-gold px-5 py-3 text-sm font-semibold text-sineoda-bg transition hover:brightness-110"
               >
                 <PlaySmallIcon />
-                1. Bölümü Oynat
+                {item.videoFormat === 'vertical' ? 'Dikey İzlemeye Başla' : '1. Bölümü Oynat'}
               </button>
             )}
 
@@ -227,6 +227,29 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
 
               {isSeriesContent(item.type) && episodes.length > 0 && (
                 <div className="mt-6">
+                  {item.videoFormat === 'vertical' ? (
+                    <>
+                      <h3 className="mb-3 text-sm font-semibold text-white">Bölümler</h3>
+                      <div className="hide-scrollbar flex gap-2 overflow-x-auto pb-2">
+                        {sortedEpisodes.map((episode) => (
+                          <button
+                            key={episode.id}
+                            type="button"
+                            onClick={() => onPlay(item, episode)}
+                            className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left transition hover:border-sineoda-gold/40 hover:bg-sineoda-gold/10"
+                          >
+                            <p className="text-lg font-bold text-sineoda-gold">{episode.episode}</p>
+                            <p className="mt-1 max-w-[120px] truncate text-xs text-white">{episode.title}</p>
+                            <p className="text-[10px] text-sineoda-muted">{episode.duration}</p>
+                          </button>
+                        ))}
+                      </div>
+                      <p className="mt-3 text-xs text-sineoda-muted">
+                        Dikey izleme modunda yukarı/aşağı kaydırarak bölümler arasında geçiş yapabilirsin.
+                      </p>
+                    </>
+                  ) : (
+                    <>
                   <div className="mb-3 flex flex-wrap gap-2">
                     {seasons.map((value) => (
                       <button
@@ -262,6 +285,8 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
                       </button>
                     ))}
                   </div>
+                    </>
+                  )}
                 </div>
               )}
             </>

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { ReactNode } from 'react'
+import { SiteFooter } from './SiteFooter'
 
 interface AuthLayoutProps {
   children: ReactNode
@@ -35,6 +36,8 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
           <div className="mt-6">{children}</div>
         </div>
       </div>
+
+      <SiteFooter />
     </div>
   )
 }
