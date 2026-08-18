@@ -111,6 +111,26 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/belgeseller"
+        element={
+          <ProtectedRoute requireProfile>
+            <AuthenticatedProviders>
+              <BrowsePage contentType="belgesel" pageTitle="Belgeseller" />
+            </AuthenticatedProviders>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/kisa-filmler"
+        element={
+          <ProtectedRoute requireProfile>
+            <AuthenticatedProviders>
+              <BrowsePage contentType="kisa-film" pageTitle="Kısa Filmler" />
+            </AuthenticatedProviders>
+          </ProtectedRoute>
+        }
+      />
 
       <Route path="/admin/giris" element={<AdminLoginPage />} />
       <Route

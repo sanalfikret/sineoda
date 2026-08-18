@@ -7,6 +7,7 @@ const navItems = [
   { label: 'Ana Sayfa', to: '/', match: (path: string) => path === '/' },
   { label: 'Diziler', to: '/diziler', match: (path: string) => path === '/diziler' },
   { label: 'Filmler', to: '/filmler', match: (path: string) => path === '/filmler' },
+  { label: 'Belgeseller', to: '/belgeseller', match: (path: string) => path === '/belgeseller' },
   { label: 'Listem', to: '/listem', match: (path: string) => path === '/listem' },
 ]
 

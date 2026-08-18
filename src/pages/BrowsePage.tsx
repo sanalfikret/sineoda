@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
 import { useWatchlist } from '../context/WatchlistContext'
 import { buildBrowseRows, pickFeatured } from '../utils/browse'
+import { getContentTypeLabel } from '../constants/contentTypes'
 
 interface BrowsePageProps {
   contentType?: ContentType | null
@@ -118,7 +119,7 @@ function BrowseContent({ contentType = null, pageTitle }: BrowsePageProps) {
         item={heroItem}
         onPlay={openPlayer}
         onDetails={openDetail}
-        eyebrow={pageTitle ?? (contentType === 'dizi' ? 'Diziler' : contentType === 'film' ? 'Filmler' : 'Senin İçin')}
+        eyebrow={pageTitle ?? (contentType ? getContentTypeLabel(contentType) : 'Senin İçin')}
       />
 
       <GenreFilterBar activeGenre={activeGenre} onChange={setActiveGenre} />

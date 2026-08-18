@@ -1,5 +1,7 @@
+import type { ContentType } from './constants/contentTypes.js'
+
 export type UserRole = 'user' | 'admin'
-export type ContentType = 'film' | 'dizi'
+export type { ContentType }
 
 export interface UserRow {
   id: string
@@ -40,6 +42,7 @@ export interface ContentRow {
   is_new?: number
   new_until?: string | null
   subtitles_json?: string
+  credits_json?: string
 }
 
 export interface EpisodeRow {

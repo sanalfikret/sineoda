@@ -8,6 +8,8 @@ import { resolveMediaUrl } from '../../api/client'
 import { useContent } from '../../context/ContentContext'
 import { BROWSE_GENRES, CONTENT_GENRES, STREAM_PROVIDERS } from '../../constants/genres'
 import { buildSubtitles, subtitlesToForm } from '../../utils/subtitles'
+import { buildCredits, creditsToForm } from '../../utils/credits'
+import { CONTENT_TYPES, isSeriesContent } from '../../constants/contentTypes'
 import type { ContentType } from '../../types/content'
 
 const RATINGS = ['Genel', '7+', '13+', '16+', '18+']
@@ -29,6 +31,10 @@ const EMPTY_FORM = {
   featured: false,
   subtitleTr: '',
   subtitleEn: '',
+  directors: '',
+  producers: '',
+  cast: '',
+  studio: '',
 }
 
 export function AdminContentFormPage() {
@@ -62,6 +68,7 @@ export function AdminContentFormPage() {
       isNew: item.isNew ?? false,
       featured: item.featured ?? false,
       ...subtitlesToForm(item.subtitles),
+      ...creditsToForm(item.credits),
     })
   }, [id, getContentById])
 
@@ -94,6 +101,7 @@ export function AdminContentFormPage() {
       isNew: form.isNew,
       featured: form.featured,
       subtitles: buildSubtitles(form.subtitleTr, form.subtitleEn),
+      credits: buildCredits(form),
     }
 
     setSaving(true)
@@ -142,14 +150,17 @@ export function AdminContentFormPage() {
               required
             />
           </Field>
-          <Field label="Tür">
+          <Field label="İçerik Türü">
             <select
               value={form.type}
               onChange={(event) => update('type', event.target.value as ContentType)}
               className={inputClass}
             >
-              <option value="film">Film</option>
-              <option value="dizi">Dizi</option>
+              {CONTENT_TYPES.map((entry) => (
+                <option key={entry.value} value={entry.value}>
+                  {entry.label}
+                </option>
+              ))}
             </select>
           </Field>
         </div>
@@ -158,10 +169,53 @@ export function AdminContentFormPage() {
           <textarea
             value={form.description}
             onChange={(event) => update('description', event.target.value)}
-            rows={4}
+            rows={5}
+            placeholder="Filmin veya dizinin kısa özeti..."
             className={inputClass}
           />
         </Field>
+
+        <section className="space-y-3">
+          <div>
+            <h3 className="text-sm font-semibold text-white">Künye</h3>
+            <p className="mt-1 text-xs text-sineoda-muted">
+              Yönetmen, yapımcı ve oyuncular ayrı kutularda. Her satıra bir isim yazabilirsiniz.
+            </p>
+          </div>
+
+          <CreditBox
+            label="Yönetmen"
+            value={form.directors}
+            onChange={(value) => update('directors', value)}
+            placeholder="Uğur Bayraktar"
+            rows={3}
+          />
+          <CreditBox
+            label="Yapımcı"
+            value={form.producers}
+            onChange={(value) => update('producers', value)}
+            placeholder="Yapımcı adı"
+            rows={3}
+          />
+          <CreditBox
+            label="Oyuncular"
+            value={form.cast}
+            onChange={(value) => update('cast', value)}
+            placeholder="Her satıra bir oyuncu adı"
+            rows={5}
+          />
+
+          <div className="rounded-xl border border-white/10 bg-[#0d0f14] p-4">
+            <Field label="Stüdyo / Yapım Şirketi">
+              <input
+                value={form.studio}
+                onChange={(event) => update('studio', event.target.value)}
+                placeholder="Sineoda Studios"
+                className={inputClass}
+              />
+            </Field>
+          </div>
+        </section>
 
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Yıl">
@@ -195,7 +249,7 @@ export function AdminContentFormPage() {
           </Field>
         </div>
 
-        <Field label="Türler">
+        <Field label="Kategori Etiketleri">
           <input
             value={form.genres}
             onChange={(event) => update('genres', event.target.value)}
@@ -355,7 +409,36 @@ export function AdminContentFormPage() {
         </div>
       </form>
 
-      {isEdit && id && form.type === 'dizi' && <AdminEpisodesPanel contentId={id} />}
+      {isEdit && id && isSeriesContent(form.type) && <AdminEpisodesPanel contentId={id} />}
+    </div>
+  )
+}
+
+function CreditBox({
+  label,
+  value,
+  onChange,
+  placeholder,
+  rows,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+  rows: number
+}) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-[#0d0f14] p-4">
+      <label className="block">
+        <span className="mb-2 block text-sm font-medium text-white">{label}</span>
+        <textarea
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          rows={rows}
+          placeholder={placeholder}
+          className={`${inputClass} resize-y min-h-[88px]`}
+        />
+      </label>
     </div>
   )
 }

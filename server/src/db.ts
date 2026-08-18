@@ -102,6 +102,7 @@ function runMigrations() {
   ensureColumn('content', 'is_new', 'INTEGER DEFAULT 0')
   ensureColumn('content', 'new_until', 'TEXT')
   ensureColumn('content', 'subtitles_json', "TEXT DEFAULT '[]'")
+  ensureColumn('content', 'credits_json', "TEXT DEFAULT '{}'")
   ensureColumn('users', 'subscription_status', "TEXT DEFAULT 'free'")
   ensureColumn('users', 'subscription_plan', 'TEXT')
   ensureColumn('users', 'subscription_expires_at', 'TEXT')
@@ -187,6 +188,16 @@ function runMigrations() {
       seconds_watched REAL NOT NULL,
       activity_date TEXT NOT NULL,
       created_at TEXT NOT NULL
+    );
+  `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS content_reactions (
+      profile_id TEXT NOT NULL,
+      content_id TEXT NOT NULL,
+      reaction TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (profile_id, content_id)
     );
   `)
 }
