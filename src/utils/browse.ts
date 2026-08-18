@@ -1,13 +1,27 @@
 import { BROWSE_GENRES, genreToCategoryId } from '../constants/genres'
 import type { ContentCategory, ContentItem, ContentType } from '../types/content'
 
-/** BrowsePage'de ayrı satır olarak gösterildiği için kategori listesinden çıkarılır */
-const EXCLUSIVE_BROWSE_ROW_TITLES = new Set(['Yeni Eklenenler', 'Dikey Diziler'])
+export type BrowseFilterOptions = {
+  type?: ContentType | null
+  genre?: string | null
+  verticalOnly?: boolean
+}
 
-export function filterCatalog(
-  catalog: ContentItem[],
-  options: { type?: ContentType | null; genre?: string | null; verticalOnly?: boolean },
-) {
+export type BrowseRow = {
+  id: string
+  title: string
+  itemIds: string[]
+  items: ContentItem[]
+}
+
+/** BrowsePage'de ayrı satır olarak gösterildiği için kategori listesinden çıkarılır */
+export const BROWSE_EXCLUSIVE_ROW_TITLES = new Set([
+  'Yeni Eklenenler',
+  'Dikey Diziler',
+  'Bu Hafta Trend',
+])
+
+export function filterCatalog(catalog: ContentItem[], options: BrowseFilterOptions) {
   return catalog.filter((item) => {
     if (options.verticalOnly && item.videoFormat !== 'vertical') return false
     if (options.type && item.type !== options.type) return false
@@ -16,11 +30,46 @@ export function filterCatalog(
   })
 }
 
-export function buildBrowseRows(
+export function pickCategoryRow(
   categories: ContentCategory[],
+  title: string,
   catalog: ContentItem[],
   getContentById: (id: string) => ContentItem | undefined,
-  options: { type?: ContentType | null; genre?: string | null; verticalOnly?: boolean },
+  options: BrowseFilterOptions,
+): BrowseRow | null {
+  const category = categories.find((entry) => entry.title === title)
+  if (!category) return null
+
+  const filteredIds = new Set(filterCatalog(catalog, options).map((item) => item.id))
+  const items = category.itemIds
+    .map((id) => getContentById(id))
+    .filter((item): item is ContentItem => Boolean(item && filteredIds.has(item.id)))
+
+  if (items.length === 0) return null
+
+  return {
+    id: category.id,
+    title: category.title,
+    itemIds: items.map((item) => item.id),
+    items,
+  }
+}
+
+export function buildGenreBrowseRows(
+  catalog: ContentItem[],
+  options: BrowseFilterOptions,
+): BrowseRow[] {
+  return BROWSE_GENRES.map((genre) => ({
+    id: genreToCategoryId(genre),
+    title: genre,
+    itemIds: [] as string[],
+    items: filterCatalog(catalog, { ...options, genre }),
+  })).filter((row) => row.items.length > 0)
+}
+
+export function buildBrowseRows(
+  catalog: ContentItem[],
+  options: BrowseFilterOptions,
 ) {
   if (options.genre) {
     const items = filterCatalog(catalog, options).sort((a, b) =>
@@ -37,30 +86,7 @@ export function buildBrowseRows(
     ]
   }
 
-  const filteredIds = new Set(filterCatalog(catalog, options).map((item) => item.id))
-
-  const editorialRows = categories
-    .map((category) => ({
-      ...category,
-      items: category.itemIds
-        .map((id) => getContentById(id))
-        .filter((item): item is ContentItem => Boolean(item && filteredIds.has(item.id))),
-    }))
-    .filter(
-      (row) => row.items.length > 0 && !EXCLUSIVE_BROWSE_ROW_TITLES.has(row.title),
-    )
-
-  const genreRows = BROWSE_GENRES.map((genre) => ({
-    id: genreToCategoryId(genre),
-    title: genre,
-    itemIds: [] as string[],
-    items: filterCatalog(catalog, { ...options, genre }),
-  })).filter((row) => row.items.length > 0)
-
-  const existingTitles = new Set(editorialRows.map((row) => row.title))
-  const uniqueGenreRows = genreRows.filter((row) => !existingTitles.has(row.title))
-
-  return [...editorialRows, ...uniqueGenreRows]
+  return buildGenreBrowseRows(catalog, options)
 }
 
 export function pickFeatured(
