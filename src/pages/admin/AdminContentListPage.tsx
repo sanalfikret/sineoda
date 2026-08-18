@@ -5,7 +5,7 @@ import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { useContent } from '../../context/ContentContext'
 import { CONTENT_TYPES, getContentDisplayLabel } from '../../constants/contentTypes'
 import type { AdminContentItem, ContentType } from '../../types/content'
-import { formatLicenseDate } from '../../utils/license'
+import { formatLicenseDate, mergeAdminCatalog } from '../../utils/license'
 import { isVerticalContent } from '../../utils/vertical'
 import { fuzzySearchMatch } from '../../utils/search'
 
@@ -60,22 +60,31 @@ function sortAdminItems(items: AdminContentItem[]) {
 }
 
 export function AdminContentListPage() {
-  const { deleteContent, setFeatured } = useContent()
+  const { catalog, deleteContent, setFeatured, isLoading: catalogLoading } = useContent()
   const [adminCatalog, setAdminCatalog] = useState<AdminContentItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [usingFallback, setUsingFallback] = useState(false)
   const [query, setQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
 
-  const loadCatalog = () => {
-    return fetchAdminCatalog()
-      .then(({ catalog }) => setAdminCatalog(catalog))
-      .catch(() => setAdminCatalog([]))
-      .finally(() => setLoading(false))
+  const loadCatalog = async (sourceCatalog = catalog) => {
+    setLoading(true)
+    try {
+      const { catalog: adminItems } = await fetchAdminCatalog()
+      setAdminCatalog(mergeAdminCatalog(sourceCatalog, adminItems))
+      setUsingFallback(false)
+    } catch {
+      setAdminCatalog(mergeAdminCatalog(sourceCatalog, []))
+      setUsingFallback(true)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
-    void loadCatalog()
-  }, [])
+    if (catalogLoading) return
+    void loadCatalog(catalog)
+  }, [catalog, catalogLoading])
 
   const verticalCount = useMemo(() => adminCatalog.filter(isVerticalContent).length, [adminCatalog])
   const expiringCount = useMemo(
@@ -149,6 +158,13 @@ export function AdminContentListPage() {
           >
             Listeyi göster
           </button>
+        </div>
+      )}
+
+      {usingFallback && (
+        <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-sineoda-muted">
+          Telif bilgileri henüz API&apos;den yüklenemedi; içerik listesi site kataloğundan gösteriliyor.
+          Telif tarihlerini kaydetmek için API&apos;yi güncelleyin.
         </div>
       )}
 
@@ -231,7 +247,7 @@ export function AdminContentListPage() {
               </tr>
             </thead>
             <tbody>
-              {loading ? (
+              {loading || catalogLoading ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-10 text-center text-sineoda-muted">
                     Yükleniyor...
