@@ -410,28 +410,39 @@ const DEFAULT_LANDING_SHOWCASES = [
   },
   {
     id: 'landing-dikey',
-    title: 'Dikey',
+    title: 'Dikey Dizi',
     icon: 'dikey',
     description: 'Mobil öncelikli kısa bölümler — kaydır, izle, devam et.',
     items: ['kalp-satirlari'],
   },
 ] as const
 
+export function ensureLandingShowcases() {
+  for (const showcase of DEFAULT_LANDING_SHOWCASES) {
+    const exists = dbGet<{ id: string }>('SELECT id FROM landing_showcases WHERE id = ?', [showcase.id])
+    if (exists) continue
+
+    const maxOrder = dbGet<{ max: number | null }>('SELECT MAX(sort_order) as max FROM landing_showcases')
+    const order = (maxOrder?.max ?? -1) + 1
+
+    dbRun(
+      'INSERT INTO landing_showcases (id, title, icon, description, sort_order) VALUES (?, ?, ?, ?, ?)',
+      [showcase.id, showcase.title, showcase.icon, showcase.description, order],
+    )
+    showcase.items.forEach((contentId, itemIndex) => {
+      const contentExists = dbGet('SELECT id FROM content WHERE id = ?', [contentId])
+      if (!contentExists) return
+      dbRun(
+        'INSERT INTO landing_showcase_items (showcase_id, content_id, sort_order) VALUES (?, ?, ?)',
+        [showcase.id, contentId, itemIndex],
+      )
+    })
+  }
+}
+
+/** @deprecated use ensureLandingShowcases */
 export function ensureDikeyShowcase() {
-  const exists = dbGet<{ id: string }>('SELECT id FROM landing_showcases WHERE id = ?', ['landing-dikey'])
-  if (exists) return
-
-  const maxOrder = dbGet<{ max: number | null }>('SELECT MAX(sort_order) as max FROM landing_showcases')
-  const order = (maxOrder?.max ?? -1) + 1
-
-  dbRun(
-    'INSERT INTO landing_showcases (id, title, icon, description, sort_order) VALUES (?, ?, ?, ?, ?)',
-    ['landing-dikey', 'Dikey', 'dikey', 'Mobil öncelikli kısa bölümler — kaydır, izle, devam et.', order],
-  )
-  dbRun(
-    'INSERT INTO landing_showcase_items (showcase_id, content_id, sort_order) VALUES (?, ?, ?)',
-    ['landing-dikey', 'kalp-satirlari', 0],
-  )
+  ensureLandingShowcases()
 }
 
 export function seedLandingData(force = false) {
