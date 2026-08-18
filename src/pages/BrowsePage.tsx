@@ -113,13 +113,19 @@ function BrowseContent({ contentType = null, pageTitle }: BrowsePageProps) {
   }
 
   return (
-    <main>
+    <main className="bg-sineoda-bg">
       <Hero
         item={heroItem}
         onPlay={openPlayer}
         onDetails={openDetail}
-        eyebrow={pageTitle ?? (contentType === 'dizi' ? 'Diziler' : contentType === 'film' ? 'Filmler' : 'Öne Çıkan')}
+        eyebrow={pageTitle ?? (contentType === 'dizi' ? 'Diziler' : contentType === 'film' ? 'Filmler' : 'Senin İçin')}
       />
+
+      {!contentType && (
+        <p className="px-4 pt-2 text-sm text-sineoda-muted sm:px-6 lg:px-8">
+          Kategoriler ve tüm katalog yalnızca üyelere özeldir.
+        </p>
+      )}
 
       <GenreFilterBar activeGenre={activeGenre} onChange={setActiveGenre} />
 
