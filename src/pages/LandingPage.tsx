@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { SiteFooter } from '../components/SiteFooter'
 import { LandingFeatures } from '../components/landing/LandingFeatures'
+import { LandingManifesto } from '../components/landing/LandingManifesto'
 import { LandingHeader } from '../components/landing/LandingHeader'
 import { LandingHero } from '../components/landing/LandingHero'
 import { LandingCategoryShowcase } from '../components/landing/LandingCategoryShowcase'
@@ -13,7 +14,7 @@ import {
   getDemoCatalog,
   resolveLandingShowcases,
 } from '../data/demoLandingPosters'
-import { fetchBootstrap, fetchLandingConfig, resolveMediaUrl } from '../api/client'
+import { fetchBootstrap, fetchLandingConfig } from '../api/client'
 import type { ContentItem } from '../types/content'
 
 const FALLBACK_HERO =
@@ -27,7 +28,6 @@ function mergeCatalog(catalog: ContentItem[]) {
 
 export function LandingPage() {
   const [heroItem, setHeroItem] = useState<ContentItem | null>(null)
-  const [teaserPosters, setTeaserPosters] = useState<string[]>([])
   const [sliderItems, setSliderItems] = useState<ContentItem[]>([])
   const [showcases, setShowcases] = useState(DEMO_LANDING_SHOWCASES)
   const [scrolled, setScrolled] = useState(false)
@@ -44,11 +44,6 @@ export function LandingPage() {
       const catalog =
         bootstrap.catalog.length >= 20 ? bootstrap.catalog : mergeCatalog(bootstrap.catalog)
       setHeroItem(bootstrap.featuredContent ?? catalog[0] ?? null)
-      const posters = catalog
-        .slice(0, 6)
-        .map((item) => resolveMediaUrl(item.poster))
-        .filter(Boolean)
-      setTeaserPosters(posters)
 
       let landing = bootstrap.landing ?? null
       if (!landing) {
@@ -74,19 +69,11 @@ export function LandingPage() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  const uniquePosters = useMemo(
-    () => [...new Set(teaserPosters)].filter((url) => url !== resolveMediaUrl(heroItem?.poster ?? '')),
-    [teaserPosters, heroItem],
-  )
-
   return (
     <div className="min-h-dvh bg-sineoda-bg text-white">
       <LandingHeader scrolled={scrolled} />
-      <LandingHero
-        heroItem={heroItem}
-        teaserPosters={uniquePosters}
-        fallbackImage={FALLBACK_HERO}
-      />
+      <LandingHero heroItem={heroItem} fallbackImage={FALLBACK_HERO} />
+      <LandingManifesto />
       <LandingSlider items={sliderItems} />
       <LandingCategoryShowcase showcases={showcases} />
       <LandingFeatures />

@@ -5,7 +5,7 @@ const faqs = [
   {
     question: 'Sineoda nedir?',
     answer:
-      'Sineoda; film, dizi ve özel yapımları internet üzerinden izleyebileceğiniz premium bir dijital yayın platformudur. Tek hesapla telefon, tablet, bilgisayar ve Android TV üzerinden izleyebilirsiniz.',
+      'Sineoda; dünyanın dört bir yanından bağımsız sinemacıların filmlerini, dizilerini ve belgesellerini izleyebileceğiniz küratörlü bir dijital yayın platformudur. Tek hesapla telefon, tablet, bilgisayar ve Android TV üzerinden erişebilirsiniz.',
   },
   {
     question: 'Sineoda\'nın maliyeti nedir?',
@@ -25,7 +25,7 @@ const faqs = [
   {
     question: 'Sineoda\'da ne izleyebilirim?',
     answer:
-      'Yerli ve yabancı filmler, diziler, belgeseller, stand-up gösterileri ve Sineoda Originals özel yapımları. Katalog düzenli olarak güncellenir.',
+      'Dünya bağımsız sinemasından filmler ve diziler; festival ödüllü belgeseller, kısa metrajlar ve yerli bağımsız yapımlar. Katalog düzenli olarak güncellenir.',
   },
   {
     question: 'Sineoda çocuklar için uygun mudur?',
