@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { v4 as uuid } from 'uuid'
 import { dbAll, dbGet, dbRun } from '../db.js'
-import { mapEpisode } from '../mappers.js'
+import { mapEpisode, serializeSubtitles } from '../mappers.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import type { EpisodeRow } from '../types.js'
 
@@ -51,10 +51,11 @@ router.post('/content/:contentId/bulk', requireAdmin, (req: AuthRequest, res) =>
 
 router.post('/content/:contentId', requireAdmin, (req: AuthRequest, res) => {
   const body = req.body as Record<string, unknown>
+  const subtitlesJson = serializeSubtitles(body.subtitles)
   const id = uuid()
   dbRun(
-    `INSERT INTO episodes (id, content_id, season, episode_number, title, description, duration, video_url, stream_provider, sort_order)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO episodes (id, content_id, season, episode_number, title, description, duration, video_url, stream_provider, sort_order, subtitles_json)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       req.params.contentId,
@@ -66,6 +67,7 @@ router.post('/content/:contentId', requireAdmin, (req: AuthRequest, res) => {
       String(body.videoUrl ?? body.video_url ?? ''),
       String(body.streamProvider ?? body.stream_provider ?? 'custom'),
       Number(body.sortOrder ?? 0),
+      subtitlesJson,
     ],
   )
   const row = dbGet<EpisodeRow>('SELECT * FROM episodes WHERE id = ?', [id])!
@@ -79,8 +81,10 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
     return
   }
   const body = req.body as Record<string, unknown>
+  const subtitlesJson =
+    body.subtitles !== undefined ? serializeSubtitles(body.subtitles) : existing.subtitles_json ?? '[]'
   dbRun(
-    `UPDATE episodes SET season=?, episode_number=?, title=?, description=?, duration=?, video_url=?, stream_provider=?, sort_order=? WHERE id=?`,
+    `UPDATE episodes SET season=?, episode_number=?, title=?, description=?, duration=?, video_url=?, stream_provider=?, sort_order=?, subtitles_json=? WHERE id=?`,
     [
       body.season !== undefined ? Number(body.season) : existing.season,
       body.episode !== undefined || body.episodeNumber !== undefined
@@ -92,6 +96,7 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
       body.videoUrl !== undefined ? String(body.videoUrl) : body.video_url !== undefined ? String(body.video_url) : existing.video_url,
       body.streamProvider !== undefined ? String(body.streamProvider) : existing.stream_provider ?? 'custom',
       body.sortOrder !== undefined ? Number(body.sortOrder) : existing.sort_order,
+      subtitlesJson,
       existing.id,
     ],
   )

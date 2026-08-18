@@ -39,6 +39,7 @@ export interface ContentRow {
   video_format?: string
   is_new?: number
   new_until?: string | null
+  subtitles_json?: string
 }
 
 export interface EpisodeRow {
@@ -52,6 +53,7 @@ export interface EpisodeRow {
   video_url: string
   stream_provider?: string
   sort_order: number
+  subtitles_json?: string
 }
 
 export interface CategoryRow {
