@@ -33,10 +33,13 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
   const [duration, setDuration] = useState(0)
   const [muted, setMuted] = useState(false)
   const [showControls, setShowControls] = useState(true)
+  const [captionsOn, setCaptionsOn] = useState(true)
   const hideTimerRef = useRef<number | null>(null)
 
   const mediaUrl = target ? resolveMediaUrl(target.videoUrl) : ''
   const youtubeEmbedUrl = mediaUrl && isYoutubeUrl(mediaUrl) ? getYoutubeEmbedUrl(mediaUrl, { autoplay: true, controls: true }) : null
+  const subtitles = target?.subtitles ?? []
+  const hasCaptions = subtitles.length > 0 && !youtubeEmbedUrl
   const isVertical = target?.item.videoFormat === 'vertical'
   const canTrack = Boolean(getToken() && getProfileId() && target)
 
@@ -99,6 +102,15 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
       }
     }
   }, [target, mediaUrl, youtubeEmbedUrl])
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !hasCaptions) return
+
+    for (const track of video.textTracks) {
+      track.mode = captionsOn ? 'showing' : 'hidden'
+    }
+  }, [captionsOn, hasCaptions, target, mediaUrl])
 
   useEffect(() => {
     if (!target) return
@@ -212,7 +224,18 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
           setPlaying(false)
           persistProgress(0, duration)
         }}
-      />
+      >
+        {subtitles.map((track, index) => (
+          <track
+            key={`${track.lang}-${index}`}
+            kind="subtitles"
+            src={resolveMediaUrl(track.url)}
+            srcLang={track.lang}
+            label={track.label}
+            default={track.lang === 'tr' || index === 0}
+          />
+        ))}
+      </video>
 
       {youtubeEmbedUrl && (
         <iframe
@@ -293,6 +316,18 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
             <button type="button" aria-label={muted ? 'Sesi aç' : 'Sessize al'} onClick={() => setMuted((value) => !value)} className="rounded-full p-2 text-white transition hover:bg-white/10">
               {muted ? <MutedIcon /> : <VolumeIcon />}
             </button>
+            {hasCaptions && (
+              <button
+                type="button"
+                aria-label={captionsOn ? 'Altyazıyı kapat' : 'Altyazıyı aç'}
+                onClick={() => setCaptionsOn((value) => !value)}
+                className={`rounded-full px-2.5 py-2 text-xs font-semibold transition hover:bg-white/10 ${
+                  captionsOn ? 'text-sineoda-gold' : 'text-white'
+                }`}
+              >
+                CC
+              </button>
+            )}
             <span className="text-xs text-white/80 sm:text-sm">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>

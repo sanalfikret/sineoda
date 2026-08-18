@@ -1,5 +1,34 @@
 import type { ContentRow, EpisodeRow, ProfileRow, UserRow } from './types.js'
 
+export interface SubtitleTrack {
+  lang: string
+  label: string
+  url: string
+}
+
+function parseSubtitles(value?: string | null): SubtitleTrack[] {
+  if (!value) return []
+  try {
+    const parsed = JSON.parse(value) as SubtitleTrack[]
+    return Array.isArray(parsed) ? parsed.filter((track) => track?.url && track?.lang) : []
+  } catch {
+    return []
+  }
+}
+
+export function serializeSubtitles(subtitles: SubtitleTrack[] | unknown) {
+  if (!Array.isArray(subtitles)) return '[]'
+  const cleaned = subtitles
+    .filter((track): track is SubtitleTrack => Boolean(track && typeof track === 'object' && 'url' in track && 'lang' in track))
+    .map((track) => ({
+      lang: String(track.lang),
+      label: String(track.label || track.lang),
+      url: String(track.url),
+    }))
+    .filter((track) => track.url.trim())
+  return JSON.stringify(cleaned)
+}
+
 export function mapUser(row: UserRow, profiles: ProfileRow[] = []) {
   return {
     id: row.id,
@@ -46,6 +75,7 @@ export function mapContent(row: ContentRow) {
     isNew: isNewFlag,
     newUntil,
     featured: Boolean(row.featured),
+    subtitles: parseSubtitles(row.subtitles_json),
   }
 }
 
@@ -60,6 +90,7 @@ export function mapEpisode(row: EpisodeRow) {
     duration: row.duration,
     videoUrl: row.video_url,
     streamProvider: row.stream_provider ?? 'custom',
+    subtitles: parseSubtitles(row.subtitles_json),
   }
 }
 
