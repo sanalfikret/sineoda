@@ -266,7 +266,7 @@ export function AdminContentFormPage() {
           onChange={(url) => update('videoUrl', url)}
         />
         <p className="-mt-3 text-xs text-sineoda-muted">
-          Mux, Cloudflare Stream, Bunny.net veya lisanslı CDN&apos;den aldığın HLS/MP4 bağlantısını yapıştır.
+          YouTube, MP4 veya HLS (.m3u8) linki yapıştır. Test için YouTube da çalışır.
         </p>
 
         <VideoUpload
