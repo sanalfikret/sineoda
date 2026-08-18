@@ -1,4 +1,10 @@
 import { parseCredits } from './services/credits.js'
+import {
+  getLicenseDaysRemaining,
+  isLicenseExpired,
+  isLicenseExpiringSoon,
+  isLicenseUnlimited,
+} from './services/license.js'
 import type { ContentRow, EpisodeRow, ProfileRow, UserRow } from './types.js'
 
 export interface SubtitleTrack {
@@ -52,6 +58,26 @@ export function mapProfile(row: ProfileRow) {
     name: row.name,
     avatar: row.avatar,
     isKids: Boolean(row.is_kids),
+  }
+}
+
+export function mapContentLicense(row: ContentRow) {
+  const licenseExpiresAt = row.license_expires_at ?? null
+  const contentAddedAt = row.content_added_at ?? null
+  return {
+    contentAddedAt,
+    licenseExpiresAt,
+    licenseUnlimited: isLicenseUnlimited(licenseExpiresAt),
+    licenseExpired: isLicenseExpired(licenseExpiresAt),
+    licenseExpiringSoon: isLicenseExpiringSoon(licenseExpiresAt),
+    licenseDaysRemaining: licenseExpiresAt ? getLicenseDaysRemaining(licenseExpiresAt) : null,
+  }
+}
+
+export function mapContentAdmin(row: ContentRow) {
+  return {
+    ...mapContent(row),
+    ...mapContentLicense(row),
   }
 }
 

@@ -4,15 +4,24 @@ import { ImageUpload } from '../../components/admin/ImageUpload'
 import { VideoUpload } from '../../components/admin/VideoUpload'
 import { SubtitleUpload } from '../../components/admin/SubtitleUpload'
 import { AdminEpisodesPanel } from '../../components/admin/AdminEpisodesPanel'
-import { resolveMediaUrl } from '../../api/client'
+import { resolveMediaUrl, fetchAdminCatalog } from '../../api/client'
 import { useContent } from '../../context/ContentContext'
 import { BROWSE_GENRES, CONTENT_GENRES, STREAM_PROVIDERS } from '../../constants/genres'
 import { buildSubtitles, subtitlesToForm } from '../../utils/subtitles'
 import { buildCredits, creditsToForm } from '../../utils/credits'
 import { CONTENT_TYPES, isSeriesContent } from '../../constants/contentTypes'
 import type { ContentType } from '../../types/content'
+import { toDateInputValue } from '../../utils/license'
 
 const RATINGS = ['Genel', '7+', '13+', '16+', '18+']
+const todayInput = () => new Date().toISOString().slice(0, 10)
+
+const LICENSE_DEFAULTS = {
+  contentAddedAt: todayInput(),
+  licenseUnlimited: true,
+  licenseExpiresAt: '',
+}
+
 const EMPTY_FORM = {
   title: '',
   description: '',
@@ -35,6 +44,7 @@ const EMPTY_FORM = {
   producers: '',
   cast: '',
   studio: '',
+  ...LICENSE_DEFAULTS,
 }
 
 const VERTICAL_PRESET = {
@@ -75,28 +85,59 @@ export function AdminContentFormPage() {
 
   useEffect(() => {
     if (!id) return
-    const item = getContentById(id)
-    if (!item) return
 
-    setForm({
-      title: item.title,
-      description: item.description,
-      year: item.year,
-      duration: item.duration,
-      rating: item.rating,
-      type: item.type,
-      genres: item.genres.join(', '),
-      poster: item.poster,
-      backdrop: item.backdrop,
-      videoUrl: item.videoUrl,
-      trailerUrl: item.trailerUrl ?? '',
-      streamProvider: item.streamProvider ?? 'custom',
-      videoFormat: item.videoFormat ?? 'standard',
-      isNew: item.isNew ?? false,
-      featured: item.featured ?? false,
-      ...subtitlesToForm(item.subtitles),
-      ...creditsToForm(item.credits),
-    })
+    void fetchAdminCatalog()
+      .then(({ catalog }) => {
+        const item = catalog.find((entry) => entry.id === id)
+        if (!item) return
+
+        setForm({
+          title: item.title,
+          description: item.description,
+          year: item.year,
+          duration: item.duration,
+          rating: item.rating,
+          type: item.type,
+          genres: item.genres.join(', '),
+          poster: item.poster,
+          backdrop: item.backdrop,
+          videoUrl: item.videoUrl,
+          trailerUrl: item.trailerUrl ?? '',
+          streamProvider: item.streamProvider ?? 'custom',
+          videoFormat: item.videoFormat ?? 'standard',
+          isNew: item.isNew ?? false,
+          featured: item.featured ?? false,
+          contentAddedAt: toDateInputValue(item.contentAddedAt) || todayInput(),
+          licenseUnlimited: item.licenseUnlimited,
+          licenseExpiresAt: toDateInputValue(item.licenseExpiresAt),
+          ...subtitlesToForm(item.subtitles),
+          ...creditsToForm(item.credits),
+        })
+      })
+      .catch(() => {
+        const item = getContentById(id)
+        if (!item) return
+        setForm((current) => ({
+          ...current,
+          title: item.title,
+          description: item.description,
+          year: item.year,
+          duration: item.duration,
+          rating: item.rating,
+          type: item.type,
+          genres: item.genres.join(', '),
+          poster: item.poster,
+          backdrop: item.backdrop,
+          videoUrl: item.videoUrl,
+          trailerUrl: item.trailerUrl ?? '',
+          streamProvider: item.streamProvider ?? 'custom',
+          videoFormat: item.videoFormat ?? 'standard',
+          isNew: item.isNew ?? false,
+          featured: item.featured ?? false,
+          ...subtitlesToForm(item.subtitles),
+          ...creditsToForm(item.credits),
+        }))
+      })
   }, [id, getContentById])
 
   const handleSubmit = async (event: FormEvent) => {
@@ -105,6 +146,16 @@ export function AdminContentFormPage() {
 
     if (!form.title.trim() || !form.poster.trim() || !form.videoUrl.trim()) {
       setError('Başlık, poster ve video zorunludur.')
+      return
+    }
+
+    if (!form.contentAddedAt) {
+      setError('Platforma eklenme tarihi zorunludur.')
+      return
+    }
+
+    if (!form.licenseUnlimited && !form.licenseExpiresAt) {
+      setError('Telif sınırsız değilse bitiş tarihi girilmelidir.')
       return
     }
 
@@ -127,6 +178,9 @@ export function AdminContentFormPage() {
       videoFormat: form.videoFormat,
       isNew: form.isNew,
       featured: form.featured,
+      contentAddedAt: form.contentAddedAt,
+      licenseUnlimited: form.licenseUnlimited,
+      licenseExpiresAt: form.licenseUnlimited ? null : form.licenseExpiresAt,
       subtitles: buildSubtitles(form.subtitleTr, form.subtitleEn),
       credits: buildCredits(form),
     }
@@ -380,6 +434,48 @@ export function AdminContentFormPage() {
             Filtreler: {BROWSE_GENRES.join(', ')}
           </p>
         </Field>
+
+        <section className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 sm:p-5">
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-amber-200">Telif &amp; Yayın Bilgileri</h3>
+            <p className="mt-1 text-xs text-sineoda-muted">
+              Bu alanlar yalnızca admin panelinde görünür; üyeler bu bilgileri görmez.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Platforma Eklenme Tarihi *">
+              <input
+                type="date"
+                value={form.contentAddedAt}
+                onChange={(event) => update('contentAddedAt', event.target.value)}
+                className={inputClass}
+                required
+              />
+            </Field>
+
+            <div>
+              <Field label="Telif Bitiş Tarihi">
+                <input
+                  type="date"
+                  value={form.licenseExpiresAt}
+                  onChange={(event) => update('licenseExpiresAt', event.target.value)}
+                  disabled={form.licenseUnlimited}
+                  className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-50`}
+                />
+              </Field>
+              <label className="mt-3 flex items-center gap-2 text-sm text-white/85">
+                <input
+                  type="checkbox"
+                  checked={form.licenseUnlimited}
+                  onChange={(event) => update('licenseUnlimited', event.target.checked)}
+                  className="h-4 w-4 rounded accent-sineoda-gold"
+                />
+                Sınırsız telif (bitiş tarihi yok)
+              </label>
+            </div>
+          </div>
+        </section>
 
         <ImageUpload
           label="Poster *"

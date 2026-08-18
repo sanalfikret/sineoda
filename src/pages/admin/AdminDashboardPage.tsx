@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   fetchAnalyticsOverview,
+  fetchExpiringLicenses,
   fetchWatchStats,
   resolveMediaUrl,
   type AnalyticsOverview,
@@ -9,24 +10,30 @@ import {
 } from '../../api/client'
 import { useContent } from '../../context/ContentContext'
 import { CONTENT_TYPES } from '../../constants/contentTypes'
+import type { AdminContentItem } from '../../types/content'
+import { formatLicenseDate } from '../../utils/license'
 
 export function AdminDashboardPage() {
   const { catalog, categories, featuredContent } = useContent()
   const [watchStats, setWatchStats] = useState<WatchStat[]>([])
   const [overview, setOverview] = useState<AnalyticsOverview | null>(null)
+  const [expiringItems, setExpiringItems] = useState<AdminContentItem[]>([])
   const [statsLoading, setStatsLoading] = useState(true)
 
   const loadStats = async () => {
     try {
-      const [watchData, overviewData] = await Promise.all([
+      const [watchData, overviewData, expiringData] = await Promise.all([
         fetchWatchStats(),
         fetchAnalyticsOverview(),
+        fetchExpiringLicenses(30),
       ])
       setWatchStats(watchData.stats)
       setOverview(overviewData)
+      setExpiringItems(expiringData.items)
     } catch {
       setWatchStats([])
       setOverview(null)
+      setExpiringItems([])
     } finally {
       setStatsLoading(false)
     }
@@ -87,6 +94,58 @@ export function AdminDashboardPage() {
             Toplam izlenme: {overview.totals.watchHours} saat ({overview.totals.watchMinutes} dk) ·{' '}
             {overview.totals.activeSubscriptions} aktif abonelik · {overview.totals.users} kullanıcı
           </p>
+        </section>
+      )}
+
+      {expiringItems.length > 0 && (
+        <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="font-semibold text-amber-100">Telif Süresi Yaklaşan İçerikler</h2>
+              <p className="mt-1 text-sm text-amber-100/70">
+                Önümüzdeki 30 gün içinde anlaşması bitecek {expiringItems.length} içerik
+              </p>
+            </div>
+            <Link
+              to="/admin/icerikler"
+              className="rounded-lg border border-amber-400/40 px-4 py-2 text-sm font-medium text-amber-100 hover:bg-amber-500/20"
+            >
+              Tümünü gör
+            </Link>
+          </div>
+          <div className="mt-4 space-y-2">
+            {expiringItems.slice(0, 6).map((item) => (
+              <div
+                key={item.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/20 bg-[#11141c]/70 px-4 py-3"
+              >
+                <div className="flex items-center gap-3">
+                  <img
+                    src={resolveMediaUrl(item.poster)}
+                    alt=""
+                    className="h-12 w-9 rounded object-cover"
+                  />
+                  <div>
+                    <p className="font-medium text-white">{item.title}</p>
+                    <p className="text-xs text-sineoda-muted">
+                      Bitiş: {formatLicenseDate(item.licenseExpiresAt)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="rounded-full bg-amber-500/20 px-3 py-1 text-xs font-semibold text-amber-200">
+                    {item.licenseDaysRemaining} gün kaldı
+                  </span>
+                  <Link
+                    to={`/admin/icerikler/${item.id}`}
+                    className="text-sm text-sineoda-gold hover:underline"
+                  >
+                    Düzenle
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
         </section>
       )}
 
