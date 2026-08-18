@@ -32,8 +32,8 @@ export function ContentRow({
   }
 
   return (
-    <section className="mb-8 overflow-visible sm:mb-10">
-      <div className="mb-3 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+    <section className="mb-5">
+      <div className="mb-2 flex items-center justify-between px-4 sm:px-6 lg:px-8">
         <h2 className={`font-semibold text-white ${prominent ? 'text-xl sm:text-2xl' : 'text-lg sm:text-xl'}`}>
           {title}
         </h2>
@@ -52,8 +52,8 @@ export function ContentRow({
 
       <div
         ref={rowRef}
-        className={`hide-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-visible px-4 pb-6 pt-2 sm:px-6 lg:px-8 ${
-          prominent ? 'gap-4 sm:gap-5' : 'gap-3 sm:gap-4'
+        className={`hide-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden px-4 sm:px-6 lg:px-8 ${
+          prominent ? 'gap-3 sm:gap-4' : 'gap-2.5 sm:gap-3'
         }`}
       >
         {items.map((item) => (

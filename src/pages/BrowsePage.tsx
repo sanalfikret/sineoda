@@ -178,7 +178,7 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
 
       <GenreFilterBar activeGenre={activeGenre} onChange={setActiveGenre} />
 
-      <div className="space-y-2 pb-24 pt-4">
+      <div className="pb-24 pt-2">
         {!activeGenre && !contentType && !verticalOnly && verticalItems.length > 0 && (
           <ContentRow
             title="Dikey Diziler"
