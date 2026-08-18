@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { sendSmsCode } from '../api/client'
 import { AuthLayout } from '../components/AuthLayout'
 import { LEGAL_LINKS } from '../constants/legal'
@@ -8,8 +8,9 @@ import { useAuth } from '../context/AuthContext'
 export function SignupPage() {
   const { signup, user } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(() => searchParams.get('email') ?? '')
   const [password, setPassword] = useState('')
   const [phone, setPhone] = useState('')
   const [smsCode, setSmsCode] = useState('')
