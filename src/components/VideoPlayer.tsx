@@ -274,13 +274,7 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
           Geri
         </button>
         <h2 className="truncate px-4 text-sm font-semibold text-white sm:text-base">{target.title}</h2>
-        <ContentActionButtons
-          contentId={target.item.id}
-          title={target.title}
-          variant="overlay"
-          showWatchlist={false}
-          className="pointer-events-auto shrink-0"
-        />
+        <div className="w-16 shrink-0 sm:w-20" />
       </div>
 
       {!youtubeEmbedUrl && !playing && (
@@ -306,7 +300,6 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
           <ContentActionButtons
             contentId={target.item.id}
             title={target.title}
-            variant="overlay"
             showWatchlist={false}
           />
         </div>
@@ -347,12 +340,29 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
           </div>
-          <span className="hidden text-xs text-white/60 sm:inline">
-            {target.item.rating} · {target.item.year}
-            {isVertical ? ' · Dikey' : ''}
-          </span>
+          <ContentActionButtons
+            contentId={target.item.id}
+            title={target.title}
+            showWatchlist={false}
+            className="hidden sm:block"
+          />
         </div>
       </div>
+      )}
+
+      {youtubeEmbedUrl && (
+        <div
+          className={`absolute inset-x-0 bottom-0 flex justify-end px-4 pb-6 transition-opacity duration-300 sm:px-6 ${
+            showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+        >
+          <ContentActionButtons
+            contentId={target.item.id}
+            title={target.title}
+            showWatchlist={false}
+            className="pointer-events-auto"
+          />
+        </div>
       )}
     </div>
   )
