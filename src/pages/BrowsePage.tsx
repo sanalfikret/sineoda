@@ -230,6 +230,7 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
               onSelect={handleSelect}
               progressMap={progressMap}
               layout={verticalOnly ? 'portrait' : 'landscape'}
+              variant={activeGenre ? 'grid' : 'carousel'}
             />
           ))
         )}
