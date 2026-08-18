@@ -1,6 +1,7 @@
-import { type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useWatchlist } from '../context/WatchlistContext'
 import { useContentReactions } from '../hooks/useContentReactions'
+import { ShareMenu } from './ShareMenu'
 
 interface ContentActionButtonsProps {
   contentId: string
@@ -18,8 +19,8 @@ export function ContentActionButtons({
   className = '',
 }: ContentActionButtonsProps) {
   const { isInWatchlist, toggleWatchlist } = useWatchlist()
-  const { reaction, reactionLoading, shareBusy, shareNotice, handleReaction, handleShare } =
-    useContentReactions(contentId)
+  const { reaction, reactionLoading, handleReaction } = useContentReactions(contentId)
+  const [shareOpen, setShareOpen] = useState(false)
 
   const inList = isInWatchlist(contentId)
 
@@ -59,18 +60,16 @@ export function ContentActionButtons({
 
         <ClassicButton
           label="Paylaş"
-          disabled={shareBusy}
+          active={shareOpen}
           showLabel={showLabels}
-          onClick={() => void handleShare(title)}
+          onClick={() => setShareOpen((open) => !open)}
         >
           <ShareIcon />
         </ClassicButton>
       </div>
 
-      {shareNotice && (
-        <p className="absolute right-0 top-full z-20 mt-2 whitespace-nowrap rounded-lg bg-sineoda-gold px-3 py-1.5 text-xs font-semibold text-sineoda-bg shadow-lg">
-          {shareNotice}
-        </p>
+      {shareOpen && (
+        <ShareMenu contentId={contentId} title={title} onClose={() => setShareOpen(false)} />
       )}
     </div>
   )
