@@ -1,0 +1,111 @@
+import { TrailerBackdrop } from './TrailerBackdrop'
+import type { ContentItem } from '../types/content'
+
+interface HeroProps {
+  item: ContentItem
+  onPlay: (item: ContentItem) => void
+  onDetails: (item: ContentItem) => void
+  eyebrow?: string
+}
+
+export function Hero({ item, onPlay, onDetails, eyebrow = 'Öne Çıkan' }: HeroProps) {
+  return (
+    <section className="relative min-h-[78vh] overflow-hidden sm:min-h-[88vh] tv:min-h-[85vh]">
+      <TrailerBackdrop item={item} />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(232,184,74,0.12),transparent_50%)]" />
+      <div className="absolute inset-0 bg-gradient-to-r from-sineoda-bg via-sineoda-bg/90 to-sineoda-bg/20" />
+      <div className="absolute inset-0 bg-gradient-to-t from-sineoda-bg via-sineoda-bg/30 to-black/20" />
+      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-sineoda-gold/40 to-transparent" />
+
+      <div className="relative mx-auto flex h-full max-w-7xl items-end px-4 pb-14 pt-28 sm:px-6 sm:pb-20 lg:px-8 tv:pb-24 tv:pt-32">
+        <div className="max-w-3xl">
+          <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.28em] text-sineoda-gold sm:text-sm">
+            <span className="h-px w-8 bg-sineoda-gold/70" />
+            {eyebrow}
+            {item.isNew && (
+              <span className="rounded-full bg-sineoda-gold px-2.5 py-0.5 text-[10px] font-bold tracking-normal text-sineoda-bg">
+                YENİ
+              </span>
+            )}
+          </p>
+          <h1 className="text-4xl font-bold leading-[1.05] text-white sm:text-6xl lg:text-7xl tv:text-7xl">
+            {item.title}
+          </h1>
+          <div className="mt-5 flex flex-wrap items-center gap-2 text-sm text-white/75">
+            <span className="rounded border border-sineoda-gold/30 bg-sineoda-gold/10 px-2.5 py-0.5 text-xs font-semibold text-sineoda-gold">
+              {item.rating}
+            </span>
+            <span>{item.year}</span>
+            <span className="text-white/40">•</span>
+            <span>{item.duration}</span>
+            <span className="text-white/40">•</span>
+            <span className="capitalize">{item.type}</span>
+            {item.videoFormat === 'vertical' && (
+              <>
+                <span className="text-white/40">•</span>
+                <span className="text-sineoda-gold">Dikey Dizi</span>
+              </>
+            )}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {item.genres.slice(0, 4).map((genre) => (
+              <span key={genre} className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/85">
+                {genre}
+              </span>
+            ))}
+          </div>
+          <p className="mt-5 max-w-2xl line-clamp-3 text-sm leading-relaxed text-white/80 sm:line-clamp-none sm:text-lg">
+            {item.description}
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => onPlay(item)}
+              className="inline-flex items-center gap-2 rounded-lg bg-sineoda-gold px-6 py-3.5 text-sm font-semibold text-sineoda-bg shadow-lg shadow-sineoda-gold/20 transition hover:brightness-110"
+            >
+              <PlayIcon />
+              Oynat
+            </button>
+            {item.trailerUrl && (
+              <button
+                type="button"
+                onClick={() => onDetails(item)}
+                className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/15"
+              >
+                <InfoIcon />
+                Fragman & Detay
+              </button>
+            )}
+            {!item.trailerUrl && (
+              <button
+                type="button"
+                onClick={() => onDetails(item)}
+                className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/15"
+              >
+                <InfoIcon />
+                Detaylar
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function PlayIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M8 5v14l11-7z" />
+    </svg>
+  )
+}
+
+function InfoIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 10v6M12 7h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  )
+}
