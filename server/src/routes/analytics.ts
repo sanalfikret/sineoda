@@ -86,7 +86,9 @@ router.get('/watch-stats', requireAdmin, (_req: AuthRequest, res) => {
     FROM content c
     LEFT JOIN watch_progress wp ON wp.content_id = c.id
     GROUP BY c.id
+    HAVING total_seconds > 0
     ORDER BY total_seconds DESC
+    LIMIT 200
   `)
 
   res.json({

@@ -4,6 +4,7 @@ import { fetchAdminCatalog, resolveMediaUrl } from '../../api/client'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { useContent } from '../../context/ContentContext'
 import { CONTENT_TYPES, getContentDisplayLabel } from '../../constants/contentTypes'
+import { useAdminAnalytics } from '../../hooks/useAdminAnalytics'
 import type { AdminContentItem, ContentType } from '../../types/content'
 import { formatLicenseDate, mergeAdminCatalog } from '../../utils/license'
 import { isVerticalContent } from '../../utils/vertical'
@@ -61,6 +62,7 @@ function sortAdminItems(items: AdminContentItem[]) {
 
 export function AdminContentListPage() {
   const { catalog, deleteContent, setFeatured, isLoading: catalogLoading } = useContent()
+  const { watchStatsById } = useAdminAnalytics(0)
   const [adminCatalog, setAdminCatalog] = useState<AdminContentItem[]>([])
   const [loading, setLoading] = useState(true)
   const [usingFallback, setUsingFallback] = useState(false)
@@ -242,6 +244,7 @@ export function AdminContentListPage() {
                 <th className="px-4 py-3 font-medium">Tür</th>
                 <th className="px-4 py-3 font-medium">Eklenme</th>
                 <th className="px-4 py-3 font-medium">Telif</th>
+                <th className="px-4 py-3 font-medium">İzlenen</th>
                 <th className="px-4 py-3 font-medium">Öne Çıkan</th>
                 <th className="px-4 py-3 font-medium">İşlemler</th>
               </tr>
@@ -249,13 +252,13 @@ export function AdminContentListPage() {
             <tbody>
               {loading || catalogLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-sineoda-muted">
+                  <td colSpan={8} className="px-4 py-10 text-center text-sineoda-muted">
                     Yükleniyor...
                   </td>
                 </tr>
               ) : filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-sineoda-muted">
+                  <td colSpan={8} className="px-4 py-10 text-center text-sineoda-muted">
                     {typeFilter === 'dikey' ? (
                       <div className="space-y-3">
                         <p>Henüz dikey dizi eklenmemiş.</p>
@@ -274,7 +277,9 @@ export function AdminContentListPage() {
                   </td>
                 </tr>
               ) : (
-                filteredItems.map((item) => (
+                filteredItems.map((item) => {
+                  const watchedMinutes = watchStatsById.get(item.id)?.totalWatchedMinutes
+                  return (
                   <tr
                     key={item.id}
                     className={`border-b border-white/5 last:border-0 ${
@@ -311,6 +316,9 @@ export function AdminContentListPage() {
                     <td className="px-4 py-3">
                       <LicenseStatusBadge item={item} />
                     </td>
+                    <td className="px-4 py-3 text-xs text-white/80">
+                      {watchedMinutes ? `${watchedMinutes} dk` : '—'}
+                    </td>
                     <td className="px-4 py-3">
                       {item.featured ? (
                         <span className="rounded-full bg-sineoda-gold/15 px-2 py-1 text-xs text-sineoda-gold">
@@ -344,7 +352,8 @@ export function AdminContentListPage() {
                       </div>
                     </td>
                   </tr>
-                ))
+                  )
+                })
               )}
             </tbody>
           </table>
