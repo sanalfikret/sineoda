@@ -3,7 +3,9 @@ import { fetchEpisodes, getProfileId, getToken, resolveMediaUrl, saveWatchProgre
 import { isSeriesContent } from '../constants/contentTypes'
 import type { Episode, PlayTarget } from '../types/content'
 import { getYoutubeEmbedUrl, isYoutubeUrl } from '../utils/media'
+import { getActiveFullscreenElement, isFullscreenSupported, useFullscreen } from '../hooks/useFullscreen'
 import { ContentActionButtons } from './ContentActionButtons'
+import { PlayerFullscreenButton } from './PlayerFullscreenButton'
 
 interface VerticalPlayerProps {
   target: PlayTarget | null
@@ -43,6 +45,8 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
   const [showEpisodeList, setShowEpisodeList] = useState(false)
   const [swipeHint, setSwipeHint] = useState(true)
   const hideTimerRef = useRef<number | null>(null)
+  const { ref: playerRef, isFullscreen, toggle: toggleFullscreen } = useFullscreen<HTMLDivElement>()
+  const fullscreenSupported = isFullscreenSupported()
 
   const canTrack = Boolean(getToken() && getProfileId() && target)
 
@@ -176,7 +180,11 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
     if (!target) return
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') handleClose()
+      if (event.key === 'Escape' && !getActiveFullscreenElement()) handleClose()
+      if (event.key === 'f' || event.key === 'F') {
+        event.preventDefault()
+        void toggleFullscreen()
+      }
       if (event.key === 'ArrowUp') goToEpisode(episodeIndex + 1)
       if (event.key === 'ArrowDown') goToEpisode(episodeIndex - 1)
     }
@@ -192,7 +200,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
       window.clearTimeout(hintTimer)
       if (hideTimerRef.current) window.clearTimeout(hideTimerRef.current)
     }
-  }, [target, episodeIndex])
+  }, [target, episodeIndex, toggleFullscreen])
 
   if (!target) return null
 
@@ -274,6 +282,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
 
   return (
     <div
+      ref={playerRef}
       className="safe-top safe-bottom fixed inset-0 z-[60] flex items-center justify-center bg-black"
       onMouseMove={scheduleHideControls}
       onTouchStart={handleTouchStart}
@@ -289,6 +298,10 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
         playsInline
         muted={muted}
         onClick={togglePlay}
+        onDoubleClick={(event) => {
+          event.preventDefault()
+          void toggleFullscreen()
+        }}
         onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
         onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
         onPlay={() => setPlaying(true)}
@@ -435,6 +448,12 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
               >
                 {muted ? <MutedIcon /> : <VolumeIcon />}
               </button>
+              {fullscreenSupported && (
+                <PlayerFullscreenButton
+                  isFullscreen={isFullscreen}
+                  onClick={() => void toggleFullscreen()}
+                />
+              )}
               <span className="text-xs text-white/80">
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>

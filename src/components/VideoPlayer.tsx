@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getProfileId, getToken, resolveMediaUrl, saveWatchProgress } from '../api/client'
 import type { PlayTarget } from '../types/content'
 import { getYoutubeEmbedUrl, isYoutubeUrl } from '../utils/media'
+import { getActiveFullscreenElement, isFullscreenSupported, useFullscreen } from '../hooks/useFullscreen'
 import { ContentActionButtons } from './ContentActionButtons'
+import { PlayerFullscreenButton } from './PlayerFullscreenButton'
 
 interface VideoPlayerProps {
   target: PlayTarget | null
@@ -36,6 +38,8 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
   const [showControls, setShowControls] = useState(true)
   const [captionsOn, setCaptionsOn] = useState(true)
   const hideTimerRef = useRef<number | null>(null)
+  const { ref: playerRef, isFullscreen, toggle: toggleFullscreen } = useFullscreen<HTMLDivElement>()
+  const fullscreenSupported = isFullscreenSupported()
 
   const mediaUrl = target ? resolveMediaUrl(target.videoUrl) : ''
   const youtubeEmbedUrl = mediaUrl && isYoutubeUrl(mediaUrl) ? getYoutubeEmbedUrl(mediaUrl, { autoplay: true, controls: true }) : null
@@ -54,6 +58,14 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
     }).catch(() => undefined)
     lastSavedRef.current = position
   }
+
+  const handleClose = useCallback(() => {
+    const video = videoRef.current
+    if (video && canTrack) {
+      persistProgress(video.currentTime, video.duration || duration)
+    }
+    onClose()
+  }, [canTrack, duration, onClose, target])
 
   useEffect(() => {
     if (!target || !mediaUrl || youtubeEmbedUrl) return
@@ -131,7 +143,11 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
     if (!target) return
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') handleClose()
+      if (event.key === 'Escape' && !getActiveFullscreenElement()) handleClose()
+      if (event.key === 'f' || event.key === 'F') {
+        event.preventDefault()
+        void toggleFullscreen()
+      }
       if (event.key === ' ') {
         event.preventDefault()
         const video = videoRef.current
@@ -154,17 +170,9 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
       window.removeEventListener('keydown', onKeyDown)
       if (hideTimerRef.current) window.clearTimeout(hideTimerRef.current)
     }
-  }, [target])
+  }, [target, toggleFullscreen, handleClose])
 
   if (!target) return null
-
-  const handleClose = () => {
-    const video = videoRef.current
-    if (video && canTrack) {
-      persistProgress(video.currentTime, video.duration || duration)
-    }
-    onClose()
-  }
 
   const togglePlay = () => {
     const video = videoRef.current
@@ -199,6 +207,7 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
 
   return (
     <div
+      ref={playerRef}
       className={`safe-top safe-bottom fixed inset-0 z-[60] flex items-center justify-center bg-black ${
         isVertical ? 'px-4' : ''
       }`}
@@ -217,6 +226,10 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
         playsInline
         muted={muted}
         onClick={togglePlay}
+        onDoubleClick={(event) => {
+          event.preventDefault()
+          void toggleFullscreen()
+        }}
         onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
         onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
         onPlay={() => setPlaying(true)}
@@ -275,7 +288,14 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
             Geri
           </button>
           <h2 className="truncate text-center text-sm font-semibold text-white sm:text-base">{target.title}</h2>
-          <div className="w-[118px]" aria-hidden="true" />
+          <div className="flex w-[118px] justify-end">
+            {fullscreenSupported && (
+              <PlayerFullscreenButton
+                isFullscreen={isFullscreen}
+                onClick={() => void toggleFullscreen()}
+              />
+            )}
+          </div>
         </div>
 
         <ContentActionButtons
@@ -337,6 +357,12 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
               >
                 CC
               </button>
+            )}
+            {fullscreenSupported && (
+              <PlayerFullscreenButton
+                isFullscreen={isFullscreen}
+                onClick={() => void toggleFullscreen()}
+              />
             )}
             <span className="text-xs text-white/80 sm:text-sm">
               {formatTime(currentTime)} / {formatTime(duration)}
