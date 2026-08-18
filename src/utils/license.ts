@@ -1,3 +1,5 @@
+import type { AdminContentItem, ContentItem } from '../types/content'
+
 const DAY_MS = 24 * 60 * 60 * 1000
 
 export function isLicenseUnlimited(expiresAt: string | null | undefined): boolean {
@@ -36,4 +38,26 @@ export function formatLicenseDate(iso: string | null | undefined): string {
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return '—'
   return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+export function toAdminContentItem(item: ContentItem): AdminContentItem {
+  return {
+    ...item,
+    contentAddedAt: null,
+    licenseExpiresAt: null,
+    licenseUnlimited: true,
+    licenseExpired: false,
+    licenseExpiringSoon: false,
+    licenseDaysRemaining: null,
+  }
+}
+
+export function mergeAdminCatalog(
+  items: ContentItem[],
+  adminItems: AdminContentItem[],
+): AdminContentItem[] {
+  if (adminItems.length === 0) return items.map(toAdminContentItem)
+
+  const adminById = new Map(adminItems.map((item) => [item.id, item]))
+  return items.map((item) => adminById.get(item.id) ?? toAdminContentItem(item))
 }
