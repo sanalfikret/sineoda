@@ -6,7 +6,7 @@ import type { ContentRow } from '../types.js'
 
 const router = Router()
 
-function getLandingConfig() {
+export function getLandingConfig() {
   const sliderRows = dbAll<{ content_id: string; sort_order: number }>(
     'SELECT content_id, sort_order FROM landing_slider ORDER BY sort_order',
   )
