@@ -17,6 +17,8 @@ interface WatchlistContextValue {
   isLoading: boolean
   isInWatchlist: (contentId: string) => boolean
   toggleWatchlist: (contentId: string) => Promise<void>
+  actionError: string | null
+  clearActionError: () => void
 }
 
 const WatchlistContext = createContext<WatchlistContextValue | null>(null)
@@ -25,6 +27,7 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
   const { activeProfile } = useAuth()
   const [watchlistItems, setWatchlistItems] = useState<ContentItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   const loadWatchlist = useCallback(async () => {
     if (!activeProfile) {
@@ -56,14 +59,28 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
 
   const toggleWatchlist = useCallback(
     async (contentId: string) => {
-      if (!activeProfile) return
-
-      if (watchlistIds.includes(contentId)) {
-        await removeFromWatchlist(contentId)
-      } else {
-        await addToWatchlist(contentId)
+      if (!activeProfile) {
+        const message = 'Listeye eklemek için profil seçmelisiniz.'
+        setActionError(message)
+        throw new Error(message)
       }
-      await loadWatchlist()
+
+      const wasInList = watchlistIds.includes(contentId)
+      setActionError(null)
+
+      try {
+        if (wasInList) {
+          await removeFromWatchlist(contentId)
+        } else {
+          await addToWatchlist(contentId)
+        }
+        await loadWatchlist()
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'Liste güncellenemedi. Tekrar deneyin.'
+        setActionError(message)
+        throw error
+      }
     },
     [activeProfile, watchlistIds, loadWatchlist],
   )
@@ -75,8 +92,10 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
       isLoading,
       isInWatchlist,
       toggleWatchlist,
+      actionError,
+      clearActionError: () => setActionError(null),
     }),
-    [watchlistIds, watchlistItems, isLoading, isInWatchlist, toggleWatchlist],
+    [watchlistIds, watchlistItems, isLoading, isInWatchlist, toggleWatchlist, actionError],
   )
 
   return <WatchlistContext.Provider value={value}>{children}</WatchlistContext.Provider>

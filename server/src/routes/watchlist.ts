@@ -1,4 +1,5 @@
 import { Router, type Response } from 'express'
+import { ensureContentById } from '../catalogEnsure.js'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { getProfileId, requireAuth, type AuthRequest } from '../middleware/auth.js'
 import { mapContent } from '../mappers.js'
@@ -44,7 +45,7 @@ router.post('/:contentId', requireAuth, (req: AuthRequest, res) => {
   const profile = validateProfile(req, res)
   if (!profile) return
 
-  const content = dbGet('SELECT id FROM content WHERE id = ?', [req.params.contentId])
+  const content = ensureContentById(req.params.contentId)
   if (!content) {
     res.status(404).json({ error: 'İçerik bulunamadı.' })
     return

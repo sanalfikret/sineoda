@@ -3,6 +3,7 @@ import { dbGet, dbRun } from './db.js'
 const FEATURED_BROWSE_GENRES = [
   'Aksiyon', 'Dram', 'Suç', 'Gerilim', 'Komedi', 'Romantik', 'Aile', 'Belgesel',
   'Gizem', 'Stand-up', 'Din Temalı', 'Korku', 'Bilim Kurgu', 'Fantastik',
+  'Macera', 'Animasyon', 'Anime', 'Müzikal', 'Reality', 'Yerli', 'Spor',
 ] as const
 
 const POSTERS = [
@@ -55,6 +56,11 @@ const GENRE_TITLES: Record<(typeof FEATURED_BROWSE_GENRES)[number], string[]> = 
   Fantastik: ['Ejderha Efsanesi', 'Sihirli Krallık', 'Kayıp Harita', 'Büyücü Okulu', 'Peri Masalı', 'Karanlık Kale', 'Efsanevi Kılıç', 'Büyülü Orman', 'Gölge Kral', 'Sonsuz Destan'],
 }
 
+function titlesForGenre(genre: (typeof FEATURED_BROWSE_GENRES)[number]) {
+  if (GENRE_TITLES[genre]) return GENRE_TITLES[genre]
+  return Array.from({ length: 10 }, (_, index) => `${genre} Hikayesi ${index + 1}`)
+}
+
 function slug(genre: string) {
   return genre.toLocaleLowerCase('tr').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 }
@@ -96,7 +102,7 @@ interface SeedItem {
 function buildItems(): SeedItem[] {
   const items: SeedItem[] = []
   FEATURED_BROWSE_GENRES.forEach((genre, genreIndex) => {
-    GENRE_TITLES[genre].forEach((title, titleIndex) => {
+    titlesForGenre(genre).forEach((title, titleIndex) => {
       const globalIndex = genreIndex * 10 + titleIndex
       const photoId = POSTERS[globalIndex % POSTERS.length]
       const type = pickType(genre, titleIndex)
@@ -117,7 +123,7 @@ function buildItems(): SeedItem[] {
   return items
 }
 
-const GENRE_ITEMS = buildItems()
+export const GENRE_ITEMS = buildItems()
 
 function upsertGenreItem(item: SeedItem) {
   const genresJson = JSON.stringify(item.genres)
@@ -137,6 +143,13 @@ function upsertGenreItem(item: SeedItem) {
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'custom', ?, 'standard', 1, ?, 0)`,
     [item.id, item.title, `${item.title} — ${item.genres[0]} türünde özgün yapım.`, item.year, item.duration, item.rating, item.type, genresJson, item.poster, item.backdrop, item.videoUrl, item.videoUrl, newUntil],
   )
+}
+
+export function ensureGenreContentById(contentId: string): boolean {
+  const item = GENRE_ITEMS.find((entry) => entry.id === contentId)
+  if (!item) return false
+  upsertGenreItem(item)
+  return true
 }
 
 export function ensureGenreCatalog() {

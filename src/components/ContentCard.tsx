@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { resolveMediaUrl } from '../api/client'
+import { backdropUrlForId, enrichContentImages, posterUrlForId } from '../utils/contentImages'
 import type { ContentItem } from '../types/content'
 import { getContentTypeLabel } from '../constants/contentTypes'
 
@@ -18,7 +20,12 @@ export function ContentCard({
   layout = 'landscape',
 }: ContentCardProps) {
   const isPortrait = layout === 'portrait' || item.videoFormat === 'vertical'
-  const imageUrl = resolveMediaUrl(isPortrait ? item.poster : item.backdrop || item.poster)
+  const enriched = enrichContentImages(item)
+  const imageUrl = resolveMediaUrl(
+    isPortrait ? enriched.poster : enriched.backdrop || enriched.poster,
+  )
+  const fallbackUrl = isPortrait ? posterUrlForId(item.id, true) : backdropUrlForId(item.id)
+  const [imageSrc, setImageSrc] = useState(imageUrl)
 
   const widthClass = isPortrait
     ? size === 'large'
@@ -39,9 +46,10 @@ export function ContentCard({
     >
       <div className={isPortrait ? 'aspect-[9/16]' : 'aspect-video'}>
         <img
-          src={imageUrl}
+          src={imageSrc}
           alt={item.title}
           loading="lazy"
+          onError={() => setImageSrc(fallbackUrl)}
           className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
         />
       </div>

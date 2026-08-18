@@ -21,9 +21,12 @@ export const BROWSE_EXCLUSIVE_ROW_TITLES = new Set([
   'Bu Hafta Trend',
 ])
 
+export const BROWSE_ITEMS_PER_ROW = 10
+
 export function filterCatalog(catalog: ContentItem[], options: BrowseFilterOptions) {
   return catalog.filter((item) => {
     if (options.verticalOnly && item.videoFormat !== 'vertical') return false
+    if (!options.verticalOnly && item.videoFormat === 'vertical') return false
     if (options.type && item.type !== options.type) return false
     if (options.genre && !item.genres.includes(options.genre)) return false
     return true
@@ -44,6 +47,7 @@ export function pickCategoryRow(
   const items = category.itemIds
     .map((id) => getContentById(id))
     .filter((item): item is ContentItem => Boolean(item && filteredIds.has(item.id)))
+    .slice(0, BROWSE_ITEMS_PER_ROW)
 
   if (items.length === 0) return null
 
@@ -63,7 +67,7 @@ export function buildGenreBrowseRows(
     id: genreToCategoryId(genre),
     title: genre,
     itemIds: [] as string[],
-    items: filterCatalog(catalog, { ...options, genre }),
+    items: filterCatalog(catalog, { ...options, genre }).slice(0, BROWSE_ITEMS_PER_ROW),
   })).filter((row) => row.items.length > 0)
 }
 
@@ -72,9 +76,9 @@ export function buildBrowseRows(
   options: BrowseFilterOptions,
 ) {
   if (options.genre) {
-    const items = filterCatalog(catalog, options).sort((a, b) =>
-      a.title.localeCompare(b.title, 'tr'),
-    )
+    const items = filterCatalog(catalog, options)
+      .sort((a, b) => a.title.localeCompare(b.title, 'tr'))
+      .slice(0, BROWSE_ITEMS_PER_ROW)
     if (items.length === 0) return []
     return [
       {
