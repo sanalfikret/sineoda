@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { fetchJournalPost, resolveMediaUrl } from '../api/client'
-import { SiteFooter } from '../components/SiteFooter'
+import { useOptionalContentUI } from '../components/AppShell'
 import { resolveJournalPost } from '../data/demoJournal'
+import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
 import type { JournalPost } from '../types/journal'
 import { formatJournalDate, journalBodyParagraphs } from '../utils/journal'
 
 export function JournalPostPage() {
   const { slug = '' } = useParams()
+  const { user, activeProfile } = useAuth()
   const { catalog } = useContent()
+  const contentUI = useOptionalContentUI()
+  const isMember = Boolean(user && activeProfile)
   const [post, setPost] = useState<JournalPost | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -24,7 +28,7 @@ export function JournalPostPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-sineoda-bg text-sineoda-muted">
+      <div className="flex min-h-[50dvh] items-center justify-center text-sineoda-muted">
         Yükleniyor...
       </div>
     )
@@ -32,7 +36,7 @@ export function JournalPostPage() {
 
   if (!post) {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-sineoda-bg px-4 text-center">
+      <div className="flex min-h-[50dvh] flex-col items-center justify-center gap-4 px-4 text-center">
         <p className="text-lg text-white">Yazı bulunamadı.</p>
         <Link to="/dergi" className="text-sineoda-accent hover:underline">
           Dergiye dön
@@ -42,20 +46,28 @@ export function JournalPostPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-sineoda-bg text-white">
-      <header className="safe-top border-b border-white/5 px-4 py-5 sm:px-6">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
+    <>
+      {!isMember && (
+        <header className="safe-top border-b border-white/5 px-4 py-5 sm:px-6">
+          <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
+            <Link to="/dergi" className="text-sm text-sineoda-muted transition hover:text-white">
+              ← Dergi
+            </Link>
+            <Link to="/" className="text-sm font-medium text-sineoda-accent">
+              Sineoda
+            </Link>
+          </div>
+        </header>
+      )}
+
+      <article className={`mx-auto max-w-3xl px-5 sm:px-8 ${isMember ? 'py-8' : 'py-10 sm:py-14'}`}>
+        {isMember && (
           <Link to="/dergi" className="text-sm text-sineoda-muted transition hover:text-white">
             ← Dergi
           </Link>
-          <Link to="/" className="text-sm font-medium text-sineoda-accent">
-            Sineoda
-          </Link>
-        </div>
-      </header>
+        )}
 
-      <article className="mx-auto max-w-3xl px-5 py-10 sm:px-8 sm:py-14">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sineoda-accent">
+        <p className={`text-xs font-semibold uppercase tracking-[0.22em] text-sineoda-accent ${isMember ? 'mt-4' : ''}`}>
           {formatJournalDate(post.publishedAt)} · {post.author}
         </p>
         <h1 className="mt-4 text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">
@@ -93,18 +105,26 @@ export function JournalPostPage() {
                 İlgili içerik
               </p>
               <p className="mt-2 text-lg font-medium">{linkedContent.title}</p>
-              <Link
-                to="/giris"
-                className="mt-3 inline-flex rounded-md bg-sineoda-accent px-4 py-2 text-sm font-semibold text-sineoda-bg"
-              >
-                İzlemek için giriş yap
-              </Link>
+              {isMember && contentUI ? (
+                <button
+                  type="button"
+                  onClick={() => void contentUI.openPlayer(linkedContent)}
+                  className="mt-3 inline-flex rounded-md bg-sineoda-accent px-4 py-2 text-sm font-semibold text-sineoda-bg"
+                >
+                  İzle
+                </button>
+              ) : (
+                <Link
+                  to="/giris"
+                  className="mt-3 inline-flex rounded-md bg-sineoda-accent px-4 py-2 text-sm font-semibold text-sineoda-bg"
+                >
+                  İzlemek için giriş yap
+                </Link>
+              )}
             </div>
           </div>
         )}
       </article>
-
-      <SiteFooter />
-    </div>
+    </>
   )
 }

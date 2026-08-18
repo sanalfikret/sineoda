@@ -27,6 +27,10 @@ interface ContentUIContextValue {
 
 const ContentUIContext = createContext<ContentUIContextValue | null>(null)
 
+export function useOptionalContentUI() {
+  return useContext(ContentUIContext)
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { isAdmin } = useAuth()
   const [detailItem, setDetailItem] = useState<ContentItem | null>(null)

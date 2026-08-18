@@ -10,6 +10,7 @@ const navItems = [
   { label: 'Belgeseller', to: '/belgeseller', match: (path: string) => path === '/belgeseller' },
   { label: 'Dikey Diziler', to: '/dikey-diziler', match: (path: string) => path === '/dikey-diziler' },
   { label: 'Listem', to: '/listem', match: (path: string) => path === '/listem' },
+  { label: 'Dergi', to: '/dergi', match: (path: string) => path === '/dergi' || path.startsWith('/dergi/') },
 ]
 
 export function Header() {
