@@ -6,7 +6,16 @@ const PROFILE_KEY = 'sineoda_profile_id'
 
 export function getApiBase() {
   const base = import.meta.env.VITE_API_URL ?? ''
-  return base.replace(/\/$/, '')
+  if (base) return base.replace(/\/$/, '')
+
+  if (import.meta.env.PROD && typeof window !== 'undefined') {
+    const host = window.location.hostname
+    if (host.endsWith('.vercel.app') || host === 'sineoda.vercel.app') {
+      return 'https://sineoda-api.onrender.com'
+    }
+  }
+
+  return ''
 }
 
 export function resolveMediaUrl(url: string) {
