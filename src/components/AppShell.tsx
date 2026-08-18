@@ -43,6 +43,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     (item: ContentItem) => {
       saveBrowseScroll(location.pathname, location.search)
       const from = `${location.pathname}${location.search}`
+      sessionStorage.setItem('content-detail-from', from)
       navigate(`/icerik/${item.id}`, { state: { from } })
     },
     [navigate, location.pathname, location.search],

@@ -187,6 +187,7 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
             progressMap={progressMap}
             viewAllHref="/dikey-diziler"
             prominent
+            layout="portrait"
           />
         )}
 
@@ -228,6 +229,7 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
               items={row.items}
               onSelect={handleSelect}
               progressMap={progressMap}
+              layout={verticalOnly ? 'portrait' : 'landscape'}
             />
           ))
         )}
