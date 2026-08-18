@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { fetchCanPlay, fetchWatchProgress } from '../api/client'
+import { fetchCanPlay, fetchEpisodes, fetchWatchProgress } from '../api/client'
 import type { ContentItem, Episode, PlayTarget } from '../types/content'
 import { DetailModal } from './DetailModal'
 import { Header } from './Header'
@@ -17,6 +17,7 @@ import { SiteFooter } from './SiteFooter'
 import { VideoPlayer } from './VideoPlayer'
 import { VerticalPlayer } from './VerticalPlayer'
 import { useAuth } from '../context/AuthContext'
+import { isSeriesContent } from '../constants/contentTypes'
 import { isVerticalContent } from '../utils/vertical'
 
 interface ContentUIContextValue {
@@ -51,12 +52,32 @@ export function AppShell({ children }: { children: ReactNode }) {
         }
       }
 
-      const videoUrl = episode?.videoUrl ?? item.videoUrl
-      const title = episode ? `${item.title} · S${episode.season} B${episode.episode} ${episode.title}` : item.title
+      let resolvedEpisode = episode
+      if (!resolvedEpisode && isSeriesContent(item.type)) {
+        try {
+          const { episodes } = await fetchEpisodes(item.id)
+          const sorted = [...episodes].sort(
+            (a, b) => a.season - b.season || a.episode - b.episode,
+          )
+          resolvedEpisode = sorted.find((entry) => entry.videoUrl?.trim()) ?? sorted[0]
+        } catch {
+          resolvedEpisode = undefined
+        }
+      }
+
+      const videoUrl = resolvedEpisode?.videoUrl ?? item.videoUrl
+      if (!videoUrl?.trim()) {
+        setDetailItem(item)
+        return
+      }
+
+      const title = resolvedEpisode
+        ? `${item.title} · S${resolvedEpisode.season} B${resolvedEpisode.episode} ${resolvedEpisode.title}`
+        : item.title
 
       let startPosition = 0
       try {
-        const { progress } = await fetchWatchProgress(item.id, episode?.id)
+        const { progress } = await fetchWatchProgress(item.id, resolvedEpisode?.id)
         if (
           progress &&
           progress.position > 10 &&
@@ -74,9 +95,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         item,
         videoUrl,
         title,
-        episodeId: episode?.id,
+        episodeId: resolvedEpisode?.id,
         startPosition,
-        subtitles: episode?.subtitles?.length ? episode.subtitles : item.subtitles,
+        subtitles: resolvedEpisode?.subtitles?.length ? resolvedEpisode.subtitles : item.subtitles,
       })
     },
     [isAdmin],

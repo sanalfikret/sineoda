@@ -97,7 +97,10 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
 
   const seasons = [...new Set(episodes.map((ep) => ep.season))].sort((a, b) => a - b)
   const seasonEpisodes = episodes.filter((ep) => ep.season === season)
-  const firstEpisode = sortedEpisodes[0]
+  const firstEpisode = sortedEpisodes.find((episode) => episode.videoUrl?.trim()) ?? sortedEpisodes[0]
+  const hasEpisodeVideo = sortedEpisodes.some((episode) => episode.videoUrl?.trim())
+  const hasMainVideo = Boolean(item.videoUrl?.trim())
+  const canPlay = hasEpisodeVideo || hasMainVideo
   const canResume = resumePosition !== null && resumePosition > 10
   const credits = item.credits ?? {}
   const audioLanguages = credits.audioLanguages ?? ['Türkçe']
@@ -184,7 +187,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
               </button>
             )}
 
-            {!canResume && isSeriesContent(item.type) && episodes.length > 0 && firstEpisode && (
+            {!canResume && isSeriesContent(item.type) && firstEpisode && hasEpisodeVideo && (
               <button
                 type="button"
                 onClick={() => onPlay(item, firstEpisode)}
@@ -195,7 +198,18 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
               </button>
             )}
 
-            {!canResume && !isSeriesContent(item.type) && (
+            {!canResume && isSeriesContent(item.type) && !hasEpisodeVideo && hasMainVideo && (
+              <button
+                type="button"
+                onClick={() => onPlay(item)}
+                className="inline-flex items-center gap-2 rounded-lg bg-sineoda-gold px-5 py-3 text-sm font-semibold text-sineoda-bg transition hover:brightness-110"
+              >
+                <PlaySmallIcon />
+                {item.videoFormat === 'vertical' ? 'Dikey İzle' : 'Oynat'}
+              </button>
+            )}
+
+            {!canResume && !isSeriesContent(item.type) && hasMainVideo && (
               <button
                 type="button"
                 onClick={() => onPlay(item)}
@@ -204,6 +218,13 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
                 <PlaySmallIcon />
                 Oynat
               </button>
+            )}
+
+            {!canResume && !canPlay && (
+              <p className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-sineoda-muted">
+                Bu içerik için henüz video eklenmemiş. Admin panelinden video URL&apos;si ve bölümleri
+                ekleyebilirsiniz.
+              </p>
             )}
 
             <ContentActionButtons contentId={item.id} title={item.title} />
