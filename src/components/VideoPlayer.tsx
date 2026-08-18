@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { getProfileId, getToken, resolveMediaUrl, saveWatchProgress } from '../api/client'
-import type { PlayTarget } from '../types/content'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { fetchEpisodes, getProfileId, getToken, resolveMediaUrl, saveWatchProgress } from '../api/client'
+import type { Episode, PlayTarget } from '../types/content'
+import { isSeriesContent } from '../constants/contentTypes'
 import { getYoutubeEmbedUrl, isYoutubeUrl } from '../utils/media'
 import { getActiveFullscreenElement, isFullscreenSupported, useFullscreen } from '../hooks/useFullscreen'
 import { ContentActionButtons } from './ContentActionButtons'
@@ -9,6 +10,7 @@ import { PlayerFullscreenButton } from './PlayerFullscreenButton'
 interface VideoPlayerProps {
   target: PlayTarget | null
   onClose: () => void
+  onPlayEpisode?: (episode: Episode) => void
 }
 
 function formatTime(seconds: number) {
@@ -27,19 +29,28 @@ async function loadHls() {
   return mod.default
 }
 
-export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
+export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const hlsRef = useRef<{ destroy: () => void } | null>(null)
   const lastSavedRef = useRef(0)
+  const countdownRef = useRef<number | null>(null)
   const [playing, setPlaying] = useState(true)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [muted, setMuted] = useState(false)
   const [showControls, setShowControls] = useState(true)
   const [captionsOn, setCaptionsOn] = useState(true)
+  const [episodes, setEpisodes] = useState<Episode[]>([])
+  const [nextEpisode, setNextEpisode] = useState<Episode | null>(null)
+  const [countdown, setCountdown] = useState(8)
   const hideTimerRef = useRef<number | null>(null)
   const { ref: playerRef, isFullscreen, toggle: toggleFullscreen } = useFullscreen<HTMLDivElement>()
   const fullscreenSupported = isFullscreenSupported()
+
+  const sortedEpisodes = useMemo(
+    () => [...episodes].sort((a, b) => a.season - b.season || a.episode - b.episode),
+    [episodes],
+  )
 
   const mediaUrl = target ? resolveMediaUrl(target.videoUrl) : ''
   const youtubeEmbedUrl = mediaUrl && isYoutubeUrl(mediaUrl) ? getYoutubeEmbedUrl(mediaUrl, { autoplay: true, controls: true }) : null
@@ -47,6 +58,40 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
   const hasCaptions = subtitles.length > 0 && !youtubeEmbedUrl
   const isVertical = target?.item.videoFormat === 'vertical'
   const canTrack = Boolean(getToken() && getProfileId() && target)
+
+  const clearNextCountdown = useCallback(() => {
+    if (countdownRef.current) {
+      window.clearInterval(countdownRef.current)
+      countdownRef.current = null
+    }
+  }, [])
+
+  const dismissNextEpisode = useCallback(() => {
+    clearNextCountdown()
+    setNextEpisode(null)
+  }, [clearNextCountdown])
+
+  const playNextEpisode = useCallback(() => {
+    if (!nextEpisode || !onPlayEpisode) return
+    clearNextCountdown()
+    setNextEpisode(null)
+    onPlayEpisode(nextEpisode)
+  }, [nextEpisode, onPlayEpisode, clearNextCountdown])
+
+  useEffect(() => {
+    if (!target || !isSeriesContent(target.item.type)) {
+      setEpisodes([])
+      return
+    }
+
+    fetchEpisodes(target.item.id)
+      .then((data) => setEpisodes(data.episodes))
+      .catch(() => setEpisodes([]))
+  }, [target])
+
+  useEffect(() => {
+    dismissNextEpisode()
+  }, [target, dismissNextEpisode])
 
   const persistProgress = (position: number, videoDuration: number) => {
     if (!canTrack || !target || videoDuration <= 0) return
@@ -172,6 +217,24 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
     }
   }, [target, toggleFullscreen, handleClose])
 
+  useEffect(() => {
+    if (!nextEpisode) return
+
+    setCountdown(8)
+    clearNextCountdown()
+
+    countdownRef.current = window.setInterval(() => {
+      setCountdown((value) => Math.max(0, value - 1))
+    }, 1000)
+
+    return () => clearNextCountdown()
+  }, [nextEpisode, clearNextCountdown])
+
+  useEffect(() => {
+    if (!nextEpisode || countdown > 0) return
+    playNextEpisode()
+  }, [countdown, nextEpisode, playNextEpisode])
+
   if (!target) return null
 
   const togglePlay = () => {
@@ -237,6 +300,15 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
         onEnded={() => {
           setPlaying(false)
           persistProgress(0, duration)
+
+          if (!target || !onPlayEpisode || sortedEpisodes.length === 0) return
+
+          const currentIndex = sortedEpisodes.findIndex((ep) => ep.id === target.episodeId)
+          const next = currentIndex >= 0 ? sortedEpisodes[currentIndex + 1] : sortedEpisodes[0]
+          if (!next?.videoUrl?.trim()) return
+
+          setNextEpisode(next)
+          setCountdown(8)
         }}
       >
         {subtitles.map((track, index) => (
@@ -317,6 +389,32 @@ export function VideoPlayer({ target, onClose }: VideoPlayerProps) {
             <path d="M8 5v14l11-7z" />
           </svg>
         </button>
+      )}
+
+      {nextEpisode && (
+        <div className="pointer-events-auto absolute bottom-24 right-4 z-20 w-[min(100%,20rem)] rounded-2xl border border-white/15 bg-black/85 p-4 shadow-2xl backdrop-blur-md sm:bottom-28 sm:right-6">
+          <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-gold">Sonraki Bölüm</p>
+          <p className="mt-2 text-sm font-semibold text-white">
+            S{nextEpisode.season} B{nextEpisode.episode} · {nextEpisode.title}
+          </p>
+          <p className="mt-1 text-xs text-sineoda-muted">{countdown} saniye içinde başlıyor</p>
+          <div className="mt-4 flex gap-2">
+            <button
+              type="button"
+              onClick={playNextEpisode}
+              className="flex-1 rounded-lg bg-sineoda-gold px-4 py-2.5 text-sm font-semibold text-sineoda-bg transition hover:brightness-110"
+            >
+              Devam Et
+            </button>
+            <button
+              type="button"
+              onClick={dismissNextEpisode}
+              className="rounded-lg border border-white/15 px-4 py-2.5 text-sm text-white/80 transition hover:bg-white/10"
+            >
+              Kapat
+            </button>
+          </div>
+        </div>
       )}
 
       {!youtubeEmbedUrl && (
