@@ -19,7 +19,7 @@ import analyticsRoutes from './routes/analytics.js'
 import analyticsPublicRoutes from './routes/analyticsPublic.js'
 import landingRoutes from './routes/landing.js'
 import contactRoutes from './routes/contact.js'
-import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureDikeyShowcase } from './seed.js'
+import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureLandingShowcases } from './seed.js'
 import type { ContentRow } from './types.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -32,7 +32,7 @@ ensureExtraSeedContent()
 ensureVerticalSeries()
 ensureGenreCategories()
 seedLandingData()
-ensureDikeyShowcase()
+ensureLandingShowcases()
 
 const app = express()
 

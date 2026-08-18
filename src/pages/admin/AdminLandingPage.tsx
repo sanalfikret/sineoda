@@ -92,6 +92,38 @@ export function AdminLandingPage() {
     setShowcases((current) => current.filter((_, i) => i !== index))
   }
 
+  const moveShowcase = (index: number, direction: -1 | 1) => {
+    setShowcases((current) => {
+      const next = [...current]
+      const target = index + direction
+      if (target < 0 || target >= next.length) return current
+      ;[next[index], next[target]] = [next[target], next[index]]
+      return next
+    })
+  }
+
+  const moveShowcaseItem = (showcaseIndex: number, itemIndex: number, direction: -1 | 1) => {
+    setShowcases((current) =>
+      current.map((showcase, index) => {
+        if (index !== showcaseIndex) return showcase
+        const itemIds = [...showcase.itemIds]
+        const target = itemIndex + direction
+        if (target < 0 || target >= itemIds.length) return showcase
+        ;[itemIds[itemIndex], itemIds[target]] = [itemIds[target], itemIds[itemIndex]]
+        return { ...showcase, itemIds }
+      }),
+    )
+  }
+
+  const removeShowcaseItem = (showcaseIndex: number, contentId: string) => {
+    setShowcases((current) =>
+      current.map((showcase, index) => {
+        if (index !== showcaseIndex) return showcase
+        return { ...showcase, itemIds: showcase.itemIds.filter((id) => id !== contentId) }
+      }),
+    )
+  }
+
   const handleSave = async () => {
     setSaving(true)
     setMessage('')
@@ -119,7 +151,7 @@ export function AdminLandingPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Ana Sayfa</h1>
           <p className="mt-1 text-sm text-sineoda-muted">
-            Slider ve kategori vitrinlerini yönet
+            Üye olmadan önceki ana sayfa: slider ve Tabii tarzı kategori şeritleri
           </p>
         </div>
         <button
@@ -197,9 +229,9 @@ export function AdminLandingPage() {
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-white">Kategori Vitrinleri</h2>
+            <h2 className="text-lg font-semibold text-white">Kategori Şeritleri</h2>
             <p className="mt-1 text-sm text-sineoda-muted">
-              Tabii tarzı kategori sekmeleri ve altındaki poster satırları
+              Dizi, Film, Belgesel, Çocuk, Dikey Dizi gibi sekmeler ve altındaki poster satırları
             </p>
           </div>
           <button
@@ -221,7 +253,7 @@ export function AdminLandingPage() {
                 <input
                   value={showcase.title}
                   onChange={(event) => updateShowcase(index, { title: event.target.value })}
-                  placeholder="Başlık"
+                  placeholder="Başlık (ör. Dizi)"
                   className="rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-sineoda-gold"
                 />
                 <select
@@ -236,13 +268,29 @@ export function AdminLandingPage() {
                   ))}
                 </select>
               </div>
-              <button
-                type="button"
-                onClick={() => removeShowcase(index)}
-                className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-300 hover:bg-red-500/20"
-              >
-                Sil
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => moveShowcase(index, -1)}
+                  className="rounded-lg border border-white/10 px-3 py-2 text-xs text-white/70 hover:bg-white/5"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveShowcase(index, 1)}
+                  className="rounded-lg border border-white/10 px-3 py-2 text-xs text-white/70 hover:bg-white/5"
+                >
+                  ↓
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeShowcase(index)}
+                  className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-300 hover:bg-red-500/20"
+                >
+                  Sil
+                </button>
+              </div>
             </div>
 
             <textarea
@@ -254,6 +302,52 @@ export function AdminLandingPage() {
             />
 
             <div className="mt-4">
+              {showcase.itemIds.length > 0 && (
+                <div className="mb-4 space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">
+                    Sıralama (gösterim sırası)
+                  </p>
+                  {showcase.itemIds.map((contentId, itemIndex) => {
+                    const item = catalog.find((entry) => entry.id === contentId)
+                    if (!item) return null
+                    return (
+                      <div
+                        key={contentId}
+                        className="flex items-center gap-2 rounded-lg border border-sineoda-gold/20 bg-sineoda-gold/5 px-3 py-2"
+                      >
+                        <img
+                          src={resolveMediaUrl(item.poster)}
+                          alt=""
+                          className="h-10 w-7 rounded object-cover"
+                        />
+                        <span className="min-w-0 flex-1 truncate text-sm text-white">{item.title}</span>
+                        <button
+                          type="button"
+                          onClick={() => moveShowcaseItem(index, itemIndex, -1)}
+                          className="text-xs text-white/60 hover:text-white"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveShowcaseItem(index, itemIndex, 1)}
+                          className="text-xs text-white/60 hover:text-white"
+                        >
+                          ↓
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeShowcaseItem(index, contentId)}
+                          className="text-xs text-red-300 hover:text-red-200"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
               <ContentPicker
                 catalog={catalog}
                 selectedIds={showcase.itemIds}
