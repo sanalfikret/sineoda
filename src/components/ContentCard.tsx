@@ -10,6 +10,7 @@ interface ContentCardProps {
   progressPercent?: number
   size?: 'default' | 'large'
   layout?: 'landscape' | 'portrait'
+  variant?: 'carousel' | 'stack'
 }
 
 export function ContentCard({
@@ -18,8 +19,10 @@ export function ContentCard({
   progressPercent,
   size = 'default',
   layout = 'landscape',
+  variant = 'carousel',
 }: ContentCardProps) {
-  const isPortrait = layout === 'portrait' || item.videoFormat === 'vertical'
+  const isStacked = variant === 'stack'
+  const isPortrait = !isStacked && (layout === 'portrait' || item.videoFormat === 'vertical')
   const enriched = enrichContentImages(item)
   const imageUrl = resolveMediaUrl(
     isPortrait ? enriched.poster : enriched.backdrop || enriched.poster,
@@ -37,6 +40,50 @@ export function ContentCard({
 
   const metaLine = [item.rating, item.duration, String(item.year)].filter(Boolean).join(' · ')
   const genreLine = item.genres.slice(0, 3).join(' · ')
+
+  if (isStacked) {
+    return (
+      <button
+        type="button"
+        onClick={() => onSelect(item)}
+        className="group flex w-full gap-4 overflow-hidden rounded-xl border border-white/10 bg-sineoda-surface p-3 text-left transition hover:border-white/20 hover:bg-white/[0.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold sm:gap-5 sm:p-4"
+      >
+        <div className="relative w-[38%] max-w-[220px] shrink-0 overflow-hidden rounded-lg sm:w-[200px]">
+          <div className="aspect-video">
+            <img
+              src={imageSrc}
+              alt={item.title}
+              loading="lazy"
+              onError={() => setImageSrc(fallbackUrl)}
+              className="h-full w-full object-cover"
+            />
+          </div>
+          {progressPercent !== undefined && progressPercent > 2 && (
+            <div className="absolute inset-x-0 bottom-0 h-1 bg-white/20">
+              <div
+                className="h-full bg-sineoda-gold"
+                style={{ width: `${Math.min(progressPercent, 100)}%` }}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1 py-0.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-base font-semibold text-white sm:text-lg">{item.title}</h3>
+            {item.isNew && (
+              <span className="rounded bg-sineoda-gold px-2 py-0.5 text-[10px] font-bold text-sineoda-bg">
+                YENİ
+              </span>
+            )}
+          </div>
+          <p className="mt-1.5 text-xs text-sineoda-muted sm:text-sm">{metaLine}</p>
+          {genreLine && <p className="mt-1 text-xs text-white/55">{genreLine}</p>}
+          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-white/70">{item.description}</p>
+        </div>
+      </button>
+    )
+  }
 
   return (
     <button
