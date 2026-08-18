@@ -8,19 +8,28 @@ import { LandingSlider } from '../components/landing/LandingSlider'
 import { LandingEmailSignup } from '../components/landing/LandingEmailSignup'
 import { LandingFaq } from '../components/landing/LandingFaq'
 import { LandingPricing } from '../components/landing/LandingPricing'
+import {
+  DEMO_LANDING_SHOWCASES,
+  getDemoCatalog,
+  resolveLandingShowcases,
+} from '../data/demoLandingPosters'
 import { fetchBootstrap, fetchLandingConfig, resolveMediaUrl } from '../api/client'
 import type { ContentItem } from '../types/content'
-import type { LandingShowcase } from '../components/landing/LandingCategoryShowcase'
-import { buildFallbackShowcases } from '../utils/landingShowcases'
 
 const FALLBACK_HERO =
   'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&h=1080&fit=crop&q=80'
+
+function mergeCatalog(catalog: ContentItem[]) {
+  const demo = getDemoCatalog()
+  const ids = new Set(catalog.map((item) => item.id))
+  return [...catalog, ...demo.filter((item) => !ids.has(item.id))]
+}
 
 export function LandingPage() {
   const [heroItem, setHeroItem] = useState<ContentItem | null>(null)
   const [teaserPosters, setTeaserPosters] = useState<string[]>([])
   const [sliderItems, setSliderItems] = useState<ContentItem[]>([])
-  const [showcases, setShowcases] = useState<LandingShowcase[]>([])
+  const [showcases, setShowcases] = useState(DEMO_LANDING_SHOWCASES)
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -32,8 +41,10 @@ export function LandingPage() {
         return
       }
 
-      setHeroItem(bootstrap.featuredContent ?? bootstrap.catalog[0] ?? null)
-      const posters = bootstrap.catalog
+      const catalog =
+        bootstrap.catalog.length >= 20 ? bootstrap.catalog : mergeCatalog(bootstrap.catalog)
+      setHeroItem(bootstrap.featuredContent ?? catalog[0] ?? null)
+      const posters = catalog
         .slice(0, 6)
         .map((item) => resolveMediaUrl(item.poster))
         .filter(Boolean)
@@ -48,14 +59,12 @@ export function LandingPage() {
         }
       }
 
+      const apiSlider = landing?.slider.length ? landing.slider : bootstrap.trailers
       setSliderItems(
-        landing?.slider.length ? landing.slider : bootstrap.trailers.slice(0, 5),
+        apiSlider.length >= 3 ? apiSlider.slice(0, 8) : DEMO_LANDING_SHOWCASES[1].items.slice(0, 8),
       )
-      setShowcases(
-        landing?.showcases.length
-          ? landing.showcases
-          : buildFallbackShowcases(bootstrap.catalog),
-      )
+
+      setShowcases(resolveLandingShowcases(landing?.showcases))
     })()
   }, [])
 
