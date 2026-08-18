@@ -7,6 +7,7 @@ const navItems = [
   { to: '/admin/icerikler', label: 'İçerikler', end: false },
   { to: '/admin/kategoriler', label: 'Kategoriler', end: false },
   { to: '/admin/ana-sayfa', label: 'Ana Sayfa', end: false },
+  { to: '/admin/dergi', label: 'Dergi', end: false },
   { to: '/admin/kullanicilar', label: 'Kullanıcılar', end: false },
 ]
 

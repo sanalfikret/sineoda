@@ -130,3 +130,20 @@ export function slugify(text: string) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
 }
+
+export function mapJournalPost(row: import('./types.js').JournalPostRow) {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    excerpt: row.excerpt,
+    body: row.body,
+    coverImage: row.cover_image,
+    author: row.author,
+    contentId: row.content_id,
+    status: row.status,
+    publishedAt: row.published_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}

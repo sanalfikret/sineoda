@@ -11,6 +11,8 @@ import { AdminContentFormPage } from './pages/admin/AdminContentFormPage'
 import { AdminContentListPage } from './pages/admin/AdminContentListPage'
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage'
 import { AdminLoginPage } from './pages/admin/AdminLoginPage'
+import { AdminJournalFormPage } from './pages/admin/AdminJournalFormPage'
+import { AdminJournalListPage } from './pages/admin/AdminJournalListPage'
 import { AdminLandingPage } from './pages/admin/AdminLandingPage'
 import { AdminUsersPage } from './pages/admin/AdminUsersPage'
 import { BrowsePage } from './pages/BrowsePage'
@@ -25,6 +27,8 @@ import { ProfilesPage } from './pages/ProfilesPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { LegalPage } from './pages/LegalPage'
 import { ContactPage } from './pages/ContactPage'
+import { JournalListPage } from './pages/JournalListPage'
+import { JournalPostPage } from './pages/JournalPostPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { SignupPage } from './pages/SignupPage'
 
@@ -73,6 +77,8 @@ function App() {
       <Route path="/planlar" element={<PricingPage />} />
       <Route path="/yasal/:slug" element={<LegalPage />} />
       <Route path="/iletisim" element={<ContactPage />} />
+      <Route path="/dergi" element={<JournalListPage />} />
+      <Route path="/dergi/:slug" element={<JournalPostPage />} />
       <Route path="/odeme/paytr" element={<PaytrCheckoutPage />} />
       <Route path="/odeme/basarili" element={<PaymentSuccessPage />} />
       <Route path="/odeme/basarisiz" element={<PaymentFailPage />} />
@@ -160,6 +166,9 @@ function App() {
         <Route path="icerikler/:id" element={<AdminContentFormPage />} />
         <Route path="kategoriler" element={<AdminCategoriesPage />} />
         <Route path="ana-sayfa" element={<AdminLandingPage />} />
+        <Route path="dergi" element={<AdminJournalListPage />} />
+        <Route path="dergi/yeni" element={<AdminJournalFormPage />} />
+        <Route path="dergi/:id" element={<AdminJournalFormPage />} />
         <Route path="kullanicilar" element={<AdminUsersPage />} />
       </Route>
 
