@@ -129,7 +129,6 @@ function runMigrations() {
   ensureColumn('users', 'subscription_expires_at', 'TEXT')
   ensureColumn('users', 'phone', 'TEXT')
   ensureColumn('users', 'phone_verified', 'INTEGER DEFAULT 0')
-  ensureColumn('episodes', 'subtitles_json', "TEXT DEFAULT '[]'")
 
   db.run(`
     CREATE TABLE IF NOT EXISTS phone_verification_codes (
@@ -155,6 +154,8 @@ function runMigrations() {
       sort_order INTEGER NOT NULL DEFAULT 0
     );
   `)
+
+  ensureColumn('episodes', 'subtitles_json', "TEXT DEFAULT '[]'")
 
   db.run(`
     CREATE TABLE IF NOT EXISTS payment_orders (
@@ -267,6 +268,12 @@ function runMigrations() {
 }
 
 function ensureColumn(table: string, column: string, definition: string) {
+  const exists = dbGet<{ name: string }>(
+    "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+    [table],
+  )
+  if (!exists) return
+
   const columns = dbAll<{ name: string }>(`PRAGMA table_info(${table})`)
   if (!columns.some((col) => col.name === column)) {
     db.run(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`)
