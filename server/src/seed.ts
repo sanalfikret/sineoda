@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs'
 import { v4 as uuid } from 'uuid'
 import { dbAll, dbExec, dbGet, dbRun } from './db.js'
+import type { UserRow } from './types.js'
 
 const V = {
   bunny: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
@@ -307,16 +308,29 @@ export function seedEpisodes() {
   }
 }
 
-export function seedDatabase() {
-  const userCount = dbGet<{ count: number }>('SELECT COUNT(*) as count FROM users')
-  if ((userCount?.count ?? 0) === 0) {
+const DEFAULT_ADMIN_EMAIL = 'admin@sineoda.com'
+
+export function ensureDefaultAdmin() {
+  const existing = dbGet<UserRow>('SELECT * FROM users WHERE email = ?', [DEFAULT_ADMIN_EMAIL])
+  if (!existing) {
     const adminHash = bcrypt.hashSync('admin123', 10)
-    const adminId = uuid()
     dbRun(
       'INSERT INTO users (id, name, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-      [adminId, 'Sineoda Admin', 'admin@sineoda.com', adminHash, 'admin', new Date().toISOString()],
+      [uuid(), 'Sineoda Admin', DEFAULT_ADMIN_EMAIL, adminHash, 'admin', new Date().toISOString()],
     )
+    return
+  }
 
+  if (existing.role !== 'admin') {
+    dbRun('UPDATE users SET role = ? WHERE id = ?', ['admin', existing.id])
+  }
+}
+
+export function seedDatabase() {
+  ensureDefaultAdmin()
+
+  const userCount = dbGet<{ count: number }>('SELECT COUNT(*) as count FROM users')
+  if ((userCount?.count ?? 0) <= 1) {
     const demoHash = bcrypt.hashSync('demo1234', 10)
     const demoId = uuid()
     dbRun(
