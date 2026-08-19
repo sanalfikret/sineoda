@@ -7,12 +7,35 @@ import { CONTENT_TYPES, getContentDisplayLabel } from '../../constants/contentTy
 import { useAdminAnalytics } from '../../hooks/useAdminAnalytics'
 import type { AdminContentItem, ContentType } from '../../types/content'
 import { formatLicenseDate, mergeAdminCatalog } from '../../utils/license'
+import { formatPublishDate } from '../../utils/publish'
 import { isVerticalContent } from '../../utils/vertical'
 import { fuzzySearchMatch } from '../../utils/search'
 
 type TypeFilter = 'all' | ContentType | 'dikey' | 'expiring'
 
 const NEW_VERTICAL_HREF = '/admin/icerikler/yeni?dikey=1'
+
+function PublishStatusBadge({ item }: { item: AdminContentItem }) {
+  if (item.isScheduled) {
+    return (
+      <span className="rounded-full bg-sky-500/15 px-2 py-1 text-xs font-medium text-sky-300">
+        Planlandı · {formatPublishDate(item.publishedAt)}
+      </span>
+    )
+  }
+
+  if (!item.isPublished) {
+    return (
+      <span className="rounded-full bg-white/10 px-2 py-1 text-xs text-white/70">Yayınlanmadı</span>
+    )
+  }
+
+  return (
+    <span className="rounded-full bg-emerald-500/15 px-2 py-1 text-xs font-medium text-emerald-300">
+      Yayında
+    </span>
+  )
+}
 
 function LicenseStatusBadge({ item }: { item: AdminContentItem }) {
   if (item.licenseUnlimited) {
@@ -243,6 +266,7 @@ export function AdminContentListPage() {
                 <th className="px-4 py-3 font-medium">Başlık</th>
                 <th className="px-4 py-3 font-medium">Tür</th>
                 <th className="px-4 py-3 font-medium">Eklenme</th>
+                <th className="px-4 py-3 font-medium">Yayın</th>
                 <th className="px-4 py-3 font-medium">Telif</th>
                 <th className="px-4 py-3 font-medium">İzlenen</th>
                 <th className="px-4 py-3 font-medium">Öne Çıkan</th>
@@ -252,13 +276,13 @@ export function AdminContentListPage() {
             <tbody>
               {loading || catalogLoading ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-sineoda-muted">
+                  <td colSpan={9} className="px-4 py-10 text-center text-sineoda-muted">
                     Yükleniyor...
                   </td>
                 </tr>
               ) : filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-sineoda-muted">
+                  <td colSpan={9} className="px-4 py-10 text-center text-sineoda-muted">
                     {typeFilter === 'dikey' ? (
                       <div className="space-y-3">
                         <p>Henüz dikey dizi eklenmemiş.</p>
@@ -312,6 +336,9 @@ export function AdminContentListPage() {
                     </td>
                     <td className="px-4 py-3 text-xs text-white/70">
                       {formatLicenseDate(item.contentAddedAt)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <PublishStatusBadge item={item} />
                     </td>
                     <td className="px-4 py-3">
                       <LicenseStatusBadge item={item} />

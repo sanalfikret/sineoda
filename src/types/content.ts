@@ -69,7 +69,7 @@ export interface ContentCategory {
   itemIds: string[]
 }
 
-/** Yalnızca admin API'sinde döner — kullanıcıya gösterilmez */
+/** Yalnızca admin panelinde görünür — kullanıcıya gösterilmez */
 export interface AdminContentMeta {
   contentAddedAt: string | null
   licenseExpiresAt: string | null
@@ -77,6 +77,9 @@ export interface AdminContentMeta {
   licenseExpired: boolean
   licenseExpiringSoon: boolean
   licenseDaysRemaining: number | null
+  publishedAt: string | null
+  isPublished: boolean
+  isScheduled: boolean
 }
 
 export type AdminContentItem = ContentItem & AdminContentMeta
