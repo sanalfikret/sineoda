@@ -4,22 +4,47 @@ import { useContent } from '../../context/ContentContext'
 import type { ContentCategory } from '../../types/content'
 import { fuzzySearchMatch } from '../../utils/search'
 
+function mergeCategoryMetadata(
+  current: ContentCategory[],
+  incoming: ContentCategory[],
+): ContentCategory[] {
+  const byId = new Map(incoming.map((category) => [category.id, category]))
+  const next = current.filter((category) => byId.has(category.id)).map((category) => byId.get(category.id)!)
+  const known = new Set(next.map((category) => category.id))
+  const added = incoming.filter((category) => !known.has(category.id))
+  return [...next, ...added]
+}
+
 export function AdminCategoriesPage() {
   const { catalog, categories, addCategory, updateCategory, deleteCategory, reorderCategories, resetToSeed } =
     useContent()
   const [newTitle, setNewTitle] = useState('')
-  const [orderedCategories, setOrderedCategories] = useState<ContentCategory[]>(categories)
+  const [orderedCategories, setOrderedCategories] = useState<ContentCategory[]>([])
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [searchByCategory, setSearchByCategory] = useState<Record<string, string>>({})
   const [orderError, setOrderError] = useState<string | null>(null)
   const [savingOrder, setSavingOrder] = useState(false)
-  const skipSyncRef = useRef(false)
+  const initializedRef = useRef(false)
+  const orderedRef = useRef<ContentCategory[]>([])
 
   useEffect(() => {
-    if (skipSyncRef.current) return
-    setOrderedCategories(categories)
-  }, [categories])
+    orderedRef.current = orderedCategories
+  }, [orderedCategories])
+
+  useEffect(() => {
+    if (categories.length === 0) return
+
+    if (!initializedRef.current) {
+      setOrderedCategories(categories)
+      initializedRef.current = true
+      return
+    }
+
+    if (savingOrder || draggingId) return
+
+    setOrderedCategories((current) => mergeCategoryMetadata(current, categories))
+  }, [categories, savingOrder, draggingId])
 
   const catalogById = useMemo(() => new Map(catalog.map((item) => [item.id, item])), [catalog])
 
@@ -43,6 +68,7 @@ export function AdminCategoriesPage() {
       return
     }
     await resetToSeed()
+    initializedRef.current = false
   }
 
   const toggleExpanded = (id: string) => {
@@ -54,19 +80,36 @@ export function AdminCategoriesPage() {
     })
   }
 
+  const moveCategory = (sourceId: string, targetId: string) => {
+    if (sourceId === targetId) return null
+
+    let nextOrder: ContentCategory[] | null = null
+    setOrderedCategories((current) => {
+      const sourceIndex = current.findIndex((category) => category.id === sourceId)
+      const targetIndex = current.findIndex((category) => category.id === targetId)
+      if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return current
+
+      const next = [...current]
+      const [moved] = next.splice(sourceIndex, 1)
+      next.splice(targetIndex, 0, moved)
+      nextOrder = next
+      return next
+    })
+    return nextOrder
+  }
+
   const persistOrder = async (next: ContentCategory[]) => {
-    const previous = orderedCategories
     setOrderedCategories(next)
     setSavingOrder(true)
     setOrderError(null)
-    skipSyncRef.current = true
+
     try {
-      await reorderCategories(next.map((category) => category.id))
+      const saved = await reorderCategories(next.map((category) => category.id))
+      setOrderedCategories(saved)
     } catch (error) {
-      setOrderedCategories(previous)
       setOrderError(error instanceof Error ? error.message : 'Sıra kaydedilemedi.')
+      setOrderedCategories((current) => mergeCategoryMetadata(current, categories))
     } finally {
-      skipSyncRef.current = false
       setSavingOrder(false)
     }
   }
@@ -77,24 +120,29 @@ export function AdminCategoriesPage() {
     event.dataTransfer.setData('text/plain', id)
   }
 
-  const handleDragOver = (event: DragEvent<HTMLElement>) => {
+  const handleDragOver = (event: DragEvent<HTMLElement>, targetId: string) => {
     event.preventDefault()
     event.dataTransfer.dropEffect = 'move'
+    const sourceId = draggingId
+    if (!sourceId) return
+    moveCategory(sourceId, targetId)
   }
 
-  const handleDrop = (event: DragEvent<HTMLElement>, targetId: string) => {
+  const handleDrop = (event: DragEvent<HTMLElement>) => {
     event.preventDefault()
-    const sourceId = draggingId ?? event.dataTransfer.getData('text/plain')
     setDraggingId(null)
-    if (!sourceId || sourceId === targetId) return
+    void persistOrder(orderedRef.current)
+  }
 
-    const sourceIndex = orderedCategories.findIndex((category) => category.id === sourceId)
-    const targetIndex = orderedCategories.findIndex((category) => category.id === targetId)
-    if (sourceIndex < 0 || targetIndex < 0) return
+  const handleDragEnd = () => {
+    setDraggingId(null)
+  }
 
+  const nudgeCategory = (index: number, direction: -1 | 1) => {
+    const targetIndex = index + direction
+    if (targetIndex < 0 || targetIndex >= orderedCategories.length) return
     const next = [...orderedCategories]
-    const [moved] = next.splice(sourceIndex, 1)
-    next.splice(targetIndex, 0, moved)
+    ;[next[index], next[targetIndex]] = [next[targetIndex], next[index]]
     void persistOrder(next)
   }
 
@@ -108,7 +156,7 @@ export function AdminCategoriesPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Kategoriler</h1>
           <p className="mt-1 text-sm text-sineoda-muted">
-            Ana sayfa satırlarını yönet. Sıralamayı fareyle sürükleyerek değiştir — üyeler aynı sırayı görür.
+            Ana sayfa satırlarını yönet. Sürükleyerek veya oklarla sırala — üyeler aynı sırayı görür.
             {savingOrder && <span className="ml-2 text-sineoda-gold">Kaydediliyor…</span>}
           </p>
         </div>
@@ -144,7 +192,7 @@ export function AdminCategoriesPage() {
       </div>
 
       <div className="space-y-3">
-        {orderedCategories.map((category) => {
+        {orderedCategories.map((category, index) => {
           const expanded = expandedIds.has(category.id)
           const search = searchByCategory[category.id] ?? ''
           const selectedItems = category.itemIds
@@ -159,11 +207,11 @@ export function AdminCategoriesPage() {
           return (
             <section
               key={category.id}
-              draggable
+              draggable={!savingOrder}
               onDragStart={(event) => handleDragStart(event, category.id)}
-              onDragOver={handleDragOver}
-              onDrop={(event) => handleDrop(event, category.id)}
-              onDragEnd={() => setDraggingId(null)}
+              onDragOver={(event) => handleDragOver(event, category.id)}
+              onDrop={handleDrop}
+              onDragEnd={handleDragEnd}
               className={`rounded-2xl border bg-[#11141c] transition ${
                 draggingId === category.id
                   ? 'border-sineoda-gold/50 opacity-70'
@@ -186,6 +234,27 @@ export function AdminCategoriesPage() {
                     <circle cx="15" cy="17" r="1.5" />
                   </svg>
                 </button>
+
+                <div className="flex flex-col gap-1">
+                  <button
+                    type="button"
+                    aria-label="Yukarı taşı"
+                    disabled={index === 0 || savingOrder}
+                    onClick={() => nudgeCategory(index, -1)}
+                    className="rounded border border-white/10 px-2 py-0.5 text-xs text-white/70 hover:bg-white/5 disabled:opacity-30"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Aşağı taşı"
+                    disabled={index === orderedCategories.length - 1 || savingOrder}
+                    onClick={() => nudgeCategory(index, 1)}
+                    className="rounded border border-white/10 px-2 py-0.5 text-xs text-white/70 hover:bg-white/5 disabled:opacity-30"
+                  >
+                    ↓
+                  </button>
+                </div>
 
                 <button
                   type="button"
