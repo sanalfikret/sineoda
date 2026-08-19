@@ -30,7 +30,7 @@ interface ContentContextValue {
     updates: Partial<Pick<ContentCategory, 'title' | 'itemIds'>>,
   ) => Promise<void>
   deleteCategory: (id: string) => Promise<void>
-  reorderCategories: (orderedIds: string[]) => Promise<void>
+  reorderCategories: (orderedIds: string[]) => Promise<ContentCategory[]>
   resetToSeed: () => Promise<void>
 }
 
@@ -139,16 +139,14 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     [refresh],
   )
 
-  const reorderCategories = useCallback(
-    async (orderedIds: string[]) => {
-      const result = await api<{ categories: ContentCategory[] }>('/api/categories/reorder', {
-        method: 'PUT',
-        body: JSON.stringify({ orderedIds }),
-      })
-      setCategories(result.categories)
-    },
-    [],
-  )
+  const reorderCategories = useCallback(async (orderedIds: string[]) => {
+    const result = await api<{ categories: ContentCategory[] }>('/api/categories/reorder', {
+      method: 'PUT',
+      body: JSON.stringify({ orderedIds }),
+    })
+    setCategories(result.categories)
+    return result.categories
+  }, [])
 
   const resetToSeed = useCallback(async () => {
     await api('/api/categories/reset', { method: 'POST' })
