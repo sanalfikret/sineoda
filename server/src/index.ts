@@ -73,7 +73,7 @@ app.get('/api/health', (_req, res) => {
     ok: true,
     service: 'sineoda-api',
     version: 2,
-    features: { landing: true, contact: true, journal: true },
+    features: { landing: true, contact: true, journal: true, reactions: true, watchlist: true },
     email: config.isEmailConfigured(),
   })
 })

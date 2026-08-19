@@ -2,30 +2,25 @@ import { Router } from 'express'
 import { ensureContentById } from '../catalogEnsure.js'
 import { dbGet, dbRun } from '../db.js'
 import { requireAuth, type AuthRequest } from '../middleware/auth.js'
+import { validateProfile } from '../middleware/profile.js'
 
 const router = Router()
 
 router.get('/:contentId', requireAuth, (req: AuthRequest, res) => {
-  const profileId = req.headers['x-profile-id']
-  if (!profileId || typeof profileId !== 'string') {
-    res.status(400).json({ error: 'Profil gerekli.' })
-    return
-  }
+  const profile = validateProfile(req, res)
+  if (!profile) return
 
   const row = dbGet<{ reaction: string }>(
     'SELECT reaction FROM content_reactions WHERE profile_id = ? AND content_id = ?',
-    [profileId, req.params.contentId],
+    [profile.id, req.params.contentId],
   )
 
   res.json({ reaction: row?.reaction ?? null })
 })
 
 router.put('/:contentId', requireAuth, (req: AuthRequest, res) => {
-  const profileId = req.headers['x-profile-id']
-  if (!profileId || typeof profileId !== 'string') {
-    res.status(400).json({ error: 'Profil gerekli.' })
-    return
-  }
+  const profile = validateProfile(req, res)
+  if (!profile) return
 
   const reaction = req.body?.reaction
   if (reaction !== 'like' && reaction !== 'dislike' && reaction !== null) {
@@ -35,7 +30,7 @@ router.put('/:contentId', requireAuth, (req: AuthRequest, res) => {
 
   if (reaction === null) {
     dbRun('DELETE FROM content_reactions WHERE profile_id = ? AND content_id = ?', [
-      profileId,
+      profile.id,
       req.params.contentId,
     ])
     res.json({ reaction: null })
@@ -51,7 +46,7 @@ router.put('/:contentId', requireAuth, (req: AuthRequest, res) => {
     `INSERT INTO content_reactions (profile_id, content_id, reaction, updated_at)
      VALUES (?, ?, ?, ?)
      ON CONFLICT(profile_id, content_id) DO UPDATE SET reaction = excluded.reaction, updated_at = excluded.updated_at`,
-    [profileId, req.params.contentId, reaction, new Date().toISOString()],
+    [profile.id, req.params.contentId, reaction, new Date().toISOString()],
   )
 
   res.json({ reaction })
