@@ -92,23 +92,29 @@ app.get('/api/health', (_req, res) => {
 
 app.get('/api/bootstrap', (_req, res) => {
   res.set('Cache-Control', 'no-store')
-  const catalog = dbAll<ContentRow>(
-    `SELECT * FROM content WHERE ${PUBLISHED_CONTENT_SQL} ORDER BY title`,
-  ).map(mapContent)
-  const featured = catalog.find((item) => item.featured) ?? catalog[0] ?? null
-  const trailers = catalog.filter((item) => item.trailerUrl).slice(0, 6)
-  const newReleases = catalog.filter((item) => item.isNew).slice(0, 12)
-
-  const categories = mapCategoriesResponse()
-
-  let landing = { slider: [] as ReturnType<typeof mapContent>[], showcases: [] as Array<{ id: string; title: string; icon: string; description: string; items: ReturnType<typeof mapContent>[] }> }
   try {
-    landing = getLandingConfig()
-  } catch {
-    // landing tabloları henüz yoksa bootstrap yine de çalışsın
-  }
+    const catalog = dbAll<ContentRow>(
+      `SELECT * FROM content WHERE ${PUBLISHED_CONTENT_SQL} ORDER BY title`,
+    ).map(mapContent)
+    const featured = catalog.find((item) => item.featured) ?? catalog[0] ?? null
+    const trailers = catalog.filter((item) => item.trailerUrl).slice(0, 6)
+    const newReleases = catalog.filter((item) => item.isNew).slice(0, 12)
 
-  res.json({ catalog, categories, featuredContent: featured, trailers, newReleases, landing })
+    const categories = mapCategoriesResponse()
+
+    let landing = { slider: [] as ReturnType<typeof mapContent>[], showcases: [] as Array<{ id: string; title: string; icon: string; description: string; items: ReturnType<typeof mapContent>[] }> }
+    try {
+      landing = getLandingConfig()
+    } catch {
+      // landing tabloları henüz yoksa bootstrap yine de çalışsın
+    }
+
+    res.json({ catalog, categories, featuredContent: featured, trailers, newReleases, landing })
+  } catch (error) {
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Katalog yüklenemedi.',
+    })
+  }
 })
 
 app.use('/api/analytics', analyticsPublicRoutes)
