@@ -10,7 +10,7 @@ export function getApiBase() {
 
   if (import.meta.env.PROD && typeof window !== 'undefined') {
     const host = window.location.hostname
-    if (host.endsWith('.vercel.app') || host === 'sineoda.vercel.app') {
+    if (host.endsWith('.vercel.app') || host === 'sineoda.vercel.app' || host === 'sineoda.web.app') {
       return 'https://sineoda-api.onrender.com'
     }
   }
@@ -78,7 +78,10 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
         const body = (await response.json()) as { error?: string }
         message = body.error || message
       } else if (response.status === 404) {
-        message = 'Bu özellik sunucuda henüz aktif değil. API güncellenmeli.'
+        message =
+          path.includes('/categories/reorder') || path.includes('/reactions/')
+            ? 'API güncel değil. Render panelinde sineoda-api servisini Manual Deploy ile yeniden yayınlayın.'
+            : 'Bu özellik sunucuda henüz aktif değil. API güncellenmeli.'
       } else {
         await response.text()
       }
@@ -86,7 +89,10 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
       if (response.status === 502 || response.status === 503) {
         message = 'Sunucuya bağlanılamıyor. baslat.bat ile API\'nin çalıştığından emin olun.'
       } else if (response.status === 404) {
-        message = 'Bu özellik sunucuda henüz aktif değil. API güncellenmeli.'
+        message =
+          path.includes('/categories/reorder') || path.includes('/reactions/')
+            ? 'API güncel değil. Render panelinde sineoda-api servisini Manual Deploy ile yeniden yayınlayın.'
+            : 'Bu özellik sunucuda henüz aktif değil. API güncellenmeli.'
       }
     }
     throw new Error(message)

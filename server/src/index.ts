@@ -25,6 +25,8 @@ import adminJournalRoutes from './routes/adminJournal.js'
 import { PUBLISHED_CONTENT_SQL } from './services/publish.js'
 import { mapCategoriesResponse } from './services/categoryOrder.js'
 import { fillCategoriesToTarget } from './services/categoryFill.js'
+import { backfillMissingImages } from './backfillImages.js'
+import { ensureDemoCatalog } from './demoCatalog.js'
 import { ensureGenreCatalog } from './genreCatalog.js'
 import { ensureJournalPosts } from './journalSeed.js'
 import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureLandingShowcases } from './seed.js'
@@ -76,7 +78,14 @@ app.get('/api/health', (_req, res) => {
     ok: true,
     service: 'sineoda-api',
     version: 2,
-    features: { landing: true, contact: true, journal: true, reactions: true, watchlist: true },
+    features: {
+      landing: true,
+      contact: true,
+      journal: true,
+      reactions: true,
+      watchlist: true,
+      categoryReorder: true,
+    },
     email: config.isEmailConfigured(),
   })
 })
