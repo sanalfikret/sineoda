@@ -1,4 +1,4 @@
-import { parseCredits } from './services/credits.js'
+import { resolveContentImages } from './services/contentImages.js'
 import {
   getLicenseDaysRemaining,
   isLicenseExpired,
@@ -89,6 +89,7 @@ export function mapContentAdmin(row: ContentRow) {
 export function mapContent(row: ContentRow) {
   const newUntil = row.new_until ?? null
   const isNewFlag = Boolean(row.is_new) || (newUntil ? new Date(newUntil) > new Date() : false)
+  const images = resolveContentImages(row)
   return {
     id: row.id,
     title: row.title,
@@ -98,8 +99,8 @@ export function mapContent(row: ContentRow) {
     rating: row.rating,
     type: row.type,
     genres: JSON.parse(row.genres) as string[],
-    poster: row.poster,
-    backdrop: row.backdrop,
+    poster: images.poster,
+    backdrop: images.backdrop,
     videoUrl: row.video_url,
     trailerUrl: row.trailer_url ?? '',
     streamProvider: row.stream_provider ?? 'custom',

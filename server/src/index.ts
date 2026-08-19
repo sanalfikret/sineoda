@@ -23,6 +23,8 @@ import contactRoutes from './routes/contact.js'
 import journalRoutes from './routes/journal.js'
 import adminJournalRoutes from './routes/adminJournal.js'
 import { PUBLISHED_CONTENT_SQL } from './services/publish.js'
+import { mapCategoriesResponse } from './services/categoryOrder.js'
+import { fillCategoriesToTarget } from './services/categoryFill.js'
 import { ensureGenreCatalog } from './genreCatalog.js'
 import { ensureJournalPosts } from './journalSeed.js'
 import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureLandingShowcases } from './seed.js'
@@ -43,6 +45,7 @@ ensureDemoCatalog()
 ensureGenreCatalog()
 ensureJournalPosts()
 backfillMissingImages()
+fillCategoriesToTarget()
 
 const app = express()
 
@@ -86,16 +89,7 @@ app.get('/api/bootstrap', (_req, res) => {
   const trailers = catalog.filter((item) => item.trailerUrl).slice(0, 6)
   const newReleases = catalog.filter((item) => item.isNew).slice(0, 12)
 
-  const categories = dbAll<{ id: string; title: string }>(
-    'SELECT * FROM categories ORDER BY sort_order, title',
-  ).map((category) => ({
-    id: category.id,
-    title: category.title,
-    itemIds: dbAll<{ content_id: string }>(
-      'SELECT content_id FROM category_items WHERE category_id = ? ORDER BY sort_order',
-      [category.id],
-    ).map((row) => row.content_id),
-  }))
+  const categories = mapCategoriesResponse()
 
   let landing = { slider: [] as ReturnType<typeof mapContent>[], showcases: [] as Array<{ id: string; title: string; icon: string; description: string; items: ReturnType<typeof mapContent>[] }> }
   try {

@@ -17,7 +17,7 @@ export type BrowseRow = {
 /** BrowsePage'de ayrı satır olarak gösterildiği için kategori listesinden çıkarılır */
 export const BROWSE_EXCLUSIVE_ROW_TITLES = new Set<string>()
 
-export const BROWSE_ITEMS_PER_ROW = 10
+export const BROWSE_ITEMS_PER_ROW = 20
 
 export function filterCatalog(catalog: ContentItem[], options: BrowseFilterOptions) {
   return catalog.filter((item) => {
