@@ -293,12 +293,14 @@ function replaceShowcaseItems(showcaseId: string, title: string, icon: string, d
 function replaceCategoryItems(categoryId: string, title: string, sortOrder: number, itemIds: string[]) {
   const exists = dbGet('SELECT id FROM categories WHERE id = ?', [categoryId])
   if (exists) {
-    dbRun('UPDATE categories SET title = ?, sort_order = ? WHERE id = ?', [title, sortOrder, categoryId])
+    dbRun('UPDATE categories SET title = ? WHERE id = ?', [title, categoryId])
   } else {
     dbRun('INSERT INTO categories (id, title, sort_order) VALUES (?, ?, ?)', [categoryId, title, sortOrder])
   }
 
-  dbRun('DELETE FROM category_items WHERE category_id = ?', [categoryId])
+  const hasItems = dbGet('SELECT content_id FROM category_items WHERE category_id = ? LIMIT 1', [categoryId])
+  if (hasItems) return
+
   itemIds.forEach((contentId, index) => {
     const contentExists = dbGet('SELECT id FROM content WHERE id = ?', [contentId])
     if (!contentExists) return

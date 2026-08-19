@@ -83,7 +83,7 @@ export function ensureGenreCategories() {
 function upsertCategory(id: string, title: string, sortOrder: number) {
   const exists = dbGet('SELECT id FROM categories WHERE id = ?', [id])
   if (exists) {
-    dbRun('UPDATE categories SET title = ?, sort_order = ? WHERE id = ?', [title, sortOrder, id])
+    dbRun('UPDATE categories SET title = ? WHERE id = ?', [title, id])
   } else {
     dbRun('INSERT INTO categories (id, title, sort_order) VALUES (?, ?, ?)', [id, title, sortOrder])
   }

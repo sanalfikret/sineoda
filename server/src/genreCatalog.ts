@@ -159,12 +159,19 @@ export function ensureGenreCatalog() {
     const ids = GENRE_ITEMS.filter((item) => item.genres.includes(genre)).map((item) => item.id)
     const categoryId = `genre-row-${slug(genre)}`
     const exists = dbGet('SELECT id FROM categories WHERE id = ?', [categoryId])
-    if (exists) dbRun('UPDATE categories SET title = ?, sort_order = ? WHERE id = ?', [genre, 20 + index, categoryId])
-    else dbRun('INSERT INTO categories (id, title, sort_order) VALUES (?, ?, ?)', [categoryId, genre, 20 + index])
+    if (exists) {
+      dbRun('UPDATE categories SET title = ? WHERE id = ?', [genre, categoryId])
+    } else {
+      dbRun('INSERT INTO categories (id, title, sort_order) VALUES (?, ?, ?)', [categoryId, genre, 20 + index])
+    }
 
-    dbRun('DELETE FROM category_items WHERE category_id = ?', [categoryId])
+    const hasItems = dbGet('SELECT content_id FROM category_items WHERE category_id = ? LIMIT 1', [categoryId])
+    if (hasItems) return
+
     ids.forEach((contentId, itemIndex) => {
-      dbRun('INSERT INTO category_items (category_id, content_id, sort_order) VALUES (?, ?, ?)', [categoryId, contentId, itemIndex])
+      dbRun('INSERT INTO category_items (category_id, content_id, sort_order) VALUES (?, ?, ?)', [
+        categoryId, contentId, itemIndex,
+      ])
     })
   })
 }
