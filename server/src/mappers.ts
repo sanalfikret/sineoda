@@ -1,4 +1,5 @@
 import { resolveContentImages } from './services/contentImages.js'
+import { parseCredits } from './services/credits.js'
 import {
   getLicenseDaysRemaining,
   isLicenseExpired,
