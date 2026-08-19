@@ -22,7 +22,7 @@ import landingRoutes, { getLandingConfig } from './routes/landing.js'
 import contactRoutes from './routes/contact.js'
 import journalRoutes from './routes/journal.js'
 import adminJournalRoutes from './routes/adminJournal.js'
-import { backfillMissingImages } from './backfillImages.js'
+import { PUBLISHED_CONTENT_SQL } from './services/publish.js'
 import { ensureGenreCatalog } from './genreCatalog.js'
 import { ensureJournalPosts } from './journalSeed.js'
 import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureLandingShowcases } from './seed.js'
@@ -79,7 +79,9 @@ app.get('/api/health', (_req, res) => {
 })
 
 app.get('/api/bootstrap', (_req, res) => {
-  const catalog = dbAll<ContentRow>('SELECT * FROM content ORDER BY title').map(mapContent)
+  const catalog = dbAll<ContentRow>(
+    `SELECT * FROM content WHERE ${PUBLISHED_CONTENT_SQL} ORDER BY title`,
+  ).map(mapContent)
   const featured = catalog.find((item) => item.featured) ?? catalog[0] ?? null
   const trailers = catalog.filter((item) => item.trailerUrl).slice(0, 6)
   const newReleases = catalog.filter((item) => item.isNew).slice(0, 12)

@@ -15,11 +15,7 @@ export type BrowseRow = {
 }
 
 /** BrowsePage'de ayrı satır olarak gösterildiği için kategori listesinden çıkarılır */
-export const BROWSE_EXCLUSIVE_ROW_TITLES = new Set([
-  'Yeni Eklenenler',
-  'Dikey Diziler',
-  'Bu Hafta Trend',
-])
+export const BROWSE_EXCLUSIVE_ROW_TITLES = new Set(['Dikey Diziler'])
 
 export const BROWSE_ITEMS_PER_ROW = 10
 
@@ -59,6 +55,32 @@ export function pickCategoryRow(
   }
 }
 
+export function buildCategoryBrowseRows(
+  categories: ContentCategory[],
+  catalog: ContentItem[],
+  getContentById: (id: string) => ContentItem | undefined,
+  options: BrowseFilterOptions,
+): BrowseRow[] {
+  const filteredIds = new Set(filterCatalog(catalog, options).map((item) => item.id))
+
+  return categories
+    .filter((category) => !BROWSE_EXCLUSIVE_ROW_TITLES.has(category.title))
+    .map((category) => {
+      const items = category.itemIds
+        .map((id) => getContentById(id))
+        .filter((item): item is ContentItem => Boolean(item && filteredIds.has(item.id)))
+        .slice(0, BROWSE_ITEMS_PER_ROW)
+
+      return {
+        id: category.id,
+        title: category.title,
+        itemIds: items.map((item) => item.id),
+        items,
+      }
+    })
+    .filter((row) => row.items.length > 0)
+}
+
 export function buildGenreBrowseRows(
   catalog: ContentItem[],
   options: BrowseFilterOptions,
@@ -74,6 +96,8 @@ export function buildGenreBrowseRows(
 export function buildBrowseRows(
   catalog: ContentItem[],
   options: BrowseFilterOptions,
+  categories: ContentCategory[] = [],
+  getContentById?: (id: string) => ContentItem | undefined,
 ) {
   if (options.genre) {
     const items = filterCatalog(catalog, options)
@@ -88,6 +112,10 @@ export function buildBrowseRows(
         items,
       },
     ]
+  }
+
+  if (categories.length > 0 && getContentById) {
+    return buildCategoryBrowseRows(categories, catalog, getContentById, options)
   }
 
   return buildGenreBrowseRows(catalog, options)

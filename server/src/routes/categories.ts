@@ -42,6 +42,20 @@ router.post('/', requireAdmin, (req: AuthRequest, res) => {
   res.status(201).json({ category: { id, title, itemIds: [] } })
 })
 
+router.put('/reorder', requireAdmin, (req: AuthRequest, res) => {
+  const orderedIds = req.body.orderedIds
+  if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
+    res.status(400).json({ error: 'orderedIds dizisi zorunlu.' })
+    return
+  }
+
+  orderedIds.forEach((id: string, index: number) => {
+    dbRun('UPDATE categories SET sort_order = ? WHERE id = ?', [index, String(id)])
+  })
+
+  res.json({ ok: true })
+})
+
 router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
   const existing = dbGet('SELECT * FROM categories WHERE id = ?', [req.params.id])
   if (!existing) {

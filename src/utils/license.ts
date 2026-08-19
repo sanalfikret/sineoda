@@ -49,6 +49,9 @@ export function toAdminContentItem(item: ContentItem): AdminContentItem {
     licenseExpired: false,
     licenseExpiringSoon: false,
     licenseDaysRemaining: null,
+    publishedAt: null,
+    isPublished: true,
+    isScheduled: false,
   }
 }
 

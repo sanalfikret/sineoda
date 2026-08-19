@@ -105,11 +105,17 @@ function runMigrations() {
   ensureColumn('content', 'credits_json', "TEXT DEFAULT '{}'")
   ensureColumn('content', 'content_added_at', 'TEXT')
   ensureColumn('content', 'license_expires_at', 'TEXT')
+  ensureColumn('content', 'published_at', 'TEXT')
 
   db.run(`
     UPDATE content
     SET content_added_at = COALESCE(content_added_at, datetime('now'))
     WHERE content_added_at IS NULL OR content_added_at = ''
+  `)
+  db.run(`
+    UPDATE content
+    SET published_at = COALESCE(published_at, content_added_at, datetime('now'))
+    WHERE published_at IS NULL OR published_at = ''
   `)
   ensureColumn('users', 'subscription_status', "TEXT DEFAULT 'free'")
   ensureColumn('users', 'subscription_plan', 'TEXT')

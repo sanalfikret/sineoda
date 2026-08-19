@@ -9,7 +9,7 @@ import { Hero } from '../components/Hero'
 import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
 import { useWatchlist } from '../context/WatchlistContext'
-import { buildBrowseRows, filterCatalog, pickCategoryRow, pickFeatured } from '../utils/browse'
+import { buildBrowseRows, filterCatalog, pickFeatured } from '../utils/browse'
 import { restoreBrowseScroll } from '../utils/browseState'
 import { filterVerticalCatalog } from '../utils/vertical'
 import { getContentTypeLabel } from '../constants/contentTypes'
@@ -24,7 +24,7 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
   const { openDetail, openPlayer } = useContentUI()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { categories, featuredContent, catalog, newReleases, getContentById, isLoading } = useContent()
+  const { categories, featuredContent, catalog, getContentById, isLoading } = useContent()
   const { watchlistItems } = useWatchlist()
   const { activeProfile } = useAuth()
   const activeGenre = searchParams.get('tur')
@@ -93,13 +93,8 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
   const verticalItems = useMemo(() => filterVerticalCatalog(catalog), [catalog])
 
   const rows = useMemo(
-    () => buildBrowseRows(catalog, browseOptions),
-    [catalog, browseOptions],
-  )
-
-  const trendingRow = useMemo(
-    () => pickCategoryRow(categories, 'Bu Hafta Trend', catalog, getContentById, browseOptions),
-    [categories, catalog, getContentById, browseOptions],
+    () => buildBrowseRows(catalog, browseOptions, categories, getContentById),
+    [catalog, browseOptions, categories, getContentById],
   )
 
   const filteredWatchlist = useMemo(() => {
@@ -116,11 +111,6 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
       return percent !== undefined && percent > 2
     })
   }, [filteredCatalog, progressMap, activeProfile])
-
-  const filteredNewReleases = useMemo(() => {
-    const items = newReleases.length > 0 ? newReleases : catalog.filter((item) => item.isNew)
-    return filterCatalog(items, browseOptions)
-  }, [newReleases, catalog, browseOptions])
 
   const handleContinue = async (item: ContentItem) => {
     const episodeId = resumeEpisodeMap[item.id]
@@ -196,19 +186,6 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
             title="Kaldığın Yerden Devam Et"
             items={continueWatching}
             onSelect={(item) => void handleContinue(item)}
-            progressMap={progressMap}
-          />
-        )}
-
-        {!activeGenre && !contentType && filteredNewReleases.length > 0 && (
-          <ContentRow title="Yeni Eklenenler" items={filteredNewReleases} onSelect={handleSelect} />
-        )}
-
-        {!activeGenre && !contentType && !verticalOnly && trendingRow && (
-          <ContentRow
-            title={trendingRow.title}
-            items={trendingRow.items}
-            onSelect={handleSelect}
             progressMap={progressMap}
           />
         )}

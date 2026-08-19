@@ -45,6 +45,7 @@ export interface ContentRow {
   credits_json?: string
   content_added_at?: string | null
   license_expires_at?: string | null
+  published_at?: string | null
 }
 
 export interface EpisodeRow {

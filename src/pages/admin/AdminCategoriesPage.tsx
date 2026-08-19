@@ -1,11 +1,23 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState, type DragEvent } from 'react'
 import { resolveMediaUrl } from '../../api/client'
 import { useContent } from '../../context/ContentContext'
+import type { ContentCategory } from '../../types/content'
+import { fuzzySearchMatch } from '../../utils/search'
 
 export function AdminCategoriesPage() {
-  const { catalog, categories, addCategory, updateCategory, deleteCategory, resetToSeed } =
+  const { catalog, categories, addCategory, updateCategory, deleteCategory, reorderCategories, resetToSeed } =
     useContent()
   const [newTitle, setNewTitle] = useState('')
+  const [orderedCategories, setOrderedCategories] = useState<ContentCategory[]>(categories)
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const [searchByCategory, setSearchByCategory] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    setOrderedCategories(categories)
+  }, [categories])
+
+  const catalogById = useMemo(() => new Map(catalog.map((item) => [item.id, item])), [catalog])
 
   const handleAddCategory = async () => {
     if (!newTitle.trim()) return
@@ -29,12 +41,59 @@ export function AdminCategoriesPage() {
     await resetToSeed()
   }
 
+  const toggleExpanded = (id: string) => {
+    setExpandedIds((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const persistOrder = async (next: ContentCategory[]) => {
+    setOrderedCategories(next)
+    await reorderCategories(next.map((category) => category.id))
+  }
+
+  const handleDragStart = (event: DragEvent<HTMLElement>, id: string) => {
+    setDraggingId(id)
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', id)
+  }
+
+  const handleDragOver = (event: DragEvent<HTMLElement>) => {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDrop = (event: DragEvent<HTMLElement>, targetId: string) => {
+    event.preventDefault()
+    const sourceId = draggingId ?? event.dataTransfer.getData('text/plain')
+    setDraggingId(null)
+    if (!sourceId || sourceId === targetId) return
+
+    const sourceIndex = orderedCategories.findIndex((category) => category.id === sourceId)
+    const targetIndex = orderedCategories.findIndex((category) => category.id === targetId)
+    if (sourceIndex < 0 || targetIndex < 0) return
+
+    const next = [...orderedCategories]
+    const [moved] = next.splice(sourceIndex, 1)
+    next.splice(targetIndex, 0, moved)
+    void persistOrder(next)
+  }
+
+  const updateSearch = (categoryId: string, value: string) => {
+    setSearchByCategory((current) => ({ ...current, [categoryId]: value }))
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-white">Kategoriler</h1>
-          <p className="mt-1 text-sm text-sineoda-muted">Ana sayfa satırlarını yönet</p>
+          <p className="mt-1 text-sm text-sineoda-muted">
+            Ana sayfa satırlarını yönet. Sıralamayı fareyle sürükleyerek değiştir — üyeler aynı sırayı görür.
+          </p>
         </div>
         <button
           type="button"
@@ -61,62 +120,151 @@ export function AdminCategoriesPage() {
         </button>
       </div>
 
-      <div className="space-y-4">
-        {categories.map((category) => (
-          <section
-            key={category.id}
-            className="rounded-2xl border border-white/10 bg-[#11141c] p-5"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <input
-                value={category.title}
-                onChange={(event) =>
-                  updateCategory(category.id, { title: event.target.value })
-                }
-                className="rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-lg font-semibold text-white outline-none focus:border-sineoda-gold"
-              />
-              <button
-                type="button"
-                onClick={() => void handleDeleteCategory(category.id, category.title)}
-                className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-300 hover:bg-red-500/20"
-              >
-                Kategoriyi Sil
-              </button>
-            </div>
+      <div className="space-y-3">
+        {orderedCategories.map((category) => {
+          const expanded = expandedIds.has(category.id)
+          const search = searchByCategory[category.id] ?? ''
+          const selectedItems = category.itemIds
+            .map((id) => catalogById.get(id))
+            .filter((item): item is NonNullable<typeof item> => Boolean(item))
+          const addableItems = catalog.filter(
+            (item) =>
+              !category.itemIds.includes(item.id) &&
+              fuzzySearchMatch(search, item.title, item.id, item.genres.join(' ')),
+          )
 
-            <p className="mt-2 text-xs text-sineoda-muted">{category.id}</p>
+          return (
+            <section
+              key={category.id}
+              draggable
+              onDragStart={(event) => handleDragStart(event, category.id)}
+              onDragOver={handleDragOver}
+              onDrop={(event) => handleDrop(event, category.id)}
+              onDragEnd={() => setDraggingId(null)}
+              className={`rounded-2xl border bg-[#11141c] transition ${
+                draggingId === category.id
+                  ? 'border-sineoda-gold/50 opacity-70'
+                  : 'border-white/10'
+              }`}
+            >
+              <div className="flex items-center gap-3 p-4">
+                <button
+                  type="button"
+                  aria-label="Sürükleyerek sırala"
+                  className="cursor-grab rounded-lg border border-white/10 px-2 py-3 text-sineoda-muted hover:bg-white/5 active:cursor-grabbing"
+                  title="Sürükleyerek sırala"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <circle cx="9" cy="7" r="1.5" />
+                    <circle cx="15" cy="7" r="1.5" />
+                    <circle cx="9" cy="12" r="1.5" />
+                    <circle cx="15" cy="12" r="1.5" />
+                    <circle cx="9" cy="17" r="1.5" />
+                    <circle cx="15" cy="17" r="1.5" />
+                  </svg>
+                </button>
 
-            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {catalog.map((item) => {
-                const checked = category.itemIds.includes(item.id)
-                return (
-                  <label
-                    key={item.id}
-                    className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 transition ${
-                      checked
-                        ? 'border-sineoda-gold/40 bg-sineoda-gold/10'
-                        : 'border-white/10 hover:bg-white/5'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => {
-                        const itemIds = checked
-                          ? category.itemIds.filter((entry) => entry !== item.id)
-                          : [...category.itemIds, item.id]
-                        updateCategory(category.id, { itemIds })
-                      }}
-                      className="accent-sineoda-gold"
-                    />
-                    <img src={resolveMediaUrl(item.poster)} alt="" className="h-10 w-7 rounded object-cover" />
-                    <span className="truncate text-sm text-white/85">{item.title}</span>
-                  </label>
-                )
-              })}
-            </div>
-          </section>
-        ))}
+                <button
+                  type="button"
+                  onClick={() => toggleExpanded(category.id)}
+                  className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                >
+                  <span className="text-white/60">{expanded ? '▼' : '▶'}</span>
+                  <div className="min-w-0">
+                    <p className="truncate text-lg font-semibold text-white">{category.title}</p>
+                    <p className="text-xs text-sineoda-muted">
+                      {selectedItems.length} içerik · {category.id}
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => void handleDeleteCategory(category.id, category.title)}
+                  className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-300 hover:bg-red-500/20"
+                >
+                  Sil
+                </button>
+              </div>
+
+              {expanded && (
+                <div className="border-t border-white/10 p-4 pt-3">
+                  <input
+                    value={category.title}
+                    onChange={(event) => updateCategory(category.id, { title: event.target.value })}
+                    className="mb-4 w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-base font-semibold text-white outline-none focus:border-sineoda-gold"
+                  />
+
+                  {selectedItems.length > 0 && (
+                    <div className="mb-4">
+                      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-sineoda-muted">
+                        Seçili içerikler
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedItems.map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() =>
+                              updateCategory(category.id, {
+                                itemIds: category.itemIds.filter((entry) => entry !== item.id),
+                              })
+                            }
+                            className="flex items-center gap-2 rounded-full border border-sineoda-gold/30 bg-sineoda-gold/10 px-2.5 py-1 text-xs text-white hover:bg-sineoda-gold/20"
+                          >
+                            <img
+                              src={resolveMediaUrl(item.poster)}
+                              alt=""
+                              className="h-5 w-3.5 rounded object-cover"
+                            />
+                            <span className="max-w-[140px] truncate">{item.title}</span>
+                            <span className="text-white/50">×</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <input
+                    value={search}
+                    onChange={(event) => updateSearch(category.id, event.target.value)}
+                    placeholder="İçerik ara ve ekle..."
+                    className="mb-3 w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold"
+                  />
+
+                  <div className="max-h-72 space-y-2 overflow-y-auto">
+                    {addableItems.length === 0 ? (
+                      <p className="py-4 text-center text-sm text-sineoda-muted">
+                        {search ? 'Eşleşen içerik yok.' : 'Tüm içerikler bu kategoride.'}
+                      </p>
+                    ) : (
+                      addableItems.slice(0, 40).map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() =>
+                            updateCategory(category.id, {
+                              itemIds: [...category.itemIds, item.id],
+                            })
+                          }
+                          className="flex w-full items-center gap-3 rounded-lg border border-white/10 px-3 py-2 text-left transition hover:border-sineoda-gold/30 hover:bg-white/5"
+                        >
+                          <img
+                            src={resolveMediaUrl(item.poster)}
+                            alt=""
+                            className="h-10 w-7 rounded object-cover"
+                          />
+                          <span className="truncate text-sm text-white/85">{item.title}</span>
+                          <span className="ml-auto text-xs text-sineoda-gold">Ekle</span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </section>
+          )
+        })}
       </div>
     </div>
   )
