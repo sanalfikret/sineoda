@@ -408,6 +408,7 @@ export async function bulkCreateEpisodes(
     duration?: string
     startEpisode?: number
     titles?: string[]
+    videoUrls?: string[]
   },
 ) {
   return api<{ episodes: Episode[]; createdCount: number }>(`/api/episodes/content/${contentId}/bulk`, {

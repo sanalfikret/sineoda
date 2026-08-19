@@ -28,6 +28,9 @@ router.post('/content/:contentId/bulk', requireAdmin, (req: AuthRequest, res) =>
   const customTitles = Array.isArray(req.body.titles)
     ? req.body.titles.map((title: unknown) => String(title).trim()).filter(Boolean)
     : []
+  const customUrls = Array.isArray(req.body.videoUrls)
+    ? req.body.videoUrls.map((url: unknown) => String(url).trim())
+    : []
 
   const created: ReturnType<typeof mapEpisode>[] = []
 
@@ -40,11 +43,12 @@ router.post('/content/:contentId/bulk', requireAdmin, (req: AuthRequest, res) =>
     if (exists) continue
 
     const title = customTitles[i] || `${titlePrefix} ${episodeNum}`
+    const videoUrl = customUrls[i] || ''
     const id = uuid()
     dbRun(
       `INSERT INTO episodes (id, content_id, season, episode_number, title, description, duration, video_url, stream_provider, sort_order)
-       VALUES (?, ?, ?, ?, ?, '', ?, '', 'custom', ?)`,
-      [id, req.params.contentId, season, episodeNum, title, duration, i],
+       VALUES (?, ?, ?, ?, ?, '', ?, ?, 'custom', ?)`,
+      [id, req.params.contentId, season, episodeNum, title, duration, videoUrl, i],
     )
     const row = dbGet<EpisodeRow>('SELECT * FROM episodes WHERE id = ?', [id])!
     created.push(mapEpisode(row))
