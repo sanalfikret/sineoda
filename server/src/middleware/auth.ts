@@ -1,7 +1,8 @@
 import type { NextFunction, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import { config } from '../config.js'
-import type { JwtPayload } from '../types.js'
+import { dbGet } from '../db.js'
+import type { JwtPayload, UserRow } from '../types.js'
 
 export function signToken(payload: JwtPayload) {
   return jwt.sign(payload, config.jwtSecret, { expiresIn: '7d' })
@@ -32,9 +33,13 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
 
 export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
   requireAuth(req, res, () => {
-    if (req.auth?.role !== 'admin') {
+    const user = dbGet<UserRow>('SELECT role FROM users WHERE id = ?', [req.auth!.userId])
+    if (!user || user.role !== 'admin') {
       res.status(403).json({ error: 'Admin yetkisi gerekli.' })
       return
+    }
+    if (req.auth && req.auth.role !== user.role) {
+      req.auth = { ...req.auth, role: user.role }
     }
     next()
   })
