@@ -1,30 +1,12 @@
-import { Router, type Response } from 'express'
+import { Router } from 'express'
 import { ensureContentById } from '../catalogEnsure.js'
 import { dbAll, dbGet, dbRun } from '../db.js'
-import { getProfileId, requireAuth, type AuthRequest } from '../middleware/auth.js'
+import { requireAuth, type AuthRequest } from '../middleware/auth.js'
+import { validateProfile } from '../middleware/profile.js'
 import { mapContent } from '../mappers.js'
-import type { ContentRow, ProfileRow } from '../types.js'
+import type { ContentRow } from '../types.js'
 
 const router = Router()
-
-function validateProfile(req: AuthRequest, res: Response): ProfileRow | undefined {
-  const profileId = getProfileId(req)
-  if (!profileId) {
-    res.status(400).json({ error: 'X-Profile-Id header gerekli.' })
-    return undefined
-  }
-
-  const profile = dbGet<ProfileRow>('SELECT * FROM profiles WHERE id = ? AND user_id = ?', [
-    profileId,
-    req.auth!.userId,
-  ])
-  if (!profile) {
-    res.status(404).json({ error: 'Profil bulunamadı.' })
-    return undefined
-  }
-
-  return profile
-}
 
 router.get('/', requireAuth, (req: AuthRequest, res) => {
   const profile = validateProfile(req, res)

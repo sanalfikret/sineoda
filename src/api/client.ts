@@ -72,12 +72,21 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
 
   if (!response.ok) {
     let message = 'İstek başarısız.'
+    const contentType = response.headers.get('content-type') ?? ''
     try {
-      const body = (await response.json()) as { error?: string }
-      message = body.error || message
+      if (contentType.includes('application/json')) {
+        const body = (await response.json()) as { error?: string }
+        message = body.error || message
+      } else if (response.status === 404) {
+        message = 'Bu özellik sunucuda henüz aktif değil. API güncellenmeli.'
+      } else {
+        await response.text()
+      }
     } catch {
       if (response.status === 502 || response.status === 503) {
         message = 'Sunucuya bağlanılamıyor. baslat.bat ile API\'nin çalıştığından emin olun.'
+      } else if (response.status === 404) {
+        message = 'Bu özellik sunucuda henüz aktif değil. API güncellenmeli.'
       }
     }
     throw new Error(message)
