@@ -4,6 +4,7 @@ import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import { mapContent, serializeSubtitles, slugify } from '../mappers.js'
 import { serializeCredits } from '../services/credits.js'
 import { parseContentAddedAt, parseLicenseDate } from '../services/license.js'
+import { parsePublishedAt } from '../services/publish.js'
 import { normalizeContentType } from '../constants/contentTypes.js'
 import type { ContentRow } from '../types.js'
 
@@ -64,15 +65,35 @@ function contentFields(body: Record<string, unknown>, existing?: ContentRow) {
         : body.licenseExpiresAt !== undefined || body.license_expires_at !== undefined
           ? parseLicenseDate(body.licenseExpiresAt ?? body.license_expires_at)
           : existing?.license_expires_at ?? null,
+    publishedAt: (() => {
+      if (body.publishNow === true || body.publish_now === true) {
+        return parsePublishedAt(null, { publishNow: true })
+      }
+      if (body.publishedAt !== undefined || body.published_at !== undefined) {
+        return parsePublishedAt(body.publishedAt ?? body.published_at, {
+          existing: existing?.published_at ?? null,
+        })
+      }
+      if (!existing) {
+        return parsePublishedAt(null, { publishNow: true })
+      }
+      return existing.published_at ?? null
+    })(),
   }
 }
 
 router.get('/', (_req, res) => {
-  res.json({ catalog: dbAll<ContentRow>('SELECT * FROM content ORDER BY title').map(mapContent) })
+  const catalog = dbAll<ContentRow>(
+    `SELECT * FROM content WHERE published_at IS NOT NULL AND published_at <= datetime('now') ORDER BY title`,
+  ).map(mapContent)
+  res.json({ catalog })
 })
 
 router.get('/:id', (req, res) => {
-  const row = dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [req.params.id])
+  const row = dbGet<ContentRow>(
+    `SELECT * FROM content WHERE id = ? AND published_at IS NOT NULL AND published_at <= datetime('now')`,
+    [req.params.id],
+  )
   if (!row) {
     res.status(404).json({ error: 'İçerik bulunamadı.' })
     return
@@ -94,30 +115,38 @@ router.post('/', requireAdmin, (req: AuthRequest, res) => {
     id = `${slugify(title)}-${counter++}`
   }
 
-  const fields = contentFields(body, {
-    title,
-    description: '',
-    year: new Date().getFullYear(),
-    duration: '',
-    rating: '13+',
-    type: 'film',
-    genres: '[]',
-    poster: '',
-    backdrop: '',
-    video_url: '',
-    featured: 0,
-  } as ContentRow)
+  let fields
+  try {
+    fields = contentFields(body, {
+      title,
+      description: '',
+      year: new Date().getFullYear(),
+      duration: '',
+      rating: '13+',
+      type: 'film',
+      genres: '[]',
+      poster: '',
+      backdrop: '',
+      video_url: '',
+      featured: 0,
+      published_at: new Date().toISOString(),
+    } as ContentRow)
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : 'Geçersiz içerik verisi.' })
+    return
+  }
 
   if (fields.featured) dbRun('UPDATE content SET featured = 0')
 
   dbRun(
-    `INSERT INTO content (id, title, description, year, duration, rating, type, genres, poster, backdrop, video_url, stream_provider, trailer_url, video_format, is_new, new_until, featured, subtitles_json, credits_json, content_added_at, license_expires_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO content (id, title, description, year, duration, rating, type, genres, poster, backdrop, video_url, stream_provider, trailer_url, video_format, is_new, new_until, featured, subtitles_json, credits_json, content_added_at, license_expires_at, published_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id, fields.title, fields.description, fields.year, fields.duration, fields.rating, fields.type,
       fields.genres, fields.poster, fields.backdrop || fields.poster, fields.videoUrl, fields.streamProvider,
       fields.trailerUrl, fields.videoFormat, fields.isNew, fields.newUntil, fields.featured ? 1 : 0,
       fields.subtitlesJson, fields.creditsJson, fields.contentAddedAt, fields.licenseExpiresAt,
+      fields.publishedAt,
     ],
   )
 
@@ -131,17 +160,23 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
     return
   }
 
-  const fields = contentFields(req.body as Record<string, unknown>, existing)
+  let fields
+  try {
+    fields = contentFields(req.body as Record<string, unknown>, existing)
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : 'Geçersiz içerik verisi.' })
+    return
+  }
   if (fields.featured) dbRun('UPDATE content SET featured = 0')
 
   dbRun(
-    `UPDATE content SET title=?, description=?, year=?, duration=?, rating=?, type=?, genres=?, poster=?, backdrop=?, video_url=?, stream_provider=?, trailer_url=?, video_format=?, is_new=?, new_until=?, featured=?, subtitles_json=?, credits_json=?, content_added_at=?, license_expires_at=? WHERE id=?`,
+    `UPDATE content SET title=?, description=?, year=?, duration=?, rating=?, type=?, genres=?, poster=?, backdrop=?, video_url=?, stream_provider=?, trailer_url=?, video_format=?, is_new=?, new_until=?, featured=?, subtitles_json=?, credits_json=?, content_added_at=?, license_expires_at=?, published_at=? WHERE id=?`,
     [
       fields.title, fields.description, fields.year, fields.duration, fields.rating, fields.type,
       fields.genres, fields.poster, fields.backdrop, fields.videoUrl, fields.streamProvider,
       fields.trailerUrl, fields.videoFormat, fields.isNew, fields.newUntil, fields.featured ? 1 : 0,
       fields.subtitlesJson, fields.creditsJson, fields.contentAddedAt, fields.licenseExpiresAt,
-      existing.id,
+      fields.publishedAt, existing.id,
     ],
   )
 

@@ -12,6 +12,7 @@ import { buildCredits, creditsToForm } from '../../utils/credits'
 import { CONTENT_TYPES, isSeriesContent } from '../../constants/contentTypes'
 import type { ContentType } from '../../types/content'
 import { toDateInputValue } from '../../utils/license'
+import { defaultScheduledDateTime, toDateTimeLocalValue } from '../../utils/publish'
 
 const RATINGS = ['Genel', '7+', '13+', '16+', '18+']
 const todayInput = () => new Date().toISOString().slice(0, 10)
@@ -45,6 +46,8 @@ const EMPTY_FORM = {
   cast: '',
   studio: '',
   ...LICENSE_DEFAULTS,
+  publishMode: 'now' as 'now' | 'scheduled',
+  publishedAt: defaultScheduledDateTime(),
 }
 
 const VERTICAL_PRESET = {
@@ -110,6 +113,8 @@ export function AdminContentFormPage() {
           contentAddedAt: toDateInputValue(item.contentAddedAt) || todayInput(),
           licenseUnlimited: item.licenseUnlimited,
           licenseExpiresAt: toDateInputValue(item.licenseExpiresAt),
+          publishMode: item.isScheduled ? 'scheduled' : 'now',
+          publishedAt: toDateTimeLocalValue(item.publishedAt) || defaultScheduledDateTime(),
           ...subtitlesToForm(item.subtitles),
           ...creditsToForm(item.credits),
         })
@@ -159,6 +164,11 @@ export function AdminContentFormPage() {
       return
     }
 
+    if (form.publishMode === 'scheduled' && !form.publishedAt) {
+      setError('Planlanan yayın için tarih ve saat seçmelisin.')
+      return
+    }
+
     const payload = {
       title: form.title.trim(),
       description: form.description.trim(),
@@ -181,6 +191,11 @@ export function AdminContentFormPage() {
       contentAddedAt: form.contentAddedAt,
       licenseUnlimited: form.licenseUnlimited,
       licenseExpiresAt: form.licenseUnlimited ? null : form.licenseExpiresAt,
+      publishNow: form.publishMode === 'now',
+      publishedAt:
+        form.publishMode === 'scheduled'
+          ? new Date(form.publishedAt).toISOString()
+          : undefined,
       subtitles: buildSubtitles(form.subtitleTr, form.subtitleEn),
       credits: buildCredits(form),
     }
@@ -434,6 +449,52 @@ export function AdminContentFormPage() {
             Filtreler: {BROWSE_GENRES.join(', ')}
           </p>
         </Field>
+
+        <section className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 sm:p-5">
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-emerald-200">Yayın Zamanı</h3>
+            <p className="mt-1 text-xs text-sineoda-muted">
+              Yayınlanan içerikler aktif üyeler tarafından izlenebilir. Planlanan içerikler belirlenen
+              saatte otomatik görünür.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <label className="flex items-center gap-3 text-sm text-white/85">
+              <input
+                type="radio"
+                name="publishMode"
+                checked={form.publishMode === 'now'}
+                onChange={() => update('publishMode', 'now')}
+                className="accent-sineoda-gold"
+              />
+              Hemen yayınla
+            </label>
+
+            <label className="flex items-center gap-3 text-sm text-white/85">
+              <input
+                type="radio"
+                name="publishMode"
+                checked={form.publishMode === 'scheduled'}
+                onChange={() => update('publishMode', 'scheduled')}
+                className="accent-sineoda-gold"
+              />
+              İleri tarihte yayınla
+            </label>
+
+            {form.publishMode === 'scheduled' && (
+              <Field label="Yayın tarihi ve saati *">
+                <input
+                  type="datetime-local"
+                  value={form.publishedAt}
+                  onChange={(event) => update('publishedAt', event.target.value)}
+                  className={inputClass}
+                  required
+                />
+              </Field>
+            )}
+          </div>
+        </section>
 
         <section className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 sm:p-5">
           <div className="mb-4">

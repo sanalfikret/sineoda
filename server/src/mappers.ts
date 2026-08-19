@@ -5,6 +5,7 @@ import {
   isLicenseExpiringSoon,
   isLicenseUnlimited,
 } from './services/license.js'
+import { isContentPublished, isContentScheduled } from './services/publish.js'
 import type { ContentRow, EpisodeRow, ProfileRow, UserRow } from './types.js'
 
 export interface SubtitleTrack {
@@ -64,6 +65,7 @@ export function mapProfile(row: ProfileRow) {
 export function mapContentLicense(row: ContentRow) {
   const licenseExpiresAt = row.license_expires_at ?? null
   const contentAddedAt = row.content_added_at ?? null
+  const publishedAt = row.published_at ?? null
   return {
     contentAddedAt,
     licenseExpiresAt,
@@ -71,6 +73,9 @@ export function mapContentLicense(row: ContentRow) {
     licenseExpired: isLicenseExpired(licenseExpiresAt),
     licenseExpiringSoon: isLicenseExpiringSoon(licenseExpiresAt),
     licenseDaysRemaining: licenseExpiresAt ? getLicenseDaysRemaining(licenseExpiresAt) : null,
+    publishedAt,
+    isPublished: isContentPublished(publishedAt),
+    isScheduled: isContentScheduled(publishedAt),
   }
 }
 
