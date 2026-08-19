@@ -14,6 +14,14 @@ export function loadCategoryOrder(): string[] | null {
   }
 }
 
+export function removeCategoryFromOrder(categoryId: string) {
+  const customOrder = loadCategoryOrder()
+  if (!customOrder?.length) return
+  const next = customOrder.filter((id) => id !== categoryId)
+  if (next.length === customOrder.length) return
+  saveCategoryOrder(next)
+}
+
 export function saveCategoryOrder(orderedIds: string[]) {
   const uniqueIds = [...new Set(orderedIds.map(String))]
   dbRun('INSERT OR REPLACE INTO site_settings (key, value) VALUES (?, ?)', [

@@ -65,7 +65,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
 
   let response: Response
   try {
-    response = await fetch(`${getApiBase()}${path}`, { ...options, headers })
+    response = await fetch(`${getApiBase()}${path}`, { ...options, headers, cache: 'no-store' })
   } catch {
     throw new Error('Sunucuya bağlanılamıyor. baslat.bat ile projeyi yeniden başlatın (API port 3001).')
   }

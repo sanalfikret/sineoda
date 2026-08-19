@@ -1,4 +1,5 @@
 import { BROWSE_GENRES, genreToCategoryId } from '../constants/genres'
+import { getContentTypeLabel } from '../constants/contentTypes'
 import type { ContentCategory, ContentItem, ContentType } from '../types/content'
 
 export type BrowseFilterOptions = {
@@ -93,6 +94,50 @@ export function buildGenreBrowseRows(
   })).filter((row) => row.items.length > 0)
 }
 
+function typeBrowseTitle(type: ContentType) {
+  switch (type) {
+    case 'dizi':
+      return 'Tüm Diziler'
+    case 'film':
+      return 'Tüm Filmler'
+    case 'belgesel':
+      return 'Tüm Belgeseller'
+    case 'kisa-film':
+      return 'Tüm Kısa Filmler'
+    default:
+      return `Tüm ${getContentTypeLabel(type)}`
+  }
+}
+
+function buildAllTypeBrowseRow(catalog: ContentItem[], options: BrowseFilterOptions): BrowseRow[] {
+  const items = filterCatalog(catalog, options).sort((a, b) => a.title.localeCompare(b.title, 'tr'))
+  if (items.length === 0) return []
+
+  const title = options.verticalOnly
+    ? 'Dikey Diziler'
+    : options.type
+      ? typeBrowseTitle(options.type)
+      : 'Tümü'
+
+  return [
+    {
+      id: options.verticalOnly ? 'all-vertical' : options.type ? `all-${options.type}` : 'all',
+      title,
+      itemIds: items.map((item) => item.id),
+      items,
+    },
+  ]
+}
+
+export function genresForCatalog(catalog: ContentItem[], options: BrowseFilterOptions) {
+  const items = filterCatalog(catalog, { ...options, genre: null })
+  const available = new Set<string>()
+  for (const item of items) {
+    for (const genre of item.genres) available.add(genre)
+  }
+  return BROWSE_GENRES.filter((genre) => available.has(genre))
+}
+
 export function buildBrowseRows(
   catalog: ContentItem[],
   options: BrowseFilterOptions,
@@ -100,9 +145,7 @@ export function buildBrowseRows(
   getContentById?: (id: string) => ContentItem | undefined,
 ) {
   if (options.genre) {
-    const items = filterCatalog(catalog, options)
-      .sort((a, b) => a.title.localeCompare(b.title, 'tr'))
-      .slice(0, BROWSE_ITEMS_PER_ROW)
+    const items = filterCatalog(catalog, options).sort((a, b) => a.title.localeCompare(b.title, 'tr'))
     if (items.length === 0) return []
     return [
       {
@@ -112,6 +155,10 @@ export function buildBrowseRows(
         items,
       },
     ]
+  }
+
+  if (options.type || options.verticalOnly) {
+    return buildAllTypeBrowseRow(catalog, options)
   }
 
   if (categories.length > 0 && getContentById) {

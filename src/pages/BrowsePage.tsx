@@ -9,7 +9,7 @@ import { Hero } from '../components/Hero'
 import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
 import { useWatchlist } from '../context/WatchlistContext'
-import { buildBrowseRows, filterCatalog, pickFeatured } from '../utils/browse'
+import { buildBrowseRows, filterCatalog, genresForCatalog, pickFeatured } from '../utils/browse'
 import { restoreBrowseScroll } from '../utils/browseState'
 import { isVerticalContent } from '../utils/vertical'
 import { getContentTypeLabel } from '../constants/contentTypes'
@@ -24,7 +24,7 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
   const { openDetail, openPlayer } = useContentUI()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { categories, featuredContent, catalog, getContentById, isLoading } = useContent()
+  const { categories, featuredContent, catalog, getContentById, isLoading, refresh } = useContent()
   const { watchlistItems } = useWatchlist()
   const { activeProfile } = useAuth()
   const activeGenre = searchParams.get('tur')
@@ -37,6 +37,34 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
     else next.delete('tur')
     setSearchParams(next, { replace: true })
   }
+
+  useEffect(() => {
+    if (contentType || verticalOnly) return
+    void refresh()
+  }, [contentType, verticalOnly, refresh])
+
+  useEffect(() => {
+    const onFocus = () => {
+      if (contentType || verticalOnly) return
+      void refresh()
+    }
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [contentType, verticalOnly, refresh])
+
+  const genreOptions = useMemo(
+    () => genresForCatalog(catalog, { type: contentType, verticalOnly, genre: null }),
+    [catalog, contentType, verticalOnly],
+  )
+
+  useEffect(() => {
+    if (!activeGenre || genreOptions.length === 0) return
+    if (!genreOptions.includes(activeGenre as (typeof genreOptions)[number])) {
+      const next = new URLSearchParams(searchParams)
+      next.delete('tur')
+      setSearchParams(next, { replace: true })
+    }
+  }, [activeGenre, genreOptions, searchParams, setSearchParams])
 
   useEffect(() => {
     if (isLoading) return
@@ -152,19 +180,11 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
     )
   }
 
-  const displayHero = activeGenre ? filteredCatalog[0] : heroItem ?? catalog[0] ?? null
-
-  if (!displayHero && !activeGenre) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-sineoda-gold border-t-transparent" />
-      </div>
-    )
-  }
+  const displayHero = activeGenre ? filteredCatalog[0] : heroItem ?? filteredCatalog[0] ?? null
 
   return (
     <main className="bg-sineoda-bg">
-      {displayHero && (
+      {displayHero ? (
       <Hero
         item={displayHero}
         onPlay={openPlayer}
@@ -175,9 +195,15 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
             : pageTitle ?? (verticalOnly ? 'Dikey Diziler' : contentType ? getContentTypeLabel(contentType) : 'Senin İçin')
         }
       />
+      ) : (
+        <div className="px-4 pb-4 pt-28 sm:px-6 lg:px-8">
+          <h1 className="text-2xl font-bold text-white sm:text-3xl">
+            {pageTitle ?? (verticalOnly ? 'Dikey Diziler' : contentType ? getContentTypeLabel(contentType) : 'Senin İçin')}
+          </h1>
+        </div>
       )}
 
-      <GenreFilterBar activeGenre={activeGenre} onChange={setActiveGenre} />
+      <GenreFilterBar activeGenre={activeGenre} genres={genreOptions} onChange={setActiveGenre} />
 
       <div className="pb-24 pt-2">
         {!activeGenre && !contentType && continueWatching.length > 0 && (
@@ -208,7 +234,7 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
               }
               prominent={row.title === 'Dikey Diziler'}
               layout={rowLayout(row.title, row.items)}
-              variant={activeGenre ? 'grid' : 'carousel'}
+              variant={activeGenre || contentType || verticalOnly ? 'grid' : 'carousel'}
             />
           ))
         )}
