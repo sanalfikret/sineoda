@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type DragEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import { resolveMediaUrl } from '../../api/client'
 import { useContent } from '../../context/ContentContext'
 import type { ContentCategory } from '../../types/content'
@@ -12,8 +12,12 @@ export function AdminCategoriesPage() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [searchByCategory, setSearchByCategory] = useState<Record<string, string>>({})
+  const [orderError, setOrderError] = useState<string | null>(null)
+  const [savingOrder, setSavingOrder] = useState(false)
+  const skipSyncRef = useRef(false)
 
   useEffect(() => {
+    if (skipSyncRef.current) return
     setOrderedCategories(categories)
   }, [categories])
 
@@ -51,8 +55,20 @@ export function AdminCategoriesPage() {
   }
 
   const persistOrder = async (next: ContentCategory[]) => {
+    const previous = orderedCategories
     setOrderedCategories(next)
-    await reorderCategories(next.map((category) => category.id))
+    setSavingOrder(true)
+    setOrderError(null)
+    skipSyncRef.current = true
+    try {
+      await reorderCategories(next.map((category) => category.id))
+    } catch (error) {
+      setOrderedCategories(previous)
+      setOrderError(error instanceof Error ? error.message : 'Sıra kaydedilemedi.')
+    } finally {
+      skipSyncRef.current = false
+      setSavingOrder(false)
+    }
   }
 
   const handleDragStart = (event: DragEvent<HTMLElement>, id: string) => {
@@ -93,6 +109,7 @@ export function AdminCategoriesPage() {
           <h1 className="text-2xl font-bold text-white">Kategoriler</h1>
           <p className="mt-1 text-sm text-sineoda-muted">
             Ana sayfa satırlarını yönet. Sıralamayı fareyle sürükleyerek değiştir — üyeler aynı sırayı görür.
+            {savingOrder && <span className="ml-2 text-sineoda-gold">Kaydediliyor…</span>}
           </p>
         </div>
         <button
@@ -103,6 +120,12 @@ export function AdminCategoriesPage() {
           Demo Verisine Sıfırla
         </button>
       </div>
+
+      {orderError && (
+        <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {orderError}
+        </p>
+      )}
 
       <div className="flex gap-2">
         <input

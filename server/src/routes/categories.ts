@@ -1,30 +1,16 @@
 import { Router } from 'express'
 import { v4 as uuid } from 'uuid'
-import { dbAll, dbGet, dbRun } from '../db.js'
+import { dbGet, dbRun } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import { slugify } from '../mappers.js'
 import { resetContent } from '../seed.js'
+import { fillCategoriesToTarget } from '../services/categoryFill.js'
+import { mapCategoriesResponse, saveCategoryOrder } from '../services/categoryOrder.js'
 
 const router = Router()
 
 router.get('/', (_req, res) => {
-  const categories = dbAll<{ id: string; title: string; sort_order: number }>(
-    'SELECT * FROM categories ORDER BY sort_order, title',
-  )
-  const items = dbAll<{ category_id: string; content_id: string; sort_order: number }>(
-    'SELECT category_id, content_id, sort_order FROM category_items ORDER BY sort_order',
-  )
-
-  res.json({
-    categories: categories.map((category) => ({
-      id: category.id,
-      title: category.title,
-      itemIds: items
-        .filter((item) => item.category_id === category.id)
-        .sort((a, b) => a.sort_order - b.sort_order)
-        .map((item) => item.content_id),
-    })),
-  })
+  res.json({ categories: mapCategoriesResponse() })
 })
 
 router.post('/', requireAdmin, (req: AuthRequest, res) => {
@@ -49,11 +35,13 @@ router.put('/reorder', requireAdmin, (req: AuthRequest, res) => {
     return
   }
 
-  orderedIds.forEach((id: string, index: number) => {
-    dbRun('UPDATE categories SET sort_order = ? WHERE id = ?', [index, String(id)])
-  })
+  saveCategoryOrder(orderedIds.map(String))
+  res.json({ ok: true, categories: mapCategoriesResponse() })
+})
 
-  res.json({ ok: true })
+router.post('/fill', requireAdmin, (_req: AuthRequest, res) => {
+  fillCategoriesToTarget()
+  res.json({ ok: true, categories: mapCategoriesResponse() })
 })
 
 router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
@@ -76,15 +64,13 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
     })
   }
 
-  const category = dbGet<{ id: string; title: string }>('SELECT * FROM categories WHERE id = ?', [
-    req.params.id,
-  ])!
-  const itemIds = dbAll<{ content_id: string }>(
-    'SELECT content_id FROM category_items WHERE category_id = ? ORDER BY sort_order',
-    [req.params.id],
-  ).map((row) => row.content_id)
+  const category = mapCategoriesResponse().find((entry) => entry.id === req.params.id)
+  if (!category) {
+    res.status(404).json({ error: 'Kategori bulunamadı.' })
+    return
+  }
 
-  res.json({ category: { ...category, itemIds } })
+  res.json({ category })
 })
 
 router.delete('/:id', requireAdmin, (req: AuthRequest, res) => {

@@ -141,13 +141,13 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   const reorderCategories = useCallback(
     async (orderedIds: string[]) => {
-      await api('/api/categories/reorder', {
+      const result = await api<{ categories: ContentCategory[] }>('/api/categories/reorder', {
         method: 'PUT',
         body: JSON.stringify({ orderedIds }),
       })
-      await refresh()
+      setCategories(result.categories)
     },
-    [refresh],
+    [],
   )
 
   const resetToSeed = useCallback(async () => {
