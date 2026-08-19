@@ -26,6 +26,7 @@ const WatchlistContext = createContext<WatchlistContextValue | null>(null)
 export function WatchlistProvider({ children }: { children: ReactNode }) {
   const { activeProfile } = useAuth()
   const [watchlistItems, setWatchlistItems] = useState<ContentItem[]>([])
+  const [optimisticIds, setOptimisticIds] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
@@ -50,7 +51,10 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
     void loadWatchlist()
   }, [loadWatchlist])
 
-  const watchlistIds = useMemo(() => watchlistItems.map((item) => item.id), [watchlistItems])
+  const watchlistIds = useMemo(
+    () => [...new Set([...watchlistItems.map((item) => item.id), ...optimisticIds])],
+    [watchlistItems, optimisticIds],
+  )
 
   const isInWatchlist = useCallback(
     (contentId: string) => watchlistIds.includes(contentId),
@@ -68,21 +72,33 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
       const wasInList = watchlistIds.includes(contentId)
       setActionError(null)
 
+      const previousItems = watchlistItems
+      const previousOptimistic = optimisticIds
+      if (wasInList) {
+        setWatchlistItems((items) => items.filter((item) => item.id !== contentId))
+        setOptimisticIds((ids) => ids.filter((id) => id !== contentId))
+      } else {
+        setOptimisticIds((ids) => (ids.includes(contentId) ? ids : [...ids, contentId]))
+      }
+
       try {
         if (wasInList) {
           await removeFromWatchlist(contentId)
         } else {
           await addToWatchlist(contentId)
         }
+        setOptimisticIds((ids) => ids.filter((id) => id !== contentId))
         await loadWatchlist()
       } catch (error) {
+        setWatchlistItems(previousItems)
+        setOptimisticIds(previousOptimistic)
         const message =
           error instanceof Error ? error.message : 'Liste güncellenemedi. Tekrar deneyin.'
         setActionError(message)
         throw error
       }
     },
-    [activeProfile, watchlistIds, loadWatchlist],
+    [activeProfile, watchlistIds, watchlistItems, optimisticIds, loadWatchlist],
   )
 
   const value = useMemo(

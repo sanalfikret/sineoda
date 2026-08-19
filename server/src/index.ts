@@ -91,6 +91,7 @@ app.get('/api/health', (_req, res) => {
 })
 
 app.get('/api/bootstrap', (_req, res) => {
+  res.set('Cache-Control', 'no-store')
   const catalog = dbAll<ContentRow>(
     `SELECT * FROM content WHERE ${PUBLISHED_CONTENT_SQL} ORDER BY title`,
   ).map(mapContent)

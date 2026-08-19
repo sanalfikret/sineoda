@@ -1,12 +1,13 @@
-import { BROWSE_GENRES } from '../constants/genres'
+import { BROWSE_GENRES, type BrowseGenre } from '../constants/genres'
 
 interface GenreFilterBarProps {
   activeGenre: string | null
+  genres?: readonly BrowseGenre[]
   onChange: (genre: string | null) => void
 }
 
-export function GenreFilterBar({ activeGenre, onChange }: GenreFilterBarProps) {
-  const chips = [{ id: null, label: 'Tümü' }, ...BROWSE_GENRES.map((g) => ({ id: g, label: g }))]
+export function GenreFilterBar({ activeGenre, genres = BROWSE_GENRES, onChange }: GenreFilterBarProps) {
+  const chips = [{ id: null, label: 'Tümü' }, ...genres.map((g) => ({ id: g, label: g }))]
 
   return (
     <div className="sticky top-[4.5rem] z-30 -mx-4 border-b border-white/5 bg-sineoda-bg/95 px-4 py-3 backdrop-blur-md sm:top-20 sm:-mx-6 sm:px-6 lg:px-8">
