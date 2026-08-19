@@ -366,7 +366,9 @@ export function seedDatabase() {
 }
 
 export function resetContent() {
-  dbExec('DELETE FROM watchlist; DELETE FROM category_items; DELETE FROM categories; DELETE FROM content;')
+  dbExec(
+    "DELETE FROM watchlist; DELETE FROM category_items; DELETE FROM categories; DELETE FROM content; DELETE FROM site_settings WHERE key = 'category_order';",
+  )
   for (const row of SEED_CONTENT) {
     dbRun(
       `INSERT INTO content (id, title, description, year, duration, rating, type, genres, poster, backdrop, video_url, featured)

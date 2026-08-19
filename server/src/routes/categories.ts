@@ -5,11 +5,12 @@ import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import { slugify } from '../mappers.js'
 import { resetContent } from '../seed.js'
 import { fillCategoriesToTarget } from '../services/categoryFill.js'
-import { mapCategoriesResponse, saveCategoryOrder } from '../services/categoryOrder.js'
+import { mapCategoriesResponse, removeCategoryFromOrder, saveCategoryOrder } from '../services/categoryOrder.js'
 
 const router = Router()
 
 router.get('/', (_req, res) => {
+  res.set('Cache-Control', 'no-store')
   res.json({ categories: mapCategoriesResponse() })
 })
 
@@ -79,6 +80,7 @@ router.delete('/:id', requireAdmin, (req: AuthRequest, res) => {
     res.status(404).json({ error: 'Kategori bulunamadı.' })
     return
   }
+  removeCategoryFromOrder(req.params.id)
   dbRun('DELETE FROM categories WHERE id = ?', [req.params.id])
   res.status(204).send()
 })
