@@ -11,7 +11,7 @@ import { useContent } from '../context/ContentContext'
 import { useWatchlist } from '../context/WatchlistContext'
 import { buildBrowseRows, filterCatalog, pickFeatured } from '../utils/browse'
 import { restoreBrowseScroll } from '../utils/browseState'
-import { filterVerticalCatalog } from '../utils/vertical'
+import { isVerticalContent } from '../utils/vertical'
 import { getContentTypeLabel } from '../constants/contentTypes'
 
 interface BrowsePageProps {
@@ -90,12 +90,27 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
     return pickFeatured(catalog, featuredContent, contentType, verticalOnly)
   }, [catalog, featuredContent, contentType, activeGenre, filteredCatalog, verticalOnly])
 
-  const verticalItems = useMemo(() => filterVerticalCatalog(catalog), [catalog])
-
   const rows = useMemo(
     () => buildBrowseRows(catalog, browseOptions, categories, getContentById),
     [catalog, browseOptions, categories, getContentById],
   )
+
+  const handleSelect = verticalOnly
+    ? (item: ContentItem) => void openPlayer(item)
+    : openDetail
+
+  const rowLayout = (rowTitle: string, items: ContentItem[]) => {
+    if (verticalOnly) return 'portrait' as const
+    if (rowTitle === 'Dikey Diziler' || items.every(isVerticalContent)) return 'portrait' as const
+    return 'landscape' as const
+  }
+
+  const rowSelect = (rowTitle: string) => {
+    if (verticalOnly || rowTitle === 'Dikey Diziler') {
+      return (item: ContentItem) => void openPlayer(item)
+    }
+    return handleSelect
+  }
 
   const filteredWatchlist = useMemo(() => {
     let items = watchlistItems
@@ -128,10 +143,6 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
     }
     openPlayer(item)
   }
-
-  const handleSelect = verticalOnly
-    ? (item: ContentItem) => void openPlayer(item)
-    : openDetail
 
   if (isLoading) {
     return (
@@ -169,18 +180,6 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
       <GenreFilterBar activeGenre={activeGenre} onChange={setActiveGenre} />
 
       <div className="pb-24 pt-2">
-        {!activeGenre && !contentType && !verticalOnly && verticalItems.length > 0 && (
-          <ContentRow
-            title="Dikey Diziler"
-            items={verticalItems}
-            onSelect={(item) => void openPlayer(item)}
-            progressMap={progressMap}
-            viewAllHref="/dikey-diziler"
-            prominent
-            layout="portrait"
-          />
-        )}
-
         {!activeGenre && !contentType && continueWatching.length > 0 && (
           <ContentRow
             title="Kaldığın Yerden Devam Et"
@@ -188,10 +187,6 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
             onSelect={(item) => void handleContinue(item)}
             progressMap={progressMap}
           />
-        )}
-
-        {!activeGenre && !contentType && filteredWatchlist.length > 0 && (
-          <ContentRow title="Listem" items={filteredWatchlist} onSelect={openDetail} />
         )}
 
         {rows.length === 0 ? (
@@ -204,12 +199,22 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
               key={row.id}
               title={row.title}
               items={row.items}
-              onSelect={handleSelect}
+              onSelect={rowSelect(row.title)}
               progressMap={progressMap}
-              layout={verticalOnly ? 'portrait' : 'landscape'}
+              viewAllHref={
+                !activeGenre && !contentType && row.title === 'Dikey Diziler'
+                  ? '/dikey-diziler'
+                  : undefined
+              }
+              prominent={row.title === 'Dikey Diziler'}
+              layout={rowLayout(row.title, row.items)}
               variant={activeGenre ? 'grid' : 'carousel'}
             />
           ))
+        )}
+
+        {!activeGenre && !contentType && filteredWatchlist.length > 0 && (
+          <ContentRow title="Listem" items={filteredWatchlist} onSelect={openDetail} />
         )}
       </div>
     </main>
