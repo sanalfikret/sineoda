@@ -560,6 +560,8 @@ export async function creatorSignupRequest(data: {
   studioName: string
   bio?: string
   acceptLegal: boolean
+  program?: 'standard' | 'student_cinema'
+  schoolId?: string
 }): Promise<AuthResponse> {
   return api<AuthResponse>('/api/creator/auth/signup', {
     method: 'POST',
@@ -583,7 +585,7 @@ export async function creatorFetchMe() {
 
 export async function creatorFetchDashboard() {
   return api<{
-    creator: { id: string; studioName: string; status: string; documentCount: number }
+    creator: { id: string; studioName: string; status: string; documentCount: number; program?: string; schoolId?: string | null }
     payoutRules: { note: string }
     content: Array<ContentItem & { reviewStatus: string; qualifiedMinutes: number; likes: number }>
     totals: { qualifiedMinutes: number; likes: number; publishedCount: number; pendingCount: number }
@@ -694,6 +696,70 @@ export async function fetchAdminPendingCreatorContent() {
 
 export async function reviewAdminCreatorContent(contentId: string, reviewStatus: 'published' | 'rejected' | 'pending') {
   return api<{ item: ContentItem; reviewStatus: string }>(`/api/admin/creators/content/${contentId}/review`, {
+    method: 'PATCH',
+    body: JSON.stringify({ reviewStatus }),
+  })
+}
+
+export interface FilmSchool {
+  id: string
+  name: string
+  slug: string
+  logoUrl: string
+  website: string
+}
+
+export interface AdminFilmSchool extends FilmSchool {
+  status: 'active' | 'inactive'
+  createdAt: string
+}
+
+export interface AdminStudentCinemaItem extends ContentItem {
+  reviewStatus: string
+  program: string
+  contentFormat: 'main' | 'bts' | 'teacher_note'
+  parentContentId: string | null
+  schoolId: string | null
+  schoolName: string | null
+  schoolReviewStatus: string
+  studioName: string | null
+  creatorId: string | null
+}
+
+export async function fetchFilmSchools() {
+  return api<{ schools: FilmSchool[] }>('/api/student-cinema/schools')
+}
+
+export async function fetchAdminFilmSchools() {
+  return api<{ schools: AdminFilmSchool[] }>('/api/admin/student-cinema/schools')
+}
+
+export async function createAdminFilmSchool(data: { name: string; website?: string; logoUrl?: string }) {
+  return api<{ school: AdminFilmSchool }>('/api/admin/student-cinema/schools', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function fetchAdminStudentCinemaQueue() {
+  return api<{ items: AdminStudentCinemaItem[] }>('/api/admin/student-cinema/queue')
+}
+
+export async function reviewAdminStudentCinemaSchool(
+  contentId: string,
+  schoolReviewStatus: 'approved' | 'rejected' | 'pending',
+) {
+  return api<{ item: AdminStudentCinemaItem }>(`/api/admin/student-cinema/content/${contentId}/school-review`, {
+    method: 'PATCH',
+    body: JSON.stringify({ schoolReviewStatus }),
+  })
+}
+
+export async function reviewAdminStudentCinemaContent(
+  contentId: string,
+  reviewStatus: 'published' | 'rejected' | 'pending',
+) {
+  return api<{ item: AdminStudentCinemaItem }>(`/api/admin/student-cinema/content/${contentId}/review`, {
     method: 'PATCH',
     body: JSON.stringify({ reviewStatus }),
   })

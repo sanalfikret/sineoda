@@ -11,6 +11,7 @@ import { LandingFaq } from '../components/landing/LandingFaq'
 import { LandingJournalTeaser } from '../components/landing/LandingJournalTeaser'
 import { LandingPricing } from '../components/landing/LandingPricing'
 import { LandingCreatorSection } from '../components/landing/LandingCreatorSection'
+import { LandingStudentCinemaSection } from '../components/landing/LandingStudentCinemaSection'
 import {
   DEMO_LANDING_SHOWCASES,
   getDemoCatalog,
@@ -81,6 +82,7 @@ export function LandingPage() {
       <LandingJournalTeaser />
       <LandingFeatures />
       <LandingPricing />
+      <LandingStudentCinemaSection />
       <LandingFaq />
       <LandingEmailSignup />
       <LandingCreatorSection />

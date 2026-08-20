@@ -37,6 +37,8 @@ interface AuthContextValue {
     studioName: string
     bio?: string
     acceptLegal: boolean
+    program?: 'standard' | 'student_cinema'
+    schoolId?: string
   }) => Promise<void>
   logout: () => void
   selectProfile: (profileId: string) => void
@@ -120,6 +122,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       studioName: string
       bio?: string
       acceptLegal: boolean
+      program?: 'standard' | 'student_cinema'
+      schoolId?: string
     }) => {
       const { token, user: newUser } = await creatorSignupRequest(data)
       setToken(token)

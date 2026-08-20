@@ -42,6 +42,8 @@ function getCreatorProfile(userId: string) {
       status: creator.status,
       legalAcceptedAt: creator.legal_accepted_at,
       createdAt: creator.created_at,
+      program: creator.program ?? 'standard',
+      schoolId: creator.school_id ?? null,
     },
     documents: documents.map((doc) => ({
       id: doc.id,
@@ -102,6 +104,8 @@ router.get('/dashboard', requireCreator, (req: AuthRequest, res) => {
       studioName: creator.studio_name,
       status: creator.status,
       documentCount: documents.length,
+      program: creator.program ?? 'standard',
+      schoolId: creator.school_id ?? null,
     },
     payoutRules: {
       note: 'Kazançlar yapımcı anlaşmasında belirtilen adil paylaşım modeline göre hesaplanır.',
@@ -111,6 +115,10 @@ router.get('/dashboard', requireCreator, (req: AuthRequest, res) => {
       return {
         ...mapContent(row),
         reviewStatus: row.review_status ?? 'pending',
+        program: row.program ?? 'standard',
+        contentFormat: row.content_format ?? 'main',
+        parentContentId: row.parent_content_id ?? null,
+        schoolReviewStatus: row.school_review_status ?? 'none',
         qualifiedMinutes: Math.round((stat?.qualified_seconds ?? 0) / 60),
         likes: stat?.likes ?? 0,
       }
@@ -219,14 +227,50 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
 
   const type = normalizeContentType(body.type, 'film')
   const now = new Date().toISOString()
+  const isStudentProgram = (creator.program ?? 'standard') === 'student_cinema'
+  const contentFormat = String(body.contentFormat ?? body.content_format ?? 'main').trim()
+  const parentContentId = String(body.parentContentId ?? body.parent_content_id ?? '').trim() || null
+
+  if (!['main', 'bts', 'teacher_note'].includes(contentFormat)) {
+    res.status(400).json({ error: 'Geçersiz içerik formatı.' })
+    return
+  }
+
+  if (isStudentProgram) {
+    if (!creator.school_id) {
+      res.status(400).json({ error: 'Genç Sinema başvurusu için okul seçimi zorunludur.' })
+      return
+    }
+    if (contentFormat !== 'main' && !parentContentId) {
+      res.status(400).json({ error: 'Kamera arkası veya hoca notu için ana film seçmelisiniz.' })
+      return
+    }
+    if (parentContentId) {
+      const parent = dbGet<ContentRow>(
+        'SELECT * FROM content WHERE id = ? AND creator_id = ? AND content_format = ?',
+        [parentContentId, creator.id, 'main'],
+      )
+      if (!parent) {
+        res.status(400).json({ error: 'Bağlı ana film bulunamadı.' })
+        return
+      }
+    }
+  } else if (contentFormat !== 'main' || parentContentId) {
+    res.status(400).json({ error: 'Kamera arkası yalnızca Genç Sinema programında kullanılabilir.' })
+    return
+  }
+
+  const program = isStudentProgram ? 'student_cinema' : 'standard'
+  const schoolId = isStudentProgram ? creator.school_id : null
+  const schoolReviewStatus = isStudentProgram ? 'pending' : 'none'
 
   dbRun(
     `INSERT INTO content (
       id, title, description, year, duration, rating, type, genres, poster, backdrop,
       video_url, stream_provider, trailer_url, video_format, is_new, new_until, featured,
       subtitles_json, credits_json, content_added_at, license_expires_at, published_at,
-      creator_id, review_status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      creator_id, review_status, program, content_format, parent_content_id, school_id, school_review_status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       title,
@@ -252,6 +296,11 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
       null,
       creator.id,
       'pending',
+      program,
+      contentFormat,
+      parentContentId,
+      schoolId,
+      schoolReviewStatus,
     ],
   )
 
@@ -259,7 +308,12 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
   res.status(201).json({
     item: mapContent(row),
     reviewStatus: 'pending',
-    message: 'İçeriğiniz incelemeye gönderildi. Onaylandıktan sonra yayınlanacaktır.',
+    program,
+    contentFormat,
+    schoolReviewStatus,
+    message: isStudentProgram
+      ? 'Projeniz okul onayına gönderildi. Okul onayından sonra Sineoda incelemesine alınır.'
+      : 'İçeriğiniz incelemeye gönderildi. Onaylandıktan sonra yayınlanacaktır.',
   })
 })
 

@@ -23,6 +23,8 @@ import contactRoutes from './routes/contact.js'
 import journalRoutes from './routes/journal.js'
 import adminJournalRoutes from './routes/adminJournal.js'
 import adminCreatorsRoutes from './routes/adminCreators.js'
+import adminStudentCinemaRoutes from './routes/adminStudentCinema.js'
+import studentCinemaRoutes from './routes/studentCinema.js'
 import creatorAuthRoutes from './routes/creatorAuth.js'
 import creatorRoutes from './routes/creator.js'
 import creatorUploadRoutes from './routes/creatorUpload.js'
@@ -33,7 +35,7 @@ import { backfillMissingImages } from './backfillImages.js'
 import { ensureDemoCatalog } from './demoCatalog.js'
 import { ensureGenreCatalog } from './genreCatalog.js'
 import { ensureJournalPosts } from './journalSeed.js'
-import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureLandingShowcases } from './seed.js'
+import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureLandingShowcases, ensureFilmSchools } from './seed.js'
 import type { ContentRow } from './types.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -50,6 +52,7 @@ ensureLandingShowcases()
 ensureDemoCatalog()
 ensureGenreCatalog()
 ensureJournalPosts()
+ensureFilmSchools()
 backfillMissingImages()
 fillCategoriesToTarget()
 
@@ -91,6 +94,7 @@ app.get('/api/health', (_req, res) => {
       categoryReorder: true,
       creators: true,
       qualifiedWatch: true,
+      studentCinema: true,
     },
     email: config.isEmailConfigured(),
   })
@@ -143,6 +147,8 @@ app.use('/api/creator/auth', creatorAuthRoutes)
 app.use('/api/creator', creatorRoutes)
 app.use('/api/creator/upload', creatorUploadRoutes)
 app.use('/api/admin/creators', adminCreatorsRoutes)
+app.use('/api/admin/student-cinema', adminStudentCinemaRoutes)
+app.use('/api/student-cinema', studentCinemaRoutes)
 app.use('/api/admin/users', userRoutes)
 app.use('/api/admin/upload', uploadRoutes)
 

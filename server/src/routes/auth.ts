@@ -170,7 +170,9 @@ router.get('/me', requireAuth, (req: AuthRequest, res) => {
       status: string
       legal_accepted_at: string | null
       created_at: string
-    }>('SELECT id, studio_name, bio, status, legal_accepted_at, created_at FROM creators WHERE user_id = ?', [
+      program?: string
+      school_id?: string | null
+    }>('SELECT id, studio_name, bio, status, legal_accepted_at, created_at, program, school_id FROM creators WHERE user_id = ?', [
       req.auth!.userId,
     ])
     res.json({
@@ -184,6 +186,8 @@ router.get('/me', requireAuth, (req: AuthRequest, res) => {
               status: creator.status,
               legalAcceptedAt: creator.legal_accepted_at,
               createdAt: creator.created_at,
+              program: creator.program ?? 'standard',
+              schoolId: creator.school_id ?? null,
             }
           : null,
       },

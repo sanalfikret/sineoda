@@ -16,6 +16,8 @@ export interface CreatorProfile {
   status: CreatorStatus
   legalAcceptedAt: string | null
   createdAt: string
+  program?: 'standard' | 'student_cinema'
+  schoolId?: string | null
 }
 
 export interface Subscription {
