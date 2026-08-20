@@ -67,6 +67,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
+    if (activeProfile && !getProfileId()) {
+      setProfileId(activeProfile.id)
+    }
+  }, [activeProfile])
+
+  useEffect(() => {
     const init = async () => {
       if (!getToken()) {
         setIsLoading(false)

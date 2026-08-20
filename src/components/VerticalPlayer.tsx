@@ -3,6 +3,7 @@ import { fetchEpisodes, getProfileId, getToken, resolveMediaUrl, saveWatchProgre
 import { isSeriesContent } from '../constants/contentTypes'
 import type { Episode, PlayTarget } from '../types/content'
 import { getYoutubeEmbedUrl, isYoutubeUrl } from '../utils/media'
+import { resolvePlayVideoUrl } from '../utils/playVideo'
 import { getActiveFullscreenElement, isFullscreenSupported, useFullscreen } from '../hooks/useFullscreen'
 import { ContentActionButtons } from './ContentActionButtons'
 import { AgeRatingOverlay } from './AgeRatingOverlay'
@@ -59,7 +60,9 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
   const hasEpisodes = sortedEpisodes.length > 0
   const currentEpisode = hasEpisodes ? sortedEpisodes[episodeIndex] : null
 
-  const activeVideoUrl = currentEpisode?.videoUrl ?? target?.videoUrl ?? ''
+  const activeVideoUrl = target
+    ? resolvePlayVideoUrl(target.item, currentEpisode)
+    : ''
   const activeSubtitles = currentEpisode?.subtitles?.length
     ? currentEpisode.subtitles
     : target?.subtitles ?? []

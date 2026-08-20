@@ -31,6 +31,10 @@ router.post('/content/:contentId/bulk', requireAdmin, (req: AuthRequest, res) =>
   const customUrls = Array.isArray(req.body.videoUrls)
     ? req.body.videoUrls.map((url: unknown) => String(url).trim())
     : []
+  const parentContent = dbGet<{ video_url: string }>('SELECT video_url FROM content WHERE id = ?', [
+    req.params.contentId,
+  ])
+  const fallbackVideoUrl = parentContent?.video_url?.trim() ?? ''
 
   const created: ReturnType<typeof mapEpisode>[] = []
 
@@ -43,7 +47,7 @@ router.post('/content/:contentId/bulk', requireAdmin, (req: AuthRequest, res) =>
     if (exists) continue
 
     const title = customTitles[i] || `${titlePrefix} ${episodeNum}`
-    const videoUrl = customUrls[i] || ''
+    const videoUrl = customUrls[i] || fallbackVideoUrl
     const id = uuid()
     dbRun(
       `INSERT INTO episodes (id, content_id, season, episode_number, title, description, duration, video_url, stream_provider, sort_order)

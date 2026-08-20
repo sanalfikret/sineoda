@@ -33,6 +33,7 @@ import { MAIN_CATALOG_SQL, STANDARD_PROGRAM_SQL, ensureStudentCinemaCatalog } fr
 import { mapCategoriesResponse } from './services/categoryOrder.js'
 import { fillCategoriesToTarget } from './services/categoryFill.js'
 import { backfillMissingImages } from './backfillImages.js'
+import { backfillEpisodeVideoUrls } from './services/episodeVideos.js'
 import { ensureDemoCatalog } from './demoCatalog.js'
 import { ensureGenreCatalog } from './genreCatalog.js'
 import { ensureJournalPosts } from './journalSeed.js'
@@ -56,6 +57,7 @@ ensureJournalPosts()
 ensureFilmSchools()
 ensureStudentCinemaDemoFilms()
 backfillMissingImages()
+backfillEpisodeVideoUrls()
 fillCategoriesToTarget()
 ensureStudentCinemaCatalog()
 
@@ -77,6 +79,7 @@ app.use(
       }
     },
     credentials: true,
+    allowedHeaders: ['Authorization', 'Content-Type', 'X-Profile-Id'],
   }),
 )
 app.use(express.json({ limit: '2mb' }))
