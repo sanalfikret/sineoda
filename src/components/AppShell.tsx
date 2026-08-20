@@ -13,7 +13,7 @@ import { Header } from './Header'
 import { InstallPrompt } from './InstallPrompt'
 import { PaywallModal } from './PaywallModal'
 import { SearchModal } from './SearchModal'
-import { SiteFooter } from './SiteFooter'
+import { PageFooter } from './PageFooter'
 import { VideoPlayer } from './VideoPlayer'
 import { VerticalPlayer } from './VerticalPlayer'
 import { useAuth } from '../context/AuthContext'
@@ -136,7 +136,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="min-h-dvh bg-sineoda-bg">
         <Header />
         {children}
-        <SiteFooter />
+        <PageFooter />
         <VideoPlayer
           target={playingTarget && !isVerticalContent(playingTarget.item) ? playingTarget : null}
           onClose={() => setPlayingTarget(null)}

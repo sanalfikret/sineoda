@@ -2,6 +2,8 @@ import { Router } from 'express'
 import { v4 as uuid } from 'uuid'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { getProfileId, requireAuth, type AuthRequest } from '../middleware/auth.js'
+import { normalizeContentType } from '../constants/contentTypes.js'
+import { isQualifiedWatch } from '../services/watchQualification.js'
 
 const router = Router()
 
@@ -28,9 +30,11 @@ router.get('/', requireAuth, (req: AuthRequest, res) => {
     position_seconds: number
     duration_seconds: number
     total_watched_seconds: number
+    qualified: number
+    qualified_seconds: number
     updated_at: string
   }>(
-    'SELECT position_seconds, duration_seconds, total_watched_seconds, updated_at FROM watch_progress WHERE profile_id = ? AND content_id = ? AND episode_id = ?',
+    'SELECT position_seconds, duration_seconds, total_watched_seconds, qualified, qualified_seconds, updated_at FROM watch_progress WHERE profile_id = ? AND content_id = ? AND episode_id = ?',
     [profileId, contentId, episodeId],
   )
 
@@ -40,6 +44,8 @@ router.get('/', requireAuth, (req: AuthRequest, res) => {
           position: row.position_seconds,
           duration: row.duration_seconds,
           totalWatched: row.total_watched_seconds,
+          qualified: row.qualified === 1,
+          qualifiedSeconds: row.qualified_seconds,
           updatedAt: row.updated_at,
         }
       : null,
@@ -59,8 +65,10 @@ router.get('/all', requireAuth, (req: AuthRequest, res) => {
     position_seconds: number
     duration_seconds: number
     total_watched_seconds: number
+    qualified: number
+    qualified_seconds: number
   }>(
-    'SELECT content_id, episode_id, position_seconds, duration_seconds, total_watched_seconds FROM watch_progress WHERE profile_id = ?',
+    'SELECT content_id, episode_id, position_seconds, duration_seconds, total_watched_seconds, qualified, qualified_seconds FROM watch_progress WHERE profile_id = ?',
     [profileId],
   )
 
@@ -71,6 +79,8 @@ router.get('/all', requireAuth, (req: AuthRequest, res) => {
       position: row.position_seconds,
       duration: row.duration_seconds,
       totalWatched: row.total_watched_seconds,
+      qualified: row.qualified === 1,
+      qualifiedSeconds: row.qualified_seconds,
     })),
   })
 })
@@ -92,18 +102,50 @@ router.post('/', requireAuth, (req: AuthRequest, res) => {
     return
   }
 
-  const existing = dbGet<{ position_seconds: number; total_watched_seconds: number }>(
-    'SELECT position_seconds, total_watched_seconds FROM watch_progress WHERE profile_id = ? AND content_id = ? AND episode_id = ?',
+  const content = dbGet<{ type: string; creator_id: string | null }>(
+    'SELECT type, creator_id FROM content WHERE id = ?',
+    [contentId],
+  )
+
+  const existing = dbGet<{
+    position_seconds: number
+    total_watched_seconds: number
+    qualified: number
+    qualified_seconds: number
+  }>(
+    'SELECT position_seconds, total_watched_seconds, qualified, qualified_seconds FROM watch_progress WHERE profile_id = ? AND content_id = ? AND episode_id = ?',
     [profileId, contentId, episodeId],
   )
 
   const delta = existing ? Math.max(0, position - existing.position_seconds) : position
   const totalWatched = (existing?.total_watched_seconds ?? 0) + delta
 
+  const contentType = content ? normalizeContentType(content.type) : 'film'
+  const wasQualified = existing?.qualified === 1
+  const nowQualified = wasQualified || isQualifiedWatch(contentType, position, duration)
+  const qualifiedDelta = nowQualified && delta > 0 ? delta : 0
+  const qualifiedSeconds = (existing?.qualified_seconds ?? 0) + qualifiedDelta
+
   if (delta > 0) {
     dbRun(
       'INSERT INTO watch_activity (id, profile_id, seconds_watched, activity_date, created_at) VALUES (?, ?, ?, ?, ?)',
       [uuid(), profileId, delta, new Date().toISOString().slice(0, 10), new Date().toISOString()],
+    )
+  }
+
+  if (qualifiedDelta > 0 && content?.creator_id) {
+    dbRun(
+      'INSERT INTO creator_qualified_activity (id, creator_id, content_id, episode_id, profile_id, seconds_watched, activity_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [
+        uuid(),
+        content.creator_id,
+        contentId,
+        episodeId,
+        profileId,
+        qualifiedDelta,
+        new Date().toISOString().slice(0, 10),
+        new Date().toISOString(),
+      ],
     )
   }
 
@@ -113,19 +155,20 @@ router.post('/', requireAuth, (req: AuthRequest, res) => {
     episodeId,
   ])
 
+  const now = new Date().toISOString()
   if (existingRow) {
     dbRun(
-      'UPDATE watch_progress SET position_seconds = ?, duration_seconds = ?, total_watched_seconds = ?, updated_at = ? WHERE profile_id = ? AND content_id = ? AND episode_id = ?',
-      [position, duration, totalWatched, new Date().toISOString(), profileId, contentId, episodeId],
+      'UPDATE watch_progress SET position_seconds = ?, duration_seconds = ?, total_watched_seconds = ?, qualified = ?, qualified_seconds = ?, updated_at = ? WHERE profile_id = ? AND content_id = ? AND episode_id = ?',
+      [position, duration, totalWatched, nowQualified ? 1 : 0, qualifiedSeconds, now, profileId, contentId, episodeId],
     )
   } else {
     dbRun(
-      'INSERT INTO watch_progress (profile_id, content_id, episode_id, position_seconds, duration_seconds, total_watched_seconds, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [profileId, contentId, episodeId, position, duration, totalWatched, new Date().toISOString()],
+      'INSERT INTO watch_progress (profile_id, content_id, episode_id, position_seconds, duration_seconds, total_watched_seconds, qualified, qualified_seconds, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [profileId, contentId, episodeId, position, duration, totalWatched, nowQualified ? 1 : 0, qualifiedSeconds, now],
     )
   }
 
-  res.json({ ok: true, totalWatched })
+  res.json({ ok: true, totalWatched, qualified: nowQualified, qualifiedSeconds })
 })
 
 export default router

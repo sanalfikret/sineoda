@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
 import { LEGAL_DOCUMENTS, type LegalSlug } from '../constants/legal'
-import { SiteFooter } from '../components/SiteFooter'
+import { PageFooter } from '../components/PageFooter'
 
 const SLUGS = new Set(Object.keys(LEGAL_DOCUMENTS))
 
@@ -48,7 +48,7 @@ export function LegalPage() {
         </div>
       </main>
 
-      <SiteFooter />
+      <PageFooter />
     </div>
   )
 }

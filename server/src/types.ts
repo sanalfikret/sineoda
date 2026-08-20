@@ -1,6 +1,8 @@
 import type { ContentType } from './constants/contentTypes.js'
 
-export type UserRole = 'user' | 'admin'
+export type UserRole = 'user' | 'admin' | 'creator'
+export type CreatorStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
+export type ContentReviewStatus = 'draft' | 'pending' | 'published' | 'rejected'
 export type { ContentType }
 
 export interface UserRow {
@@ -46,6 +48,26 @@ export interface ContentRow {
   content_added_at?: string | null
   license_expires_at?: string | null
   published_at?: string | null
+  creator_id?: string | null
+  review_status?: ContentReviewStatus
+}
+
+export interface CreatorRow {
+  id: string
+  user_id: string
+  studio_name: string
+  bio: string
+  status: CreatorStatus
+  legal_accepted_at: string | null
+  created_at: string
+}
+
+export interface CreatorDocumentRow {
+  id: string
+  creator_id: string
+  doc_type: string
+  file_url: string
+  uploaded_at: string
 }
 
 export interface EpisodeRow {

@@ -2,7 +2,7 @@ import type { NextFunction, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import { config } from '../config.js'
 import { dbGet } from '../db.js'
-import type { JwtPayload, UserRow } from '../types.js'
+import type { CreatorRow, JwtPayload, UserRow } from '../types.js'
 
 export function signToken(payload: JwtPayload) {
   return jwt.sign(payload, config.jwtSecret, { expiresIn: '7d' })
@@ -41,6 +41,40 @@ export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction
     if (req.auth && req.auth.role !== user.role) {
       req.auth = { ...req.auth, role: user.role }
     }
+    next()
+  })
+}
+
+export function requireCreator(req: AuthRequest, res: Response, next: NextFunction) {
+  requireAuth(req, res, () => {
+    const user = dbGet<UserRow>('SELECT role FROM users WHERE id = ?', [req.auth!.userId])
+    if (!user || user.role !== 'creator') {
+      res.status(403).json({ error: 'Yapımcı hesabı gerekli.' })
+      return
+    }
+    if (req.auth && req.auth.role !== user.role) {
+      req.auth = { ...req.auth, role: user.role }
+    }
+    next()
+  })
+}
+
+export function getCreatorForUser(userId: string) {
+  return dbGet<CreatorRow>('SELECT * FROM creators WHERE user_id = ?', [userId])
+}
+
+export function requireApprovedCreator(req: AuthRequest, res: Response, next: NextFunction) {
+  requireCreator(req, res, () => {
+    const creator = getCreatorForUser(req.auth!.userId)
+    if (!creator) {
+      res.status(404).json({ error: 'Yapımcı profili bulunamadı.' })
+      return
+    }
+    if (creator.status !== 'approved') {
+      res.status(403).json({ error: 'Hesabınız henüz onaylanmadı.', status: creator.status })
+      return
+    }
+    ;(req as AuthRequest & { creator?: CreatorRow }).creator = creator
     next()
   })
 }

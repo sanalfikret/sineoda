@@ -13,6 +13,9 @@ export function SiteFooter() {
           <Link to="/iletisim" className="text-sineoda-muted transition hover:text-white">
             İletişim
           </Link>
+          <Link to="/creator/giris" className="text-sineoda-muted transition hover:text-white">
+            Yapımcı Girişi
+          </Link>
           {LEGAL_LINKS.map((link) => (
             <Link
               key={link.slug}

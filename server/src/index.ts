@@ -22,6 +22,10 @@ import landingRoutes, { getLandingConfig } from './routes/landing.js'
 import contactRoutes from './routes/contact.js'
 import journalRoutes from './routes/journal.js'
 import adminJournalRoutes from './routes/adminJournal.js'
+import adminCreatorsRoutes from './routes/adminCreators.js'
+import creatorAuthRoutes from './routes/creatorAuth.js'
+import creatorRoutes from './routes/creator.js'
+import creatorUploadRoutes from './routes/creatorUpload.js'
 import { PUBLISHED_CONTENT_SQL } from './services/publish.js'
 import { mapCategoriesResponse } from './services/categoryOrder.js'
 import { fillCategoriesToTarget } from './services/categoryFill.js'
@@ -85,6 +89,8 @@ app.get('/api/health', (_req, res) => {
       reactions: true,
       watchlist: true,
       categoryReorder: true,
+      creators: true,
+      qualifiedWatch: true,
     },
     email: config.isEmailConfigured(),
   })
@@ -133,6 +139,10 @@ app.use('/api/admin/journal', adminJournalRoutes)
 app.use('/api/watchlist', watchlistRoutes)
 app.use('/api/reactions', reactionsRoutes)
 app.use('/api/admin/landing', landingRoutes)
+app.use('/api/creator/auth', creatorAuthRoutes)
+app.use('/api/creator', creatorRoutes)
+app.use('/api/creator/upload', creatorUploadRoutes)
+app.use('/api/admin/creators', adminCreatorsRoutes)
 app.use('/api/admin/users', userRoutes)
 app.use('/api/admin/upload', uploadRoutes)
 

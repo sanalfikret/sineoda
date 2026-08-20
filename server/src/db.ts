@@ -265,6 +265,52 @@ function runMigrations() {
       updated_at TEXT NOT NULL
     );
   `)
+
+  ensureColumn('content', 'creator_id', 'TEXT')
+  ensureColumn('content', 'review_status', "TEXT DEFAULT 'published'")
+  ensureColumn('watch_progress', 'qualified', 'INTEGER DEFAULT 0')
+  ensureColumn('watch_progress', 'qualified_seconds', 'REAL DEFAULT 0')
+
+  db.run(`
+    UPDATE content
+    SET review_status = 'published'
+    WHERE review_status IS NULL OR review_status = ''
+  `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS creators (
+      id TEXT PRIMARY KEY,
+      user_id TEXT UNIQUE NOT NULL,
+      studio_name TEXT NOT NULL,
+      bio TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'pending',
+      legal_accepted_at TEXT,
+      created_at TEXT NOT NULL
+    );
+  `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS creator_documents (
+      id TEXT PRIMARY KEY,
+      creator_id TEXT NOT NULL,
+      doc_type TEXT NOT NULL,
+      file_url TEXT NOT NULL,
+      uploaded_at TEXT NOT NULL
+    );
+  `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS creator_qualified_activity (
+      id TEXT PRIMARY KEY,
+      creator_id TEXT NOT NULL,
+      content_id TEXT NOT NULL,
+      episode_id TEXT NOT NULL DEFAULT '',
+      profile_id TEXT NOT NULL,
+      seconds_watched REAL NOT NULL,
+      activity_date TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+  `)
 }
 
 function ensureColumn(table: string, column: string, definition: string) {
