@@ -326,6 +326,7 @@ function runMigrations() {
 
   ensureColumn('creators', 'program', "TEXT NOT NULL DEFAULT 'standard'")
   ensureColumn('creators', 'school_id', 'TEXT')
+  ensureColumn('creators', 'project_crew', "TEXT NOT NULL DEFAULT ''")
   ensureColumn('content', 'program', "TEXT NOT NULL DEFAULT 'standard'")
   ensureColumn('content', 'content_format', "TEXT NOT NULL DEFAULT 'main'")
   ensureColumn('content', 'parent_content_id', 'TEXT')
