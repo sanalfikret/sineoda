@@ -1,5 +1,6 @@
 import { BROWSE_GENRES, genreToCategoryId } from '../constants/genres'
 import { getContentTypeLabel } from '../constants/contentTypes'
+import { BRAND_STUDENT_CINEMA } from '../constants/brand'
 import type { ContentCategory, ContentItem, ContentType } from '../types/content'
 import { isContentAllowedForKids } from './contentRating'
 
@@ -8,6 +9,7 @@ export type BrowseFilterOptions = {
   genre?: string | null
   verticalOnly?: boolean
   kidsSafe?: boolean
+  excludeStudent?: boolean
 }
 
 export type BrowseRow = {
@@ -20,10 +22,25 @@ export type BrowseRow = {
 /** BrowsePage'de ayrı satır olarak gösterildiği için kategori listesinden çıkarılır */
 export const BROWSE_EXCLUSIVE_ROW_TITLES = new Set<string>()
 
+function categoryFilterOptions(category: ContentCategory, options: BrowseFilterOptions): BrowseFilterOptions {
+  if (category.id === BRAND_STUDENT_CINEMA.id) {
+    return { ...options, excludeStudent: false, genre: null, type: null }
+  }
+  return options
+}
+
+function itemAllowedInCategory(category: ContentCategory, item: ContentItem, options: BrowseFilterOptions) {
+  if (category.id === BRAND_STUDENT_CINEMA.id) {
+    return item.program === 'student_cinema' && (item.contentFormat ?? 'main') === 'main'
+  }
+  return filterCatalog([item], options).length > 0
+}
+
 export const BROWSE_ITEMS_PER_ROW = 20
 
 export function filterCatalog(catalog: ContentItem[], options: BrowseFilterOptions) {
   return catalog.filter((item) => {
+    if (options.excludeStudent !== false && item.program === 'student_cinema') return false
     if (options.kidsSafe && !isContentAllowedForKids(item.rating)) return false
     if (options.verticalOnly && item.videoFormat !== 'vertical') return false
     if (!options.verticalOnly && item.videoFormat === 'vertical') return false
@@ -36,17 +53,17 @@ export function filterCatalog(catalog: ContentItem[], options: BrowseFilterOptio
 export function pickCategoryRow(
   categories: ContentCategory[],
   title: string,
-  catalog: ContentItem[],
+  _catalog: ContentItem[],
   getContentById: (id: string) => ContentItem | undefined,
   options: BrowseFilterOptions,
 ): BrowseRow | null {
   const category = categories.find((entry) => entry.title === title)
   if (!category) return null
 
-  const filteredIds = new Set(filterCatalog(catalog, options).map((item) => item.id))
+  const rowOptions = categoryFilterOptions(category, options)
   const items = category.itemIds
     .map((id) => getContentById(id))
-    .filter((item): item is ContentItem => Boolean(item && filteredIds.has(item.id)))
+    .filter((item): item is ContentItem => Boolean(item && itemAllowedInCategory(category, item, rowOptions)))
     .slice(0, BROWSE_ITEMS_PER_ROW)
 
   if (items.length === 0) return null
@@ -61,18 +78,19 @@ export function pickCategoryRow(
 
 export function buildCategoryBrowseRows(
   categories: ContentCategory[],
-  catalog: ContentItem[],
+  _catalog: ContentItem[],
   getContentById: (id: string) => ContentItem | undefined,
   options: BrowseFilterOptions,
 ): BrowseRow[] {
-  const filteredIds = new Set(filterCatalog(catalog, options).map((item) => item.id))
-
   return categories
     .filter((category) => !BROWSE_EXCLUSIVE_ROW_TITLES.has(category.title))
     .map((category) => {
+      const rowOptions = categoryFilterOptions(category, options)
       const items = category.itemIds
         .map((id) => getContentById(id))
-        .filter((item): item is ContentItem => Boolean(item && filteredIds.has(item.id)))
+        .filter((item): item is ContentItem =>
+          Boolean(item && itemAllowedInCategory(category, item, rowOptions)),
+        )
         .slice(0, BROWSE_ITEMS_PER_ROW)
 
       return {

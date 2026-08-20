@@ -591,7 +591,7 @@ export async function creatorFetchDashboard() {
     creator: { id: string; studioName: string; status: string; documentCount: number; program?: string; schoolId?: string | null }
     payoutRules: { note: string }
     content: Array<ContentItem & { reviewStatus: string; qualifiedMinutes: number; likes: number }>
-    totals: { qualifiedMinutes: number; likes: number; publishedCount: number; pendingCount: number }
+    totals: { qualifiedMinutes: number; watchMinutes: number; likes: number; viewers: number; publishedCount: number; pendingCount: number }
   }>('/api/creator/dashboard')
 }
 
@@ -719,7 +719,7 @@ export interface AdminFilmSchool extends FilmSchool {
 
 export interface AdminStudentCinemaItem extends ContentItem {
   reviewStatus: string
-  program: string
+  program: 'standard' | 'student_cinema'
   contentFormat: 'main' | 'bts' | 'teacher_note'
   parentContentId: string | null
   schoolId: string | null
@@ -727,6 +727,11 @@ export interface AdminStudentCinemaItem extends ContentItem {
   schoolReviewStatus: string
   studioName: string | null
   creatorId: string | null
+  creatorName?: string | null
+  qualifiedMinutes?: number
+  watchMinutes?: number
+  likes?: number
+  viewers?: number
 }
 
 export async function fetchFilmSchools() {
@@ -766,6 +771,10 @@ export async function updateAdminFilmSchool(
 
 export async function fetchAdminStudentCinemaQueue() {
   return api<{ items: AdminStudentCinemaItem[] }>('/api/admin/student-cinema/queue')
+}
+
+export async function fetchAdminStudentCinemaContent() {
+  return api<{ items: AdminStudentCinemaItem[] }>('/api/admin/student-cinema/content')
 }
 
 export async function reviewAdminStudentCinemaSchool(

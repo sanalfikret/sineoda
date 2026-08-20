@@ -11,6 +11,7 @@ import {
 import { mapContent, serializeSubtitles, slugify } from '../mappers.js'
 import { normalizeContentType } from '../constants/contentTypes.js'
 import { parseContentAddedAt } from '../services/license.js'
+import { getContentEngagementStats } from '../services/studentCinema.js'
 import type { ContentRow, CreatorRow } from '../types.js'
 
 const router = Router()
@@ -75,27 +76,7 @@ router.get('/dashboard', requireCreator, (req: AuthRequest, res) => {
     [creator.id],
   )
 
-  const stats = dbAll<{
-    content_id: string
-    qualified_seconds: number
-    likes: number
-  }>(
-    `SELECT
-      c.id AS content_id,
-      COALESCE(SUM(cqa.seconds_watched), 0) AS qualified_seconds,
-      COALESCE((
-        SELECT COUNT(*) FROM content_reactions cr
-        WHERE cr.content_id = c.id AND cr.reaction = 'like'
-      ), 0) AS likes
-    FROM content c
-    LEFT JOIN creator_qualified_activity cqa ON cqa.content_id = c.id AND cqa.creator_id = c.creator_id
-    WHERE c.creator_id = ?
-    GROUP BY c.id`,
-    [creator.id],
-  )
-
-  const statsByContent = new Map(stats.map((row) => [row.content_id, row]))
-
+  const engagementStats = getContentEngagementStats(contentRows.map((row) => row.id))
   const documents = dbAll<{ id: string }>('SELECT id FROM creator_documents WHERE creator_id = ?', [creator.id])
 
   res.json({
@@ -111,7 +92,7 @@ router.get('/dashboard', requireCreator, (req: AuthRequest, res) => {
       note: 'Kazançlar yapımcı anlaşmasında belirtilen adil paylaşım modeline göre hesaplanır.',
     },
     content: contentRows.map((row) => {
-      const stat = statsByContent.get(row.id)
+      const stat = engagementStats.get(row.id)
       return {
         ...mapContent(row),
         reviewStatus: row.review_status ?? 'pending',
@@ -119,15 +100,17 @@ router.get('/dashboard', requireCreator, (req: AuthRequest, res) => {
         contentFormat: row.content_format ?? 'main',
         parentContentId: row.parent_content_id ?? null,
         schoolReviewStatus: row.school_review_status ?? 'none',
-        qualifiedMinutes: Math.round((stat?.qualified_seconds ?? 0) / 60),
+        qualifiedMinutes: stat?.qualifiedMinutes ?? 0,
+        watchMinutes: stat?.watchMinutes ?? 0,
         likes: stat?.likes ?? 0,
+        viewers: stat?.viewers ?? 0,
       }
     }),
     totals: {
-      qualifiedMinutes: Math.round(
-        stats.reduce((sum, row) => sum + row.qualified_seconds, 0) / 60,
-      ),
-      likes: stats.reduce((sum, row) => sum + row.likes, 0),
+      qualifiedMinutes: [...engagementStats.values()].reduce((sum, row) => sum + row.qualifiedMinutes, 0),
+      watchMinutes: [...engagementStats.values()].reduce((sum, row) => sum + row.watchMinutes, 0),
+      likes: [...engagementStats.values()].reduce((sum, row) => sum + row.likes, 0),
+      viewers: [...engagementStats.values()].reduce((sum, row) => sum + row.viewers, 0),
       publishedCount: contentRows.filter((row) => row.review_status === 'published').length,
       pendingCount: contentRows.filter((row) => row.review_status === 'pending').length,
     },

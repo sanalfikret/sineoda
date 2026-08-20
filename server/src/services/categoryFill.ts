@@ -1,5 +1,6 @@
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { PUBLISHED_CONTENT_SQL } from './publish.js'
+import { GENC_SINEMA_CATEGORY_ID, MAIN_CATALOG_SQL, STANDARD_PROGRAM_SQL } from './studentCinema.js'
 import type { ContentRow } from '../types.js'
 
 export const ITEMS_PER_CATEGORY = 20
@@ -13,6 +14,9 @@ function parseGenres(row: ContentRow) {
 }
 
 function matchesCategory(categoryTitle: string, categoryId: string, row: ContentRow) {
+  if ((row.program ?? 'standard') === 'student_cinema') return false
+  if ((row.content_format ?? 'main') !== 'main') return false
+
   const genres = parseGenres(row)
   const title = categoryTitle.toLocaleLowerCase('tr')
   const vertical = row.video_format === 'vertical'
@@ -70,9 +74,12 @@ function setCategoryItems(categoryId: string, itemIds: string[]) {
 
 export function fillCategoriesToTarget(target = ITEMS_PER_CATEGORY) {
   const catalog = dbAll<ContentRow>(
-    `SELECT * FROM content WHERE ${PUBLISHED_CONTENT_SQL} ORDER BY title`,
+    `SELECT * FROM content WHERE ${PUBLISHED_CONTENT_SQL} AND ${STANDARD_PROGRAM_SQL} AND ${MAIN_CATALOG_SQL} ORDER BY title`,
   )
-  const categories = dbAll<{ id: string; title: string }>('SELECT id, title FROM categories')
+  const categories = dbAll<{ id: string; title: string }>(
+    'SELECT id, title FROM categories WHERE id != ?',
+    [GENC_SINEMA_CATEGORY_ID],
+  )
 
   for (const category of categories) {
     const current = dbAll<{ content_id: string }>(

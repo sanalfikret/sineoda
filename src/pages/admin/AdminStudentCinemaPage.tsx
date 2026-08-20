@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import {
   createAdminFilmSchool,
   fetchAdminFilmSchools,
+  fetchAdminStudentCinemaContent,
   fetchAdminStudentCinemaQueue,
   reviewAdminStudentCinemaContent,
   reviewAdminStudentCinemaSchool,
@@ -10,6 +11,7 @@ import {
   type AdminStudentCinemaItem,
 } from '../../api/client'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
+import { ShareButton } from '../../components/ShareButton'
 import { fuzzySearchMatch, sortByTurkishTitle } from '../../utils/search'
 import { groupSchoolsByUniversity, splitSchoolName } from '../../utils/filmSchools'
 
@@ -34,13 +36,15 @@ const REVIEW_LABELS: Record<string, string> = {
 }
 
 export function AdminStudentCinemaPage() {
-  const [tab, setTab] = useState<'schools' | 'queue'>('queue')
+  const [tab, setTab] = useState<'schools' | 'queue' | 'films'>('films')
   const [schools, setSchools] = useState<AdminFilmSchool[]>([])
   const [queue, setQueue] = useState<AdminStudentCinemaItem[]>([])
+  const [films, setFilms] = useState<AdminStudentCinemaItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [schoolQuery, setSchoolQuery] = useState('')
   const [queueQuery, setQueueQuery] = useState('')
+  const [filmsQuery, setFilmsQuery] = useState('')
   const [showSchoolForm, setShowSchoolForm] = useState(false)
   const [schoolForm, setSchoolForm] = useState({ name: '', website: '' })
   const [submittingSchool, setSubmittingSchool] = useState(false)
@@ -51,12 +55,14 @@ export function AdminStudentCinemaPage() {
     setLoading(true)
     setError('')
     try {
-      const [schoolsRes, queueRes] = await Promise.all([
+      const [schoolsRes, queueRes, filmsRes] = await Promise.all([
         fetchAdminFilmSchools(),
         fetchAdminStudentCinemaQueue(),
+        fetchAdminStudentCinemaContent(),
       ])
       setSchools(schoolsRes.schools)
       setQueue(queueRes.items)
+      setFilms(filmsRes.items)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Veriler yüklenemedi.')
     } finally {
@@ -80,6 +86,33 @@ export function AdminStudentCinemaPage() {
       setExpandedGroups(new Set(groupedSchools.map((group) => group.university)))
     }
   }, [schoolQuery, groupedSchools])
+
+  const filteredFilms = useMemo(() => {
+    return films.filter((item) =>
+      fuzzySearchMatch(
+        filmsQuery,
+        item.title,
+        item.studioName ?? '',
+        item.schoolName ?? '',
+        item.creatorName ?? '',
+        FORMAT_LABELS[item.contentFormat] ?? item.contentFormat,
+      ),
+    )
+  }, [films, filmsQuery])
+
+  const publishedFilms = useMemo(
+    () => filteredFilms.filter((item) => item.reviewStatus === 'published'),
+    [filteredFilms],
+  )
+
+  const filmTotals = useMemo(
+    () => ({
+      watchMinutes: publishedFilms.reduce((sum, item) => sum + (item.watchMinutes ?? 0), 0),
+      likes: publishedFilms.reduce((sum, item) => sum + (item.likes ?? 0), 0),
+      viewers: publishedFilms.reduce((sum, item) => sum + (item.viewers ?? 0), 0),
+    }),
+    [publishedFilms],
+  )
 
   const filteredQueue = useMemo(() => {
     return queue.filter((item) =>
@@ -184,6 +217,17 @@ export function AdminStudentCinemaPage() {
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
+          onClick={() => setTab('films')}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+            tab === 'films'
+              ? 'bg-emerald-500/15 text-emerald-300'
+              : 'bg-white/5 text-white/70 hover:bg-white/10'
+          }`}
+        >
+          Filmler ({films.length})
+        </button>
+        <button
+          type="button"
           onClick={() => setTab('queue')}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
             tab === 'queue'
@@ -244,6 +288,73 @@ export function AdminStudentCinemaPage() {
 
       {loading ? (
         <p className="text-sm text-sineoda-muted">Yükleniyor...</p>
+      ) : tab === 'films' ? (
+        <>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {[
+              { label: 'Toplam izlenme', value: `${filmTotals.watchMinutes} dk` },
+              { label: 'Toplam izleyici', value: String(filmTotals.viewers) },
+              { label: 'Toplam beğeni', value: String(filmTotals.likes) },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-xl border border-white/10 bg-[#11141c] p-4">
+                <p className="text-xs text-sineoda-muted">{stat.label}</p>
+                <p className="mt-1 text-2xl font-bold text-emerald-300">{stat.value}</p>
+              </div>
+            ))}
+          </div>
+
+          <AdminSearchBar value={filmsQuery} onChange={setFilmsQuery} placeholder="Film, okul veya öğrenci ara..." />
+
+          {filteredFilms.length === 0 ? (
+            <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-sineoda-muted">
+              Henüz Genç Sinema içeriği yok.
+            </p>
+          ) : (
+            <div className="overflow-x-auto rounded-xl border border-white/10">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-[#11141c] text-sineoda-muted">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">Film</th>
+                    <th className="px-4 py-3 font-medium">Öğrenci / Proje</th>
+                    <th className="px-4 py-3 font-medium">Okul</th>
+                    <th className="px-4 py-3 font-medium">Tür</th>
+                    <th className="px-4 py-3 font-medium">Durum</th>
+                    <th className="px-4 py-3 font-medium">İzlenme</th>
+                    <th className="px-4 py-3 font-medium">İzleyici</th>
+                    <th className="px-4 py-3 font-medium">Beğeni</th>
+                    <th className="px-4 py-3 font-medium">Paylaş</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredFilms.map((item) => (
+                    <tr key={item.id} className="border-t border-white/5">
+                      <td className="px-4 py-3 font-medium text-white">{item.title}</td>
+                      <td className="px-4 py-3 text-sineoda-muted">
+                        {item.creatorName ?? '—'}
+                        {item.studioName ? ` · ${item.studioName}` : ''}
+                      </td>
+                      <td className="px-4 py-3 text-sineoda-muted">{item.schoolName ?? '—'}</td>
+                      <td className="px-4 py-3 text-sineoda-muted">
+                        {FORMAT_LABELS[item.contentFormat] ?? item.contentFormat}
+                      </td>
+                      <td className="px-4 py-3">{REVIEW_LABELS[item.reviewStatus] ?? item.reviewStatus}</td>
+                      <td className="px-4 py-3">{item.watchMinutes ?? 0} dk</td>
+                      <td className="px-4 py-3">{item.viewers ?? 0}</td>
+                      <td className="px-4 py-3">{item.likes ?? 0}</td>
+                      <td className="px-4 py-3">
+                        <ShareButton
+                          contentId={item.id}
+                          title={item.title}
+                          disabled={item.reviewStatus !== 'published'}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       ) : tab === 'schools' ? (
         <>
           <AdminSearchBar value={schoolQuery} onChange={setSchoolQuery} placeholder="Okul ara..." />

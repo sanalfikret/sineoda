@@ -39,6 +39,8 @@ export interface ContentItem {
   featured?: boolean
   subtitles?: SubtitleTrack[]
   credits?: ContentCredits
+  program?: 'standard' | 'student_cinema'
+  contentFormat?: 'main' | 'bts' | 'teacher_note'
 }
 
 export interface Episode {

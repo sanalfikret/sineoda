@@ -10,6 +10,7 @@ import {
   creatorUploadImage,
   creatorUploadVideo,
 } from '../../api/client'
+import { ShareButton } from '../../components/ShareButton'
 import { useAuth } from '../../context/AuthContext'
 import { CREATOR_DOC_TYPES } from '../../constants/creatorLegal'
 import type { ContentItem } from '../../types/content'
@@ -24,12 +25,12 @@ interface CreatorDocument {
 
 interface DashboardContent extends ContentItem {
   reviewStatus: string
-  program?: string
-  contentFormat?: string
   parentContentId?: string | null
   schoolReviewStatus?: string
   qualifiedMinutes: number
+  watchMinutes: number
   likes: number
+  viewers: number
 }
 
 const FORMAT_LABELS: Record<string, string> = {
@@ -63,7 +64,14 @@ export function CreatorDashboardPage() {
   const { user, logout } = useAuth()
   const [documents, setDocuments] = useState<CreatorDocument[]>([])
   const [content, setContent] = useState<DashboardContent[]>([])
-  const [totals, setTotals] = useState({ qualifiedMinutes: 0, likes: 0, publishedCount: 0, pendingCount: 0 })
+  const [totals, setTotals] = useState({
+    qualifiedMinutes: 0,
+    watchMinutes: 0,
+    likes: 0,
+    viewers: 0,
+    publishedCount: 0,
+    pendingCount: 0,
+  })
   const [status, setStatus] = useState<CreatorStatus>('pending')
   const [program, setProgram] = useState<'standard' | 'student_cinema'>('standard')
   const [documentCount, setDocumentCount] = useState(0)
@@ -259,12 +267,20 @@ export function CreatorDashboardPage() {
         )}
 
         <section className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { label: 'Hesaplanan izlenme', value: `${totals.qualifiedMinutes} dk` },
-            { label: 'Beğeni', value: String(totals.likes) },
-            { label: 'Yayında', value: String(totals.publishedCount) },
-            { label: 'İncelemede', value: String(totals.pendingCount) },
-          ].map((stat) => (
+          {(program === 'student_cinema'
+            ? [
+                { label: 'Toplam izlenme', value: `${totals.watchMinutes} dk` },
+                { label: 'İzleyici', value: String(totals.viewers) },
+                { label: 'Beğeni', value: String(totals.likes) },
+                { label: 'Yayında', value: String(totals.publishedCount) },
+              ]
+            : [
+                { label: 'Hesaplanan izlenme', value: `${totals.qualifiedMinutes} dk` },
+                { label: 'Beğeni', value: String(totals.likes) },
+                { label: 'Yayında', value: String(totals.publishedCount) },
+                { label: 'İncelemede', value: String(totals.pendingCount) },
+              ]
+          ).map((stat) => (
             <div key={stat.label} className="rounded-xl border border-white/10 bg-[#11141c] p-4">
               <p className="text-xs text-sineoda-muted">{stat.label}</p>
               <p className="mt-1 text-2xl font-bold text-sineoda-gold">{stat.value}</p>
@@ -543,7 +559,9 @@ export function CreatorDashboardPage() {
                       <th className="px-4 py-3 font-medium">Okul</th>
                     )}
                     <th className="px-4 py-3 font-medium">İzlenme (dk)</th>
+                    <th className="px-4 py-3 font-medium">İzleyici</th>
                     <th className="px-4 py-3 font-medium">Beğeni</th>
+                    <th className="px-4 py-3 font-medium">Paylaş</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -561,8 +579,16 @@ export function CreatorDashboardPage() {
                           {SCHOOL_REVIEW_LABELS[item.schoolReviewStatus ?? 'none'] ?? item.schoolReviewStatus}
                         </td>
                       )}
-                      <td className="px-4 py-3">{item.qualifiedMinutes}</td>
+                      <td className="px-4 py-3">{item.watchMinutes || item.qualifiedMinutes}</td>
+                      <td className="px-4 py-3">{item.viewers}</td>
                       <td className="px-4 py-3">{item.likes}</td>
+                      <td className="px-4 py-3">
+                        <ShareButton
+                          contentId={item.id}
+                          title={item.title}
+                          disabled={item.reviewStatus !== 'published'}
+                        />
+                      </td>
                     </tr>
                   ))}
                 </tbody>
