@@ -17,6 +17,7 @@ interface ContentContextValue {
   featuredContent: ContentItem | null
   trailers: ContentItem[]
   newReleases: ContentItem[]
+  studentCinemaPicks: ContentItem[]
   isLoading: boolean
   refresh: () => Promise<void>
   getContentById: (id: string) => ContentItem | undefined
@@ -42,6 +43,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const [featuredContent, setFeaturedContent] = useState<ContentItem | null>(null)
   const [trailers, setTrailers] = useState<ContentItem[]>([])
   const [newReleases, setNewReleases] = useState<ContentItem[]>([])
+  const [studentCinemaPicks, setStudentCinemaPicks] = useState<ContentItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   const refresh = useCallback(async () => {
@@ -51,6 +53,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     setFeaturedContent(data.featuredContent)
     setTrailers(data.trailers ?? [])
     setNewReleases(data.newReleases ?? [])
+    setStudentCinemaPicks(data.studentCinemaPicks ?? [])
   }, [])
 
   useEffect(() => {
@@ -65,8 +68,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   }, [refresh])
 
   const getContentById = useCallback(
-    (id: string) => catalog.find((item) => item.id === id),
-    [catalog],
+    (id: string) => catalog.find((item) => item.id === id) ?? studentCinemaPicks.find((item) => item.id === id),
+    [catalog, studentCinemaPicks],
   )
 
   const addContent = useCallback(
@@ -160,6 +163,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       featuredContent,
       trailers,
       newReleases,
+      studentCinemaPicks,
       isLoading,
       refresh,
       getContentById,
@@ -179,6 +183,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       featuredContent,
       trailers,
       newReleases,
+      studentCinemaPicks,
       isLoading,
       refresh,
       getContentById,

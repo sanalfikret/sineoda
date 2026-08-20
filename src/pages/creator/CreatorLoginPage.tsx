@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { CreatorAuthLayout } from '../../components/creator/CreatorAuthLayout'
 import { useAuth } from '../../context/AuthContext'
 
 export function CreatorLoginPage() {
@@ -29,7 +30,8 @@ export function CreatorLoginPage() {
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-[#0d0f14] px-4">
+    <CreatorAuthLayout>
+      <div className="flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#11141c] p-6 sm:p-8">
         <div className="mb-6 flex items-center gap-3">
           <img src="/icon.svg" alt="" className="h-10 w-10 rounded-lg" />
@@ -81,12 +83,8 @@ export function CreatorLoginPage() {
             Yapımcı kaydı
           </Link>
         </p>
-        <p className="mt-2 text-center text-xs text-sineoda-muted">
-          <Link to="/" className="hover:text-white">
-            ← Ana siteye dön
-          </Link>
-        </p>
       </div>
-    </div>
+      </div>
+    </CreatorAuthLayout>
   )
 }
