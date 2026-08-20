@@ -30,7 +30,7 @@ import creatorRoutes from './routes/creator.js'
 import creatorUploadRoutes from './routes/creatorUpload.js'
 import { PUBLISHED_CONTENT_SQL } from './services/publish.js'
 import { MAIN_CATALOG_SQL, STANDARD_PROGRAM_SQL, ensureStudentCinemaCatalog } from './services/studentCinema.js'
-import { mapCategoriesResponse } from './services/categoryOrder.js'
+import { mapCategoriesResponse, reconcileCategoryOrder } from './services/categoryOrder.js'
 import { fillCategoriesToTarget } from './services/categoryFill.js'
 import { backfillMissingImages } from './backfillImages.js'
 import { backfillEpisodeVideoUrls } from './services/episodeVideos.js'
@@ -60,6 +60,7 @@ backfillMissingImages()
 backfillEpisodeVideoUrls()
 fillCategoriesToTarget()
 ensureStudentCinemaCatalog()
+reconcileCategoryOrder()
 
 const app = express()
 

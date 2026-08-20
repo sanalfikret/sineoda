@@ -148,8 +148,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ orderedIds }),
     })
     setCategories(result.categories)
+    await refresh()
     return result.categories
-  }, [])
+  }, [refresh])
 
   const resetToSeed = useCallback(async () => {
     await api('/api/categories/reset', { method: 'POST' })

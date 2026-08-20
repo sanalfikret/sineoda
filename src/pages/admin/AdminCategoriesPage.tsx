@@ -27,6 +27,7 @@ export function AdminCategoriesPage() {
   const [savingOrder, setSavingOrder] = useState(false)
   const initializedRef = useRef(false)
   const orderedRef = useRef<ContentCategory[]>([])
+  const orderDirtyRef = useRef(false)
 
   useEffect(() => {
     orderedRef.current = orderedCategories
@@ -93,6 +94,7 @@ export function AdminCategoriesPage() {
       const [moved] = next.splice(sourceIndex, 1)
       next.splice(targetIndex, 0, moved)
       nextOrder = next
+      orderDirtyRef.current = true
       return next
     })
     return nextOrder
@@ -102,6 +104,7 @@ export function AdminCategoriesPage() {
     setOrderedCategories(next)
     setSavingOrder(true)
     setOrderError(null)
+    orderDirtyRef.current = false
 
     try {
       const saved = await reorderCategories(next.map((category) => category.id))
@@ -130,12 +133,13 @@ export function AdminCategoriesPage() {
 
   const handleDrop = (event: DragEvent<HTMLElement>) => {
     event.preventDefault()
-    setDraggingId(null)
-    void persistOrder(orderedRef.current)
   }
 
   const handleDragEnd = () => {
     setDraggingId(null)
+    if (orderDirtyRef.current) {
+      void persistOrder(orderedRef.current)
+    }
   }
 
   const nudgeCategory = (index: number, direction: -1 | 1) => {
