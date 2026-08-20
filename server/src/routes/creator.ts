@@ -11,7 +11,6 @@ import {
 import { mapContent, serializeSubtitles, slugify } from '../mappers.js'
 import { normalizeContentType } from '../constants/contentTypes.js'
 import { parseContentAddedAt } from '../services/license.js'
-import { thresholdLabel } from '../services/watchQualification.js'
 import type { ContentRow, CreatorRow } from '../types.js'
 
 const router = Router()
@@ -105,9 +104,7 @@ router.get('/dashboard', requireCreator, (req: AuthRequest, res) => {
       documentCount: documents.length,
     },
     payoutRules: {
-      longFormThreshold: '30%',
-      shortFormThreshold: '50%',
-      note: 'Uzun metraj filmlerde gelir hakkı kazanmak için izleyicinin en az %30 izlemesi gerekir. Kısa filmlerde %50.',
+      note: 'Kazançlar yapımcı anlaşmasında belirtilen adil paylaşım modeline göre hesaplanır.',
     },
     content: contentRows.map((row) => {
       const stat = statsByContent.get(row.id)
@@ -116,7 +113,6 @@ router.get('/dashboard', requireCreator, (req: AuthRequest, res) => {
         reviewStatus: row.review_status ?? 'pending',
         qualifiedMinutes: Math.round((stat?.qualified_seconds ?? 0) / 60),
         likes: stat?.likes ?? 0,
-        threshold: thresholdLabel(row.type),
       }
     }),
     totals: {

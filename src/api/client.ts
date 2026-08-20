@@ -584,8 +584,8 @@ export async function creatorFetchMe() {
 export async function creatorFetchDashboard() {
   return api<{
     creator: { id: string; studioName: string; status: string; documentCount: number }
-    payoutRules: { longFormThreshold: string; shortFormThreshold: string; note: string }
-    content: Array<ContentItem & { reviewStatus: string; qualifiedMinutes: number; likes: number; threshold: string }>
+    payoutRules: { note: string }
+    content: Array<ContentItem & { reviewStatus: string; qualifiedMinutes: number; likes: number }>
     totals: { qualifiedMinutes: number; likes: number; publishedCount: number; pendingCount: number }
   }>('/api/creator/dashboard')
 }

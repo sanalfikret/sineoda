@@ -11,8 +11,8 @@ export function CreatorFooterBar() {
           <div>
             <p className="text-base font-semibold text-white">Bağımsız yapımcı mısınız?</p>
             <p className="mt-0.5 max-w-xl text-sm text-sineoda-muted">
-              Filminizi yükleyin, telif belgenizi sunun, nitelikli izlenmelerden gelir kazanın.
-              Uzun metrajda en az %30 izlenme şartı geçerlidir.
+              Filmini yükle, adil paylaşımdan kazanç elde et. Telif belgeni sun, bağımsız sinemanı
+              Sineoda izleyicileriyle buluştur.
             </p>
           </div>
         </div>
