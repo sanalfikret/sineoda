@@ -21,6 +21,7 @@ import { isSeriesContent } from '../constants/contentTypes'
 import { isContentAllowedForKids } from '../utils/contentRating'
 import { isVerticalContent } from '../utils/vertical'
 import { saveBrowseScroll } from '../utils/browseState'
+import { resolvePlayVideoUrl } from '../utils/playVideo'
 
 interface ContentUIContextValue {
   openDetail: (item: ContentItem) => void
@@ -78,14 +79,16 @@ export function AppShell({ children }: { children: ReactNode }) {
           const sorted = [...episodes].sort(
             (a, b) => a.season - b.season || a.episode - b.episode,
           )
-          resolvedEpisode = sorted.find((entry) => entry.videoUrl?.trim()) ?? sorted[0]
+          resolvedEpisode =
+            sorted.find((entry) => entry.videoUrl?.trim()) ??
+            (sorted[0]?.videoUrl?.trim() ? sorted[0] : undefined)
         } catch {
           resolvedEpisode = undefined
         }
       }
 
-      const videoUrl = resolvedEpisode?.videoUrl ?? item.videoUrl
-      if (!videoUrl?.trim()) {
+      const videoUrl = resolvePlayVideoUrl(item, resolvedEpisode)
+      if (!videoUrl) {
         openDetail(item)
         return
       }
