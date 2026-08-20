@@ -545,3 +545,95 @@ export async function updateJournalPost(id: string, data: Record<string, unknown
 export async function deleteJournalPost(id: string) {
   return api<{ ok: boolean }>(`/api/admin/journal/${id}`, { method: 'DELETE' })
 }
+
+export async function creatorLoginRequest(email: string, password: string): Promise<AuthResponse> {
+  return api<AuthResponse>('/api/creator/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  })
+}
+
+export async function creatorSignupRequest(data: {
+  name: string
+  email: string
+  password: string
+  studioName: string
+  bio?: string
+  acceptLegal: boolean
+}): Promise<AuthResponse> {
+  return api<AuthResponse>('/api/creator/auth/signup', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function creatorFetchMe() {
+  return api<{
+    creator: {
+      id: string
+      studioName: string
+      bio: string
+      status: string
+      legalAcceptedAt: string | null
+      createdAt: string
+    }
+    documents: Array<{ id: string; docType: string; fileUrl: string; uploadedAt: string }>
+  }>('/api/creator/me')
+}
+
+export async function creatorFetchDashboard() {
+  return api<{
+    creator: { id: string; studioName: string; status: string; documentCount: number }
+    payoutRules: { longFormThreshold: string; shortFormThreshold: string; note: string }
+    content: Array<ContentItem & { reviewStatus: string; qualifiedMinutes: number; likes: number; threshold: string }>
+    totals: { qualifiedMinutes: number; likes: number; publishedCount: number; pendingCount: number }
+  }>('/api/creator/dashboard')
+}
+
+export async function creatorUploadDocument(file: File): Promise<string> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const result = await api<{ url: string }>('/api/creator/upload/document', {
+    method: 'POST',
+    body: formData,
+  })
+  return result.url
+}
+
+export async function creatorUploadImage(file: File): Promise<string> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const result = await api<{ url: string }>('/api/creator/upload/image', {
+    method: 'POST',
+    body: formData,
+  })
+  return result.url
+}
+
+export async function creatorUploadVideo(file: File): Promise<string> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const result = await api<{ url: string }>('/api/creator/upload/video', {
+    method: 'POST',
+    body: formData,
+  })
+  return result.url
+}
+
+export async function creatorAddDocument(docType: string, fileUrl: string) {
+  return api('/api/creator/documents', {
+    method: 'POST',
+    body: JSON.stringify({ docType, fileUrl }),
+  })
+}
+
+export async function creatorDeleteDocument(id: string) {
+  return api(`/api/creator/documents/${id}`, { method: 'DELETE' })
+}
+
+export async function creatorSubmitContent(data: Record<string, unknown>) {
+  return api('/api/creator/content', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}

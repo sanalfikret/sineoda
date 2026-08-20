@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { fetchBillingPlans, fetchSubscription, startCheckout } from '../api/client'
-import { SiteFooter } from '../components/SiteFooter'
+import { PageFooter } from '../components/PageFooter'
 import { useAuth } from '../context/AuthContext'
 
 interface Plan {
@@ -181,7 +181,7 @@ export function PricingPage() {
         )}
       </main>
 
-      <SiteFooter />
+      <PageFooter />
     </div>
   )
 }

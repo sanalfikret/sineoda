@@ -9,6 +9,8 @@ import {
 } from 'react'
 import {
   createProfileRequest,
+  creatorLoginRequest,
+  creatorSignupRequest,
   fetchMe,
   getProfileId,
   getToken,
@@ -24,8 +26,18 @@ interface AuthContextValue {
   activeProfile: Profile | null
   isLoading: boolean
   isAdmin: boolean
+  isCreator: boolean
   login: (email: string, password: string, options?: { requireAdmin?: boolean }) => Promise<void>
   signup: (name: string, email: string, password: string, phone: string, smsCode: string) => Promise<void>
+  creatorLogin: (email: string, password: string) => Promise<void>
+  creatorSignup: (data: {
+    name: string
+    email: string
+    password: string
+    studioName: string
+    bio?: string
+    acceptLegal: boolean
+  }) => Promise<void>
   logout: () => void
   selectProfile: (profileId: string) => void
   addProfile: (name: string, avatar: string, isKids?: boolean) => Promise<void>
@@ -92,6 +104,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setActiveProfile(null)
   }, [])
 
+  const creatorLogin = useCallback(async (email: string, password: string) => {
+    const { token, user: loggedInUser } = await creatorLoginRequest(email, password)
+    setToken(token)
+    setUser(loggedInUser)
+    setProfileId(null)
+    setActiveProfile(null)
+  }, [])
+
+  const creatorSignup = useCallback(
+    async (data: {
+      name: string
+      email: string
+      password: string
+      studioName: string
+      bio?: string
+      acceptLegal: boolean
+    }) => {
+      const { token, user: newUser } = await creatorSignupRequest(data)
+      setToken(token)
+      setUser(newUser)
+      setProfileId(null)
+      setActiveProfile(null)
+    },
+    [],
+  )
+
   const logout = useCallback(() => {
     setToken(null)
     setProfileId(null)
@@ -119,6 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const isAdmin = user?.role === 'admin'
+  const isCreator = user?.role === 'creator'
 
   const value = useMemo(
     () => ({
@@ -126,13 +165,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       activeProfile,
       isLoading,
       isAdmin,
+      isCreator,
       login,
       signup,
+      creatorLogin,
+      creatorSignup,
       logout,
       selectProfile,
       addProfile,
     }),
-    [user, activeProfile, isLoading, isAdmin, login, signup, logout, selectProfile, addProfile],
+    [user, activeProfile, isLoading, isAdmin, isCreator, login, signup, creatorLogin, creatorSignup, logout, selectProfile, addProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

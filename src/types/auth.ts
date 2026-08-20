@@ -5,7 +5,18 @@ export interface Profile {
   isKids?: boolean
 }
 
-export type UserRole = 'user' | 'admin'
+export type UserRole = 'user' | 'admin' | 'creator'
+
+export type CreatorStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
+
+export interface CreatorProfile {
+  id: string
+  studioName: string
+  bio: string
+  status: CreatorStatus
+  legalAcceptedAt: string | null
+  createdAt: string
+}
 
 export interface Subscription {
   status: string
@@ -20,6 +31,7 @@ export interface User {
   role: UserRole
   profiles: Profile[]
   subscription?: Subscription
+  creator?: CreatorProfile | null
 }
 
 export interface Session {
