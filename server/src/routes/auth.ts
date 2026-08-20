@@ -161,6 +161,36 @@ router.get('/me', requireAuth, (req: AuthRequest, res) => {
     res.status(404).json({ error: 'Kullanıcı bulunamadı.' })
     return
   }
+
+  if (user.role === 'creator') {
+    const creator = dbGet<{
+      id: string
+      studio_name: string
+      bio: string
+      status: string
+      legal_accepted_at: string | null
+      created_at: string
+    }>('SELECT id, studio_name, bio, status, legal_accepted_at, created_at FROM creators WHERE user_id = ?', [
+      req.auth!.userId,
+    ])
+    res.json({
+      user: {
+        ...user,
+        creator: creator
+          ? {
+              id: creator.id,
+              studioName: creator.studio_name,
+              bio: creator.bio,
+              status: creator.status,
+              legalAcceptedAt: creator.legal_accepted_at,
+              createdAt: creator.created_at,
+            }
+          : null,
+      },
+    })
+    return
+  }
+
   res.json({ user })
 })
 

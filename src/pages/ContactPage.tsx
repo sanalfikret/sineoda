@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { submitContactForm } from '../api/client'
-import { SiteFooter } from '../components/SiteFooter'
+import { PageFooter } from '../components/PageFooter'
 
 const SUBJECT_OPTIONS = [
   { value: 'oneri', label: 'Öneri' },
@@ -137,7 +137,7 @@ export function ContactPage() {
         </form>
       </main>
 
-      <SiteFooter />
+      <PageFooter />
     </div>
   )
 }

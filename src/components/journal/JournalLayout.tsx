@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { AppShell } from '../AppShell'
-import { SiteFooter } from '../SiteFooter'
+import { PageFooter } from '../PageFooter'
 import { PublicJournalHeader } from './PublicJournalHeader'
 import { useAuth } from '../../context/AuthContext'
 import { SearchProvider } from '../../context/SearchContext'
@@ -41,7 +41,7 @@ export function JournalLayout() {
     <div className="min-h-dvh bg-sineoda-bg text-white">
       <PublicJournalHeader />
       <Outlet />
-      <SiteFooter />
+      <PageFooter />
     </div>
   )
 }

@@ -33,6 +33,10 @@ import { JournalPostPage } from './pages/JournalPostPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { ContentDetailPage } from './pages/ContentDetailPage'
 import { SignupPage } from './pages/SignupPage'
+import { CreatorRoute } from './components/creator/CreatorRoute'
+import { CreatorLoginPage } from './pages/creator/CreatorLoginPage'
+import { CreatorRegisterPage } from './pages/creator/CreatorRegisterPage'
+import { CreatorDashboardPage } from './pages/creator/CreatorDashboardPage'
 
 function AuthenticatedProviders({ children }: { children: ReactNode }) {
   return (
@@ -166,6 +170,16 @@ function App() {
       />
 
       <Route path="/admin/giris" element={<AdminLoginPage />} />
+      <Route path="/creator/giris" element={<CreatorLoginPage />} />
+      <Route path="/creator/kayit" element={<CreatorRegisterPage />} />
+      <Route
+        path="/creator"
+        element={
+          <CreatorRoute>
+            <CreatorDashboardPage />
+          </CreatorRoute>
+        }
+      />
       <Route
         path="/admin"
         element={

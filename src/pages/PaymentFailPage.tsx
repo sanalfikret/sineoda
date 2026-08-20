@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { SiteFooter } from '../components/SiteFooter'
+import { PageFooter } from '../components/PageFooter'
 
 export function PaymentFailPage() {
   return (
@@ -19,7 +19,7 @@ export function PaymentFailPage() {
         </Link>
       </div>
       </div>
-      <SiteFooter />
+      <PageFooter />
     </div>
   )
 }

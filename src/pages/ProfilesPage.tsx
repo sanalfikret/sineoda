@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { SiteFooter } from '../components/SiteFooter'
+import { PageFooter } from '../components/PageFooter'
 import { PROFILE_AVATARS } from '../types/auth'
 
 export function ProfilesPage() {
@@ -122,7 +122,7 @@ export function ProfilesPage() {
         </button>
       </div>
 
-      <SiteFooter />
+      <PageFooter />
     </div>
   )
 }
