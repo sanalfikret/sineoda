@@ -413,7 +413,13 @@ export async function bulkCreateEpisodes(
     videoUrls?: string[]
   },
 ) {
-  return api<{ episodes: Episode[]; createdCount: number }>(`/api/episodes/content/${contentId}/bulk`, {
+  return api<{
+    episodes: Episode[]
+    createdCount: number
+    skippedCount?: number
+    startEpisode: number
+    endEpisode?: number | null
+  }>(`/api/episodes/content/${contentId}/bulk`, {
     method: 'POST',
     body: JSON.stringify(data),
   })

@@ -23,6 +23,13 @@ export function isSeriesContent(type: ContentType | string): boolean {
   return type === 'dizi'
 }
 
+export function hasEpisodicContent(item: {
+  type: ContentType | string
+  videoFormat?: string
+}): boolean {
+  return isSeriesContent(item.type) || item.videoFormat === 'vertical'
+}
+
 export function isValidContentType(value: unknown): value is ContentType {
   return typeof value === 'string' && CONTENT_TYPES.some((entry) => entry.value === value)
 }

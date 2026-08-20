@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   bulkCreateEpisodes,
   createEpisode,
@@ -7,6 +7,7 @@ import {
   updateEpisode,
 } from '../../api/client'
 import type { Episode } from '../../types/content'
+import { nextEpisodeNumber, parseBulkLines, sortEpisodes } from '../../utils/episodes'
 
 interface AdminEpisodesPanelProps {
   contentId: string
@@ -40,6 +41,7 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkTitles, setBulkTitles] = useState('')
   const [bulkUrls, setBulkUrls] = useState('')
+  const [message, setMessage] = useState('')
   const [savingId, setSavingId] = useState<string | null>(null)
   const [drafts, setDrafts] = useState<Record<string, { title: string; duration: string; videoUrl: string }>>(
     {},
@@ -47,10 +49,11 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
 
   const load = async () => {
     const data = await fetchEpisodes(contentId)
-    setEpisodes(data.episodes)
+    const sorted = sortEpisodes(data.episodes)
+    setEpisodes(sorted)
     setDrafts(
       Object.fromEntries(
-        data.episodes.map((episode) => [
+        sorted.map((episode) => [
           episode.id,
           { title: episode.title, duration: episode.duration, videoUrl: episode.videoUrl },
         ]),
@@ -58,6 +61,13 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
     )
     setLoading(false)
   }
+
+  const bulkStartEpisode = useMemo(
+    () => nextEpisodeNumber(episodes, bulkSeason),
+    [episodes, bulkSeason],
+  )
+
+  const sortedEpisodes = useMemo(() => sortEpisodes(episodes), [episodes])
 
   useEffect(() => {
     void load()
@@ -69,27 +79,54 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
   }, [isVertical])
 
   const handleAdd = async () => {
-    if (!form.title.trim() || !form.videoUrl.trim()) return
-    await createEpisode(contentId, form)
-    setForm(EMPTY)
-    await load()
+    if (!form.title.trim()) return
+    setMessage('')
+    try {
+      await createEpisode(contentId, form)
+      setForm(EMPTY)
+      await load()
+      setMessage('Bölüm eklendi.')
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Bölüm eklenemedi.')
+    }
   }
 
   const handleBulkCreate = async () => {
     if (bulkCount < 1 || bulkCount > 100) return
     setBulkLoading(true)
+    setMessage('')
     try {
-      await bulkCreateEpisodes(contentId, {
+      const titleLines = splitLines(bulkTitles)
+      const titles =
+        titleLines.length > 0 ? parseBulkLines(bulkTitles, bulkCount) : undefined
+      const videoUrls = bulkUrls.trim() ? parseBulkLines(bulkUrls, bulkCount) : undefined
+
+      const result = await bulkCreateEpisodes(contentId, {
         season: bulkSeason,
         count: bulkCount,
+        startEpisode: bulkStartEpisode,
         titlePrefix: bulkPrefix.trim() || 'Bölüm',
         duration: bulkDuration.trim() || (isVertical ? '4 dk' : '45 dk'),
-        titles: splitLines(bulkTitles),
-        videoUrls: bulkUrls.split('\n').map((line) => line.trim()),
+        titles,
+        videoUrls,
       })
+
       await load()
       setBulkTitles('')
       setBulkUrls('')
+
+      const skippedCount = result.skippedCount ?? 0
+      if (skippedCount > 0) {
+        setMessage(
+          `${result.createdCount} bölüm eklendi (S${bulkSeason} B${result.startEpisode}${result.endEpisode ? `–B${result.endEpisode}` : ''}). ${skippedCount} bölüm zaten vardı, atlandı.`,
+        )
+      } else {
+        setMessage(
+          `${result.createdCount} bölüm eklendi (S${bulkSeason} B${result.startEpisode}${result.endEpisode ? `–B${result.endEpisode}` : ''}).`,
+        )
+      }
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Toplu bölüm eklenemedi.')
     } finally {
       setBulkLoading(false)
     }
@@ -131,12 +168,17 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
       <h2 className="text-lg font-semibold text-white">
         {isVertical ? 'Dikey Dizi Bölümleri' : 'Dizi Bölümleri'}
       </h2>
+      {message && (
+        <p className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/85">
+          {message}
+        </p>
+      )}
 
       <div className="rounded-xl border border-sineoda-gold/20 bg-sineoda-gold/5 p-4">
         <h3 className="text-sm font-semibold text-sineoda-gold">Toplu Bölüm Oluştur</h3>
         <p className="mt-1 text-xs text-sineoda-muted">
-          Sezon, sayı ve süreyi bir kez gir. Başlık ve video linklerini alt alta yapıştır — her satır bir
-          bölüm. Linkleri şimdi vermezsen sonra listeden tek tek yapıştırırsın; formu baştan doldurmana gerek yok.
+          Sezon, sayı ve süreyi bir kez gir. Bölümler S{bulkSeason} B{bulkStartEpisode}&apos;den
+          başlayarak eklenir. Başlık ve video linklerini alt alta yapıştır — her satır bir bölüm.
         </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-4">
           <input
@@ -193,9 +235,19 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
           onClick={() => void handleBulkCreate()}
           className="mt-3 rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
         >
-          {bulkLoading ? 'Oluşturuluyor...' : `Sezon ${bulkSeason} · ${bulkCount} bölüm oluştur`}
+          {bulkLoading ? 'Oluşturuluyor...' : `S${bulkSeason} · B${bulkStartEpisode}–B${bulkStartEpisode + bulkCount - 1} oluştur (${bulkCount} bölüm)`}
         </button>
       </div>
+
+      {sortedEpisodes.length > 0 && (
+        <p className="text-sm text-sineoda-muted">
+          Toplam {sortedEpisodes.length} bölüm ·{' '}
+          {[...new Set(sortedEpisodes.map((episode) => episode.season))]
+            .sort((a, b) => a - b)
+            .map((season) => `S${season}: ${sortedEpisodes.filter((episode) => episode.season === season).length}`)
+            .join(' · ')}
+        </p>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <input
@@ -243,7 +295,7 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
       </button>
 
       <div className="space-y-3">
-        {episodes.map((episode) => {
+        {sortedEpisodes.map((episode) => {
           const draft = drafts[episode.id] ?? {
             title: episode.title,
             duration: episode.duration,
@@ -302,7 +354,7 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
             </div>
           )
         })}
-        {episodes.length === 0 && (
+        {sortedEpisodes.length === 0 && (
           <p className="text-sm text-sineoda-muted">Henüz bölüm eklenmedi. Yukarıdan toplu oluşturabilirsiniz.</p>
         )}
       </div>
