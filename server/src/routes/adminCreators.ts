@@ -35,6 +35,90 @@ router.get('/creators', requireAdmin, (_req: AuthRequest, res) => {
   })
 })
 
+router.get('/creators/:id', requireAdmin, (req: AuthRequest, res) => {
+  const row = dbGet<
+    CreatorRow & { user_name: string; user_email: string; user_created_at: string }
+  >(
+    `SELECT c.*, u.name AS user_name, u.email AS user_email, u.created_at AS user_created_at
+     FROM creators c
+     JOIN users u ON u.id = c.user_id
+     WHERE c.id = ?`,
+    [req.params.id],
+  )
+
+  if (!row) {
+    res.status(404).json({ error: 'Yapımcı bulunamadı.' })
+    return
+  }
+
+  const documents = dbAll<{
+    id: string
+    doc_type: string
+    file_url: string
+    uploaded_at: string
+  }>('SELECT id, doc_type, file_url, uploaded_at FROM creator_documents WHERE creator_id = ? ORDER BY uploaded_at DESC', [
+    row.id,
+  ])
+
+  const contentRows = dbAll<ContentRow>(
+    'SELECT * FROM content WHERE creator_id = ? ORDER BY content_added_at DESC',
+    [row.id],
+  )
+
+  const stats = dbAll<{
+    content_id: string
+    qualified_seconds: number
+    likes: number
+  }>(
+    `SELECT
+      c.id AS content_id,
+      COALESCE(SUM(cqa.seconds_watched), 0) AS qualified_seconds,
+      COALESCE((
+        SELECT COUNT(*) FROM content_reactions cr
+        WHERE cr.content_id = c.id AND cr.reaction = 'like'
+      ), 0) AS likes
+    FROM content c
+    LEFT JOIN creator_qualified_activity cqa ON cqa.content_id = c.id AND cqa.creator_id = c.creator_id
+    WHERE c.creator_id = ?
+    GROUP BY c.id`,
+    [row.id],
+  )
+
+  const statsByContent = new Map(stats.map((entry) => [entry.content_id, entry]))
+
+  res.json({
+    creator: {
+      id: row.id,
+      userId: row.user_id,
+      name: row.user_name,
+      email: row.user_email,
+      studioName: row.studio_name,
+      bio: row.bio,
+      status: row.status,
+      legalAcceptedAt: row.legal_accepted_at,
+      createdAt: row.created_at,
+      userCreatedAt: row.user_created_at,
+      documentCount: documents.length,
+      contentCount: contentRows.length,
+    },
+    documents: documents.map((doc) => ({
+      id: doc.id,
+      docType: doc.doc_type,
+      fileUrl: doc.file_url,
+      uploadedAt: doc.uploaded_at,
+    })),
+    content: contentRows.map((item) => {
+      const stat = statsByContent.get(item.id)
+      return {
+        ...mapContent(item),
+        reviewStatus: item.review_status ?? 'pending',
+        qualifiedMinutes: Math.round((stat?.qualified_seconds ?? 0) / 60),
+        likes: stat?.likes ?? 0,
+      }
+    }),
+  })
+})
+
 router.patch('/creators/:id', requireAdmin, (req: AuthRequest, res) => {
   const status = String(req.body.status ?? '').trim()
   if (!['pending', 'approved', 'rejected', 'suspended'].includes(status)) {

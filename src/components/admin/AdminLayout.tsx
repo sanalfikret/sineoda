@@ -8,7 +8,8 @@ const navItems = [
   { to: '/admin/kategoriler', label: 'Kategoriler', end: false },
   { to: '/admin/ana-sayfa', label: 'Ana Sayfa', end: false },
   { to: '/admin/dergi', label: 'Dergi', end: false },
-  { to: '/admin/kullanicilar', label: 'Kullanıcılar', end: false },
+  { to: '/admin/kullanicilar', label: 'İzleyiciler', end: false },
+  { to: '/admin/yapimcilar', label: 'Yapımcılar', end: false },
 ]
 
 export function AdminLayout() {

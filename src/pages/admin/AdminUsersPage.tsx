@@ -55,8 +55,11 @@ export function AdminUsersPage() {
     void loadUsers()
   }, [])
 
+  const viewerCount = useMemo(() => users.filter((user) => user.role !== 'creator').length, [users])
+
   const filteredUsers = useMemo(() => {
-    const searched = users.filter((user) =>
+    const viewers = users.filter((user) => user.role !== 'creator')
+    const searched = viewers.filter((user) =>
       fuzzySearchMatch(query, user.name, user.email, subscriptionLabel(user)),
     )
     return sortByTurkishTitle(searched, (user) => user.name)
@@ -98,8 +101,10 @@ export function AdminUsersPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Kullanıcılar</h1>
-          <p className="mt-1 text-sm text-sineoda-muted">Alfabetik sıralı · {users.length} kayıtlı kullanıcı</p>
+          <h1 className="text-2xl font-bold text-white">İzleyiciler</h1>
+          <p className="mt-1 text-sm text-sineoda-muted">
+            Alfabetik sıralı · {filteredUsers.length} kayıtlı izleyici / admin
+          </p>
         </div>
         <button
           type="button"
@@ -115,7 +120,7 @@ export function AdminUsersPage() {
         onChange={setQuery}
         placeholder="Ad, e-posta veya abonelik ara..."
         resultCount={filteredUsers.length}
-        totalCount={users.length}
+        totalCount={viewerCount}
       />
 
       {error && (
