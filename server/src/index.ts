@@ -32,6 +32,7 @@ import { PUBLISHED_CONTENT_SQL } from './services/publish.js'
 import { MAIN_CATALOG_SQL, STANDARD_PROGRAM_SQL, ensureStudentCinemaCatalog } from './services/studentCinema.js'
 import { mapCategoriesResponse } from './services/categoryOrder.js'
 import { fillCategoriesToTarget } from './services/categoryFill.js'
+import { ensureSeriesEpisodes } from './services/seriesEpisodes.js'
 import { backfillMissingImages } from './backfillImages.js'
 import { ensureDemoCatalog } from './demoCatalog.js'
 import { ensureGenreCatalog } from './genreCatalog.js'
@@ -57,6 +58,7 @@ ensureFilmSchools()
 backfillMissingImages()
 fillCategoriesToTarget()
 ensureStudentCinemaCatalog()
+ensureSeriesEpisodes()
 
 const app = express()
 

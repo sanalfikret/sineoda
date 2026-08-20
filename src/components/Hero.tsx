@@ -1,5 +1,6 @@
 import { TrailerBackdrop } from './TrailerBackdrop'
 import type { ContentItem } from '../types/content'
+import { itemShowsEpisodePicker } from '../utils/episodes'
 
 interface HeroProps {
   item: ContentItem
@@ -64,7 +65,11 @@ export function Hero({ item, onPlay, onDetails, eyebrow = 'Öne Çıkan' }: Hero
               className="inline-flex items-center gap-2 rounded-lg bg-sineoda-gold px-6 py-3.5 text-sm font-semibold text-sineoda-bg shadow-lg shadow-sineoda-gold/20 transition hover:brightness-110"
             >
               <PlayIcon />
-              {item.videoFormat === 'vertical' ? 'Dikey İzle' : 'Oynat'}
+              {item.videoFormat === 'vertical'
+                ? 'Dikey İzle'
+                : itemShowsEpisodePicker(item)
+                  ? 'Bölümleri Gör'
+                  : 'Oynat'}
             </button>
             {item.trailerUrl && (
               <button

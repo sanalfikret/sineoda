@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type TouchEvent } from 'react'
 import { fetchEpisodes, getProfileId, getToken, resolveMediaUrl, saveWatchProgress } from '../api/client'
-import { isSeriesContent } from '../constants/contentTypes'
 import type { Episode, PlayTarget } from '../types/content'
 import { getYoutubeEmbedUrl, isYoutubeUrl } from '../utils/media'
+import { itemShowsEpisodePicker, resolveSeriesEpisodes } from '../utils/episodes'
 import { getActiveFullscreenElement, isFullscreenSupported, useFullscreen } from '../hooks/useFullscreen'
 import { ContentActionButtons } from './ContentActionButtons'
 import { AgeRatingOverlay } from './AgeRatingOverlay'
@@ -94,20 +94,21 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
     setShowEpisodeList(false)
     setSwipeHint(true)
 
-    if (!isSeriesContent(target.item.type)) return
+    if (!itemShowsEpisodePicker(target.item)) return
 
     fetchEpisodes(target.item.id)
       .then((data) => {
-        const sorted = [...data.episodes].sort(
-          (a, b) => a.season - b.season || a.episode - b.episode,
-        )
+        const sorted = resolveSeriesEpisodes(target.item, data.episodes)
         setEpisodes(sorted)
         if (target.episodeId) {
           const index = sorted.findIndex((ep) => ep.id === target.episodeId)
           if (index >= 0) setEpisodeIndex(index)
         }
       })
-      .catch(() => setEpisodes([]))
+      .catch(() => {
+        const sorted = resolveSeriesEpisodes(target.item, [])
+        setEpisodes(sorted)
+      })
   }, [target])
 
   useEffect(() => {

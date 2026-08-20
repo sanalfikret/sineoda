@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { fetchEpisodes, getProfileId, getToken, resolveMediaUrl, saveWatchProgress } from '../api/client'
 import type { Episode, PlayTarget } from '../types/content'
-import { isSeriesContent } from '../constants/contentTypes'
 import { getYoutubeEmbedUrl, isYoutubeUrl } from '../utils/media'
+import {
+  episodesForSeason,
+  itemShowsEpisodePicker,
+  resolveSeriesEpisodes,
+  uniqueSeasons,
+} from '../utils/episodes'
 import { getActiveFullscreenElement, isFullscreenSupported, useFullscreen } from '../hooks/useFullscreen'
 import { ContentActionButtons } from './ContentActionButtons'
 import { AgeRatingOverlay } from './AgeRatingOverlay'
 import { PlayerFullscreenButton } from './PlayerFullscreenButton'
+import { SeriesEpisodePicker } from './SeriesEpisodePicker'
 
 interface VideoPlayerProps {
   target: PlayTarget | null
@@ -42,6 +48,8 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
   const [showControls, setShowControls] = useState(true)
   const [captionsOn, setCaptionsOn] = useState(true)
   const [episodes, setEpisodes] = useState<Episode[]>([])
+  const [pickerSeason, setPickerSeason] = useState(1)
+  const [showEpisodePicker, setShowEpisodePicker] = useState(false)
   const [nextEpisode, setNextEpisode] = useState<Episode | null>(null)
   const [countdown, setCountdown] = useState(8)
   const hideTimerRef = useRef<number | null>(null)
@@ -52,6 +60,8 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
     () => [...episodes].sort((a, b) => a.season - b.season || a.episode - b.episode),
     [episodes],
   )
+  const pickerSeasons = uniqueSeasons(sortedEpisodes)
+  const pickerSeasonEpisodes = episodesForSeason(sortedEpisodes, pickerSeason)
 
   const mediaUrl = target ? resolveMediaUrl(target.videoUrl) : ''
   const youtubeEmbedUrl = mediaUrl && isYoutubeUrl(mediaUrl) ? getYoutubeEmbedUrl(mediaUrl, { autoplay: true, controls: true }) : null
@@ -80,14 +90,24 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
   }, [nextEpisode, onPlayEpisode, clearNextCountdown])
 
   useEffect(() => {
-    if (!target || !isSeriesContent(target.item.type)) {
+    if (!target || !itemShowsEpisodePicker(target.item)) {
       setEpisodes([])
+      setShowEpisodePicker(false)
       return
     }
 
     fetchEpisodes(target.item.id)
-      .then((data) => setEpisodes(data.episodes))
-      .catch(() => setEpisodes([]))
+      .then((data) => {
+        const list = resolveSeriesEpisodes(target.item, data.episodes)
+        setEpisodes(list)
+        const current = list.find((episode) => episode.id === target.episodeId)
+        setPickerSeason(current?.season ?? list[0]?.season ?? 1)
+      })
+      .catch(() => {
+        const list = resolveSeriesEpisodes(target.item, [])
+        setEpisodes(list)
+        setPickerSeason(list[0]?.season ?? 1)
+      })
   }, [target])
 
   useEffect(() => {
@@ -395,6 +415,37 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
         </button>
       )}
 
+      {showEpisodePicker && target && sortedEpisodes.length > 0 && onPlayEpisode && (
+        <div className="pointer-events-auto absolute inset-y-0 right-0 z-30 w-full max-w-md overflow-y-auto border-l border-white/10 bg-black/90 p-4 backdrop-blur-md sm:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-gold">Bölümler</p>
+              <p className="mt-1 text-sm font-semibold text-white">{target.item.title}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowEpisodePicker(false)}
+              className="rounded-full px-3 py-1.5 text-sm text-white/80 hover:bg-white/10"
+            >
+              Kapat
+            </button>
+          </div>
+          <SeriesEpisodePicker
+            compact
+            seasons={pickerSeasons}
+            season={pickerSeason}
+            seasonEpisodes={pickerSeasonEpisodes}
+            episodesInSeason={(value) => episodesForSeason(sortedEpisodes, value).length}
+            onSeasonChange={setPickerSeason}
+            currentEpisodeId={target.episodeId}
+            onPlayEpisode={(episode) => {
+              setShowEpisodePicker(false)
+              onPlayEpisode(episode)
+            }}
+          />
+        </div>
+      )}
+
       {nextEpisode && (
         <div className="pointer-events-auto absolute bottom-24 right-4 z-20 w-[min(100%,20rem)] rounded-2xl border border-white/15 bg-black/85 p-4 shadow-2xl backdrop-blur-md sm:bottom-28 sm:right-6">
           <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-gold">Sonraki Bölüm</p>
@@ -448,6 +499,17 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
             <button type="button" aria-label={muted ? 'Sesi aç' : 'Sessize al'} onClick={() => setMuted((value) => !value)} className="rounded-full p-2 text-white transition hover:bg-white/10">
               {muted ? <MutedIcon /> : <VolumeIcon />}
             </button>
+            {sortedEpisodes.length > 0 && onPlayEpisode && (
+              <button
+                type="button"
+                onClick={() => setShowEpisodePicker((open) => !open)}
+                className={`rounded-full px-3 py-2 text-xs font-semibold transition hover:bg-white/10 ${
+                  showEpisodePicker ? 'bg-sineoda-gold/20 text-sineoda-gold' : 'text-white'
+                }`}
+              >
+                Bölümler
+              </button>
+            )}
             {hasCaptions && (
               <button
                 type="button"
