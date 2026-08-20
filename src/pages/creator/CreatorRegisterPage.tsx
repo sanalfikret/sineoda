@@ -1,9 +1,10 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
-import { fetchFilmSchools } from '../../api/client'
+import { fetchFilmSchools, uploadStudentId } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
 import { BRAND_STUDENT_CINEMA } from '../../constants/brand'
 import { CREATOR_LEGAL_TERMS } from '../../constants/creatorLegal'
+import { groupSchoolsByUniversity, splitSchoolName } from '../../utils/filmSchools'
 
 export function CreatorRegisterPage() {
   const { creatorSignup, isCreator, isLoading } = useAuth()
@@ -15,9 +16,13 @@ export function CreatorRegisterPage() {
   const [studioName, setStudioName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [phone, setPhone] = useState('')
+  const [projectCrew, setProjectCrew] = useState('')
   const [bio, setBio] = useState('')
   const [schoolId, setSchoolId] = useState('')
   const [schools, setSchools] = useState<Array<{ id: string; name: string }>>([])
+  const [studentIdFile, setStudentIdFile] = useState<File | null>(null)
+  const [studentIdPreview, setStudentIdPreview] = useState('')
   const [acceptLegal, setAcceptLegal] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -29,8 +34,16 @@ export function CreatorRegisterPage() {
       .catch(() => setSchools([]))
   }, [isStudentProgram])
 
+  const groupedSchools = useMemo(() => groupSchoolsByUniversity(schools), [schools])
+
   if (!isLoading && isCreator) {
     return <Navigate to="/creator" replace />
+  }
+
+  const handleStudentIdChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null
+    setStudentIdFile(file)
+    setStudentIdPreview(file ? file.name : '')
   }
 
   const handleSubmit = async (event: FormEvent) => {
@@ -43,9 +56,26 @@ export function CreatorRegisterPage() {
       setError('Sinema okulunuzu seçmelisiniz.')
       return
     }
+    if (isStudentProgram && !phone.trim()) {
+      setError('Telefon numaranızı girmelisiniz.')
+      return
+    }
+    if (isStudentProgram && !projectCrew.trim()) {
+      setError('Yönetmen ve yapım ekibi bilgisini girmelisiniz.')
+      return
+    }
+    if (isStudentProgram && !studentIdFile) {
+      setError('Öğrenci kimliği yüklemeniz zorunludur.')
+      return
+    }
     setError('')
     setLoading(true)
     try {
+      let studentIdFileUrl: string | undefined
+      if (isStudentProgram && studentIdFile) {
+        studentIdFileUrl = await uploadStudentId(studentIdFile)
+      }
+
       await creatorSignup({
         name,
         email,
@@ -55,6 +85,9 @@ export function CreatorRegisterPage() {
         acceptLegal,
         program: isStudentProgram ? 'student_cinema' : 'standard',
         schoolId: isStudentProgram ? schoolId : undefined,
+        phone: isStudentProgram ? phone : undefined,
+        projectCrew: isStudentProgram ? projectCrew : undefined,
+        studentIdFileUrl,
       })
       navigate('/creator', { replace: true })
     } catch (err) {
@@ -104,10 +137,17 @@ export function CreatorRegisterPage() {
                 className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-emerald-400"
               >
                 <option value="">Okul seçin</option>
-                {schools.map((school) => (
-                  <option key={school.id} value={school.id}>
-                    {school.name}
-                  </option>
+                {groupedSchools.map((group) => (
+                  <optgroup key={group.university} label={group.university}>
+                    {group.schools.map((school) => {
+                      const { department } = splitSchoolName(school.name)
+                      return (
+                        <option key={school.id} value={school.id}>
+                          {department}
+                        </option>
+                      )
+                    })}
+                  </optgroup>
                 ))}
               </select>
             </label>
@@ -135,6 +175,56 @@ export function CreatorRegisterPage() {
               />
             </label>
           </div>
+
+          {isStudentProgram && (
+            <>
+              <label className="block">
+                <span className="mb-1.5 block text-sm text-white/90">Telefon</span>
+                <input
+                  type="tel"
+                  required
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  placeholder="05XX XXX XX XX"
+                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-emerald-400"
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-1.5 block text-sm text-white/90">
+                  Yönetmen ve yapım ekibi
+                </span>
+                <textarea
+                  required
+                  rows={4}
+                  value={projectCrew}
+                  onChange={(event) => setProjectCrew(event.target.value)}
+                  placeholder={'Yönetmen: ...\nYapımcı: ...\nGörüntü yönetmeni: ...\nKurgu: ...'}
+                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-emerald-400"
+                />
+                <span className="mt-1.5 block text-xs text-white/40">
+                  Her satıra bir isim ve rol yazabilirsiniz.
+                </span>
+              </label>
+
+              <label className="block">
+                <span className="mb-1.5 block text-sm text-white/90">Öğrenci kimliği</span>
+                <input
+                  type="file"
+                  required
+                  accept="image/*,application/pdf"
+                  onChange={handleStudentIdChange}
+                  className="w-full rounded-lg border border-dashed border-white/15 bg-[#0d0f14] px-4 py-3 text-sm text-white/80 file:mr-4 file:rounded-md file:border-0 file:bg-emerald-500 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[#07110d]"
+                />
+                {studentIdPreview && (
+                  <span className="mt-1.5 block text-xs text-emerald-300/80">{studentIdPreview}</span>
+                )}
+                <span className="mt-1.5 block text-xs text-white/40">
+                  Öğrenci veya mezun olduğunuzu gösteren kimlik kartı fotoğrafı veya PDF (en fazla 10 MB).
+                </span>
+              </label>
+            </>
+          )}
 
           <label className="block">
             <span className="mb-1.5 block text-sm text-white/90">E-posta</span>

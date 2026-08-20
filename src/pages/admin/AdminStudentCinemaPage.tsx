@@ -5,11 +5,13 @@ import {
   fetchAdminStudentCinemaQueue,
   reviewAdminStudentCinemaContent,
   reviewAdminStudentCinemaSchool,
+  updateAdminFilmSchool,
   type AdminFilmSchool,
   type AdminStudentCinemaItem,
 } from '../../api/client'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { fuzzySearchMatch, sortByTurkishTitle } from '../../utils/search'
+import { groupSchoolsByUniversity, splitSchoolName } from '../../utils/filmSchools'
 
 const FORMAT_LABELS: Record<string, string> = {
   main: 'Ana film',
@@ -42,6 +44,8 @@ export function AdminStudentCinemaPage() {
   const [showSchoolForm, setShowSchoolForm] = useState(false)
   const [schoolForm, setSchoolForm] = useState({ name: '', website: '' })
   const [submittingSchool, setSubmittingSchool] = useState(false)
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+  const [togglingSchoolId, setTogglingSchoolId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -68,6 +72,14 @@ export function AdminStudentCinemaPage() {
     const filtered = schools.filter((school) => fuzzySearchMatch(schoolQuery, school.name, school.slug))
     return sortByTurkishTitle(filtered, (school) => school.name)
   }, [schools, schoolQuery])
+
+  const groupedSchools = useMemo(() => groupSchoolsByUniversity(filteredSchools), [filteredSchools])
+
+  useEffect(() => {
+    if (schoolQuery.trim()) {
+      setExpandedGroups(new Set(groupedSchools.map((group) => group.university)))
+    }
+  }, [schoolQuery, groupedSchools])
 
   const filteredQueue = useMemo(() => {
     return queue.filter((item) =>
@@ -115,6 +127,31 @@ export function AdminStudentCinemaPage() {
       await load()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'İnceleme güncellenemedi.')
+    }
+  }
+
+  const toggleGroup = (university: string) => {
+    setExpandedGroups((current) => {
+      const next = new Set(current)
+      if (next.has(university)) next.delete(university)
+      else next.add(university)
+      return next
+    })
+  }
+
+  const handleToggleSchoolStatus = async (school: AdminFilmSchool) => {
+    const nextStatus = school.status === 'active' ? 'inactive' : 'active'
+    setTogglingSchoolId(school.id)
+    setError('')
+    try {
+      await updateAdminFilmSchool(school.id, { status: nextStatus })
+      setSchools((current) =>
+        current.map((entry) => (entry.id === school.id ? { ...entry, status: nextStatus } : entry)),
+      )
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Okul durumu güncellenemedi.')
+    } finally {
+      setTogglingSchoolId(null)
     }
   }
 
@@ -210,43 +247,93 @@ export function AdminStudentCinemaPage() {
       ) : tab === 'schools' ? (
         <>
           <AdminSearchBar value={schoolQuery} onChange={setSchoolQuery} placeholder="Okul ara..." />
-          <div className="overflow-x-auto rounded-xl border border-white/10">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-[#11141c] text-sineoda-muted">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Okul</th>
-                  <th className="px-4 py-3 font-medium">Durum</th>
-                  <th className="px-4 py-3 font-medium">Web</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredSchools.map((school) => (
-                  <tr key={school.id} className="border-t border-white/5">
-                    <td className="px-4 py-3 font-medium text-white">{school.name}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs ${
-                          school.status === 'active'
-                            ? 'bg-emerald-500/15 text-emerald-300'
-                            : 'bg-white/10 text-white/50'
-                        }`}
-                      >
-                        {school.status === 'active' ? 'Aktif' : 'Pasif'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sineoda-muted">
-                      {school.website ? (
-                        <a href={school.website} target="_blank" rel="noreferrer" className="text-sineoda-gold hover:underline">
-                          Site
-                        </a>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-3">
+            {groupedSchools.length === 0 ? (
+              <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-sineoda-muted">
+                Aramanıza uygun okul bulunamadı.
+              </p>
+            ) : (
+              groupedSchools.map((group) => {
+                const isExpanded = expandedGroups.has(group.university) || Boolean(schoolQuery.trim())
+                const activeCount = group.schools.filter((school) => school.status === 'active').length
+
+                return (
+                  <section key={group.university} className="overflow-hidden rounded-xl border border-white/10 bg-[#11141c]">
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(group.university)}
+                      className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition hover:bg-white/[0.03]"
+                    >
+                      <div>
+                        <h3 className="font-semibold text-white">{group.university}</h3>
+                        <p className="mt-1 text-xs text-sineoda-muted">
+                          {group.schools.length} bölüm · {activeCount} aktif
+                        </p>
+                      </div>
+                      <span className="text-sm text-white/50">{isExpanded ? '▾' : '▸'}</span>
+                    </button>
+
+                    {isExpanded && (
+                      <div className="border-t border-white/5">
+                        {group.schools.map((school) => {
+                          const { department } = splitSchoolName(school.name)
+                          const isActive = school.status === 'active'
+
+                          return (
+                            <div
+                              key={school.id}
+                              className="flex flex-wrap items-center justify-between gap-3 border-t border-white/5 px-4 py-3 first:border-t-0"
+                            >
+                              <div className="min-w-0 flex-1">
+                                <p className="font-medium text-white">{department}</p>
+                                {school.website ? (
+                                  <a
+                                    href={school.website}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="mt-1 inline-block text-xs text-sineoda-gold hover:underline"
+                                  >
+                                    Web sitesi
+                                  </a>
+                                ) : null}
+                              </div>
+
+                              <div className="flex items-center gap-3">
+                                <span
+                                  className={`rounded-full px-2.5 py-1 text-xs ${
+                                    isActive
+                                      ? 'bg-emerald-500/15 text-emerald-300'
+                                      : 'bg-white/10 text-white/50'
+                                  }`}
+                                >
+                                  {isActive ? 'Aktif' : 'Pasif'}
+                                </span>
+                                <button
+                                  type="button"
+                                  disabled={togglingSchoolId === school.id}
+                                  onClick={() => void handleToggleSchoolStatus(school)}
+                                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition disabled:opacity-60 ${
+                                    isActive
+                                      ? 'border border-white/15 text-white/70 hover:bg-white/5'
+                                      : 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20'
+                                  }`}
+                                >
+                                  {togglingSchoolId === school.id
+                                    ? 'Kaydediliyor...'
+                                    : isActive
+                                      ? 'Pasif Yap'
+                                      : 'Aktif Yap'}
+                                </button>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </section>
+                )
+              })
+            )}
           </div>
         </>
       ) : (

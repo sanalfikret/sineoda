@@ -40,7 +40,7 @@ function mapCreatorUser(user: UserRow) {
 }
 
 router.post('/signup', (req, res) => {
-  const { name, email, password, studioName, bio, acceptLegal, program, schoolId } = req.body as {
+  const { name, email, password, studioName, bio, acceptLegal, program, schoolId, phone, projectCrew, studentIdFileUrl } = req.body as {
     name?: string
     email?: string
     password?: string
@@ -49,6 +49,9 @@ router.post('/signup', (req, res) => {
     acceptLegal?: boolean
     program?: string
     schoolId?: string
+    phone?: string
+    projectCrew?: string
+    studentIdFileUrl?: string
   }
 
   if (!name?.trim() || !email?.trim() || !password || password.length < 6) {
@@ -70,6 +73,22 @@ router.post('/signup', (req, res) => {
   let resolvedSchoolId: string | null = null
 
   if (creatorProgram === 'student_cinema') {
+    const normalizedPhone = String(phone ?? '').replace(/\s+/g, '').trim()
+    if (!/^(\+90|0)?5\d{9}$/.test(normalizedPhone.replace(/^\+90/, '0'))) {
+      res.status(400).json({ error: 'Geçerli bir cep telefonu numarası girin.' })
+      return
+    }
+
+    if (!String(projectCrew ?? '').trim()) {
+      res.status(400).json({ error: 'Yönetmen ve yapım ekibi bilgisi zorunludur.' })
+      return
+    }
+
+    if (!String(studentIdFileUrl ?? '').trim()) {
+      res.status(400).json({ error: 'Öğrenci kimliği yüklemeniz zorunludur.' })
+      return
+    }
+
     const school = schoolId
       ? dbGet<{ id: string }>('SELECT id FROM film_schools WHERE id = ? AND status = ?', [
           String(schoolId).trim(),
@@ -94,15 +113,40 @@ router.post('/signup', (req, res) => {
   const creatorId = uuid()
   const hash = bcrypt.hashSync(password, 10)
   const now = new Date().toISOString()
+  const normalizedPhone =
+    creatorProgram === 'student_cinema'
+      ? String(phone ?? '')
+          .replace(/\s+/g, '')
+          .replace(/^\+90/, '0')
+          .replace(/^0(\d{10})$/, '+90$1')
+      : null
 
   dbRun(
-    'INSERT INTO users (id, name, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-    [userId, name.trim(), normalizedEmail, hash, 'creator', now],
+    'INSERT INTO users (id, name, email, password_hash, role, created_at, phone) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [userId, name.trim(), normalizedEmail, hash, 'creator', now, normalizedPhone],
   )
   dbRun(
-    'INSERT INTO creators (id, user_id, studio_name, bio, status, legal_accepted_at, created_at, program, school_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [creatorId, userId, studioName.trim(), bio?.trim() ?? '', 'pending', now, now, creatorProgram, resolvedSchoolId],
+    'INSERT INTO creators (id, user_id, studio_name, bio, status, legal_accepted_at, created_at, program, school_id, project_crew) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [
+      creatorId,
+      userId,
+      studioName.trim(),
+      bio?.trim() ?? '',
+      'pending',
+      now,
+      now,
+      creatorProgram,
+      resolvedSchoolId,
+      creatorProgram === 'student_cinema' ? String(projectCrew).trim() : '',
+    ],
   )
+
+  if (creatorProgram === 'student_cinema' && studentIdFileUrl?.trim()) {
+    dbRun(
+      'INSERT INTO creator_documents (id, creator_id, doc_type, file_url, uploaded_at) VALUES (?, ?, ?, ?, ?)',
+      [uuid(), creatorId, 'student_id', studentIdFileUrl.trim(), now],
+    )
+  }
 
   const user = dbGet<UserRow>('SELECT * FROM users WHERE id = ?', [userId])!
   const publicUser = mapCreatorUser(user)

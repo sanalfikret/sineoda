@@ -29,5 +29,6 @@ export const CREATOR_DOC_TYPES = [
   { value: 'license', label: 'Yayın lisans sözleşmesi' },
   { value: 'producer', label: 'Yapımcı / stüdyo belgesi' },
   { value: 'school_approval', label: 'Okul / mezuniyet projesi onayı' },
+  { value: 'student_id', label: 'Öğrenci kimliği' },
   { value: 'other', label: 'Diğer destekleyici belge' },
 ] as const

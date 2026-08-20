@@ -562,6 +562,9 @@ export async function creatorSignupRequest(data: {
   acceptLegal: boolean
   program?: 'standard' | 'student_cinema'
   schoolId?: string
+  phone?: string
+  projectCrew?: string
+  studentIdFileUrl?: string
 }): Promise<AuthResponse> {
   return api<AuthResponse>('/api/creator/auth/signup', {
     method: 'POST',
@@ -730,6 +733,16 @@ export async function fetchFilmSchools() {
   return api<{ schools: FilmSchool[] }>('/api/student-cinema/schools')
 }
 
+export async function uploadStudentId(file: File): Promise<string> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const result = await api<{ url: string }>('/api/student-cinema/upload-student-id', {
+    method: 'POST',
+    body: formData,
+  })
+  return result.url
+}
+
 export async function fetchAdminFilmSchools() {
   return api<{ schools: AdminFilmSchool[] }>('/api/admin/student-cinema/schools')
 }
@@ -737,6 +750,16 @@ export async function fetchAdminFilmSchools() {
 export async function createAdminFilmSchool(data: { name: string; website?: string; logoUrl?: string }) {
   return api<{ school: AdminFilmSchool }>('/api/admin/student-cinema/schools', {
     method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function updateAdminFilmSchool(
+  id: string,
+  data: { status?: 'active' | 'inactive'; name?: string; website?: string },
+) {
+  return api<{ school: AdminFilmSchool }>(`/api/admin/student-cinema/schools/${id}`, {
+    method: 'PATCH',
     body: JSON.stringify(data),
   })
 }
