@@ -5,17 +5,9 @@ import type { ContentItem } from '../../types/content'
 
 interface LandingSliderProps {
   items: ContentItem[]
-  memberMode?: boolean
-  onPlay?: (item: ContentItem) => void
-  onDetails?: (item: ContentItem) => void
 }
 
-export function LandingSlider({
-  items,
-  memberMode = false,
-  onPlay,
-  onDetails,
-}: LandingSliderProps) {
+export function LandingSlider({ items }: LandingSliderProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -83,31 +75,12 @@ export function LandingSlider({
                 {activeItem.description}
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-3">
-                {memberMode ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => onPlay?.(activeItem)}
-                      className="inline-flex items-center justify-center rounded-md bg-sineoda-gold px-6 py-2.5 text-sm font-bold text-sineoda-bg transition hover:brightness-110"
-                    >
-                      Oynat
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onDetails?.(activeItem)}
-                      className="inline-flex items-center justify-center rounded-md border border-white/20 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
-                    >
-                      Detaylar
-                    </button>
-                  </>
-                ) : (
-                  <Link
-                    to="/kayit"
-                    className="inline-flex items-center justify-center rounded-md bg-sineoda-gold px-6 py-2.5 text-sm font-bold text-sineoda-bg transition hover:brightness-110"
-                  >
-                    Üye Ol
-                  </Link>
-                )}
+                <Link
+                  to="/kayit"
+                  className="inline-flex items-center justify-center rounded-md bg-sineoda-gold px-6 py-2.5 text-sm font-bold text-sineoda-bg transition hover:brightness-110"
+                >
+                  Üye Ol
+                </Link>
                 <span className="text-sm text-white/50">
                   {activeItem.year} · {activeItem.rating}
                 </span>
