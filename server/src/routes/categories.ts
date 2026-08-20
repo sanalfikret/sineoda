@@ -6,6 +6,7 @@ import { slugify } from '../mappers.js'
 import { resetContent } from '../seed.js'
 import { fillCategoriesToTarget } from '../services/categoryFill.js'
 import { mapCategoriesResponse, removeCategoryFromOrder, saveCategoryOrder, appendCategoryToOrder } from '../services/categoryOrder.js'
+import { dedupeAllCategories } from '../services/categoryDedup.js'
 
 const router = Router()
 
@@ -37,7 +38,13 @@ router.put('/reorder', requireAdmin, (req: AuthRequest, res) => {
     return
   }
 
+  dedupeAllCategories()
   saveCategoryOrder(orderedIds.map(String))
+  res.json({ ok: true, categories: mapCategoriesResponse() })
+})
+
+router.post('/dedupe', requireAdmin, (_req: AuthRequest, res) => {
+  dedupeAllCategories()
   res.json({ ok: true, categories: mapCategoriesResponse() })
 })
 

@@ -46,7 +46,7 @@ export const CONTENT_GENRES = [
 export type BrowseGenre = (typeof BROWSE_GENRES)[number]
 
 export function genreToCategoryId(genre: string) {
-  return `genre-${genre
+  return `genre-row-${genre
     .toLocaleLowerCase('tr')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
