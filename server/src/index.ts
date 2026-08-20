@@ -36,7 +36,7 @@ import { backfillMissingImages } from './backfillImages.js'
 import { ensureDemoCatalog } from './demoCatalog.js'
 import { ensureGenreCatalog } from './genreCatalog.js'
 import { ensureJournalPosts } from './journalSeed.js'
-import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureLandingShowcases, ensureFilmSchools } from './seed.js'
+import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureLandingShowcases, ensureFilmSchools, ensureStudentCinemaDemoFilms } from './seed.js'
 import type { ContentRow } from './types.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -54,6 +54,7 @@ ensureDemoCatalog()
 ensureGenreCatalog()
 ensureJournalPosts()
 ensureFilmSchools()
+ensureStudentCinemaDemoFilms()
 backfillMissingImages()
 fillCategoriesToTarget()
 ensureStudentCinemaCatalog()
