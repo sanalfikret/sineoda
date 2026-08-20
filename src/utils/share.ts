@@ -1,5 +1,5 @@
 export function buildShareUrl(contentId: string) {
-  return `${window.location.origin}/?icerik=${encodeURIComponent(contentId)}`
+  return `${window.location.origin}/icerik/${encodeURIComponent(contentId)}`
 }
 
 export function buildShareMessage(title: string, url: string) {
