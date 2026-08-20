@@ -11,6 +11,7 @@ interface ContentDetailViewProps {
   onPlay: (item: ContentItem, episode?: Episode) => void
   onBack?: () => void
   mode?: 'page' | 'modal'
+  kidsProfileBlocked?: boolean
 }
 
 type DetailTab = 'overview' | 'details'
@@ -35,7 +36,13 @@ function CreditList({ label, items }: { label: string; items: string[] }) {
   )
 }
 
-export function ContentDetailView({ item, onPlay, onBack, mode = 'page' }: ContentDetailViewProps) {
+export function ContentDetailView({
+  item,
+  onPlay,
+  onBack,
+  mode = 'page',
+  kidsProfileBlocked = false,
+}: ContentDetailViewProps) {
   const [episodes, setEpisodes] = useState<Episode[]>([])
   const [season, setSeason] = useState(1)
   const [resumeEpisode, setResumeEpisode] = useState<ResumeState | null>(null)
@@ -207,7 +214,13 @@ export function ContentDetailView({ item, onPlay, onBack, mode = 'page' }: Conte
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          {seriesResume && (
+          {kidsProfileBlocked && (
+            <p className="w-full rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+              Bu içerik çocuk profili için uygun değil ({item.rating}).
+            </p>
+          )}
+
+          {!kidsProfileBlocked && seriesResume && (
             <button
               type="button"
               onClick={() => onPlay(item, seriesResume.episode)}
@@ -218,7 +231,7 @@ export function ContentDetailView({ item, onPlay, onBack, mode = 'page' }: Conte
             </button>
           )}
 
-          {filmResume !== null && (
+          {!kidsProfileBlocked && filmResume !== null && (
             <button
               type="button"
               onClick={() => onPlay(item)}
@@ -229,7 +242,7 @@ export function ContentDetailView({ item, onPlay, onBack, mode = 'page' }: Conte
             </button>
           )}
 
-          {!seriesResume && !filmResume && isSeries && firstEpisode && hasEpisodeVideo && (
+          {!kidsProfileBlocked && !seriesResume && !filmResume && isSeries && firstEpisode && hasEpisodeVideo && (
             <button
               type="button"
               onClick={() => onPlay(item, firstEpisode)}
@@ -240,7 +253,7 @@ export function ContentDetailView({ item, onPlay, onBack, mode = 'page' }: Conte
             </button>
           )}
 
-          {!seriesResume && !filmResume && isSeries && !hasEpisodeVideo && hasMainVideo && (
+          {!kidsProfileBlocked && !seriesResume && !filmResume && isSeries && !hasEpisodeVideo && hasMainVideo && (
             <button
               type="button"
               onClick={() => onPlay(item)}
@@ -251,7 +264,7 @@ export function ContentDetailView({ item, onPlay, onBack, mode = 'page' }: Conte
             </button>
           )}
 
-          {!seriesResume && !filmResume && !isSeries && hasMainVideo && (
+          {!kidsProfileBlocked && !seriesResume && !filmResume && !isSeries && hasMainVideo && (
             <button
               type="button"
               onClick={() => onPlay(item)}
