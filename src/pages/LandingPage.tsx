@@ -19,6 +19,7 @@ import {
   resolveLandingShowcases,
 } from '../data/demoLandingPosters'
 import { fetchBootstrap, fetchLandingConfig } from '../api/client'
+import { resolveLandingSliderItems } from '../utils/landingSlider'
 import type { ContentItem } from '../types/content'
 
 const FALLBACK_HERO =
@@ -59,9 +60,9 @@ export function LandingPage() {
         }
       }
 
-      const apiSlider = landing?.slider.length ? landing.slider : bootstrap.trailers
+      const apiSlider = resolveLandingSliderItems(landing, catalog, bootstrap.trailers ?? [])
       setSliderItems(
-        apiSlider.length >= 3 ? apiSlider.slice(0, 8) : DEMO_LANDING_SHOWCASES[1].items.slice(0, 8),
+        apiSlider.length > 0 ? apiSlider : DEMO_LANDING_SHOWCASES[1].items.slice(0, 8),
       )
 
       setShowcases(resolveLandingShowcases(landing?.showcases))
