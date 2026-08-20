@@ -63,7 +63,7 @@ function LegacyContentRedirect() {
 }
 
 function HomeRoute() {
-  const { user, activeProfile, isLoading } = useAuth()
+  const { user, activeProfile, isLoading, isCreator } = useAuth()
 
   if (isLoading) {
     return (
@@ -71,6 +71,10 @@ function HomeRoute() {
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-sineoda-gold border-t-transparent" />
       </div>
     )
+  }
+
+  if (user && isCreator) {
+    return <Navigate to="/creator" replace />
   }
 
   if (user && activeProfile) {
@@ -175,6 +179,16 @@ function App() {
           <ProtectedRoute requireProfile>
             <AuthenticatedProviders>
               <BrowsePage verticalOnly pageTitle="Dikey Diziler" />
+            </AuthenticatedProviders>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/genc-sinema"
+        element={
+          <ProtectedRoute requireProfile>
+            <AuthenticatedProviders>
+              <BrowsePage studentCinemaOnly pageTitle="Genç Sinema" />
             </AuthenticatedProviders>
           </ProtectedRoute>
         }
