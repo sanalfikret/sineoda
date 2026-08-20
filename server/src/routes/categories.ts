@@ -5,7 +5,7 @@ import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import { slugify } from '../mappers.js'
 import { resetContent } from '../seed.js'
 import { fillCategoriesToTarget } from '../services/categoryFill.js'
-import { mapCategoriesResponse, removeCategoryFromOrder, saveCategoryOrder } from '../services/categoryOrder.js'
+import { mapCategoriesResponse, removeCategoryFromOrder, saveCategoryOrder, appendCategoryToOrder } from '../services/categoryOrder.js'
 
 const router = Router()
 
@@ -26,6 +26,7 @@ router.post('/', requireAdmin, (req: AuthRequest, res) => {
   dbRun('INSERT INTO categories (id, title, sort_order) VALUES (?, ?, ?)', [
     id, title, (maxOrder?.max ?? -1) + 1,
   ])
+  appendCategoryToOrder(id)
   res.status(201).json({ category: { id, title, itemIds: [] } })
 })
 

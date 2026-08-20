@@ -14,67 +14,59 @@ export function loadCategoryOrder(): string[] | null {
   }
 }
 
+function allCategoryIds() {
+  return dbAll<{ id: string }>('SELECT id FROM categories ORDER BY sort_order, title').map((row) => row.id)
+}
+
+/** Admin sıralamasını tüm kategori kimliklerini kapsayacak şekilde tamamla. */
+export function normalizeCategoryOrder(orderedIds: string[]) {
+  const unique = [...new Set(orderedIds.map(String).filter(Boolean))]
+  const known = new Set(unique)
+
+  for (const id of allCategoryIds()) {
+    if (!known.has(id)) {
+      unique.push(id)
+      known.add(id)
+    }
+  }
+
+  return unique
+}
+
 export function removeCategoryFromOrder(categoryId: string) {
-  const customOrder = loadCategoryOrder()
-  if (!customOrder?.length) return
-  const next = customOrder.filter((id) => id !== categoryId)
-  if (next.length === customOrder.length) return
+  const rows = listCategoriesOrdered()
+  const next = rows.map((row) => row.id).filter((id) => id !== categoryId)
+  if (next.length === rows.length) return
   saveCategoryOrder(next)
 }
 
 export function saveCategoryOrder(orderedIds: string[]) {
-  const uniqueIds = [...new Set(orderedIds.map(String))]
-  dbRun('INSERT OR REPLACE INTO site_settings (key, value) VALUES (?, ?)', [
-    SETTINGS_KEY,
-    JSON.stringify(uniqueIds),
-  ])
+  const uniqueIds = normalizeCategoryOrder(orderedIds)
 
   uniqueIds.forEach((id, index) => {
     dbRun('UPDATE categories SET sort_order = ? WHERE id = ?', [index, id])
   })
 
-  const known = new Set(uniqueIds)
-  const remaining =
-    uniqueIds.length > 0
-      ? dbAll<{ id: string }>(
-          `SELECT id FROM categories WHERE id NOT IN (${uniqueIds.map(() => '?').join(',')})`,
-          uniqueIds,
-        )
-      : dbAll<{ id: string }>('SELECT id FROM categories')
+  dbRun('INSERT OR REPLACE INTO site_settings (key, value) VALUES (?, ?)', [
+    SETTINGS_KEY,
+    JSON.stringify(uniqueIds),
+  ])
+}
 
-  let nextOrder = uniqueIds.length
-  for (const row of remaining) {
-    if (known.has(row.id)) continue
-    dbRun('UPDATE categories SET sort_order = ? WHERE id = ?', [nextOrder++, row.id])
-  }
+export function appendCategoryToOrder(categoryId: string) {
+  const rows = listCategoriesOrdered()
+  const next = [...rows.map((row) => row.id).filter((id) => id !== categoryId), categoryId]
+  saveCategoryOrder(next)
 }
 
 export function listCategoriesOrdered() {
   const rows = dbAll<{ id: string; title: string; sort_order: number }>(
     'SELECT id, title, sort_order FROM categories',
   )
-  const customOrder = loadCategoryOrder()
 
-  if (!customOrder?.length) {
-    return [...rows].sort((a, b) => a.sort_order - b.sort_order || a.title.localeCompare(b.title, 'tr'))
-  }
-
-  const byId = new Map(rows.map((row) => [row.id, row]))
-  const ordered: typeof rows = []
-
-  for (const id of customOrder) {
-    const row = byId.get(id)
-    if (row) {
-      ordered.push(row)
-      byId.delete(id)
-    }
-  }
-
-  const rest = [...byId.values()].sort(
+  return [...rows].sort(
     (a, b) => a.sort_order - b.sort_order || a.title.localeCompare(b.title, 'tr'),
   )
-
-  return [...ordered, ...rest]
 }
 
 export function mapCategoriesResponse() {
@@ -91,4 +83,19 @@ export function mapCategoriesResponse() {
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((item) => item.content_id),
   }))
+}
+
+/** Eski site_settings kaydı ile sort_order çelişirse DB sırasını esas al. */
+export function reconcileCategoryOrder() {
+  const rows = listCategoriesOrdered()
+  if (rows.length === 0) return
+
+  const fromDb = rows.map((row) => row.id)
+  const saved = loadCategoryOrder()
+  if (saved && saved.length > 0 && saved.join('|') === fromDb.join('|')) return
+
+  dbRun('INSERT OR REPLACE INTO site_settings (key, value) VALUES (?, ?)', [
+    SETTINGS_KEY,
+    JSON.stringify(fromDb),
+  ])
 }
