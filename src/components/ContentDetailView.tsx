@@ -4,8 +4,9 @@ import { fetchAllWatchProgress, fetchEpisodes, resolveMediaUrl } from '../api/cl
 import type { ContentItem, Episode } from '../types/content'
 import { FEEDBACK_EMAIL } from '../constants/site'
 import { getContentTypeLabel, hasEpisodicContent } from '../constants/contentTypes'
-import { groupEpisodesBySeason, sortEpisodes } from '../utils/episodes'
+import { sortEpisodes } from '../utils/episodes'
 import { ContentActionButtons } from './ContentActionButtons'
+import { SeriesEpisodeSection } from './SeriesEpisodeSection'
 
 interface ContentDetailViewProps {
   item: ContentItem
@@ -122,9 +123,6 @@ export function ContentDetailView({
   }, [item])
 
   const sortedEpisodes = useMemo(() => sortEpisodes(episodes), [episodes])
-  const seasonGroups = useMemo(() => groupEpisodesBySeason(episodes), [episodes])
-
-  const seasons = seasonGroups.map(([value]) => value)
   const firstEpisode = sortedEpisodes.find((episode) => episode.videoUrl?.trim()) ?? sortedEpisodes[0]
   const hasEpisodeVideo = sortedEpisodes.some((episode) => episode.videoUrl?.trim())
   const hasMainVideo = Boolean(item.videoUrl?.trim())
@@ -142,7 +140,7 @@ export function ContentDetailView({
 
   const seriesMeta =
     isSeries && episodes.length > 0
-      ? `${seasons.length} Sezon · ${episodes.length} Bölüm`
+      ? `${new Set(episodes.map((ep) => ep.season)).size} Sezon · ${episodes.length} Bölüm`
       : null
 
   return (
@@ -301,91 +299,12 @@ export function ContentDetailView({
             <p className="mt-4 text-sm leading-relaxed text-white/85 sm:text-base">{item.description}</p>
 
             {isSeries && episodes.length > 0 && (
-              <div className="mt-8">
-                <h2 className="mb-1 text-lg font-semibold text-white">Sezonlar ve Bölümler</h2>
-                {seriesMeta && <p className="mb-4 text-sm text-sineoda-muted">{seriesMeta}</p>}
-
-                {item.videoFormat === 'vertical' ? (
-                  <>
-                    <div className="hide-scrollbar flex gap-2 overflow-x-auto pb-2">
-                      {sortedEpisodes.map((episode) => (
-                        <button
-                          key={episode.id}
-                          type="button"
-                          onClick={() => onPlay(item, episode)}
-                          className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left transition hover:border-sineoda-gold/40 hover:bg-sineoda-gold/10"
-                        >
-                          <p className="text-lg font-bold text-sineoda-gold">{episode.episode}</p>
-                          <p className="mt-1 max-w-[120px] truncate text-xs text-white">{episode.title}</p>
-                          <p className="text-[10px] text-sineoda-muted">{episode.duration}</p>
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {seasons.length > 1 && (
-                      <div className="mb-4 flex flex-wrap gap-2">
-                        {seasons.map((value) => (
-                          <button
-                            key={value}
-                            type="button"
-                            onClick={() => setSeason(value)}
-                            className={`rounded-full px-4 py-1.5 text-sm ${
-                              season === value
-                                ? 'bg-sineoda-gold text-sineoda-bg'
-                                : 'bg-white/10 text-white/85'
-                            }`}
-                          >
-                            Sezon {value}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="space-y-8">
-                      {seasonGroups
-                        .filter(([seasonNum]) => seasons.length <= 1 || seasonNum === season)
-                        .map(([seasonNum, seasonItems]) => (
-                          <div key={seasonNum}>
-                            <h3 className="mb-3 text-base font-semibold text-white">
-                              Sezon {seasonNum}
-                              <span className="ml-2 text-sm font-normal text-sineoda-muted">
-                                · {seasonItems.length} bölüm
-                              </span>
-                            </h3>
-                            <div className="space-y-2">
-                              {seasonItems.map((episode) => (
-                                <button
-                                  key={episode.id}
-                                  type="button"
-                                  onClick={() => onPlay(item, episode)}
-                                  className="flex w-full items-start gap-4 rounded-xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sineoda-gold"
-                                >
-                                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sineoda-gold/15 text-sm font-bold text-sineoda-gold">
-                                    {episode.episode}
-                                  </span>
-                                  <div className="min-w-0 flex-1">
-                                    <p className="font-medium text-white">
-                                      Bölüm {episode.episode}: {episode.title}
-                                    </p>
-                                    {episode.description && (
-                                      <p className="mt-1 line-clamp-2 text-xs text-sineoda-muted">
-                                        {episode.description}
-                                      </p>
-                                    )}
-                                    <p className="mt-1 text-xs text-sineoda-muted">{episode.duration}</p>
-                                  </div>
-                                  <PlaySmallIcon />
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  </>
-                )}
-              </div>
+              <SeriesEpisodeSection
+                item={item}
+                episodes={episodes}
+                onPlay={onPlay}
+                initialSeason={season}
+              />
             )}
           </>
         )}
