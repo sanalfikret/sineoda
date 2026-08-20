@@ -74,7 +74,12 @@ function HomeRoute() {
   }
 
   if (user && isCreator) {
-    return <Navigate to="/creator" replace />
+    return (
+      <>
+        <LegacyContentRedirect />
+        <LandingPage />
+      </>
+    )
   }
 
   if (user && activeProfile) {

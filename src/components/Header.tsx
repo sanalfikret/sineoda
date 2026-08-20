@@ -2,26 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useSearchUI } from '../context/SearchContext'
-
-const viewerNavItems = [
-  { label: 'Ana Sayfa', to: '/', match: (path: string) => path === '/' },
-  { label: 'Diziler', to: '/diziler', match: (path: string) => path === '/diziler' },
-  { label: 'Filmler', to: '/filmler', match: (path: string) => path === '/filmler' },
-  { label: 'Belgeseller', to: '/belgeseller', match: (path: string) => path === '/belgeseller' },
-  { label: 'Dikey Diziler', to: '/dikey-diziler', match: (path: string) => path === '/dikey-diziler' },
-  {
-    label: 'Genç Sinema',
-    to: '/genc-sinema',
-    match: (path: string) => path === '/genc-sinema',
-  },
-  { label: 'Listem', to: '/listem', match: (path: string) => path === '/listem' },
-  { label: 'Dergi', to: '/dergi', match: (path: string) => path === '/dergi' || path.startsWith('/dergi/') },
-]
-
-const creatorNavItems = [
-  { label: 'Yapımcı Paneli', to: '/creator', match: (path: string) => path.startsWith('/creator') },
-  { label: 'Ana Site', to: '/', match: (path: string) => path === '/' },
-]
+import { CREATOR_NAV_ITEMS, VIEWER_NAV_ITEMS, navItemIsActive } from '../constants/navigation'
 
 export function Header() {
   const { user, activeProfile, logout, isCreator } = useAuth()
@@ -38,11 +19,11 @@ export function Header() {
   }, [])
 
   const navItems = useMemo(() => {
-    if (isCreator) return creatorNavItems
-    return viewerNavItems
+    if (isCreator) return CREATOR_NAV_ITEMS
+    return VIEWER_NAV_ITEMS
   }, [isCreator])
 
-  const isActive = (match: (path: string) => boolean) => match(location.pathname)
+  const isActive = (to: string) => navItemIsActive({ label: '', to }, location.pathname)
 
   return (
     <header
@@ -61,17 +42,17 @@ export function Header() {
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav className="hidden items-center gap-1 lg:flex">
             {navItems.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
                 className={`rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold tv:px-4 tv:py-3 tv:text-base ${
-                  item.label === 'Genç Sinema'
-                    ? isActive(item.match)
+                  item.accent === 'emerald'
+                    ? isActive(item.to)
                       ? 'bg-emerald-500/15 text-emerald-300'
                       : 'text-emerald-200/80 hover:bg-emerald-500/10 hover:text-emerald-200'
-                    : isActive(item.match)
+                    : isActive(item.to)
                       ? 'bg-white/10 text-white'
                       : 'text-white/75 hover:bg-white/5 hover:text-white'
                 }`}
@@ -185,7 +166,7 @@ export function Header() {
           <button
             type="button"
             aria-label="Menü"
-            className="rounded-full p-2.5 text-white md:hidden"
+            className="rounded-full p-2.5 text-white lg:hidden"
             onClick={() => setMenuOpen((open) => !open)}
           >
             {menuOpen ? <CloseIcon /> : <MenuIcon />}
@@ -194,14 +175,20 @@ export function Header() {
       </div>
 
       {menuOpen && (
-        <nav className="border-t border-white/10 px-4 py-4 md:hidden">
+        <nav className="border-t border-white/10 px-4 py-4 lg:hidden">
           <ul className="space-y-1">
             {navItems.map((item) => (
               <li key={item.to}>
                 <Link
                   to={item.to}
                   className={`block w-full rounded-lg px-3 py-3 text-sm font-medium ${
-                    isActive(item.match) ? 'bg-white/10 text-white' : 'text-white/90 hover:bg-white/5'
+                    item.accent === 'emerald'
+                      ? isActive(item.to)
+                        ? 'bg-emerald-500/15 text-emerald-300'
+                        : 'text-emerald-200/90 hover:bg-emerald-500/10'
+                      : isActive(item.to)
+                        ? 'bg-white/10 text-white'
+                        : 'text-white/90 hover:bg-white/5'
                   }`}
                   onClick={() => setMenuOpen(false)}
                 >

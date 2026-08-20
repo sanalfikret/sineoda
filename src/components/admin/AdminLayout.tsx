@@ -1,17 +1,7 @@
 import { useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-
-const navItems = [
-  { to: '/admin', label: 'Dashboard', end: true },
-  { to: '/admin/icerikler', label: 'İçerikler', end: false },
-  { to: '/admin/kategoriler', label: 'Kategoriler', end: false },
-  { to: '/admin/ana-sayfa', label: 'Ana Sayfa', end: false },
-  { to: '/admin/dergi', label: 'Dergi', end: false },
-  { to: '/admin/kullanicilar', label: 'İzleyiciler', end: false },
-  { to: '/admin/yapimcilar', label: 'Yapımcılar', end: false },
-  { to: '/admin/genc-sinema', label: 'Genç Sinema', end: false },
-]
+import { ADMIN_NAV_ITEMS } from '../../constants/navigation'
 
 export function AdminLayout() {
   const { user, logout } = useAuth()
@@ -52,7 +42,7 @@ export function AdminLayout() {
         </div>
 
         <nav className="flex-1 space-y-1 p-3">
-          {navItems.map((item) => (
+          {ADMIN_NAV_ITEMS.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

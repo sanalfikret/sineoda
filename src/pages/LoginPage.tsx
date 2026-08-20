@@ -1,24 +1,29 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../components/AuthLayout'
 import { useAuth } from '../context/AuthContext'
 
 export function LoginPage() {
-  const { login, user } = useAuth()
+  const { login, user, isCreator } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const from = (location.state as { from?: string } | null)?.from ?? '/'
-
   useEffect(() => {
+    if (isCreator) {
+      navigate('/creator', { replace: true })
+      return
+    }
     if (user) {
       navigate('/profiller', { replace: true })
     }
-  }, [user, navigate])
+  }, [user, isCreator, navigate])
+
+  if (isCreator) {
+    return <Navigate to="/creator" replace />
+  }
 
   if (user) {
     return <Navigate to="/profiller" replace />

@@ -6,7 +6,7 @@ import { LEGAL_LINKS } from '../constants/legal'
 import { useAuth } from '../context/AuthContext'
 
 export function SignupPage() {
-  const { signup, user } = useAuth()
+  const { signup, user, isCreator } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [name, setName] = useState('')
@@ -20,6 +20,10 @@ export function SignupPage() {
   const [info, setInfo] = useState('')
   const [loading, setLoading] = useState(false)
   const [sendingCode, setSendingCode] = useState(false)
+
+  if (isCreator) {
+    return <Navigate to="/creator" replace />
+  }
 
   if (user) {
     return <Navigate to="/profiller" replace />

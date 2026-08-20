@@ -14,6 +14,7 @@ import { buildBrowseRows, filterCatalog, genresForCatalog, pickFeatured } from '
 import { restoreBrowseScroll } from '../utils/browseState'
 import { isVerticalContent } from '../utils/vertical'
 import { getContentTypeLabel } from '../constants/contentTypes'
+import { getBrowseRowViewAllHref } from '../constants/navigation'
 import { isContentAllowedForKids } from '../utils/contentRating'
 
 interface BrowsePageProps {
@@ -285,8 +286,8 @@ function BrowseContent({
               onSelect={rowSelect(row.title)}
               progressMap={progressMap}
               viewAllHref={
-                !activeGenre && !contentType && row.title === 'Dikey Diziler'
-                  ? '/dikey-diziler'
+                !activeGenre && !contentType && !verticalOnly && !studentCinemaOnly
+                  ? getBrowseRowViewAllHref(row.title)
                   : undefined
               }
               prominent={row.title === 'Dikey Diziler'}
@@ -297,7 +298,12 @@ function BrowseContent({
         )}
 
         {!activeGenre && !contentType && filteredWatchlist.length > 0 && (
-          <ContentRow title="Listem" items={filteredWatchlist} onSelect={openDetail} />
+          <ContentRow
+            title="Listem"
+            items={filteredWatchlist}
+            onSelect={openDetail}
+            viewAllHref="/listem"
+          />
         )}
       </div>
     </main>
