@@ -24,8 +24,25 @@ interface CreatorDocument {
 
 interface DashboardContent extends ContentItem {
   reviewStatus: string
+  program?: string
+  contentFormat?: string
+  parentContentId?: string | null
+  schoolReviewStatus?: string
   qualifiedMinutes: number
   likes: number
+}
+
+const FORMAT_LABELS: Record<string, string> = {
+  main: 'Ana film',
+  bts: 'Kamera arkası',
+  teacher_note: 'Hoca notu',
+}
+
+const SCHOOL_REVIEW_LABELS: Record<string, string> = {
+  none: '—',
+  pending: 'Okul onayı bekliyor',
+  approved: 'Okul onaylı',
+  rejected: 'Okul reddi',
 }
 
 const STATUS_LABELS: Record<CreatorStatus, string> = {
@@ -48,6 +65,7 @@ export function CreatorDashboardPage() {
   const [content, setContent] = useState<DashboardContent[]>([])
   const [totals, setTotals] = useState({ qualifiedMinutes: 0, likes: 0, publishedCount: 0, pendingCount: 0 })
   const [status, setStatus] = useState<CreatorStatus>('pending')
+  const [program, setProgram] = useState<'standard' | 'student_cinema'>('standard')
   const [documentCount, setDocumentCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -67,6 +85,8 @@ export function CreatorDashboardPage() {
     genres: '',
     videoUrl: '',
     poster: '',
+    contentFormat: 'main' as 'main' | 'bts' | 'teacher_note',
+    parentContentId: '',
   })
 
   const load = useCallback(async () => {
@@ -78,6 +98,7 @@ export function CreatorDashboardPage() {
       setContent(dashboard.content as DashboardContent[])
       setTotals(dashboard.totals)
       setStatus(dashboard.creator.status as CreatorStatus)
+      setProgram((dashboard.creator.program as 'standard' | 'student_cinema') ?? 'standard')
       setDocumentCount(dashboard.creator.documentCount)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Veriler yüklenemedi.')
@@ -151,6 +172,9 @@ export function CreatorDashboardPage() {
         poster: form.poster,
         backdrop: form.poster,
         videoUrl: form.videoUrl,
+        contentFormat: program === 'student_cinema' ? form.contentFormat : 'main',
+        parentContentId:
+          program === 'student_cinema' && form.contentFormat !== 'main' ? form.parentContentId : undefined,
       })
       setShowForm(false)
       setForm({
@@ -163,6 +187,8 @@ export function CreatorDashboardPage() {
         genres: '',
         videoUrl: '',
         poster: '',
+        contentFormat: 'main',
+        parentContentId: '',
       })
       await load()
     } catch (err) {
@@ -173,6 +199,7 @@ export function CreatorDashboardPage() {
   }
 
   const studioName = user?.creator?.studioName ?? 'Yapımcı'
+  const mainFilms = content.filter((item) => item.contentFormat === 'main' || !item.contentFormat)
 
   return (
     <div className="min-h-dvh bg-[#0d0f14] text-white">
@@ -204,6 +231,13 @@ export function CreatorDashboardPage() {
         {error && (
           <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
             {error}
+          </div>
+        )}
+
+        {program === 'student_cinema' && (
+          <div className="mb-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 text-sm text-emerald-100">
+            Genç Sinema programındasınız. Ana filminizi ve kamera arkası görüntülerinizi yükleyebilirsiniz.
+            Okul onayından sonra Sineoda incelemesine alınır.
           </div>
         )}
 
@@ -323,7 +357,7 @@ export function CreatorDashboardPage() {
                 onClick={() => setShowForm((value) => !value)}
                 className="rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg"
               >
-                {showForm ? 'Formu kapat' : '+ Yeni içerik gönder'}
+                {showForm ? 'Formu kapat' : program === 'student_cinema' ? '+ Proje gönder' : '+ Yeni içerik gönder'}
               </button>
             )}
           </div>
@@ -334,6 +368,46 @@ export function CreatorDashboardPage() {
               className="mb-6 space-y-4 rounded-xl border border-sineoda-gold/20 bg-[#11141c] p-6"
             >
               <div className="grid gap-4 sm:grid-cols-2">
+                {program === 'student_cinema' && (
+                  <>
+                    <label className="block">
+                      <span className="mb-1 block text-sm">İçerik türü</span>
+                      <select
+                        value={form.contentFormat}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            contentFormat: e.target.value as 'main' | 'bts' | 'teacher_note',
+                            parentContentId: e.target.value === 'main' ? '' : form.parentContentId,
+                          })
+                        }
+                        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
+                      >
+                        <option value="main">Ana film / proje</option>
+                        <option value="bts">Kamera arkası</option>
+                        <option value="teacher_note">Hoca notu</option>
+                      </select>
+                    </label>
+                    {form.contentFormat !== 'main' && (
+                      <label className="block">
+                        <span className="mb-1 block text-sm">Bağlı ana film</span>
+                        <select
+                          required
+                          value={form.parentContentId}
+                          onChange={(e) => setForm({ ...form, parentContentId: e.target.value })}
+                          className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
+                        >
+                          <option value="">Ana film seçin</option>
+                          {mainFilms.map((item) => (
+                            <option key={item.id} value={item.id}>
+                              {item.title}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+                  </>
+                )}
                 <label className="block sm:col-span-2">
                   <span className="mb-1 block text-sm">Başlık</span>
                   <input
@@ -461,7 +535,13 @@ export function CreatorDashboardPage() {
                 <thead className="bg-[#11141c] text-sineoda-muted">
                   <tr>
                     <th className="px-4 py-3 font-medium">Başlık</th>
+                    {program === 'student_cinema' && (
+                      <th className="px-4 py-3 font-medium">Tür</th>
+                    )}
                     <th className="px-4 py-3 font-medium">Durum</th>
+                    {program === 'student_cinema' && (
+                      <th className="px-4 py-3 font-medium">Okul</th>
+                    )}
                     <th className="px-4 py-3 font-medium">İzlenme (dk)</th>
                     <th className="px-4 py-3 font-medium">Beğeni</th>
                   </tr>
@@ -470,7 +550,17 @@ export function CreatorDashboardPage() {
                   {content.map((item) => (
                     <tr key={item.id} className="border-t border-white/5">
                       <td className="px-4 py-3">{item.title}</td>
+                      {program === 'student_cinema' && (
+                        <td className="px-4 py-3 text-sineoda-muted">
+                          {FORMAT_LABELS[item.contentFormat ?? 'main'] ?? item.contentFormat}
+                        </td>
+                      )}
                       <td className="px-4 py-3">{REVIEW_LABELS[item.reviewStatus] ?? item.reviewStatus}</td>
+                      {program === 'student_cinema' && (
+                        <td className="px-4 py-3 text-sineoda-muted">
+                          {SCHOOL_REVIEW_LABELS[item.schoolReviewStatus ?? 'none'] ?? item.schoolReviewStatus}
+                        </td>
+                      )}
                       <td className="px-4 py-3">{item.qualifiedMinutes}</td>
                       <td className="px-4 py-3">{item.likes}</td>
                     </tr>

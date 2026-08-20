@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs'
 import { v4 as uuid } from 'uuid'
+import { TURKEY_FILM_SCHOOLS } from './turkeyFilmSchools.js'
 import { dbAll, dbExec, dbGet, dbRun } from './db.js'
 import type { UserRow } from './types.js'
 
@@ -485,4 +486,49 @@ export function seedLandingData(force = false) {
       )
     })
   })
+}
+
+/** Eski seed id → güncel kayıt eşlemesi */
+const LEGACY_SCHOOL_ID_MAP: Record<string, string> = {
+  'istanbul-bilgi': 'istanbul-bilgi-universitesi',
+  'kadir-has': 'kadir-has-universitesi',
+  'mimar-sinan': 'mimar-sinan-sinema-tv',
+  'yasar': 'yasar-universitesi',
+  'anadolu-sinema': 'anadolu-sinema-tv',
+}
+
+export function ensureFilmSchools() {
+  const now = new Date().toISOString()
+
+  for (const [legacyId, nextId] of Object.entries(LEGACY_SCHOOL_ID_MAP)) {
+    const legacy = dbGet<{ id: string }>('SELECT id FROM film_schools WHERE id = ?', [legacyId])
+    const target = dbGet<{ id: string }>('SELECT id FROM film_schools WHERE id = ?', [nextId])
+    if (legacy && !target) {
+      dbRun('UPDATE film_schools SET id = ?, slug = ? WHERE id = ?', [nextId, nextId, legacyId])
+      dbRun('UPDATE creators SET school_id = ? WHERE school_id = ?', [nextId, legacyId])
+      dbRun('UPDATE content SET school_id = ? WHERE school_id = ?', [nextId, legacyId])
+    }
+  }
+
+  for (const school of TURKEY_FILM_SCHOOLS) {
+    const existing = dbGet<{ id: string }>('SELECT id FROM film_schools WHERE id = ? OR slug = ?', [
+      school.id,
+      school.slug,
+    ])
+    if (!existing) {
+      dbRun(
+        'INSERT INTO film_schools (id, name, slug, logo_url, website, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [school.id, school.name, school.slug, '', '', 'active', now],
+      )
+      continue
+    }
+    dbRun('UPDATE film_schools SET name = ?, slug = ?, status = ? WHERE id = ?', [
+      school.name,
+      school.slug,
+      'active',
+      existing.id,
+    ])
+  }
+
+  upsertCategory('genc-sinema', 'Genç Sinema', 3)
 }

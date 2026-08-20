@@ -311,6 +311,26 @@ function runMigrations() {
       created_at TEXT NOT NULL
     );
   `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS film_schools (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      slug TEXT UNIQUE NOT NULL,
+      logo_url TEXT NOT NULL DEFAULT '',
+      website TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'active',
+      created_at TEXT NOT NULL
+    );
+  `)
+
+  ensureColumn('creators', 'program', "TEXT NOT NULL DEFAULT 'standard'")
+  ensureColumn('creators', 'school_id', 'TEXT')
+  ensureColumn('content', 'program', "TEXT NOT NULL DEFAULT 'standard'")
+  ensureColumn('content', 'content_format', "TEXT NOT NULL DEFAULT 'main'")
+  ensureColumn('content', 'parent_content_id', 'TEXT')
+  ensureColumn('content', 'school_id', 'TEXT')
+  ensureColumn('content', 'school_review_status', "TEXT NOT NULL DEFAULT 'none'")
 }
 
 function ensureColumn(table: string, column: string, definition: string) {

@@ -3,6 +3,10 @@ import type { ContentType } from './constants/contentTypes.js'
 export type UserRole = 'user' | 'admin' | 'creator'
 export type CreatorStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
 export type ContentReviewStatus = 'draft' | 'pending' | 'published' | 'rejected'
+export type CreatorProgram = 'standard' | 'student_cinema'
+export type ContentProgram = 'standard' | 'student_cinema'
+export type StudentContentFormat = 'main' | 'bts' | 'teacher_note'
+export type SchoolReviewStatus = 'none' | 'pending' | 'approved' | 'rejected'
 export type { ContentType }
 
 export interface UserRow {
@@ -50,6 +54,11 @@ export interface ContentRow {
   published_at?: string | null
   creator_id?: string | null
   review_status?: ContentReviewStatus
+  program?: ContentProgram
+  content_format?: StudentContentFormat
+  parent_content_id?: string | null
+  school_id?: string | null
+  school_review_status?: SchoolReviewStatus
 }
 
 export interface CreatorRow {
@@ -59,6 +68,18 @@ export interface CreatorRow {
   bio: string
   status: CreatorStatus
   legal_accepted_at: string | null
+  created_at: string
+  program?: CreatorProgram
+  school_id?: string | null
+}
+
+export interface FilmSchoolRow {
+  id: string
+  name: string
+  slug: string
+  logo_url: string
+  website: string
+  status: 'active' | 'inactive'
   created_at: string
 }
 
