@@ -198,10 +198,37 @@ router.get('/me', requireAuth, (req: AuthRequest, res) => {
   res.json({ user })
 })
 
+const MAX_PROFILES = 4
+
+router.patch('/me', requireAuth, (req: AuthRequest, res) => {
+  const name = String(req.body.name ?? '').trim()
+  if (!name) {
+    res.status(400).json({ error: 'Ad gerekli.' })
+    return
+  }
+
+  dbRun('UPDATE users SET name = ? WHERE id = ?', [name, req.auth!.userId])
+  const user = getUserWithProfiles(req.auth!.userId)
+  if (!user) {
+    res.status(404).json({ error: 'Kullanıcı bulunamadı.' })
+    return
+  }
+  res.json({ user })
+})
+
 router.post('/profiles', requireAuth, (req: AuthRequest, res) => {
   const { name, avatar, isKids } = req.body as { name?: string; avatar?: string; isKids?: boolean }
   if (!name?.trim() || !avatar) {
     res.status(400).json({ error: 'Profil adı ve avatar gerekli.' })
+    return
+  }
+
+  const count = dbGet<{ count: number }>(
+    'SELECT COUNT(*) as count FROM profiles WHERE user_id = ?',
+    [req.auth!.userId],
+  )
+  if ((count?.count ?? 0) >= MAX_PROFILES) {
+    res.status(400).json({ error: `En fazla ${MAX_PROFILES} profil oluşturabilirsiniz.` })
     return
   }
 
@@ -212,6 +239,60 @@ router.post('/profiles', requireAuth, (req: AuthRequest, res) => {
 
   const user = getUserWithProfiles(req.auth!.userId)!
   res.status(201).json({ user, profile: user.profiles.find((p) => p.id === profileId) })
+})
+
+router.patch('/profiles/:id', requireAuth, (req: AuthRequest, res) => {
+  const profile = dbGet<ProfileRow>('SELECT * FROM profiles WHERE id = ? AND user_id = ?', [
+    req.params.id,
+    req.auth!.userId,
+  ])
+  if (!profile) {
+    res.status(404).json({ error: 'Profil bulunamadı.' })
+    return
+  }
+
+  const name = req.body.name !== undefined ? String(req.body.name).trim() : profile.name
+  const avatar = req.body.avatar !== undefined ? String(req.body.avatar) : profile.avatar
+  const isKids = req.body.isKids !== undefined ? (req.body.isKids ? 1 : 0) : profile.is_kids
+
+  if (!name) {
+    res.status(400).json({ error: 'Profil adı gerekli.' })
+    return
+  }
+
+  dbRun('UPDATE profiles SET name = ?, avatar = ?, is_kids = ? WHERE id = ?', [
+    name,
+    avatar,
+    isKids,
+    profile.id,
+  ])
+
+  const user = getUserWithProfiles(req.auth!.userId)!
+  res.json({ user, profile: user.profiles.find((entry) => entry.id === profile.id) })
+})
+
+router.delete('/profiles/:id', requireAuth, (req: AuthRequest, res) => {
+  const profile = dbGet<ProfileRow>('SELECT * FROM profiles WHERE id = ? AND user_id = ?', [
+    req.params.id,
+    req.auth!.userId,
+  ])
+  if (!profile) {
+    res.status(404).json({ error: 'Profil bulunamadı.' })
+    return
+  }
+
+  const count = dbGet<{ count: number }>(
+    'SELECT COUNT(*) as count FROM profiles WHERE user_id = ?',
+    [req.auth!.userId],
+  )
+  if ((count?.count ?? 0) <= 1) {
+    res.status(400).json({ error: 'Son profili silemezsiniz.' })
+    return
+  }
+
+  dbRun('DELETE FROM profiles WHERE id = ?', [profile.id])
+  const user = getUserWithProfiles(req.auth!.userId)!
+  res.json({ user })
 })
 
 router.get('/profiles/validate', requireAuth, (req: AuthRequest, res) => {

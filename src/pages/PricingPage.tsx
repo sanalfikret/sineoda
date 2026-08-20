@@ -19,7 +19,11 @@ export function PricingPage() {
   const [plans, setPlans] = useState<Plan[]>([])
   const [provider, setProvider] = useState<'paytr' | 'iyzico'>('paytr')
   const [providers, setProviders] = useState({ paytr: false, iyzico: false, paymentRequired: false })
-  const [subscription, setSubscription] = useState<{ status: string; expiresAt: string | null } | null>(null)
+  const [subscription, setSubscription] = useState<{
+    status: string
+    startedAt: string | null
+    expiresAt: string | null
+  } | null>(null)
   const [loading, setLoading] = useState(true)
   const [checkoutPlan, setCheckoutPlan] = useState<string | null>(null)
   const [message, setMessage] = useState('')
@@ -33,7 +37,7 @@ export function PricingPage() {
         setPlans(billing.plans)
         setProviders(billing.providers)
         setProvider(billing.providers.default)
-        if (sub) setSubscription({ status: sub.status, expiresAt: sub.expiresAt })
+        if (sub) setSubscription({ status: sub.status, startedAt: sub.startedAt, expiresAt: sub.expiresAt })
       })
       .finally(() => setLoading(false))
   }, [user])
@@ -52,7 +56,7 @@ export function PricingPage() {
       if ('demoMode' in result && result.demoMode) {
         setMessage(result.message)
         const sub = await fetchSubscription()
-        setSubscription({ status: sub.status, expiresAt: sub.expiresAt })
+        setSubscription({ status: sub.status, startedAt: sub.startedAt, expiresAt: sub.expiresAt })
         return
       }
 
@@ -81,7 +85,7 @@ export function PricingPage() {
               Sine<span className="text-sineoda-gold">oda</span>
             </span>
           </Link>
-          <Link to="/giris" className="text-sm text-sineoda-gold hover:underline">
+          <Link to={user ? '/hesap' : '/giris'} className="text-sm text-sineoda-gold hover:underline">
             {user ? 'Hesabım' : 'Giriş Yap'}
           </Link>
         </div>
@@ -91,13 +95,22 @@ export function PricingPage() {
         <div className="text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-sineoda-gold">Abonelik</p>
           <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">Planını seç</h1>
-          {subscription?.status === 'active' && (
-            <p className="mt-3 text-sm text-emerald-300">
-              Aktif abonelik
-              {subscription.expiresAt
-                ? ` · ${new Date(subscription.expiresAt).toLocaleDateString('tr-TR')} tarihine kadar`
-                : ''}
-            </p>
+          {(subscription?.status === 'active' || subscription?.status === 'expired') && (
+            <div className="mt-3 space-y-1 text-sm text-emerald-300">
+              <p>
+                {subscription.status === 'active' ? 'Aktif abonelik' : 'Abonelik süresi doldu'}
+              </p>
+              {subscription.startedAt && (
+                <p className="text-sineoda-muted">
+                  Başlangıç: {new Date(subscription.startedAt).toLocaleDateString('tr-TR')}
+                </p>
+              )}
+              {subscription.expiresAt && (
+                <p className="text-sineoda-muted">
+                  Bitiş: {new Date(subscription.expiresAt).toLocaleDateString('tr-TR')}
+                </p>
+              )}
+            </div>
           )}
         </div>
 
