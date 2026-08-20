@@ -86,25 +86,35 @@ export function buildCategoryBrowseRows(
   getContentById: (id: string) => ContentItem | undefined,
   options: BrowseFilterOptions,
 ): BrowseRow[] {
-  return categories
-    .filter((category) => !BROWSE_EXCLUSIVE_ROW_TITLES.has(category.title))
-    .map((category) => {
-      const rowOptions = categoryFilterOptions(category, options)
-      const items = category.itemIds
-        .map((id) => getContentById(id))
-        .filter((item): item is ContentItem =>
-          Boolean(item && itemAllowedInCategory(category, item, rowOptions)),
-        )
-        .slice(0, BROWSE_ITEMS_PER_ROW)
+  const seenTitles = new Set<string>()
+  const rows: BrowseRow[] = []
 
-      return {
-        id: category.id,
-        title: category.title,
-        itemIds: items.map((item) => item.id),
-        items,
-      }
+  for (const category of categories) {
+    if (BROWSE_EXCLUSIVE_ROW_TITLES.has(category.title)) continue
+
+    const titleKey = category.title.trim().toLocaleLowerCase('tr')
+    if (seenTitles.has(titleKey)) continue
+
+    const rowOptions = categoryFilterOptions(category, options)
+    const items = category.itemIds
+      .map((id) => getContentById(id))
+      .filter((item): item is ContentItem =>
+        Boolean(item && itemAllowedInCategory(category, item, rowOptions)),
+      )
+      .slice(0, BROWSE_ITEMS_PER_ROW)
+
+    if (items.length === 0) continue
+
+    seenTitles.add(titleKey)
+    rows.push({
+      id: category.id,
+      title: category.title,
+      itemIds: items.map((item) => item.id),
+      items,
     })
-    .filter((row) => row.items.length > 0)
+  }
+
+  return rows
 }
 
 export function buildGenreBrowseRows(
