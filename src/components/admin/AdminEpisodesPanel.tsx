@@ -69,9 +69,35 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
 
   const sortedEpisodes = useMemo(() => sortEpisodes(episodes), [episodes])
 
+  const existingSeasons = useMemo(
+    () =>
+      [...new Set(sortedEpisodes.map((episode) => episode.season))].sort((a, b) => a - b),
+    [sortedEpisodes],
+  )
+
+  const nextNewSeason = useMemo(
+    () => (existingSeasons.length > 0 ? Math.max(...existingSeasons) + 1 : 1),
+    [existingSeasons],
+  )
+
+  const selectBulkSeason = (seasonNumber: number) => {
+    setBulkSeason(seasonNumber)
+    setMessage('')
+  }
+
   useEffect(() => {
     void load()
   }, [contentId])
+
+  useEffect(() => {
+    if (existingSeasons.length === 0) {
+      setBulkSeason(1)
+      return
+    }
+    if (!existingSeasons.includes(bulkSeason) && bulkSeason > nextNewSeason) {
+      setBulkSeason(nextNewSeason)
+    }
+  }, [existingSeasons, bulkSeason, nextNewSeason])
 
   useEffect(() => {
     setBulkCount(isVertical ? 40 : 8)
@@ -161,6 +187,66 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
     }))
   }
 
+  const renderEpisodeRow = (episode: Episode) => {
+    const draft = drafts[episode.id] ?? {
+      title: episode.title,
+      duration: episode.duration,
+      videoUrl: episode.videoUrl,
+    }
+    const dirty =
+      draft.title !== episode.title ||
+      draft.duration !== episode.duration ||
+      draft.videoUrl !== episode.videoUrl
+
+    return (
+      <div key={episode.id} className="space-y-2 rounded-lg border border-white/10 bg-[#0d0f14] p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-medium text-white">
+            B{episode.episode}
+            {!draft.videoUrl.trim() && (
+              <span className="ml-2 text-xs font-normal text-amber-300">Video linki yok</span>
+            )}
+          </p>
+          <button
+            type="button"
+            onClick={() => void handleDelete(episode.id)}
+            className="text-xs text-red-300 hover:underline"
+          >
+            Sil
+          </button>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-[1fr_7rem]">
+          <input
+            value={draft.title}
+            onChange={(e) => updateDraft(episode.id, 'title', e.target.value)}
+            placeholder="Bölüm adı"
+            className={inputClass}
+          />
+          <input
+            value={draft.duration}
+            onChange={(e) => updateDraft(episode.id, 'duration', e.target.value)}
+            placeholder="Süre"
+            className={inputClass}
+          />
+        </div>
+        <input
+          value={draft.videoUrl}
+          onChange={(e) => updateDraft(episode.id, 'videoUrl', e.target.value)}
+          placeholder="Bu bölümün video linki"
+          className={inputClass}
+        />
+        <button
+          type="button"
+          disabled={!dirty || savingId === episode.id}
+          onClick={() => void handleSaveEpisode(episode)}
+          className="rounded-lg bg-sineoda-gold/15 px-3 py-1.5 text-xs font-semibold text-sineoda-gold disabled:opacity-40"
+        >
+          {savingId === episode.id ? 'Kaydediliyor…' : 'Bu bölümü kaydet'}
+        </button>
+      </div>
+    )
+  }
+
   if (loading) return <p className="text-sm text-sineoda-muted">Bölümler yükleniyor...</p>
 
   return (
@@ -177,39 +263,93 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
       <div className="rounded-xl border border-sineoda-gold/20 bg-sineoda-gold/5 p-4">
         <h3 className="text-sm font-semibold text-sineoda-gold">Toplu Bölüm Oluştur</h3>
         <p className="mt-1 text-xs text-sineoda-muted">
-          Sezon, sayı ve süreyi bir kez gir. Bölümler S{bulkSeason} B{bulkStartEpisode}&apos;den
-          başlayarak eklenir. Başlık ve video linklerini alt alta yapıştır — her satır bir bölüm.
+          2. sezon eklemek için aşağıdan <strong className="text-white/90">Sezon 2</strong> seç veya{' '}
+          <strong className="text-white/90">+ Yeni Sezon</strong> kullan. Aynı dizi kaydına kalır; yeni dizi
+          oluşturmana gerek yok.
         </p>
+
+        <div className="mt-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-sineoda-muted">
+            Hangi sezona ekliyorsun?
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {existingSeasons.map((seasonNumber) => {
+              const count = sortedEpisodes.filter((episode) => episode.season === seasonNumber).length
+              return (
+                <button
+                  key={seasonNumber}
+                  type="button"
+                  onClick={() => selectBulkSeason(seasonNumber)}
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                    bulkSeason === seasonNumber
+                      ? 'bg-sineoda-gold text-sineoda-bg'
+                      : 'bg-white/10 text-white/85 hover:bg-white/15'
+                  }`}
+                >
+                  Sezon {seasonNumber}
+                  <span className="ml-1 text-xs opacity-80">({count} bölüm)</span>
+                </button>
+              )
+            })}
+            <button
+              type="button"
+              onClick={() => selectBulkSeason(nextNewSeason)}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                bulkSeason === nextNewSeason && !existingSeasons.includes(bulkSeason)
+                  ? 'bg-sineoda-gold text-sineoda-bg'
+                  : 'border border-dashed border-sineoda-gold/40 bg-transparent text-sineoda-gold hover:bg-sineoda-gold/10'
+              }`}
+            >
+              + Sezon {nextNewSeason} ekle
+            </button>
+          </div>
+        </div>
+
+        <p className="mt-3 text-xs text-sineoda-muted">
+          Sezon {bulkSeason} için bölümler <strong className="text-white/90">B{bulkStartEpisode}</strong>
+          numarasından başlayarak eklenecek.
+        </p>
+
         <div className="mt-3 grid gap-3 sm:grid-cols-4">
-          <input
-            type="number"
-            min={1}
-            value={bulkSeason}
-            onChange={(e) => setBulkSeason(Number(e.target.value))}
-            placeholder="Sezon"
-            className={inputClass}
-          />
-          <input
-            type="number"
-            min={1}
-            max={100}
-            value={bulkCount}
-            onChange={(e) => setBulkCount(Number(e.target.value))}
-            placeholder="Bölüm sayısı"
-            className={inputClass}
-          />
-          <input
-            value={bulkPrefix}
-            onChange={(e) => setBulkPrefix(e.target.value)}
-            placeholder="Başlık öneki"
-            className={inputClass}
-          />
-          <input
-            value={bulkDuration}
-            onChange={(e) => setBulkDuration(e.target.value)}
-            placeholder="Süre"
-            className={inputClass}
-          />
+          <label className="block space-y-1.5">
+            <span className="text-xs font-medium text-sineoda-muted">Sezon no</span>
+            <input
+              type="number"
+              min={1}
+              value={bulkSeason}
+              onChange={(e) => setBulkSeason(Math.max(1, Number(e.target.value) || 1))}
+              className={inputClass}
+            />
+          </label>
+          <label className="block space-y-1.5">
+            <span className="text-xs font-medium text-sineoda-muted">Bölüm sayısı</span>
+            <input
+              type="number"
+              min={1}
+              max={100}
+              value={bulkCount}
+              onChange={(e) => setBulkCount(Number(e.target.value))}
+              className={inputClass}
+            />
+          </label>
+          <label className="block space-y-1.5">
+            <span className="text-xs font-medium text-sineoda-muted">Başlık öneki</span>
+            <input
+              value={bulkPrefix}
+              onChange={(e) => setBulkPrefix(e.target.value)}
+              placeholder="Bölüm"
+              className={inputClass}
+            />
+          </label>
+          <label className="block space-y-1.5">
+            <span className="text-xs font-medium text-sineoda-muted">Süre</span>
+            <input
+              value={bulkDuration}
+              onChange={(e) => setBulkDuration(e.target.value)}
+              placeholder={isVertical ? '4 dk' : '45 dk'}
+              className={inputClass}
+            />
+          </label>
         </div>
         <div className="mt-3 grid gap-3 lg:grid-cols-2">
           <textarea
@@ -250,22 +390,26 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
       )}
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <input
-          type="number"
-          min={1}
-          value={form.season}
-          onChange={(e) => setForm((f) => ({ ...f, season: Number(e.target.value) }))}
-          placeholder="Sezon"
-          className={inputClass}
-        />
-        <input
-          type="number"
-          min={1}
-          value={form.episode}
-          onChange={(e) => setForm((f) => ({ ...f, episode: Number(e.target.value) }))}
-          placeholder="Bölüm"
-          className={inputClass}
-        />
+        <label className="block space-y-1.5">
+          <span className="text-xs font-medium text-sineoda-muted">Sezon (tek bölüm)</span>
+          <input
+            type="number"
+            min={1}
+            value={form.season}
+            onChange={(e) => setForm((f) => ({ ...f, season: Number(e.target.value) }))}
+            className={inputClass}
+          />
+        </label>
+        <label className="block space-y-1.5">
+          <span className="text-xs font-medium text-sineoda-muted">Bölüm no</span>
+          <input
+            type="number"
+            min={1}
+            value={form.episode}
+            onChange={(e) => setForm((f) => ({ ...f, episode: Number(e.target.value) }))}
+            className={inputClass}
+          />
+        </label>
         <input
           value={form.title}
           onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
@@ -294,66 +438,21 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
         + Tek Bölüm Ekle
       </button>
 
-      <div className="space-y-3">
-        {sortedEpisodes.map((episode) => {
-          const draft = drafts[episode.id] ?? {
-            title: episode.title,
-            duration: episode.duration,
-            videoUrl: episode.videoUrl,
-          }
-          const dirty =
-            draft.title !== episode.title ||
-            draft.duration !== episode.duration ||
-            draft.videoUrl !== episode.videoUrl
-
-          return (
-            <div key={episode.id} className="space-y-2 rounded-lg border border-white/10 bg-[#0d0f14] p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm font-medium text-white">
-                  S{episode.season} B{episode.episode}
-                  {!draft.videoUrl.trim() && (
-                    <span className="ml-2 text-xs font-normal text-amber-300">Video linki yok</span>
-                  )}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => void handleDelete(episode.id)}
-                  className="text-xs text-red-300 hover:underline"
-                >
-                  Sil
-                </button>
-              </div>
-              <div className="grid gap-2 sm:grid-cols-[1fr_7rem]">
-                <input
-                  value={draft.title}
-                  onChange={(e) => updateDraft(episode.id, 'title', e.target.value)}
-                  placeholder="Bölüm adı"
-                  className={inputClass}
-                />
-                <input
-                  value={draft.duration}
-                  onChange={(e) => updateDraft(episode.id, 'duration', e.target.value)}
-                  placeholder="Süre"
-                  className={inputClass}
-                />
-              </div>
-              <input
-                value={draft.videoUrl}
-                onChange={(e) => updateDraft(episode.id, 'videoUrl', e.target.value)}
-                placeholder="Bu bölümün video linki"
-                className={inputClass}
-              />
-              <button
-                type="button"
-                disabled={!dirty || savingId === episode.id}
-                onClick={() => void handleSaveEpisode(episode)}
-                className="rounded-lg bg-sineoda-gold/15 px-3 py-1.5 text-xs font-semibold text-sineoda-gold disabled:opacity-40"
-              >
-                {savingId === episode.id ? 'Kaydediliyor…' : 'Bu bölümü kaydet'}
-              </button>
-            </div>
-          )
-        })}
+      <div className="space-y-4">
+        {existingSeasons.length > 0
+          ? existingSeasons.map((seasonNumber) => {
+              const seasonEpisodes = sortedEpisodes.filter((episode) => episode.season === seasonNumber)
+              return (
+                <div key={seasonNumber} className="space-y-3">
+                  <h3 className="text-sm font-semibold text-white">
+                    Sezon {seasonNumber}
+                    <span className="ml-2 font-normal text-sineoda-muted">· {seasonEpisodes.length} bölüm</span>
+                  </h3>
+                  {seasonEpisodes.map((episode) => renderEpisodeRow(episode))}
+                </div>
+              )
+            })
+          : null}
         {sortedEpisodes.length === 0 && (
           <p className="text-sm text-sineoda-muted">Henüz bölüm eklenmedi. Yukarıdan toplu oluşturabilirsiniz.</p>
         )}
