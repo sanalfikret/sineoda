@@ -30,6 +30,11 @@ function splitLines(value: string) {
     .filter(Boolean)
 }
 
+function clampSeason(value: number) {
+  if (!Number.isFinite(value)) return 1
+  return Math.min(Math.max(Math.trunc(value), 1), 99)
+}
+
 export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpisodesPanelProps) {
   const [episodes, setEpisodes] = useState<Episode[]>([])
   const [form, setForm] = useState(EMPTY)
@@ -81,23 +86,13 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
   )
 
   const selectBulkSeason = (seasonNumber: number) => {
-    setBulkSeason(seasonNumber)
+    setBulkSeason(clampSeason(seasonNumber))
     setMessage('')
   }
 
   useEffect(() => {
     void load()
   }, [contentId])
-
-  useEffect(() => {
-    if (existingSeasons.length === 0) {
-      setBulkSeason(1)
-      return
-    }
-    if (!existingSeasons.includes(bulkSeason) && bulkSeason > nextNewSeason) {
-      setBulkSeason(nextNewSeason)
-    }
-  }, [existingSeasons, bulkSeason, nextNewSeason])
 
   useEffect(() => {
     setBulkCount(isVertical ? 40 : 8)
@@ -263,9 +258,9 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
       <div className="rounded-xl border border-sineoda-gold/20 bg-sineoda-gold/5 p-4">
         <h3 className="text-sm font-semibold text-sineoda-gold">Toplu Bölüm Oluştur</h3>
         <p className="mt-1 text-xs text-sineoda-muted">
-          2. sezon eklemek için aşağıdan <strong className="text-white/90">Sezon 2</strong> seç veya{' '}
-          <strong className="text-white/90">+ Yeni Sezon</strong> kullan. Aynı dizi kaydına kalır; yeni dizi
-          oluşturmana gerek yok.
+          Mevcut sezona bölüm eklemek için sezon butonuna tıkla. Yeni sezon için{' '}
+          <strong className="text-white/90">+ Sıradaki sezon</strong> veya{' '}
+          <strong className="text-white/90">Sezon no</strong> alanına istediğin numarayı yaz (1–99).
         </p>
 
         <div className="mt-4">
@@ -300,8 +295,13 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
                   : 'border border-dashed border-sineoda-gold/40 bg-transparent text-sineoda-gold hover:bg-sineoda-gold/10'
               }`}
             >
-              + Sezon {nextNewSeason} ekle
+              + Sıradaki sezon ({nextNewSeason})
             </button>
+            {!existingSeasons.includes(bulkSeason) && bulkSeason !== nextNewSeason && (
+              <span className="inline-flex items-center rounded-full bg-sineoda-gold/15 px-4 py-2 text-sm font-medium text-sineoda-gold">
+                Sezon {bulkSeason} (yeni)
+              </span>
+            )}
           </div>
         </div>
 
@@ -312,12 +312,13 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
 
         <div className="mt-3 grid gap-3 sm:grid-cols-4">
           <label className="block space-y-1.5">
-            <span className="text-xs font-medium text-sineoda-muted">Sezon no</span>
+            <span className="text-xs font-medium text-sineoda-muted">Sezon no (1–99)</span>
             <input
               type="number"
               min={1}
+              max={99}
               value={bulkSeason}
-              onChange={(e) => setBulkSeason(Math.max(1, Number(e.target.value) || 1))}
+              onChange={(e) => setBulkSeason(clampSeason(Number(e.target.value)))}
               className={inputClass}
             />
           </label>
@@ -391,12 +392,13 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
 
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block space-y-1.5">
-          <span className="text-xs font-medium text-sineoda-muted">Sezon (tek bölüm)</span>
+          <span className="text-xs font-medium text-sineoda-muted">Sezon (tek bölüm, 1–99)</span>
           <input
             type="number"
             min={1}
+            max={99}
             value={form.season}
-            onChange={(e) => setForm((f) => ({ ...f, season: Number(e.target.value) }))}
+            onChange={(e) => setForm((f) => ({ ...f, season: clampSeason(Number(e.target.value)) }))}
             className={inputClass}
           />
         </label>
