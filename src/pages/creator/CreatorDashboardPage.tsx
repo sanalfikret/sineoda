@@ -26,7 +26,6 @@ interface DashboardContent extends ContentItem {
   reviewStatus: string
   qualifiedMinutes: number
   likes: number
-  threshold: string
 }
 
 const STATUS_LABELS: Record<CreatorStatus, string> = {
@@ -227,7 +226,7 @@ export function CreatorDashboardPage() {
 
         <section className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { label: 'Nitelikli izlenme', value: `${totals.qualifiedMinutes} dk` },
+            { label: 'Hesaplanan izlenme', value: `${totals.qualifiedMinutes} dk` },
             { label: 'Beğeni', value: String(totals.likes) },
             { label: 'Yayında', value: String(totals.publishedCount) },
             { label: 'İncelemede', value: String(totals.pendingCount) },
@@ -240,12 +239,10 @@ export function CreatorDashboardPage() {
         </section>
 
         <section className="mb-8 rounded-xl border border-white/10 bg-[#11141c] p-6">
-          <h2 className="text-lg font-semibold">Gelir kuralları</h2>
+          <h2 className="text-lg font-semibold">Gelir paylaşımı</h2>
           <p className="mt-2 text-sm text-sineoda-muted">
-            Uzun metraj film, belgesel ve dizi bölümlerinde gelir hakkı yalnızca izleyici en az{' '}
-            <strong className="text-white">%30</strong> izlediğinde başlar. Kısa filmlerde eşik{' '}
-            <strong className="text-white">%50</strong>dir. Erken bırakan izleyiciler gelir hesabına dahil
-            edilmez.
+            Kazançlar, yapımcı anlaşmasında tanımlanan adil paylaşım modeline göre hesaplanır.
+            Detaylı oranlar ve koşullar anlaşma metninde yer alır.
           </p>
         </section>
 
@@ -465,8 +462,7 @@ export function CreatorDashboardPage() {
                   <tr>
                     <th className="px-4 py-3 font-medium">Başlık</th>
                     <th className="px-4 py-3 font-medium">Durum</th>
-                    <th className="px-4 py-3 font-medium">Eşik</th>
-                    <th className="px-4 py-3 font-medium">Nitelikli dk</th>
+                    <th className="px-4 py-3 font-medium">İzlenme (dk)</th>
                     <th className="px-4 py-3 font-medium">Beğeni</th>
                   </tr>
                 </thead>
@@ -475,7 +471,6 @@ export function CreatorDashboardPage() {
                     <tr key={item.id} className="border-t border-white/5">
                       <td className="px-4 py-3">{item.title}</td>
                       <td className="px-4 py-3">{REVIEW_LABELS[item.reviewStatus] ?? item.reviewStatus}</td>
-                      <td className="px-4 py-3">{item.threshold}</td>
                       <td className="px-4 py-3">{item.qualifiedMinutes}</td>
                       <td className="px-4 py-3">{item.likes}</td>
                     </tr>

@@ -16,12 +16,12 @@ export function LandingCreatorSection() {
             Bağımsız sinema
           </p>
           <h2 className="mt-3 text-3xl font-bold text-white sm:text-4xl">
-            Filmini Sineoda'da yayınla, gelir kazan
+            Filmini yükle, adil paylaşımdan kazanç elde et
           </h2>
           <p className="mt-4 text-base leading-relaxed text-white/65 sm:text-lg">
-            Yapımcı hesabı aç, telif belgeni yükle, filmini gönder. Uzun metrajda gelir hakkı
-            yalnızca izleyici en az <strong className="text-white">%30</strong> izlediğinde başlar —
-            erken bırakan izleyiciler hesaba dahil edilmez.
+            Yapımcı hesabı aç, telif belgeni yükle, filmini gönder. Bağımsız sinemanızı Sineoda
+            izleyicileriyle buluşturun; gelir paylaşımı koşulları yapımcı anlaşmasında açıkça
+            belirtilir.
           </p>
           <ul className="mt-6 space-y-2 text-sm text-white/60 lg:text-left">
             <li>• Telif / mülkiyet belgesi zorunlu</li>

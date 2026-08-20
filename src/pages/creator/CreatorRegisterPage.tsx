@@ -123,8 +123,7 @@ export function CreatorRegisterPage() {
               />
               <span className="text-sm text-white/90">
                 Filminin bana ait olduğunu belgeleyeceğimi, tüm yasal sorumluluğun bana ait olduğunu
-                ve gelir paylaşımının nitelikli izlenme (%30 uzun metraj) şartına bağlı olduğunu kabul
-                ediyorum.
+                ve gelir paylaşımı koşullarının yapımcı anlaşmasında belirtildiğini kabul ediyorum.
               </span>
             </label>
           </div>
