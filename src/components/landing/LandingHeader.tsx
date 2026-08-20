@@ -28,12 +28,21 @@ export function LandingHeader({ scrolled }: LandingHeaderProps) {
           <Link to="/planlar" className="text-sm font-medium text-white/70 transition hover:text-white">
             Planlar
           </Link>
+          <Link to="/creator/giris" className="text-sm font-medium text-sineoda-gold transition hover:text-white">
+            Yapımcı
+          </Link>
           <Link to="/giris" className="text-sm font-medium text-white/70 transition hover:text-white">
             Giriş Yap
           </Link>
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            to="/creator/giris"
+            className="hidden rounded-md px-3 py-2 text-sm font-semibold text-sineoda-gold transition hover:bg-white/10 sm:inline-flex"
+          >
+            Yapımcı
+          </Link>
           <Link
             to="/giris"
             className="rounded-md px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/10 md:hidden"
