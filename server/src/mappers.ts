@@ -111,6 +111,8 @@ export function mapContent(row: ContentRow) {
     featured: Boolean(row.featured),
     subtitles: parseSubtitles(row.subtitles_json),
     credits: parseCredits(row.credits_json),
+    program: row.program ?? 'standard',
+    contentFormat: row.content_format ?? 'main',
   }
 }
 

@@ -1,5 +1,5 @@
-import { type ReactNode } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { type ReactNode, useEffect } from 'react'
+import { Navigate, Route, Routes, useNavigate, useSearchParams } from 'react-router-dom'
 import { AdminLayout } from './components/admin/AdminLayout'
 import { AdminRoute } from './components/admin/AdminRoute'
 import { ProtectedRoute } from './components/ProtectedRoute'
@@ -48,6 +48,20 @@ function AuthenticatedProviders({ children }: { children: ReactNode }) {
   )
 }
 
+function LegacyContentRedirect() {
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const contentId = searchParams.get('icerik')
+
+  useEffect(() => {
+    if (contentId) {
+      navigate(`/icerik/${contentId}`, { replace: true })
+    }
+  }, [contentId, navigate])
+
+  return null
+}
+
 function HomeRoute() {
   const { user, activeProfile, isLoading } = useAuth()
 
@@ -71,7 +85,12 @@ function HomeRoute() {
     return <Navigate to="/profiller" replace />
   }
 
-  return <LandingPage />
+  return (
+    <>
+      <LegacyContentRedirect />
+      <LandingPage />
+    </>
+  )
 }
 
 function App() {

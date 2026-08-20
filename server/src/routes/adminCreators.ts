@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import { mapContent } from '../mappers.js'
+import { addToGencSinemaCategory, isStudentMainRow } from '../services/studentCinema.js'
 import type { ContentRow, CreatorRow } from '../types.js'
 
 const router = Router()
@@ -179,6 +180,10 @@ router.patch('/content/:id/review', requireAdmin, (req: AuthRequest, res) => {
     publishedAt,
     existing.id,
   ])
+
+  if (reviewStatus === 'published' && isStudentMainRow(existing)) {
+    addToGencSinemaCategory(existing.id)
+  }
 
   const row = dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [existing.id])!
   res.json({ item: mapContent(row), reviewStatus })

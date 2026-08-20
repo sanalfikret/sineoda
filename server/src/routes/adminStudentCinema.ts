@@ -3,6 +3,12 @@ import { v4 as uuid } from 'uuid'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import { mapContent } from '../mappers.js'
+import {
+  addToGencSinemaCategory,
+  getContentEngagementStats,
+  isStudentMainRow,
+  type ContentEngagementStats,
+} from '../services/studentCinema.js'
 import type { ContentRow, FilmSchoolRow } from '../types.js'
 
 const router = Router()
@@ -26,7 +32,10 @@ function mapSchool(row: FilmSchoolRow) {
   }
 }
 
-function mapQueueItem(row: ContentRow & { studio_name: string | null; school_name: string | null }) {
+function mapQueueItem(
+  row: ContentRow & { studio_name: string | null; school_name: string | null; creator_name?: string | null },
+  stats?: ContentEngagementStats,
+) {
   return {
     ...mapContent(row),
     reviewStatus: row.review_status ?? 'pending',
@@ -38,6 +47,11 @@ function mapQueueItem(row: ContentRow & { studio_name: string | null; school_nam
     schoolReviewStatus: row.school_review_status ?? 'none',
     studioName: row.studio_name,
     creatorId: row.creator_id ?? null,
+    creatorName: row.creator_name ?? null,
+    qualifiedMinutes: stats?.qualifiedMinutes ?? 0,
+    watchMinutes: stats?.watchMinutes ?? 0,
+    likes: stats?.likes ?? 0,
+    viewers: stats?.viewers ?? 0,
   }
 }
 
@@ -120,7 +134,30 @@ router.get('/queue', requireAdmin, (_req: AuthRequest, res) => {
      ORDER BY c.content_added_at DESC`,
   )
 
-  res.json({ items: rows.map(mapQueueItem) })
+  res.json({ items: rows.map((row) => mapQueueItem(row)) })
+})
+
+router.get('/content', requireAdmin, (_req: AuthRequest, res) => {
+  const rows = dbAll<
+    ContentRow & {
+      studio_name: string | null
+      school_name: string | null
+      creator_name: string | null
+    }
+  >(
+    `SELECT c.*, cr.studio_name, fs.name AS school_name, u.name AS creator_name
+     FROM content c
+     LEFT JOIN creators cr ON cr.id = c.creator_id
+     LEFT JOIN users u ON u.id = cr.user_id
+     LEFT JOIN film_schools fs ON fs.id = c.school_id
+     WHERE c.program = 'student_cinema'
+     ORDER BY c.content_added_at DESC`,
+  )
+
+  const stats = getContentEngagementStats(rows.map((row) => row.id))
+  res.json({
+    items: rows.map((row) => mapQueueItem(row, stats.get(row.id))),
+  })
 })
 
 router.patch('/content/:id/school-review', requireAdmin, (req: AuthRequest, res) => {
@@ -184,6 +221,10 @@ router.patch('/content/:id/review', requireAdmin, (req: AuthRequest, res) => {
     publishedAt,
     existing.id,
   ])
+
+  if (reviewStatus === 'published' && isStudentMainRow(existing)) {
+    addToGencSinemaCategory(existing.id)
+  }
 
   const row = dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [existing.id])!
   res.json({

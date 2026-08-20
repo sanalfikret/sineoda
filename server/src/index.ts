@@ -29,6 +29,7 @@ import creatorAuthRoutes from './routes/creatorAuth.js'
 import creatorRoutes from './routes/creator.js'
 import creatorUploadRoutes from './routes/creatorUpload.js'
 import { PUBLISHED_CONTENT_SQL } from './services/publish.js'
+import { MAIN_CATALOG_SQL, STANDARD_PROGRAM_SQL, ensureStudentCinemaCatalog } from './services/studentCinema.js'
 import { mapCategoriesResponse } from './services/categoryOrder.js'
 import { fillCategoriesToTarget } from './services/categoryFill.js'
 import { backfillMissingImages } from './backfillImages.js'
@@ -55,6 +56,7 @@ ensureJournalPosts()
 ensureFilmSchools()
 backfillMissingImages()
 fillCategoriesToTarget()
+ensureStudentCinemaCatalog()
 
 const app = express()
 
@@ -104,11 +106,20 @@ app.get('/api/bootstrap', (_req, res) => {
   res.set('Cache-Control', 'no-store')
   try {
     const catalog = dbAll<ContentRow>(
-      `SELECT * FROM content WHERE ${PUBLISHED_CONTENT_SQL} ORDER BY title`,
+      `SELECT * FROM content WHERE ${PUBLISHED_CONTENT_SQL} AND ${MAIN_CATALOG_SQL} ORDER BY title`,
     ).map(mapContent)
-    const featured = catalog.find((item) => item.featured) ?? catalog[0] ?? null
-    const trailers = catalog.filter((item) => item.trailerUrl).slice(0, 6)
-    const newReleases = catalog.filter((item) => item.isNew).slice(0, 12)
+    const featured =
+      catalog.find(
+        (item) => item.featured && item.program !== 'student_cinema',
+      ) ??
+      catalog.find((item) => item.program !== 'student_cinema') ??
+      null
+    const trailers = catalog
+      .filter((item) => item.trailerUrl && item.program !== 'student_cinema')
+      .slice(0, 6)
+    const newReleases = catalog
+      .filter((item) => item.isNew && item.program !== 'student_cinema')
+      .slice(0, 12)
 
     const categories = mapCategoriesResponse()
 
