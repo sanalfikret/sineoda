@@ -17,7 +17,7 @@ import { PageFooter } from './PageFooter'
 import { VideoPlayer } from './VideoPlayer'
 import { VerticalPlayer } from './VerticalPlayer'
 import { useAuth } from '../context/AuthContext'
-import { isSeriesContent } from '../constants/contentTypes'
+import { itemShowsEpisodePicker, resolveSeriesEpisodes } from '../utils/episodes'
 import { isContentAllowedForKids } from '../utils/contentRating'
 import { isVerticalContent } from '../utils/vertical'
 import { saveBrowseScroll } from '../utils/browseState'
@@ -72,15 +72,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       }
 
       let resolvedEpisode = episode
-      if (!resolvedEpisode && isSeriesContent(item.type)) {
+      if (!resolvedEpisode && itemShowsEpisodePicker(item)) {
         try {
           const { episodes } = await fetchEpisodes(item.id)
-          const sorted = [...episodes].sort(
-            (a, b) => a.season - b.season || a.episode - b.episode,
-          )
+          const sorted = resolveSeriesEpisodes(item, episodes)
           resolvedEpisode = sorted.find((entry) => entry.videoUrl?.trim()) ?? sorted[0]
         } catch {
-          resolvedEpisode = undefined
+          const sorted = resolveSeriesEpisodes(item, [])
+          resolvedEpisode = sorted.find((entry) => entry.videoUrl?.trim()) ?? sorted[0]
         }
       }
 

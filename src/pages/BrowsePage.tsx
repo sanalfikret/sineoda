@@ -13,6 +13,7 @@ import { useWatchlist } from '../context/WatchlistContext'
 import { buildBrowseRows, filterCatalog, genresForCatalog, pickFeatured } from '../utils/browse'
 import { restoreBrowseScroll } from '../utils/browseState'
 import { isVerticalContent } from '../utils/vertical'
+import { itemShowsEpisodePicker } from '../utils/episodes'
 import { getContentTypeLabel } from '../constants/contentTypes'
 import { isContentAllowedForKids } from '../utils/contentRating'
 
@@ -228,7 +229,13 @@ function BrowseContent({
       {displayHero ? (
       <Hero
         item={displayHero}
-        onPlay={openPlayer}
+        onPlay={(item) => {
+          if (itemShowsEpisodePicker(item) && !verticalOnly) {
+            openDetail(item)
+            return
+          }
+          void openPlayer(item)
+        }}
         onDetails={verticalOnly ? (item) => void openPlayer(item) : openDetail}
         eyebrow={
           studentCinemaOnly

@@ -3,8 +3,16 @@ import { Link } from 'react-router-dom'
 import { fetchAllWatchProgress, fetchEpisodes, resolveMediaUrl } from '../api/client'
 import type { ContentItem, Episode } from '../types/content'
 import { FEEDBACK_EMAIL } from '../constants/site'
-import { getContentTypeLabel, isSeriesContent } from '../constants/contentTypes'
+import { getContentTypeLabel } from '../constants/contentTypes'
 import { ContentActionButtons } from './ContentActionButtons'
+import { SeriesEpisodePicker } from './SeriesEpisodePicker'
+import {
+  episodesForSeason,
+  formatEpisodeLabel,
+  itemShowsEpisodePicker,
+  resolveSeriesEpisodes,
+  uniqueSeasons,
+} from '../utils/episodes'
 
 interface ContentDetailViewProps {
   item: ContentItem
@@ -14,7 +22,7 @@ interface ContentDetailViewProps {
   kidsProfileBlocked?: boolean
 }
 
-type DetailTab = 'overview' | 'details'
+type DetailTab = 'overview' | 'episodes' | 'details'
 
 interface ResumeState {
   episode: Episode
@@ -44,31 +52,40 @@ export function ContentDetailView({
   kidsProfileBlocked = false,
 }: ContentDetailViewProps) {
   const [episodes, setEpisodes] = useState<Episode[]>([])
+  const [episodesLoading, setEpisodesLoading] = useState(() => itemShowsEpisodePicker(item))
   const [season, setSeason] = useState(1)
   const [resumeEpisode, setResumeEpisode] = useState<ResumeState | null>(null)
   const [resumeFilmPosition, setResumeFilmPosition] = useState<number | null>(null)
-  const [tab, setTab] = useState<DetailTab>('overview')
+  const [tab, setTab] = useState<DetailTab>(() => (itemShowsEpisodePicker(item) ? 'episodes' : 'overview'))
 
   useEffect(() => {
-    if (!isSeriesContent(item.type)) {
+    if (!itemShowsEpisodePicker(item)) {
       setEpisodes([])
+      setEpisodesLoading(false)
       return
     }
 
+    setEpisodesLoading(true)
     fetchEpisodes(item.id)
       .then((data) => {
-        setEpisodes(data.episodes)
-        setSeason(data.episodes[0]?.season ?? 1)
+        const list = resolveSeriesEpisodes(item, data.episodes)
+        setEpisodes(list)
+        setSeason(list[0]?.season ?? 1)
       })
-      .catch(() => setEpisodes([]))
+      .catch(() => {
+        const list = resolveSeriesEpisodes(item, [])
+        setEpisodes(list)
+        setSeason(list[0]?.season ?? 1)
+      })
+      .finally(() => setEpisodesLoading(false))
   }, [item])
 
   useEffect(() => {
-    setTab('overview')
+    setTab(itemShowsEpisodePicker(item) ? 'episodes' : 'overview')
     setResumeEpisode(null)
     setResumeFilmPosition(null)
 
-    if (isSeriesContent(item.type)) {
+    if (itemShowsEpisodePicker(item)) {
       fetchAllWatchProgress()
         .then((data) => {
           const entries = data.items.filter((entry) => entry.contentId === item.id && entry.episodeId)
@@ -124,14 +141,14 @@ export function ContentDetailView({
     [episodes],
   )
 
-  const seasons = [...new Set(episodes.map((ep) => ep.season))].sort((a, b) => a - b)
-  const seasonEpisodes = episodes.filter((ep) => ep.season === season)
+  const seasons = uniqueSeasons(episodes)
+  const seasonEpisodes = episodesForSeason(episodes, season)
   const episodesInSeason = (value: number) => episodes.filter((ep) => ep.season === value).length
   const firstEpisode = sortedEpisodes.find((episode) => episode.videoUrl?.trim()) ?? sortedEpisodes[0]
   const hasEpisodeVideo = sortedEpisodes.some((episode) => episode.videoUrl?.trim())
   const hasMainVideo = Boolean(item.videoUrl?.trim())
   const canPlay = hasEpisodeVideo || hasMainVideo
-  const isSeries = isSeriesContent(item.type)
+  const isSeries = itemShowsEpisodePicker(item)
   const seriesResume = resumeEpisode && isSeries ? resumeEpisode : null
   const filmResume = resumeFilmPosition
   const credits = item.credits ?? {}
@@ -242,18 +259,20 @@ export function ContentDetailView({
             </button>
           )}
 
-          {!kidsProfileBlocked && !seriesResume && !filmResume && isSeries && firstEpisode && hasEpisodeVideo && (
+          {!kidsProfileBlocked && !seriesResume && !filmResume && isSeries && !episodesLoading && firstEpisode && hasEpisodeVideo && (
             <button
               type="button"
               onClick={() => onPlay(item, firstEpisode)}
               className="inline-flex items-center gap-2 rounded-lg bg-sineoda-gold px-5 py-3 text-sm font-semibold text-sineoda-bg transition hover:brightness-110"
             >
               <PlaySmallIcon />
-              {item.videoFormat === 'vertical' ? 'Dikey İzlemeye Başla' : '1. Bölümü Oynat'}
+              {item.videoFormat === 'vertical'
+                ? 'Dikey İzlemeye Başla'
+                : `Oynat · ${formatEpisodeLabel(firstEpisode)}`}
             </button>
           )}
 
-          {!kidsProfileBlocked && !seriesResume && !filmResume && isSeries && !hasEpisodeVideo && hasMainVideo && (
+          {!kidsProfileBlocked && !seriesResume && !filmResume && isSeries && !episodesLoading && !hasEpisodeVideo && hasMainVideo && (
             <button
               type="button"
               onClick={() => onPlay(item)}
@@ -275,7 +294,7 @@ export function ContentDetailView({
             </button>
           )}
 
-          {!canPlay && (
+          {!canPlay && !episodesLoading && (
             <p className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-sineoda-muted">
               Bu içerik için henüz video eklenmemiş.
             </p>
@@ -288,91 +307,55 @@ export function ContentDetailView({
           <TabButton active={tab === 'overview'} onClick={() => setTab('overview')}>
             Özet
           </TabButton>
+          {isSeries && (
+            <TabButton active={tab === 'episodes'} onClick={() => setTab('episodes')}>
+              Bölümler{episodes.length > 0 ? ` (${episodes.length})` : ''}
+            </TabButton>
+          )}
           <TabButton active={tab === 'details'} onClick={() => setTab('details')}>
             Ayrıntılar
           </TabButton>
-          {isSeries && episodes.length > 0 && (
-            <span className="border-b-2 border-transparent pb-2 text-sm font-medium text-white/60">
-              Bölümler ({episodes.length})
-            </span>
-          )}
         </div>
 
         {tab === 'overview' && (
           <>
             <p className="mt-4 text-sm leading-relaxed text-white/85 sm:text-base">{item.description}</p>
-
-            {isSeries && episodes.length > 0 && (
-              <div className="mt-8">
-                <h2 className="mb-1 text-lg font-semibold text-white">Sezonlar ve Bölümler</h2>
-                {seriesMeta && <p className="mb-4 text-sm text-sineoda-muted">{seriesMeta}</p>}
-
-                {item.videoFormat === 'vertical' ? (
-                  <>
-                    <div className="hide-scrollbar flex gap-2 overflow-x-auto pb-2">
-                      {sortedEpisodes.map((episode) => (
-                        <button
-                          key={episode.id}
-                          type="button"
-                          onClick={() => onPlay(item, episode)}
-                          className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left transition hover:border-sineoda-gold/40 hover:bg-sineoda-gold/10"
-                        >
-                          <p className="text-lg font-bold text-sineoda-gold">{episode.episode}</p>
-                          <p className="mt-1 max-w-[120px] truncate text-xs text-white">{episode.title}</p>
-                          <p className="text-[10px] text-sineoda-muted">{episode.duration}</p>
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="mb-4 flex flex-wrap gap-2">
-                      {seasons.map((value) => (
-                        <button
-                          key={value}
-                          type="button"
-                          onClick={() => setSeason(value)}
-                          className={`rounded-full px-4 py-1.5 text-sm ${
-                            season === value
-                              ? 'bg-sineoda-gold text-sineoda-bg'
-                              : 'bg-white/10 text-white/85'
-                          }`}
-                        >
-                          Sezon {value} ({episodesInSeason(value)} Bölüm)
-                        </button>
-                      ))}
-                    </div>
-                    <div className="space-y-2">
-                      {seasonEpisodes.map((episode) => (
-                        <button
-                          key={episode.id}
-                          type="button"
-                          onClick={() => onPlay(item, episode)}
-                          className="flex w-full items-start gap-4 rounded-xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sineoda-gold"
-                        >
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sineoda-gold/15 text-sm font-bold text-sineoda-gold">
-                            {episode.episode}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium text-white">
-                              Bölüm {episode.episode}: {episode.title}
-                            </p>
-                            {episode.description && (
-                              <p className="mt-1 line-clamp-2 text-xs text-sineoda-muted">
-                                {episode.description}
-                              </p>
-                            )}
-                            <p className="mt-1 text-xs text-sineoda-muted">{episode.duration}</p>
-                          </div>
-                          <PlaySmallIcon />
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
+            {isSeries && (
+              <button
+                type="button"
+                onClick={() => setTab('episodes')}
+                className="mt-6 text-sm font-semibold text-sineoda-gold hover:underline"
+              >
+                {seriesMeta ? `${seriesMeta} — bölümleri gör` : 'Sezon ve bölümleri gör'}
+              </button>
             )}
           </>
+        )}
+
+        {tab === 'episodes' && isSeries && (
+          <div className="mt-6">
+            <h2 className="mb-1 text-lg font-semibold text-white">Sezonlar ve Bölümler</h2>
+            {seriesMeta && <p className="mb-4 text-sm text-sineoda-muted">{seriesMeta}</p>}
+            {episodesLoading ? (
+              <p className="rounded-xl border border-white/10 bg-white/5 px-4 py-8 text-center text-sm text-sineoda-muted">
+                Bölümler yükleniyor...
+              </p>
+            ) : episodes.length === 0 ? (
+              <p className="rounded-xl border border-white/10 bg-white/5 px-4 py-8 text-center text-sm text-sineoda-muted">
+                Bu dizi için henüz bölüm eklenmemiş.
+              </p>
+            ) : (
+              <SeriesEpisodePicker
+                seasons={seasons}
+                season={season}
+                seasonEpisodes={seasonEpisodes}
+                episodesInSeason={episodesInSeason}
+                onSeasonChange={setSeason}
+                onPlayEpisode={(episode) => onPlay(item, episode)}
+                currentEpisodeId={seriesResume?.episode.id}
+              />
+            )}
+          </div>
         )}
 
         {tab === 'details' && (
