@@ -1,15 +1,22 @@
 /** Marka metinleri — landing ve pazarlama */
 
-export const BRAND_TAGLINE = 'Dünya bağımsız sinemasının adresi'
+export const BRAND_TAGLINE = 'Bağımsız sinemanın buluşma noktası'
 
 export const BRAND_HERO = {
-  line1: 'Dünya sinemasını izle',
-  line2: 'Bağımsız sinemacıların filmleri ve dizileri',
+  line1: 'Bağımsız sinemanın buluşma noktası',
+  line2: 'İzlemek isteyenler ve yapmak isteyenler için',
   description:
-    'Dünyanın dört bir yanından bağımsız yapımcıların festival filmleri, dizileri ve belgeselleri. Ticari blockbuster değil; özgün sesler, özenle seçildi.',
+    'Festival filmlerinden bağımsız dizilere — özgün hikâyeleri keşfedin veya kendi yapımınızı izleyicilerle buluşturun. Küratörlü katalog, adil paylaşım, sinemaseverlere özel deneyim.',
   ctaPrimary: 'Ücretsiz Dene',
+  ctaCreator: 'Yapımcı Ol',
   ctaSecondary: 'Giriş Yap',
   legalNote: 'Üye olarak Kullanım Koşulları ve Gizlilik Politikası\'nı kabul etmiş olursun.',
+} as const
+
+export const BRAND_CREATOR = {
+  title: 'Filmini yükle, adil paylaşımdan kazanç elde et',
+  description:
+    'Bağımsız yapımını Sineoda\'da yayınla. Gelir paylaşımı koşulları yapımcı anlaşmasında belirtilir.',
 } as const
 
 export const BRAND_PILLARS = [
@@ -25,8 +32,8 @@ export const BRAND_PILLARS = [
 
 export const BRAND_MANIFESTO = {
   eyebrow: 'Sineoda nedir?',
-  title: 'Dünyanın bağımsız sinemacılarına açılan kapı.',
-  body: 'Hollywood ve ticari yapımların ötesinde; Cannes, Berlin, Sundance, Rotterdam ve yerli festivallerden bağımsız filmler, diziler, belgeseller ve kısa metrajlar. Dünya sinemasının özgün seslerini bir araya getiriyoruz — sakin, odaklı ve sinemaseverlere özel bir izleme deneyimiyle.',
+  title: 'İzleyici ve yapımcı aynı sahnede.',
+  body: 'Hollywood ve ticari yapımların ötesinde; Cannes, Berlin, Sundance, Rotterdam ve yerli festivallerden bağımsız filmler, diziler, belgeseller ve kısa metrajlar. Seyirci için küratörlü bir katalog, yapımcı için adil bir yayın alanı — bağımsız sinemanın buluşma noktası.',
 } as const
 
 export const BRAND_FEATURES = [

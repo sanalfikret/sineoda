@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { BRAND_CREATOR, BRAND_TAGLINE } from '../../constants/brand'
 
 export function LandingCreatorSection() {
   return (
@@ -10,24 +11,15 @@ export function LandingCreatorSection() {
         className="pointer-events-none absolute -right-20 top-0 h-64 w-64 rounded-full bg-sineoda-gold/10 blur-3xl"
         aria-hidden
       />
-      <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-8 lg:flex-row lg:items-start lg:justify-between">
+      <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-2xl text-center lg:text-left">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sineoda-gold">
-            Bağımsız sinema
+            {BRAND_TAGLINE}
           </p>
-          <h2 className="mt-3 text-3xl font-bold text-white sm:text-4xl">
-            Filmini yükle, adil paylaşımdan kazanç elde et
-          </h2>
+          <h2 className="mt-3 text-3xl font-bold text-white sm:text-4xl">{BRAND_CREATOR.title}</h2>
           <p className="mt-4 text-base leading-relaxed text-white/65 sm:text-lg">
-            Yapımcı hesabı aç, telif belgeni yükle, filmini gönder. Bağımsız sinemanızı Sineoda
-            izleyicileriyle buluşturun; gelir paylaşımı koşulları yapımcı anlaşmasında açıkça
-            belirtilir.
+            {BRAND_CREATOR.description}
           </p>
-          <ul className="mt-6 space-y-2 text-sm text-white/60 lg:text-left">
-            <li>• Telif / mülkiyet belgesi zorunlu</li>
-            <li>• Yasal sorumluluk yapımcıya aittir</li>
-            <li>• İçerikler editöryal incelemeden geçer</li>
-          </ul>
         </div>
 
         <div className="flex w-full max-w-sm shrink-0 flex-col gap-3 sm:flex-row lg:w-auto lg:flex-col">

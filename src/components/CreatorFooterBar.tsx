@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { BRAND_CREATOR } from '../constants/brand'
 
 export function CreatorFooterBar() {
   return (
@@ -10,10 +11,7 @@ export function CreatorFooterBar() {
           </div>
           <div>
             <p className="text-base font-semibold text-white">Bağımsız yapımcı mısınız?</p>
-            <p className="mt-0.5 max-w-xl text-sm text-sineoda-muted">
-              Filmini yükle, adil paylaşımdan kazanç elde et. Telif belgeni sun, bağımsız sinemanı
-              Sineoda izleyicileriyle buluştur.
-            </p>
+            <p className="mt-0.5 max-w-xl text-sm text-sineoda-muted">{BRAND_CREATOR.title}</p>
           </div>
         </div>
         <div className="flex shrink-0 flex-wrap justify-center gap-3">
