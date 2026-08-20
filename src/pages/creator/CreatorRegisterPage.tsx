@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { fetchFilmSchools, uploadStudentId } from '../../api/client'
+import { CreatorAuthLayout } from '../../components/creator/CreatorAuthLayout'
 import { useAuth } from '../../context/AuthContext'
 import { BRAND_STUDENT_CINEMA } from '../../constants/brand'
 import { CREATOR_LEGAL_TERMS } from '../../constants/creatorLegal'
@@ -98,7 +99,8 @@ export function CreatorRegisterPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-[#0d0f14] px-4 py-10">
+    <CreatorAuthLayout>
+      <div className="px-4 py-10">
       <div className="mx-auto w-full max-w-2xl">
         <div className="mb-8 flex items-center gap-3">
           <img src="/icon.svg" alt="" className="h-10 w-10 rounded-lg" />
@@ -302,6 +304,7 @@ export function CreatorRegisterPage() {
           </Link>
         </p>
       </div>
-    </div>
+      </div>
+    </CreatorAuthLayout>
   )
 }
