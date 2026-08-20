@@ -9,10 +9,26 @@ function mergeCategoryMetadata(
   incoming: ContentCategory[],
 ): ContentCategory[] {
   const byId = new Map(incoming.map((category) => [category.id, category]))
-  const next = current.filter((category) => byId.has(category.id)).map((category) => byId.get(category.id)!)
-  const known = new Set(next.map((category) => category.id))
-  const added = incoming.filter((category) => !known.has(category.id))
-  return [...next, ...added]
+  const seenTitles = new Set<string>()
+  const next: ContentCategory[] = []
+
+  for (const category of current) {
+    if (!byId.has(category.id)) continue
+    const titleKey = category.title.trim().toLocaleLowerCase('tr')
+    if (seenTitles.has(titleKey)) continue
+    seenTitles.add(titleKey)
+    next.push(byId.get(category.id)!)
+  }
+
+  for (const category of incoming) {
+    const titleKey = category.title.trim().toLocaleLowerCase('tr')
+    if (seenTitles.has(titleKey)) continue
+    if (next.some((entry) => entry.id === category.id)) continue
+    seenTitles.add(titleKey)
+    next.push(category)
+  }
+
+  return next
 }
 
 export function AdminCategoriesPage() {

@@ -50,39 +50,25 @@ const EDITORIAL_CATEGORIES = [
   ['comedy-specials', 'Komedi Özel', 13, ['stage-lights', 'little-stars', 'chef-table']],
 ] as const
 
-const GENRE_CATEGORIES = [
-  ['genre-dram', 'Dram', 20, ['aurora-dreams', 'midnight-istanbul', 'wind-road', 'kalp-satirlari']],
-  ['genre-komedi', 'Komedi', 21, ['little-stars', 'chef-table', 'stage-lights']],
-  ['genre-romantik', 'Romantik', 22, ['kalp-satirlari', 'midnight-istanbul', 'wind-road']],
-  ['genre-gerilim', 'Gerilim', 23, ['silent-forest', 'neon-pulse']],
-  ['genre-korku', 'Korku', 24, ['silent-forest']],
-  ['genre-aksiyon', 'Aksiyon', 25, ['code-breakers', 'ocean-whispers', 'anime-horizon']],
-  ['genre-belgesel', 'Belgesel', 26, ['golden-era', 'chef-table', 'wild-planet']],
-  ['genre-stand-up', 'Stand-up', 27, ['stage-lights']],
-  ['genre-bilim-kurgu', 'Bilim Kurgu', 28, ['aurora-dreams', 'anime-horizon']],
-  ['genre-fantastik', 'Fantastik', 29, ['ocean-whispers']],
-  ['genre-macera', 'Macera', 30, ['ocean-whispers', 'little-stars']],
-  ['genre-suc', 'Suç', 31, ['neon-pulse', 'code-breakers']],
-  ['genre-gizem', 'Gizem', 32, ['silent-forest', 'neon-pulse']],
-  ['genre-aile', 'Aile', 33, ['little-stars']],
-  ['genre-animasyon', 'Animasyon', 34, ['little-stars']],
-  ['genre-anime', 'Anime', 35, ['anime-horizon']],
-  ['genre-muzikal', 'Müzikal', 36, ['midnight-istanbul']],
-  ['genre-reality', 'Reality', 37, ['chef-table']],
-  ['genre-yerli', 'Yerli', 38, ['wind-road', 'midnight-istanbul', 'stage-lights']],
-  ['genre-spor', 'Spor', 39, []],
-] as const
-
 const SEED_CATEGORIES = [
   ...EDITORIAL_CATEGORIES,
-  ...GENRE_CATEGORIES,
 ] as const
 
 export function ensureGenreCategories() {
   ensureCatalogCategories()
 }
 
+function legacyGenreRowId(legacyId: string) {
+  if (!legacyId.startsWith('genre-') || legacyId.startsWith('genre-row-')) return null
+  return `genre-row-${legacyId.slice('genre-'.length)}`
+}
+
 function upsertCategory(id: string, title: string, sortOrder: number) {
+  const rowId = legacyGenreRowId(id)
+  if (rowId && dbGet('SELECT id FROM categories WHERE id = ?', [rowId])) {
+    return
+  }
+
   const exists = dbGet('SELECT id FROM categories WHERE id = ?', [id])
   if (exists) {
     dbRun('UPDATE categories SET title = ? WHERE id = ?', [title, id])
