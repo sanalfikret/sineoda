@@ -4,6 +4,7 @@ import type { ContentItem, ContentType } from '../types/content'
 import { fetchAllWatchProgress, fetchEpisodes } from '../api/client'
 import { AppShell, useContentUI } from '../components/AppShell'
 import { ContentRow } from '../components/ContentRow'
+import { StudentCinemaPicksRow } from '../components/StudentCinemaPicksRow'
 import { GenreFilterBar } from '../components/GenreFilterBar'
 import { Hero } from '../components/Hero'
 import { useAuth } from '../context/AuthContext'
@@ -31,7 +32,7 @@ function BrowseContent({
   const { openDetail, openPlayer } = useContentUI()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { categories, featuredContent, catalog, getContentById, isLoading, refresh } = useContent()
+  const { categories, featuredContent, catalog, getContentById, isLoading, refresh, studentCinemaPicks } = useContent()
   const { watchlistItems } = useWatchlist()
   const { activeProfile } = useAuth()
   const activeGenre = searchParams.get('tur')
@@ -258,6 +259,10 @@ function BrowseContent({
       )}
 
       <div className="pb-24 pt-2">
+        {!activeGenre && !contentType && !verticalOnly && !studentCinemaOnly && studentCinemaPicks.length > 0 && (
+          <StudentCinemaPicksRow items={studentCinemaPicks} onSelect={openDetail} />
+        )}
+
         {!activeGenre && !contentType && continueWatching.length > 0 && (
           <ContentRow
             title="Kaldığın Yerden Devam Et"

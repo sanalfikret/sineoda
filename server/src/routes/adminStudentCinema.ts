@@ -227,13 +227,27 @@ router.patch('/content/:id/review', requireAdmin, (req: AuthRequest, res) => {
   }
 
   const row = dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [existing.id])!
-  res.json({
-    item: {
-      ...mapContent(row),
-      reviewStatus: row.review_status ?? 'pending',
-      schoolReviewStatus: row.school_review_status ?? 'none',
-    },
-  })
+  res.json({ item: mapContent(row), reviewStatus, schoolReviewStatus: row.school_review_status ?? 'none' })
+})
+
+router.delete('/schools/:id', requireAdmin, (req: AuthRequest, res) => {
+  const existing = dbGet<FilmSchoolRow>('SELECT * FROM film_schools WHERE id = ?', [req.params.id])
+  if (!existing) {
+    res.status(404).json({ error: 'Okul bulunamadı.' })
+    return
+  }
+
+  const linkedCreator = dbGet('SELECT id FROM creators WHERE school_id = ? LIMIT 1', [existing.id])
+  const linkedContent = dbGet('SELECT id FROM content WHERE school_id = ? LIMIT 1', [existing.id])
+  if (linkedCreator || linkedContent) {
+    res.status(400).json({
+      error: 'Bu okula bağlı başvuru veya içerik var. Silmek yerine pasif yapın.',
+    })
+    return
+  }
+
+  dbRun('DELETE FROM film_schools WHERE id = ?', [existing.id])
+  res.status(204).send()
 })
 
 export default router

@@ -120,6 +120,14 @@ app.get('/api/bootstrap', (_req, res) => {
     const newReleases = catalog
       .filter((item) => item.isNew && item.program !== 'student_cinema')
       .slice(0, 12)
+    const studentCinemaPicks = dbAll<ContentRow>(
+      `SELECT * FROM content
+       WHERE ${PUBLISHED_CONTENT_SQL}
+         AND program = 'student_cinema'
+         AND ${MAIN_CATALOG_SQL}
+       ORDER BY published_at DESC
+       LIMIT 12`,
+    ).map(mapContent)
 
     const categories = mapCategoriesResponse()
 
@@ -130,7 +138,7 @@ app.get('/api/bootstrap', (_req, res) => {
       // landing tabloları henüz yoksa bootstrap yine de çalışsın
     }
 
-    res.json({ catalog, categories, featuredContent: featured, trailers, newReleases, landing })
+    res.json({ catalog, categories, featuredContent: featured, trailers, newReleases, studentCinemaPicks, landing })
   } catch (error) {
     res.status(500).json({
       error: error instanceof Error ? error.message : 'Katalog yüklenemedi.',

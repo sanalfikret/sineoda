@@ -143,6 +143,7 @@ export interface BootstrapResponse {
   featuredContent: ContentItem | null
   trailers: ContentItem[]
   newReleases: ContentItem[]
+  studentCinemaPicks?: ContentItem[]
   landing?: LandingConfigResponse
 }
 
@@ -767,6 +768,10 @@ export async function updateAdminFilmSchool(
     method: 'PATCH',
     body: JSON.stringify(data),
   })
+}
+
+export async function deleteAdminFilmSchool(id: string) {
+  return api<void>(`/api/admin/student-cinema/schools/${id}`, { method: 'DELETE' })
 }
 
 export async function fetchAdminStudentCinemaQueue() {

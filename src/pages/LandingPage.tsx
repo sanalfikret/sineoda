@@ -12,6 +12,7 @@ import { LandingJournalTeaser } from '../components/landing/LandingJournalTeaser
 import { LandingPricing } from '../components/landing/LandingPricing'
 import { LandingCreatorSection } from '../components/landing/LandingCreatorSection'
 import { LandingStudentCinemaSection } from '../components/landing/LandingStudentCinemaSection'
+import { StudentCinemaPicksRow } from '../components/StudentCinemaPicksRow'
 import {
   DEMO_LANDING_SHOWCASES,
   getDemoCatalog,
@@ -33,6 +34,7 @@ export function LandingPage() {
   const [heroItem, setHeroItem] = useState<ContentItem | null>(null)
   const [sliderItems, setSliderItems] = useState<ContentItem[]>([])
   const [showcases, setShowcases] = useState(DEMO_LANDING_SHOWCASES)
+  const [studentPicks, setStudentPicks] = useState<ContentItem[]>([])
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -63,6 +65,7 @@ export function LandingPage() {
       )
 
       setShowcases(resolveLandingShowcases(landing?.showcases))
+      setStudentPicks(bootstrap.studentCinemaPicks ?? [])
     })()
   }, [])
 
@@ -78,6 +81,7 @@ export function LandingPage() {
       <LandingHero heroItem={heroItem} fallbackImage={FALLBACK_HERO} />
       <LandingManifesto />
       <LandingSlider items={sliderItems} />
+      <StudentCinemaPicksRow items={studentPicks} guestMode className="pt-4" />
       <LandingCategoryShowcase showcases={showcases} />
       <LandingJournalTeaser />
       <LandingFeatures />
