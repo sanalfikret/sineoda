@@ -7,6 +7,7 @@ import { ContentRow } from '../components/ContentRow'
 import { StudentCinemaPicksRow } from '../components/StudentCinemaPicksRow'
 import { GenreFilterBar } from '../components/GenreFilterBar'
 import { Hero } from '../components/Hero'
+import { LandingSlider } from '../components/landing/LandingSlider'
 import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
 import { useWatchlist } from '../context/WatchlistContext'
@@ -32,7 +33,7 @@ function BrowseContent({
   const { openDetail, openPlayer } = useContentUI()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { categories, featuredContent, catalog, getContentById, isLoading, refresh, studentCinemaPicks } = useContent()
+  const { categories, featuredContent, catalog, getContentById, isLoading, refresh, studentCinemaPicks, landingSlider } = useContent()
   const { watchlistItems } = useWatchlist()
   const { activeProfile } = useAuth()
   const activeGenre = searchParams.get('tur')
@@ -223,6 +224,18 @@ function BrowseContent({
 
   const displayHero = activeGenre ? filteredCatalog[0] : heroItem ?? filteredCatalog[0] ?? null
 
+  const isMainHome =
+    !activeGenre && !contentType && !verticalOnly && !studentCinemaOnly
+
+  const homeSliderItems = useMemo(() => {
+    if (!isMainHome) return []
+    let items = landingSlider
+    if (activeProfile?.isKids) {
+      items = items.filter((item) => isContentAllowedForKids(item.rating))
+    }
+    return items
+  }, [isMainHome, landingSlider, activeProfile?.isKids])
+
   return (
     <main className="bg-sineoda-bg">
       {displayHero ? (
@@ -244,6 +257,15 @@ function BrowseContent({
             {pageTitle ?? (verticalOnly ? 'Dikey Diziler' : contentType ? getContentTypeLabel(contentType) : 'Senin İçin')}
           </h1>
         </div>
+      )}
+
+      {homeSliderItems.length > 0 && (
+        <LandingSlider
+          items={homeSliderItems}
+          memberMode
+          onPlay={openPlayer}
+          onDetails={openDetail}
+        />
       )}
 
       <GenreFilterBar

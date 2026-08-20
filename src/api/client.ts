@@ -157,6 +157,7 @@ export interface LandingShowcaseResponse {
 
 export interface LandingConfigResponse {
   slider: ContentItem[]
+  sliderContentIds?: string[]
   showcases: LandingShowcaseResponse[]
 }
 
