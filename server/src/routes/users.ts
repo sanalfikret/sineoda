@@ -17,7 +17,8 @@ function getUsersWithProfiles() {
 }
 
 router.get('/', requireAdmin, (_req: AuthRequest, res) => {
-  res.json({ users: getUsersWithProfiles() })
+  const users = getUsersWithProfiles().filter((user) => user.role !== 'creator')
+  res.json({ users })
 })
 
 router.post('/', requireAdmin, (req: AuthRequest, res) => {
