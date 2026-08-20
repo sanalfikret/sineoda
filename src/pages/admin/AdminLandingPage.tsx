@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { resolveMediaUrl, fetchLandingConfig, updateLandingConfig } from '../../api/client'
+import { resolveMediaUrl, fetchBootstrap, fetchLandingConfig, updateLandingConfig } from '../../api/client'
 import { useContent } from '../../context/ContentContext'
 import { getContentDisplayLabel, getContentTypeLabel } from '../../constants/contentTypes'
 import type { ContentItem, ContentType } from '../../types/content'
@@ -58,7 +58,8 @@ function filterPickerCatalog(
 }
 
 export function AdminLandingPage() {
-  const { catalog } = useContent()
+  const { refresh } = useContent()
+  const [pickerCatalog, setPickerCatalog] = useState<ContentItem[]>([])
   const [sliderIds, setSliderIds] = useState<string[]>([])
   const [showcases, setShowcases] = useState<ShowcaseDraft[]>([])
   const [loading, setLoading] = useState(true)
@@ -66,9 +67,14 @@ export function AdminLandingPage() {
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    fetchLandingConfig()
-      .then((data) => {
-        setSliderIds(data.slider.map((item) => item.id))
+    Promise.all([fetchBootstrap(), fetchLandingConfig()])
+      .then(([bootstrap, data]) => {
+        setPickerCatalog(bootstrap.catalog)
+        setSliderIds(
+          data.sliderContentIds?.length
+            ? data.sliderContentIds
+            : data.slider.map((item) => item.id),
+        )
         setShowcases(
           data.showcases.map((showcase) => ({
             id: showcase.id,
@@ -166,8 +172,22 @@ export function AdminLandingPage() {
     setSaving(true)
     setMessage('')
     try {
-      await updateLandingConfig({ sliderIds, showcases })
-      setMessage('Ana sayfa ayarları kaydedildi.')
+      const validIds = new Set(pickerCatalog.map((item) => item.id))
+      const persistedSliderIds = sliderIds.filter((id) => validIds.has(id))
+      const skipped = sliderIds.length - persistedSliderIds.length
+
+      const data = await updateLandingConfig({ sliderIds: persistedSliderIds, showcases })
+      setSliderIds(
+        data.sliderContentIds?.length
+          ? data.sliderContentIds
+          : data.slider.map((item) => item.id),
+      )
+      await refresh()
+      setMessage(
+        skipped > 0
+          ? `Kaydedildi. ${skipped} demo içerik slider'a eklenemedi — yalnızca veritabanındaki içerikler kullanılır.`
+          : 'Ana sayfa ayarları kaydedildi.',
+      )
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Kayıt başarısız.')
     } finally {
@@ -222,7 +242,7 @@ export function AdminLandingPage() {
             </p>
             <div className="flex flex-wrap gap-2">
               {sliderIds.map((contentId, index) => {
-                const item = catalog.find((entry) => entry.id === contentId)
+                const item = pickerCatalog.find((entry) => entry.id === contentId)
                 if (!item) return null
                 return (
                   <div
@@ -269,7 +289,7 @@ export function AdminLandingPage() {
         )}
 
         <ContentPicker
-          catalog={catalog}
+          catalog={pickerCatalog}
           selectedIds={sliderIds}
           onToggle={toggleSliderItem}
           typeFilters={SLIDER_TYPE_FILTERS}
@@ -359,7 +379,7 @@ export function AdminLandingPage() {
                     Sıralama (gösterim sırası)
                   </p>
                   {showcase.itemIds.map((contentId, itemIndex) => {
-                    const item = catalog.find((entry) => entry.id === contentId)
+                    const item = pickerCatalog.find((entry) => entry.id === contentId)
                     if (!item) return null
                     return (
                       <div
@@ -400,7 +420,7 @@ export function AdminLandingPage() {
               )}
 
               <ContentPicker
-                catalog={catalog}
+                catalog={pickerCatalog}
                 selectedIds={showcase.itemIds}
                 onToggle={(contentId) => toggleShowcaseItem(index, contentId)}
                 searchPlaceholder="Bu kategori için içerik ara..."

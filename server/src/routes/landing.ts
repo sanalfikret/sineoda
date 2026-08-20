@@ -25,8 +25,10 @@ export function getLandingConfig() {
   const catalog = dbAll<ContentRow>('SELECT * FROM content')
   const catalogMap = new Map(catalog.map((row) => [row.id, mapContent(row)]))
 
-  const slider = sliderRows
-    .map((row) => catalogMap.get(row.content_id))
+  const sliderContentIds = sliderRows.map((row) => row.content_id)
+
+  const slider = sliderContentIds
+    .map((contentId) => catalogMap.get(contentId))
     .filter((item): item is NonNullable<typeof item> => Boolean(item))
 
   const showcases = showcaseRows.map((showcase) => ({
@@ -41,7 +43,7 @@ export function getLandingConfig() {
       .filter((item): item is NonNullable<typeof item> => Boolean(item)),
   }))
 
-  return { slider, showcases }
+  return { slider, sliderContentIds, showcases }
 }
 
 router.get('/', (_req, res) => {

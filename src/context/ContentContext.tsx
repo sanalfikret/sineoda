@@ -9,6 +9,7 @@ import {
 } from 'react'
 import { api, fetchBootstrap } from '../api/client'
 import { mergeWithDemoCatalog } from '../data/demoLandingPosters'
+import { resolveLandingSliderItems } from '../utils/landingSlider'
 import type { ContentCategory, ContentItem } from '../types/content'
 
 interface ContentContextValue {
@@ -18,6 +19,7 @@ interface ContentContextValue {
   trailers: ContentItem[]
   newReleases: ContentItem[]
   studentCinemaPicks: ContentItem[]
+  landingSlider: ContentItem[]
   isLoading: boolean
   refresh: () => Promise<void>
   getContentById: (id: string) => ContentItem | undefined
@@ -44,16 +46,21 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const [trailers, setTrailers] = useState<ContentItem[]>([])
   const [newReleases, setNewReleases] = useState<ContentItem[]>([])
   const [studentCinemaPicks, setStudentCinemaPicks] = useState<ContentItem[]>([])
+  const [landingSlider, setLandingSlider] = useState<ContentItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   const refresh = useCallback(async () => {
     const data = await fetchBootstrap()
-    setCatalog(mergeWithDemoCatalog(data.catalog))
+    const mergedCatalog = mergeWithDemoCatalog(data.catalog)
+    setCatalog(mergedCatalog)
     setCategories(data.categories)
     setFeaturedContent(data.featuredContent)
     setTrailers(data.trailers ?? [])
     setNewReleases(data.newReleases ?? [])
     setStudentCinemaPicks(data.studentCinemaPicks ?? [])
+    setLandingSlider(
+      resolveLandingSliderItems(data.landing, mergedCatalog, data.trailers ?? []),
+    )
   }, [])
 
   useEffect(() => {
@@ -165,6 +172,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       trailers,
       newReleases,
       studentCinemaPicks,
+      landingSlider,
       isLoading,
       refresh,
       getContentById,
@@ -185,6 +193,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       trailers,
       newReleases,
       studentCinemaPicks,
+      landingSlider,
       isLoading,
       refresh,
       getContentById,
