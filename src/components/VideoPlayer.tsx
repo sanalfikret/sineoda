@@ -5,6 +5,7 @@ import { isSeriesContent } from '../constants/contentTypes'
 import { getYoutubeEmbedUrl, isYoutubeUrl } from '../utils/media'
 import { getActiveFullscreenElement, isFullscreenSupported, useFullscreen } from '../hooks/useFullscreen'
 import { ContentActionButtons } from './ContentActionButtons'
+import { AgeRatingOverlay } from './AgeRatingOverlay'
 import { PlayerFullscreenButton } from './PlayerFullscreenButton'
 
 interface VideoPlayerProps {
@@ -267,6 +268,7 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
   }
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
+  const ratingPlaybackKey = `${target.item.id}:${target.episodeId ?? 'main'}`
 
   return (
     <div
@@ -277,6 +279,8 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
       onMouseMove={scheduleHideControls}
       onTouchStart={scheduleHideControls}
     >
+      <AgeRatingOverlay rating={target.item.rating} playbackKey={ratingPlaybackKey} />
+
       <video
         ref={videoRef}
         className={
