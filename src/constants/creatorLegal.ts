@@ -7,11 +7,10 @@ Yüklediğiniz her içeriğin telif hakkı veya yayın hakkının size ait oldu�
 2. Yasal Sorumluluk
 İçeriğinizden doğabilecek tüm yasal talepler, telif ihlali iddiaları, kişilik hakları ihlalleri ve üçüncü taraf haklarına ilişkin sorumluluk tamamen size aittir. Sineoda, içeriğinizin yasal uygunluğunu garanti etmez; yalnızca platform sağlayıcısıdır.
 
-3. Gelir Paylaşımı ve İzlenme Şartı
-Gelir paylaşımı yalnızca "nitelikli izlenme" sürelerine göre hesaplanır:
-• Uzun metraj film, belgesel ve dizi bölümlerinde: izleyici en az %30 izlemedikçe gelir hakkı oluşmaz.
-• Kısa filmlerde: en az %50 izlenme gerekir.
-İzleyici beğenmeyip erken ayrılırsa bu süre gelir hesabına dahil edilmez.
+3. Gelir Paylaşımı
+Gelir paylaşımı, yapımcı anlaşmasında belirtilen koşullara göre hesaplanır. İzlenme süreleri,
+paylaşım oranları ve ödeme takvimi bu anlaşmada ayrıntılı olarak yer alır. Platform, anlaşma
+hükümlerine uygun şekilde adil bir paylaşım modeli uygular.
 
 4. İçerik İncelemesi
 Gönderdiğiniz içerikler Sineoda editöryal incelemesinden geçer. Onaylanmadan yayınlanmaz. Sineoda, platform standartlarına uymayan içerikleri reddetme hakkını saklı tutar.

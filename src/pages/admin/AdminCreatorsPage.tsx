@@ -316,7 +316,7 @@ export function AdminCreatorsPage() {
                           </span>
                         </div>
                         <div className="mt-3 flex flex-wrap gap-4 text-xs text-sineoda-muted">
-                          <span>Nitelikli izlenme: {item.qualifiedMinutes} dk</span>
+                          <span>İzlenme: {item.qualifiedMinutes} dk</span>
                           <span>Beğeni: {item.likes}</span>
                         </div>
                         {item.reviewStatus === 'pending' && (
