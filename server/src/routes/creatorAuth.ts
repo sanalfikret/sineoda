@@ -18,7 +18,9 @@ function mapCreatorUser(user: UserRow) {
     status: string
     legal_accepted_at: string | null
     created_at: string
-  }>('SELECT id, studio_name, bio, status, legal_accepted_at, created_at FROM creators WHERE user_id = ?', [user.id])
+    program?: string
+    school_id?: string | null
+  }>('SELECT id, studio_name, bio, status, legal_accepted_at, created_at, program, school_id FROM creators WHERE user_id = ?', [user.id])
 
   return {
     ...mapUser(user, []),
@@ -30,19 +32,23 @@ function mapCreatorUser(user: UserRow) {
           status: creator.status,
           legalAcceptedAt: creator.legal_accepted_at,
           createdAt: creator.created_at,
+          program: creator.program ?? 'standard',
+          schoolId: creator.school_id ?? null,
         }
       : null,
   }
 }
 
 router.post('/signup', (req, res) => {
-  const { name, email, password, studioName, bio, acceptLegal } = req.body as {
+  const { name, email, password, studioName, bio, acceptLegal, program, schoolId } = req.body as {
     name?: string
     email?: string
     password?: string
     studioName?: string
     bio?: string
     acceptLegal?: boolean
+    program?: string
+    schoolId?: string
   }
 
   if (!name?.trim() || !email?.trim() || !password || password.length < 6) {
@@ -58,6 +64,23 @@ router.post('/signup', (req, res) => {
   if (!acceptLegal) {
     res.status(400).json({ error: 'Yasal şartları ve sorumluluk beyanını kabul etmelisiniz.' })
     return
+  }
+
+  const creatorProgram = program === 'student_cinema' ? 'student_cinema' : 'standard'
+  let resolvedSchoolId: string | null = null
+
+  if (creatorProgram === 'student_cinema') {
+    const school = schoolId
+      ? dbGet<{ id: string }>('SELECT id FROM film_schools WHERE id = ? AND status = ?', [
+          String(schoolId).trim(),
+          'active',
+        ])
+      : null
+    if (!school) {
+      res.status(400).json({ error: 'Genç Sinema başvurusu için geçerli bir okul seçmelisiniz.' })
+      return
+    }
+    resolvedSchoolId = school.id
   }
 
   const normalizedEmail = email.trim().toLowerCase()
@@ -77,8 +100,8 @@ router.post('/signup', (req, res) => {
     [userId, name.trim(), normalizedEmail, hash, 'creator', now],
   )
   dbRun(
-    'INSERT INTO creators (id, user_id, studio_name, bio, status, legal_accepted_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [creatorId, userId, studioName.trim(), bio?.trim() ?? '', 'pending', now, now],
+    'INSERT INTO creators (id, user_id, studio_name, bio, status, legal_accepted_at, created_at, program, school_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [creatorId, userId, studioName.trim(), bio?.trim() ?? '', 'pending', now, now, creatorProgram, resolvedSchoolId],
   )
 
   const user = dbGet<UserRow>('SELECT * FROM users WHERE id = ?', [userId])!

@@ -10,6 +10,7 @@ const navItems = [
   { to: '/admin/dergi', label: 'Dergi', end: false },
   { to: '/admin/kullanicilar', label: 'İzleyiciler', end: false },
   { to: '/admin/yapimcilar', label: 'Yapımcılar', end: false },
+  { to: '/admin/genc-sinema', label: 'Genç Sinema', end: false },
 ]
 
 export function AdminLayout() {
@@ -104,6 +105,12 @@ export function AdminLayout() {
           </button>
           <p className="text-sm text-sineoda-muted lg:hidden">Admin Panel</p>
           <div className="ml-auto flex flex-wrap gap-2">
+            <Link
+              to="/admin/genc-sinema"
+              className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/20"
+            >
+              Genç Sinema
+            </Link>
             <Link
               to="/admin/icerikler/yeni?dikey=1"
               className="rounded-lg border border-sineoda-gold/50 bg-sineoda-gold/10 px-4 py-2 text-sm font-semibold text-sineoda-gold transition hover:bg-sineoda-gold/20"

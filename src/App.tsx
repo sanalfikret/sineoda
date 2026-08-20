@@ -16,6 +16,7 @@ import { AdminJournalListPage } from './pages/admin/AdminJournalListPage'
 import { AdminLandingPage } from './pages/admin/AdminLandingPage'
 import { AdminUsersPage } from './pages/admin/AdminUsersPage'
 import { AdminCreatorsPage } from './pages/admin/AdminCreatorsPage'
+import { AdminStudentCinemaPage } from './pages/admin/AdminStudentCinemaPage'
 import { BrowsePage } from './pages/BrowsePage'
 import { LandingPage } from './pages/LandingPage'
 import { LoginPage } from './pages/LoginPage'
@@ -200,6 +201,7 @@ function App() {
         <Route path="dergi/:id" element={<AdminJournalFormPage />} />
         <Route path="kullanicilar" element={<AdminUsersPage />} />
         <Route path="yapimcilar" element={<AdminCreatorsPage />} />
+        <Route path="genc-sinema" element={<AdminStudentCinemaPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

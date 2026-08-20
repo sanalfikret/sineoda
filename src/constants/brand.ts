@@ -56,6 +56,31 @@ export const BRAND_MANIFESTO = {
   body: 'Hollywood ve ticari yapımların ötesinde; Cannes, Berlin, Sundance, Rotterdam ve yerli festivallerden bağımsız filmler, diziler, belgeseller ve kısa metrajlar. Özgün sesler, özenle seçildi — sakin, odaklı ve sinemaseverlere özel bir izleme deneyimi.',
 } as const
 
+export const BRAND_STUDENT_CINEMA = {
+  id: 'genc-sinema',
+  eyebrow: 'Sinema okullarıyla',
+  title: 'Genç sinemaya dijital sahne',
+  subtitle:
+    'Mezun ve öğrenci filmlerinizi yükleyin, kamera arkası görüntülerinizi paylaşın. Okulunuz seçer, Sineoda son onayı verir — genç sinemacıları birlikte destekliyoruz.',
+  steps: [
+    {
+      title: 'Filmini ve kamera arkasını yükle',
+      text: 'Kısa film, mezuniyet projesi veya belgesel — yanında set görüntüleri ve kısa making-of videoları.',
+    },
+    {
+      title: 'Okulun onaylasın',
+      text: 'Hocanız veya okul temsilcisi projeyi okul adına önerir.',
+    },
+    {
+      title: 'Sineoda yayınlasın',
+      text: 'İçerik ve platform standartlarına uygunsa Genç Sinema seçkisinde yerini alır.',
+    },
+  ],
+  ctaPrimary: 'Filmini Gönder',
+  ctaSecondary: 'Nasıl Çalışır?',
+  registerCta: "Genç Sinema'ya Başvur",
+} as const
+
 export const BRAND_FEATURES = [
   {
     title: 'Dünya bağımsız sineması',

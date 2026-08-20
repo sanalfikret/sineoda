@@ -1,19 +1,33 @@
-import { useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { useEffect, useState, type FormEvent } from 'react'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
+import { fetchFilmSchools } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
+import { BRAND_STUDENT_CINEMA } from '../../constants/brand'
 import { CREATOR_LEGAL_TERMS } from '../../constants/creatorLegal'
 
 export function CreatorRegisterPage() {
   const { creatorSignup, isCreator, isLoading } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const isStudentProgram = searchParams.get('program') === 'genc-sinema'
+
   const [name, setName] = useState('')
   const [studioName, setStudioName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [bio, setBio] = useState('')
+  const [schoolId, setSchoolId] = useState('')
+  const [schools, setSchools] = useState<Array<{ id: string; name: string }>>([])
   const [acceptLegal, setAcceptLegal] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!isStudentProgram) return
+    void fetchFilmSchools()
+      .then((data) => setSchools(data.schools))
+      .catch(() => setSchools([]))
+  }, [isStudentProgram])
 
   if (!isLoading && isCreator) {
     return <Navigate to="/creator" replace />
@@ -25,10 +39,23 @@ export function CreatorRegisterPage() {
       setError('Yasal şartları kabul etmelisiniz.')
       return
     }
+    if (isStudentProgram && !schoolId) {
+      setError('Sinema okulunuzu seçmelisiniz.')
+      return
+    }
     setError('')
     setLoading(true)
     try {
-      await creatorSignup({ name, email, password, studioName, bio, acceptLegal })
+      await creatorSignup({
+        name,
+        email,
+        password,
+        studioName,
+        bio,
+        acceptLegal,
+        program: isStudentProgram ? 'student_cinema' : 'standard',
+        schoolId: isStudentProgram ? schoolId : undefined,
+      })
       navigate('/creator', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kayıt başarısız.')
@@ -43,10 +70,22 @@ export function CreatorRegisterPage() {
         <div className="mb-8 flex items-center gap-3">
           <img src="/icon.svg" alt="" className="h-10 w-10 rounded-lg" />
           <div>
-            <h1 className="text-2xl font-bold text-white">Yapımcı Kaydı</h1>
-            <p className="text-sm text-sineoda-muted">Bağımsız sinemanızı Sineoda'da yayınlayın</p>
+            <h1 className="text-2xl font-bold text-white">
+              {isStudentProgram ? 'Genç Sinema Başvurusu' : 'Yapımcı Kaydı'}
+            </h1>
+            <p className="text-sm text-sineoda-muted">
+              {isStudentProgram
+                ? 'Mezun veya öğrenci projenizi yüklemek için hesap oluşturun'
+                : 'Bağımsız sinemanızı Sineoda\'da yayınlayın'}
+            </p>
           </div>
         </div>
+
+        {isStudentProgram && (
+          <div className="mb-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 text-sm text-emerald-100">
+            {BRAND_STUDENT_CINEMA.subtitle}
+          </div>
+        )}
 
         {error && (
           <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
@@ -55,6 +94,25 @@ export function CreatorRegisterPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-white/10 bg-[#11141c] p-6 sm:p-8">
+          {isStudentProgram && (
+            <label className="block">
+              <span className="mb-1.5 block text-sm text-white/90">Sinema okulunuz</span>
+              <select
+                required
+                value={schoolId}
+                onChange={(event) => setSchoolId(event.target.value)}
+                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-emerald-400"
+              >
+                <option value="">Okul seçin</option>
+                {schools.map((school) => (
+                  <option key={school.id} value={school.id}>
+                    {school.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
               <span className="mb-1.5 block text-sm text-white/90">Ad Soyad</span>
@@ -66,7 +124,9 @@ export function CreatorRegisterPage() {
               />
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-sm text-white/90">Stüdyo / Yapım Adı</span>
+              <span className="mb-1.5 block text-sm text-white/90">
+                {isStudentProgram ? 'Proje / yapım adı' : 'Stüdyo / Yapım Adı'}
+              </span>
               <input
                 required
                 value={studioName}
@@ -131,9 +191,17 @@ export function CreatorRegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-sineoda-gold py-3 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
+            className={`w-full rounded-lg py-3 text-sm font-semibold disabled:opacity-60 ${
+              isStudentProgram
+                ? 'bg-emerald-500 text-[#07110d]'
+                : 'bg-sineoda-gold text-sineoda-bg'
+            }`}
           >
-            {loading ? 'Kayıt oluşturuluyor...' : 'Yapımcı Hesabı Oluştur'}
+            {loading
+              ? 'Kayıt oluşturuluyor...'
+              : isStudentProgram
+                ? BRAND_STUDENT_CINEMA.registerCta
+                : 'Yapımcı Hesabı Oluştur'}
           </button>
         </form>
 
