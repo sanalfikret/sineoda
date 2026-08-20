@@ -14,7 +14,7 @@ interface Plan {
 }
 
 export function PricingPage() {
-  const { user } = useAuth()
+  const { user, isCreator } = useAuth()
   const navigate = useNavigate()
   const [plans, setPlans] = useState<Plan[]>([])
   const [provider, setProvider] = useState<'paytr' | 'iyzico'>('paytr')
@@ -81,9 +81,19 @@ export function PricingPage() {
               Sine<span className="text-sineoda-gold">oda</span>
             </span>
           </Link>
-          <Link to="/giris" className="text-sm text-sineoda-gold hover:underline">
-            {user ? 'Hesabım' : 'Giriş Yap'}
-          </Link>
+          {isCreator ? (
+            <Link to="/creator" className="text-sm text-sineoda-gold hover:underline">
+              Yapımcı Paneli
+            </Link>
+          ) : user ? (
+            <Link to="/" className="text-sm text-sineoda-gold hover:underline">
+              Ana Sayfa
+            </Link>
+          ) : (
+            <Link to="/giris" className="text-sm text-sineoda-gold hover:underline">
+              Giriş Yap
+            </Link>
+          )}
         </div>
       </header>
 

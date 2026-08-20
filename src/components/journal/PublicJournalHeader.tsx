@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 export function PublicJournalHeader() {
-  const { user } = useAuth()
+  const { user, isCreator } = useAuth()
 
   return (
     <header className="safe-top border-b border-white/5 px-4 py-5 sm:px-6">
@@ -13,7 +13,14 @@ export function PublicJournalHeader() {
             Sine<span className="text-sineoda-accent">oda</span>
           </span>
         </Link>
-        {user ? (
+        {isCreator ? (
+          <Link
+            to="/creator"
+            className="rounded-md border border-white/15 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/5"
+          >
+            Yapımcı Paneli
+          </Link>
+        ) : user ? (
           <Link
             to="/profiller"
             className="rounded-md border border-white/15 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/5"
