@@ -637,3 +637,64 @@ export async function creatorSubmitContent(data: Record<string, unknown>) {
     body: JSON.stringify(data),
   })
 }
+
+export interface AdminCreator {
+  id: string
+  userId: string
+  name: string
+  email: string
+  studioName: string
+  bio: string
+  status: 'pending' | 'approved' | 'rejected' | 'suspended'
+  legalAcceptedAt: string | null
+  createdAt: string
+  documentCount: number
+  contentCount: number
+}
+
+export interface AdminCreatorDocument {
+  id: string
+  docType: string
+  fileUrl: string
+  uploadedAt: string
+}
+
+export interface AdminCreatorContent extends ContentItem {
+  reviewStatus: string
+  qualifiedMinutes: number
+  likes: number
+}
+
+export interface AdminCreatorDetail {
+  creator: AdminCreator & { userCreatedAt?: string }
+  documents: AdminCreatorDocument[]
+  content: AdminCreatorContent[]
+}
+
+export async function fetchAdminCreators() {
+  return api<{ creators: AdminCreator[] }>('/api/admin/creators/creators')
+}
+
+export async function fetchAdminCreatorDetail(id: string) {
+  return api<AdminCreatorDetail>(`/api/admin/creators/creators/${id}`)
+}
+
+export async function updateAdminCreatorStatus(id: string, status: AdminCreator['status']) {
+  return api<{ ok: boolean; status: string }>(`/api/admin/creators/creators/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  })
+}
+
+export async function fetchAdminPendingCreatorContent() {
+  return api<{ items: Array<ContentItem & { reviewStatus: string; studioName?: string }> }>(
+    '/api/admin/creators/content/pending',
+  )
+}
+
+export async function reviewAdminCreatorContent(contentId: string, reviewStatus: 'published' | 'rejected' | 'pending') {
+  return api<{ item: ContentItem; reviewStatus: string }>(`/api/admin/creators/content/${contentId}/review`, {
+    method: 'PATCH',
+    body: JSON.stringify({ reviewStatus }),
+  })
+}
