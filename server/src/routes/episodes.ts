@@ -20,45 +20,79 @@ router.get('/content/:contentId', (req, res) => {
 })
 
 router.post('/content/:contentId/bulk', requireAdmin, (req: AuthRequest, res) => {
-  const season = Number(req.body.season ?? 1)
+  const contentId = req.params.contentId
+  const parentContent = dbGet<{ video_url: string }>('SELECT video_url FROM content WHERE id = ?', [
+    contentId,
+  ])
+  if (!parentContent) {
+    res.status(404).json({ error: 'İçerik bulunamadı.' })
+    return
+  }
+
+  const season = Math.max(Number(req.body.season ?? 1), 1)
   const count = Math.min(Math.max(Number(req.body.count ?? 8), 1), 100)
   const titlePrefix = String(req.body.titlePrefix ?? 'Bölüm')
   const duration = String(req.body.duration ?? '')
-  const startEpisode = Number(req.body.startEpisode ?? 1)
   const customTitles = Array.isArray(req.body.titles)
-    ? req.body.titles.map((title: unknown) => String(title).trim()).filter(Boolean)
+    ? req.body.titles.map((title: unknown) => String(title).trim())
     : []
   const customUrls = Array.isArray(req.body.videoUrls)
     ? req.body.videoUrls.map((url: unknown) => String(url).trim())
     : []
-  const parentContent = dbGet<{ video_url: string }>('SELECT video_url FROM content WHERE id = ?', [
-    req.params.contentId,
-  ])
-  const fallbackVideoUrl = parentContent?.video_url?.trim() ?? ''
 
+  let startEpisode = Number(req.body.startEpisode)
+  if (!Number.isFinite(startEpisode) || startEpisode < 1) {
+    const maxRow = dbGet<{ max: number | null }>(
+      'SELECT MAX(episode_number) as max FROM episodes WHERE content_id = ? AND season = ?',
+      [contentId, season],
+    )
+    startEpisode = (maxRow?.max ?? 0) + 1
+  }
+
+  const fallbackVideoUrl = parentContent.video_url?.trim() ?? ''
   const created: ReturnType<typeof mapEpisode>[] = []
+  let skippedCount = 0
 
   for (let i = 0; i < count; i++) {
     const episodeNum = startEpisode + i
     const exists = dbGet(
       'SELECT id FROM episodes WHERE content_id = ? AND season = ? AND episode_number = ?',
-      [req.params.contentId, season, episodeNum],
+      [contentId, season, episodeNum],
     )
-    if (exists) continue
+    if (exists) {
+      skippedCount += 1
+      continue
+    }
 
-    const title = customTitles[i] || `${titlePrefix} ${episodeNum}`
-    const videoUrl = customUrls[i] || fallbackVideoUrl
+    const title = customTitles[i]?.trim() || `${titlePrefix} ${episodeNum}`
+    const videoUrl = customUrls[i]?.trim() || fallbackVideoUrl
     const id = uuid()
     dbRun(
       `INSERT INTO episodes (id, content_id, season, episode_number, title, description, duration, video_url, stream_provider, sort_order)
        VALUES (?, ?, ?, ?, ?, '', ?, ?, 'custom', ?)`,
-      [id, req.params.contentId, season, episodeNum, title, duration, videoUrl, i],
+      [id, contentId, season, episodeNum, title, duration, videoUrl, episodeNum - 1],
     )
     const row = dbGet<EpisodeRow>('SELECT * FROM episodes WHERE id = ?', [id])!
     created.push(mapEpisode(row))
   }
 
-  res.status(201).json({ episodes: created, createdCount: created.length })
+  if (created.length === 0 && skippedCount === count) {
+    res.status(409).json({
+      error: `Sezon ${season} için B${startEpisode}–B${startEpisode + count - 1} zaten mevcut.`,
+      createdCount: 0,
+      skippedCount,
+      startEpisode,
+    })
+    return
+  }
+
+  res.status(201).json({
+    episodes: created,
+    createdCount: created.length,
+    skippedCount,
+    startEpisode,
+    endEpisode: created.length > 0 ? created[created.length - 1].episode : null,
+  })
 })
 
 router.post('/content/:contentId', requireAdmin, (req: AuthRequest, res) => {

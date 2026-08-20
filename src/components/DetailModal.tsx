@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { fetchEpisodes, fetchWatchProgress, resolveMediaUrl } from '../api/client'
 import type { ContentItem, Episode } from '../types/content'
 import { FEEDBACK_EMAIL } from '../constants/site'
-import { getContentTypeLabel, isSeriesContent } from '../constants/contentTypes'
+import { getContentTypeLabel, hasEpisodicContent } from '../constants/contentTypes'
+import { groupEpisodesBySeason, sortEpisodes } from '../utils/episodes'
 import { ContentActionButtons } from './ContentActionButtons'
 
 interface DetailModalProps {
@@ -36,15 +37,16 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
   const [tab, setTab] = useState<DetailTab>('overview')
 
   useEffect(() => {
-    if (!item || !isSeriesContent(item.type)) {
+    if (!item || !hasEpisodicContent(item)) {
       setEpisodes([])
       return
     }
 
     fetchEpisodes(item.id)
       .then((data) => {
-        setEpisodes(data.episodes)
-        setSeason(data.episodes[0]?.season ?? 1)
+        const sorted = sortEpisodes(data.episodes)
+        setEpisodes(sorted)
+        setSeason(sorted[0]?.season ?? 1)
       })
       .catch(() => setEpisodes([]))
   }, [item])
@@ -88,27 +90,24 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
     }
   }, [item, onClose])
 
-  const sortedEpisodes = useMemo(
-    () => [...episodes].sort((a, b) => a.season - b.season || a.episode - b.episode),
-    [episodes],
-  )
-
-  if (!item) return null
-
-  const seasons = [...new Set(episodes.map((ep) => ep.season))].sort((a, b) => a - b)
-  const seasonEpisodes = episodes.filter((ep) => ep.season === season)
+  const sortedEpisodes = useMemo(() => sortEpisodes(episodes), [episodes])
+  const seasonGroups = useMemo(() => groupEpisodesBySeason(episodes), [episodes])
+  const seasons = seasonGroups.map(([value]) => value)
+  const isSeries = item ? hasEpisodicContent(item) : false
   const firstEpisode = sortedEpisodes.find((episode) => episode.videoUrl?.trim()) ?? sortedEpisodes[0]
   const hasEpisodeVideo = sortedEpisodes.some((episode) => episode.videoUrl?.trim())
-  const hasMainVideo = Boolean(item.videoUrl?.trim())
+  const hasMainVideo = Boolean(item?.videoUrl?.trim())
   const canPlay = hasEpisodeVideo || hasMainVideo
   const canResume = resumePosition !== null && resumePosition > 10
-  const credits = item.credits ?? {}
+  const credits = item?.credits ?? {}
   const audioLanguages = credits.audioLanguages ?? ['Türkçe']
   const subtitleLanguages =
     credits.subtitleLanguages ??
-    (item.subtitles?.length
+    (item?.subtitles?.length
       ? item.subtitles.map((track) => track.label || track.lang)
       : ['Türkçe'])
+
+  if (!item) return null
 
   return (
     <div
@@ -176,7 +175,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <div className="flex flex-wrap gap-3">
-            {canResume && !isSeriesContent(item.type) && (
+            {canResume && !isSeries && (
               <button
                 type="button"
                 onClick={() => onPlay(item)}
@@ -187,7 +186,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
               </button>
             )}
 
-            {!canResume && isSeriesContent(item.type) && firstEpisode && hasEpisodeVideo && (
+            {!canResume && isSeries && firstEpisode && hasEpisodeVideo && (
               <button
                 type="button"
                 onClick={() => onPlay(item, firstEpisode)}
@@ -198,7 +197,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
               </button>
             )}
 
-            {!canResume && isSeriesContent(item.type) && !hasEpisodeVideo && hasMainVideo && (
+            {!canResume && isSeries && !hasEpisodeVideo && hasMainVideo && (
               <button
                 type="button"
                 onClick={() => onPlay(item)}
@@ -209,7 +208,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
               </button>
             )}
 
-            {!canResume && !isSeriesContent(item.type) && hasMainVideo && (
+            {!canResume && !isSeries && hasMainVideo && (
               <button
                 type="button"
                 onClick={() => onPlay(item)}
@@ -246,7 +245,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
                 {item.description}
               </p>
 
-              {isSeriesContent(item.type) && episodes.length > 0 && (
+              {isSeries && episodes.length > 0 && (
                 <div className="mt-6">
                   {item.videoFormat === 'vertical' ? (
                     <>
@@ -271,41 +270,59 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
                     </>
                   ) : (
                     <>
-                  <div className="mb-3 flex flex-wrap gap-2">
-                    {seasons.map((value) => (
-                      <button
-                        key={value}
-                        type="button"
-                        onClick={() => setSeason(value)}
-                        className={`rounded-full px-4 py-1.5 text-sm ${
-                          season === value
-                            ? 'bg-sineoda-gold text-sineoda-bg'
-                            : 'bg-white/10 text-white/85'
-                        }`}
-                      >
-                        Sezon {value}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="space-y-2">
-                    {seasonEpisodes.map((episode) => (
-                      <button
-                        key={episode.id}
-                        type="button"
-                        onClick={() => onPlay(item, episode)}
-                        className="flex w-full items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-3 text-left transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sineoda-gold"
-                      >
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sineoda-gold/15 text-sm font-bold text-sineoda-gold">
-                          {episode.episode}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-medium text-white">{episode.title}</p>
-                          <p className="text-xs text-sineoda-muted">{episode.duration}</p>
+                      {seasons.length > 1 && (
+                        <div className="mb-3 flex flex-wrap gap-2">
+                          {seasons.map((value) => (
+                            <button
+                              key={value}
+                              type="button"
+                              onClick={() => setSeason(value)}
+                              className={`rounded-full px-4 py-1.5 text-sm ${
+                                season === value
+                                  ? 'bg-sineoda-gold text-sineoda-bg'
+                                  : 'bg-white/10 text-white/85'
+                              }`}
+                            >
+                              Sezon {value}
+                            </button>
+                          ))}
                         </div>
-                        <PlaySmallIcon />
-                      </button>
-                    ))}
-                  </div>
+                      )}
+                      <div className="space-y-6">
+                        {seasonGroups
+                          .filter(([seasonNum]) => seasons.length <= 1 || seasonNum === season)
+                          .map(([seasonNum, seasonItems]) => (
+                            <div key={seasonNum}>
+                              <h3 className="mb-2 text-sm font-semibold text-white">
+                                Sezon {seasonNum}
+                                <span className="ml-2 font-normal text-sineoda-muted">
+                                  · {seasonItems.length} bölüm
+                                </span>
+                              </h3>
+                              <div className="space-y-2">
+                                {seasonItems.map((episode) => (
+                                  <button
+                                    key={episode.id}
+                                    type="button"
+                                    onClick={() => onPlay(item, episode)}
+                                    className="flex w-full items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-3 text-left transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sineoda-gold"
+                                  >
+                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sineoda-gold/15 text-sm font-bold text-sineoda-gold">
+                                      {episode.episode}
+                                    </span>
+                                    <div className="min-w-0 flex-1">
+                                      <p className="truncate font-medium text-white">
+                                        Bölüm {episode.episode}: {episode.title}
+                                      </p>
+                                      <p className="text-xs text-sineoda-muted">{episode.duration}</p>
+                                    </div>
+                                    <PlaySmallIcon />
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
                     </>
                   )}
                 </div>
