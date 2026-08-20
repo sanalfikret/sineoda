@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { resolveMediaUrl, fetchLandingConfig, updateLandingConfig } from '../../api/client'
 import { useContent } from '../../context/ContentContext'
-import type { ContentItem } from '../../types/content'
+import { getContentDisplayLabel, getContentTypeLabel } from '../../constants/contentTypes'
+import type { ContentItem, ContentType } from '../../types/content'
+import { fuzzySearchMatch } from '../../utils/search'
 
 interface ShowcaseDraft {
   id: string
@@ -18,6 +20,42 @@ const ICON_OPTIONS = [
   { value: 'cocuk', label: 'Çocuk' },
   { value: 'dikey', label: 'Dikey Diziler' },
 ]
+
+type SliderTypeFilter = 'all' | ContentType | 'vertical'
+
+const SLIDER_TYPE_FILTERS: Array<{ id: SliderTypeFilter; label: string }> = [
+  { id: 'all', label: 'Tümü' },
+  { id: 'film', label: 'Filmler' },
+  { id: 'dizi', label: 'Diziler' },
+  { id: 'belgesel', label: 'Belgeseller' },
+  { id: 'kisa-film', label: 'Kısa Filmler' },
+  { id: 'vertical', label: 'Dikey Diziler' },
+]
+
+function matchesSliderTypeFilter(item: ContentItem, filter: SliderTypeFilter) {
+  if (filter === 'all') return true
+  if (filter === 'vertical') return item.videoFormat === 'vertical'
+  if (item.videoFormat === 'vertical') return false
+  return item.type === filter
+}
+
+function filterPickerCatalog(
+  catalog: ContentItem[],
+  query: string,
+  typeFilter?: SliderTypeFilter,
+) {
+  return catalog.filter((item) => {
+    if (typeFilter && !matchesSliderTypeFilter(item, typeFilter)) return false
+    if (!query.trim()) return true
+    return fuzzySearchMatch(
+      query,
+      item.title,
+      item.id,
+      item.genres.join(' '),
+      getContentTypeLabel(item.type),
+    )
+  })
+}
 
 export function AdminLandingPage() {
   const { catalog } = useContent()
@@ -173,49 +211,60 @@ export function AdminLandingPage() {
       <section className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
         <h2 className="text-lg font-semibold text-white">Slider</h2>
         <p className="mt-1 text-sm text-sineoda-muted">
-          Ana sayfadaki fragman slider&apos;ında gösterilecek içerikleri seç ve sırala.
+          Filmler, diziler ve belgeseller sekmelerinden seçim yap. Seçtiklerin birleşerek landing
+          ana sayfasındaki fragman slider&apos;ına yansır.
         </p>
 
         {sliderIds.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {sliderIds.map((contentId, index) => {
-              const item = catalog.find((entry) => entry.id === contentId)
-              if (!item) return null
-              return (
-                <div
-                  key={contentId}
-                  className="flex items-center gap-2 rounded-lg border border-sineoda-gold/30 bg-sineoda-gold/10 px-2 py-1"
-                >
-                  <img
-                    src={resolveMediaUrl(item.poster)}
-                    alt=""
-                    className="h-10 w-7 rounded object-cover"
-                  />
-                  <span className="text-xs font-medium text-white">{item.title}</span>
-                  <button
-                    type="button"
-                    onClick={() => moveSliderItem(index, -1)}
-                    className="text-xs text-white/60 hover:text-white"
+          <div className="mt-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-sineoda-muted">
+              Slider sırası ({sliderIds.length} içerik)
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {sliderIds.map((contentId, index) => {
+                const item = catalog.find((entry) => entry.id === contentId)
+                if (!item) return null
+                return (
+                  <div
+                    key={contentId}
+                    className="flex items-center gap-2 rounded-lg border border-sineoda-gold/30 bg-sineoda-gold/10 px-2 py-1"
                   >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveSliderItem(index, 1)}
-                    className="text-xs text-white/60 hover:text-white"
-                  >
-                    ↓
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => toggleSliderItem(contentId)}
-                    className="text-xs text-red-300 hover:text-red-200"
-                  >
-                    ×
-                  </button>
-                </div>
-              )
-            })}
+                    <img
+                      src={resolveMediaUrl(item.poster)}
+                      alt=""
+                      className="h-10 w-7 rounded object-cover"
+                    />
+                    <div className="min-w-0">
+                      <span className="block truncate text-xs font-medium text-white">{item.title}</span>
+                      <span className="text-[10px] text-sineoda-muted">
+                        {getContentDisplayLabel(item)}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => moveSliderItem(index, -1)}
+                      className="text-xs text-white/60 hover:text-white"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveSliderItem(index, 1)}
+                      className="text-xs text-white/60 hover:text-white"
+                    >
+                      ↓
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleSliderItem(contentId)}
+                      className="text-xs text-red-300 hover:text-red-200"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
 
@@ -223,6 +272,8 @@ export function AdminLandingPage() {
           catalog={catalog}
           selectedIds={sliderIds}
           onToggle={toggleSliderItem}
+          typeFilters={SLIDER_TYPE_FILTERS}
+          searchPlaceholder="Başlık, tür veya ID ile ara..."
         />
       </section>
 
@@ -352,6 +403,7 @@ export function AdminLandingPage() {
                 catalog={catalog}
                 selectedIds={showcase.itemIds}
                 onToggle={(contentId) => toggleShowcaseItem(index, contentId)}
+                searchPlaceholder="Bu kategori için içerik ara..."
               />
             </div>
           </section>
@@ -365,42 +417,102 @@ function ContentPicker({
   catalog,
   selectedIds,
   onToggle,
+  typeFilters,
+  searchPlaceholder = 'İçerik ara...',
+  maxResults = 48,
 }: {
   catalog: ContentItem[]
   selectedIds: string[]
   onToggle: (contentId: string) => void
+  typeFilters?: Array<{ id: SliderTypeFilter; label: string }>
+  searchPlaceholder?: string
+  maxResults?: number
 }) {
+  const [query, setQuery] = useState('')
+  const [typeFilter, setTypeFilter] = useState<SliderTypeFilter>('all')
+
+  const filteredCatalog = useMemo(
+    () => filterPickerCatalog(catalog, query, typeFilters ? typeFilter : undefined),
+    [catalog, query, typeFilter, typeFilters],
+  )
+
+  const visibleItems = filteredCatalog.slice(0, maxResults)
+
   return (
-    <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-      {catalog.map((item) => {
-        const checked = selectedIds.includes(item.id)
-        return (
-          <label
-            key={item.id}
-            className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 transition ${
-              checked
-                ? 'border-sineoda-gold/40 bg-sineoda-gold/10'
-                : 'border-white/10 hover:bg-white/5'
-            }`}
-          >
-            <input
-              type="checkbox"
-              checked={checked}
-              onChange={() => onToggle(item.id)}
-              className="accent-sineoda-gold"
-            />
-            <img
-              src={resolveMediaUrl(item.poster)}
-              alt=""
-              className="h-12 w-8 rounded object-cover"
-            />
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-white">{item.title}</p>
-              <p className="text-xs text-sineoda-muted">{item.type}</p>
-            </div>
-          </label>
-        )
-      })}
+    <div className="mt-4 space-y-3">
+      {typeFilters && typeFilters.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {typeFilters.map((filter) => (
+            <button
+              key={filter.id}
+              type="button"
+              onClick={() => setTypeFilter(filter.id)}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                typeFilter === filter.id
+                  ? 'bg-sineoda-gold text-sineoda-bg'
+                  : 'bg-white/10 text-white/80 hover:bg-white/15'
+              }`}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <input
+        type="search"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder={searchPlaceholder}
+        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-sm text-white outline-none focus:border-sineoda-gold"
+      />
+
+      <p className="text-xs text-sineoda-muted">
+        {filteredCatalog.length === 0
+          ? 'Eşleşen içerik yok.'
+          : filteredCatalog.length > maxResults
+            ? `${maxResults} / ${filteredCatalog.length} sonuç gösteriliyor — aramayı daraltın.`
+            : `${filteredCatalog.length} içerik listeleniyor.`}
+        {selectedIds.length > 0 && ` Seçili: ${selectedIds.length}.`}
+      </p>
+
+      {visibleItems.length === 0 ? (
+        <p className="rounded-lg border border-white/10 bg-white/5 px-4 py-6 text-center text-sm text-sineoda-muted">
+          {query.trim() ? 'Aramanızla eşleşen içerik bulunamadı.' : 'Bu filtrede içerik yok.'}
+        </p>
+      ) : (
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {visibleItems.map((item) => {
+            const checked = selectedIds.includes(item.id)
+            return (
+              <label
+                key={item.id}
+                className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 transition ${
+                  checked
+                    ? 'border-sineoda-gold/40 bg-sineoda-gold/10'
+                    : 'border-white/10 hover:bg-white/5'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => onToggle(item.id)}
+                  className="accent-sineoda-gold"
+                />
+                <img
+                  src={resolveMediaUrl(item.poster)}
+                  alt=""
+                  className="h-12 w-8 rounded object-cover"
+                />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-white">{item.title}</p>
+                  <p className="text-xs text-sineoda-muted">{getContentDisplayLabel(item)}</p>
+                </div>
+              </label>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
