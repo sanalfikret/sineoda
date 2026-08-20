@@ -19,9 +19,15 @@ interface BrowsePageProps {
   contentType?: ContentType | null
   pageTitle?: string
   verticalOnly?: boolean
+  studentCinemaOnly?: boolean
 }
 
-function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: BrowsePageProps) {
+function BrowseContent({
+  contentType = null,
+  pageTitle,
+  verticalOnly = false,
+  studentCinemaOnly = false,
+}: BrowsePageProps) {
   const { openDetail, openPlayer } = useContentUI()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -110,12 +116,13 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
 
   const browseOptions = useMemo(
     () => ({
-      type: contentType,
-      genre: activeGenre,
-      verticalOnly,
+      type: studentCinemaOnly ? null : contentType,
+      genre: studentCinemaOnly ? null : activeGenre,
+      verticalOnly: studentCinemaOnly ? false : verticalOnly,
       kidsSafe: Boolean(activeProfile?.isKids),
+      studentOnly: studentCinemaOnly,
     }),
-    [contentType, activeGenre, verticalOnly, activeProfile?.isKids],
+    [contentType, activeGenre, verticalOnly, activeProfile?.isKids, studentCinemaOnly],
   )
 
   const filteredCatalog = useMemo(
@@ -124,6 +131,9 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
   )
 
   const heroItem = useMemo(() => {
+    if (studentCinemaOnly) {
+      return filteredCatalog[0] ?? null
+    }
     if (activeGenre) {
       return filteredCatalog[0] ?? null
     }
@@ -142,6 +152,7 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
     filteredCatalog,
     verticalOnly,
     activeProfile?.isKids,
+    studentCinemaOnly,
   ])
 
   const rows = useMemo(
@@ -219,7 +230,9 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
         onPlay={openPlayer}
         onDetails={verticalOnly ? (item) => void openPlayer(item) : openDetail}
         eyebrow={
-          activeGenre
+          studentCinemaOnly
+            ? 'Genç Sinema'
+            : activeGenre
             ? activeGenre
             : pageTitle ?? (verticalOnly ? 'Dikey Diziler' : contentType ? getContentTypeLabel(contentType) : 'Senin İçin')
         }
@@ -232,7 +245,17 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
         </div>
       )}
 
-      <GenreFilterBar activeGenre={activeGenre} genres={genreOptions} onChange={setActiveGenre} />
+      <GenreFilterBar
+        activeGenre={studentCinemaOnly ? null : activeGenre}
+        genres={studentCinemaOnly ? [] : genreOptions}
+        onChange={setActiveGenre}
+      />
+
+      {studentCinemaOnly && (
+        <p className="mx-auto max-w-3xl px-4 pb-2 text-center text-sm text-emerald-100/70 sm:px-6">
+          Sinema okullarından mezun ve öğrenci filmleri — yalnızca Genç Sinema seçkisinde.
+        </p>
+      )}
 
       <div className="pb-24 pt-2">
         {!activeGenre && !contentType && continueWatching.length > 0 && (
@@ -263,7 +286,7 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
               }
               prominent={row.title === 'Dikey Diziler'}
               layout={rowLayout(row.title, row.items)}
-              variant={activeGenre || contentType || verticalOnly ? 'grid' : 'carousel'}
+              variant={activeGenre || contentType || verticalOnly || studentCinemaOnly ? 'grid' : 'carousel'}
             />
           ))
         )}

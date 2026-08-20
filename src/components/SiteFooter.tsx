@@ -16,6 +16,9 @@ export function SiteFooter() {
           <Link to="/creator/giris" className="text-sineoda-muted transition hover:text-white">
             Yapımcı Girişi
           </Link>
+          <Link to="/creator/kayit" className="text-sineoda-muted transition hover:text-white">
+            Filmini Yükle
+          </Link>
           {LEGAL_LINKS.map((link) => (
             <Link
               key={link.slug}

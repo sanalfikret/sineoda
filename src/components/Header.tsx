@@ -1,21 +1,30 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useSearchUI } from '../context/SearchContext'
 
-const navItems = [
+const viewerNavItems = [
   { label: 'Ana Sayfa', to: '/', match: (path: string) => path === '/' },
   { label: 'Diziler', to: '/diziler', match: (path: string) => path === '/diziler' },
   { label: 'Filmler', to: '/filmler', match: (path: string) => path === '/filmler' },
   { label: 'Belgeseller', to: '/belgeseller', match: (path: string) => path === '/belgeseller' },
   { label: 'Dikey Diziler', to: '/dikey-diziler', match: (path: string) => path === '/dikey-diziler' },
+  {
+    label: 'Genç Sinema',
+    to: '/genc-sinema',
+    match: (path: string) => path === '/genc-sinema',
+  },
   { label: 'Listem', to: '/listem', match: (path: string) => path === '/listem' },
   { label: 'Dergi', to: '/dergi', match: (path: string) => path === '/dergi' || path.startsWith('/dergi/') },
-  { label: 'Yapımcı', to: '/creator/giris', match: (path: string) => path.startsWith('/creator') },
+]
+
+const creatorNavItems = [
+  { label: 'Yapımcı Paneli', to: '/creator', match: (path: string) => path.startsWith('/creator') },
+  { label: 'Ana Site', to: '/', match: (path: string) => path === '/' },
 ]
 
 export function Header() {
-  const { user, activeProfile, logout } = useAuth()
+  const { user, activeProfile, logout, isCreator } = useAuth()
   const { openSearch } = useSearchUI()
   const location = useLocation()
   const [scrolled, setScrolled] = useState(false)
@@ -27,6 +36,11 @@ export function Header() {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  const navItems = useMemo(() => {
+    if (isCreator) return creatorNavItems
+    return viewerNavItems
+  }, [isCreator])
 
   const isActive = (match: (path: string) => boolean) => match(location.pathname)
 
@@ -40,7 +54,7 @@ export function Header() {
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8 tv:py-5">
         <div className="flex items-center gap-4 lg:gap-8">
-          <Link to="/" className="flex items-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sineoda-gold">
+          <Link to={isCreator ? '/creator' : '/'} className="flex items-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sineoda-gold">
             <img src="/icon.svg" alt="" className="h-8 w-8 rounded-lg sm:h-9 sm:w-9 tv:h-11 tv:w-11" />
             <span className="text-xl font-bold tracking-tight text-white sm:text-2xl tv:text-3xl">
               Sine<span className="text-sineoda-gold">oda</span>
@@ -53,9 +67,13 @@ export function Header() {
                 key={item.to}
                 to={item.to}
                 className={`rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold tv:px-4 tv:py-3 tv:text-base ${
-                  isActive(item.match)
-                    ? 'bg-white/10 text-white'
-                    : 'text-white/75 hover:bg-white/5 hover:text-white'
+                  item.label === 'Genç Sinema'
+                    ? isActive(item.match)
+                      ? 'bg-emerald-500/15 text-emerald-300'
+                      : 'text-emerald-200/80 hover:bg-emerald-500/10 hover:text-emerald-200'
+                    : isActive(item.match)
+                      ? 'bg-white/10 text-white'
+                      : 'text-white/75 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 {item.label}
@@ -65,59 +83,93 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <button
-            type="button"
-            aria-label="Ara"
-            onClick={openSearch}
-            className="rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold tv:p-3"
-          >
-            <SearchIcon />
-          </button>
+          {!isCreator && (
+            <button
+              type="button"
+              aria-label="Ara"
+              onClick={openSearch}
+              className="rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold tv:p-3"
+            >
+              <SearchIcon />
+            </button>
+          )}
 
-          {user && activeProfile ? (
+          {user && (activeProfile || isCreator) ? (
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((open) => !open)}
                 className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm text-white transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold tv:px-4 tv:py-2.5 tv:text-base"
               >
-                <span className="text-lg leading-none tv:text-xl">{activeProfile.avatar}</span>
-                <span className="hidden max-w-[100px] truncate sm:inline">{activeProfile.name}</span>
+                {isCreator ? (
+                  <span className="hidden max-w-[140px] truncate sm:inline">
+                    {user.creator?.studioName ?? 'Yapımcı'}
+                  </span>
+                ) : (
+                  <>
+                    <span className="text-lg leading-none tv:text-xl">{activeProfile?.avatar}</span>
+                    <span className="hidden max-w-[100px] truncate sm:inline">{activeProfile?.name}</span>
+                  </>
+                )}
               </button>
 
               {userMenuOpen && (
                 <div className="absolute right-0 mt-2 w-52 overflow-hidden rounded-xl border border-white/10 bg-sineoda-elevated py-1 shadow-xl">
-                  <Link
-                    to="/profiller"
-                    className="block px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
-                    onClick={() => setUserMenuOpen(false)}
-                  >
-                    Profil Değiştir
-                  </Link>
-                  <Link
-                    to="/planlar"
-                    className="block px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
-                    onClick={() => setUserMenuOpen(false)}
-                  >
-                    Abonelik
-                  </Link>
-                  <Link
-                    to="/listem"
-                    className="block px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
-                    onClick={() => setUserMenuOpen(false)}
-                  >
-                    Listem
-                  </Link>
-                  <button
-                    type="button"
-                    className="block w-full px-4 py-2.5 text-left text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
-                    onClick={() => {
-                      logout()
-                      setUserMenuOpen(false)
-                    }}
-                  >
-                    Çıkış Yap
-                  </button>
+                  {isCreator ? (
+                    <>
+                      <Link
+                        to="/creator"
+                        className="block px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        Yapımcı Paneli
+                      </Link>
+                      <button
+                        type="button"
+                        className="block w-full px-4 py-2.5 text-left text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
+                        onClick={() => {
+                          logout()
+                          setUserMenuOpen(false)
+                        }}
+                      >
+                        Çıkış Yap
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        to="/profiller"
+                        className="block px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        Profil Değiştir
+                      </Link>
+                      <Link
+                        to="/planlar"
+                        className="block px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        Abonelik
+                      </Link>
+                      <Link
+                        to="/listem"
+                        className="block px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        Listem
+                      </Link>
+                      <button
+                        type="button"
+                        className="block w-full px-4 py-2.5 text-left text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
+                        onClick={() => {
+                          logout()
+                          setUserMenuOpen(false)
+                        }}
+                      >
+                        Çıkış Yap
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>

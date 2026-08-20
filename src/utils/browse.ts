@@ -10,6 +10,7 @@ export type BrowseFilterOptions = {
   verticalOnly?: boolean
   kidsSafe?: boolean
   excludeStudent?: boolean
+  studentOnly?: boolean
 }
 
 export type BrowseRow = {
@@ -20,7 +21,7 @@ export type BrowseRow = {
 }
 
 /** BrowsePage'de ayrı satır olarak gösterildiği için kategori listesinden çıkarılır */
-export const BROWSE_EXCLUSIVE_ROW_TITLES = new Set<string>()
+export const BROWSE_EXCLUSIVE_ROW_TITLES = new Set<string>(['Genç Sinema'])
 
 function categoryFilterOptions(category: ContentCategory, options: BrowseFilterOptions): BrowseFilterOptions {
   if (category.id === BRAND_STUDENT_CINEMA.id) {
@@ -40,6 +41,9 @@ export const BROWSE_ITEMS_PER_ROW = 20
 
 export function filterCatalog(catalog: ContentItem[], options: BrowseFilterOptions) {
   return catalog.filter((item) => {
+    if (options.studentOnly) {
+      return item.program === 'student_cinema' && (item.contentFormat ?? 'main') === 'main'
+    }
     if (options.excludeStudent !== false && item.program === 'student_cinema') return false
     if (options.kidsSafe && !isContentAllowedForKids(item.rating)) return false
     if (options.verticalOnly && item.videoFormat !== 'vertical') return false
@@ -165,6 +169,19 @@ export function buildBrowseRows(
   categories: ContentCategory[] = [],
   getContentById?: (id: string) => ContentItem | undefined,
 ) {
+  if (options.studentOnly) {
+    const items = filterCatalog(catalog, options).sort((a, b) => a.title.localeCompare(b.title, 'tr'))
+    if (items.length === 0) return []
+    return [
+      {
+        id: BRAND_STUDENT_CINEMA.id,
+        title: 'Genç Sinema',
+        itemIds: items.map((item) => item.id),
+        items,
+      },
+    ]
+  }
+
   if (options.genre) {
     const items = filterCatalog(catalog, options).sort((a, b) => a.title.localeCompare(b.title, 'tr'))
     if (items.length === 0) return []
