@@ -71,6 +71,7 @@ export interface CreatorRow {
   created_at: string
   program?: CreatorProgram
   school_id?: string | null
+  project_crew?: string
 }
 
 export interface FilmSchoolRow {

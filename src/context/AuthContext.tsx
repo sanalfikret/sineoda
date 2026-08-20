@@ -39,6 +39,9 @@ interface AuthContextValue {
     acceptLegal: boolean
     program?: 'standard' | 'student_cinema'
     schoolId?: string
+    phone?: string
+    projectCrew?: string
+    studentIdFileUrl?: string
   }) => Promise<void>
   logout: () => void
   selectProfile: (profileId: string) => void
@@ -124,6 +127,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       acceptLegal: boolean
       program?: 'standard' | 'student_cinema'
       schoolId?: string
+      phone?: string
+      projectCrew?: string
+      studentIdFileUrl?: string
     }) => {
       const { token, user: newUser } = await creatorSignupRequest(data)
       setToken(token)
