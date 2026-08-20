@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { PageFooter } from '../components/PageFooter'
+import { SiteFooter } from '../components/SiteFooter'
 import { LandingFeatures } from '../components/landing/LandingFeatures'
 import { LandingManifesto } from '../components/landing/LandingManifesto'
 import { LandingHeader } from '../components/landing/LandingHeader'
@@ -81,10 +81,10 @@ export function LandingPage() {
       <LandingJournalTeaser />
       <LandingFeatures />
       <LandingPricing />
-      <LandingCreatorSection />
       <LandingFaq />
       <LandingEmailSignup />
-      <PageFooter />
+      <LandingCreatorSection />
+      <SiteFooter />
     </div>
   )
 }

@@ -40,18 +40,12 @@ export function LandingHero({ heroItem, fallbackImage }: LandingHeroProps) {
           {BRAND_HERO.description}
         </p>
 
-        <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4">
+        <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4">
           <Link
             to="/kayit"
             className="inline-flex h-12 min-w-[200px] items-center justify-center rounded-md bg-sineoda-accent px-10 text-base font-semibold text-sineoda-bg transition hover:brightness-105"
           >
             {BRAND_HERO.ctaPrimary}
-          </Link>
-          <Link
-            to="/creator/kayit"
-            className="inline-flex h-12 min-w-[200px] items-center justify-center rounded-md border border-sineoda-gold/40 bg-sineoda-gold/10 px-10 text-base font-semibold text-sineoda-gold transition hover:bg-sineoda-gold/20"
-          >
-            {BRAND_HERO.ctaCreator}
           </Link>
           <Link
             to="/giris"

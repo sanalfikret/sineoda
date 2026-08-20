@@ -4,19 +4,39 @@ export const BRAND_TAGLINE = 'Bağımsız sinemanın buluşma noktası'
 
 export const BRAND_HERO = {
   line1: 'Bağımsız sinemanın buluşma noktası',
-  line2: 'İzlemek isteyenler ve yapmak isteyenler için',
+  line2: 'Festival filmleri, diziler ve belgeseller',
   description:
-    'Festival filmlerinden bağımsız dizilere — özgün hikâyeleri keşfedin veya kendi yapımınızı izleyicilerle buluşturun. Küratörlü katalog, adil paylaşım, sinemaseverlere özel deneyim.',
+    'Dünyanın dört bir yanından bağımsız yapımcıların özgün hikâyeleri. Ticari blockbuster değil — küratörlü seçki, sakin arayüz, sinemaseverlere özel bir izleme deneyimi.',
   ctaPrimary: 'Ücretsiz Dene',
-  ctaCreator: 'Yapımcı Ol',
   ctaSecondary: 'Giriş Yap',
   legalNote: 'Üye olarak Kullanım Koşulları ve Gizlilik Politikası\'nı kabul etmiş olursun.',
 } as const
 
 export const BRAND_CREATOR = {
+  eyebrow: 'Bağımsız yapımcılar için',
   title: 'Filmini yükle, adil paylaşımdan kazanç elde et',
-  description:
-    'Bağımsız yapımını Sineoda\'da yayınla. Gelir paylaşımı koşulları yapımcı anlaşmasında belirtilir.',
+  subtitle:
+    'Sineoda yalnızca izleyiciler için değil — bağımsız sinemacılar için de tasarlandı. Yapımını yükle, küratörlü katalogda yerini al, gelir paylaşımı koşulları yapımcı anlaşmasında açıkça belirtilir.',
+  perks: [
+    {
+      title: 'Gerçek izleyici kitlesi',
+      text: 'Bağımsız sinema meraklılarından oluşan odaklı bir topluluk — rastgele tıklama değil, gerçek izlenme.',
+    },
+    {
+      title: 'Adil gelir modeli',
+      text: 'Şeffaf paylaşım koşulları. Kazancın nasıl hesaplandığı anlaşmada net; sürpriz yok.',
+    },
+    {
+      title: 'Küratörlü vitrin',
+      text: 'Filmin editöryal incelemeden geçer, katalogda özenle konumlandırılır — vitrin değeri taşır.',
+    },
+    {
+      title: 'Tek platform, tek adres',
+      text: 'Uzun metraj, kısa film, belgesel ve dizi — bağımsız yapımını tek yerden yönet.',
+    },
+  ],
+  ctaPrimary: 'Yapımcı Üyeliği Oluştur',
+  ctaSecondary: 'Yapımcı Girişi',
 } as const
 
 export const BRAND_PILLARS = [
@@ -32,8 +52,8 @@ export const BRAND_PILLARS = [
 
 export const BRAND_MANIFESTO = {
   eyebrow: 'Sineoda nedir?',
-  title: 'İzleyici ve yapımcı aynı sahnede.',
-  body: 'Hollywood ve ticari yapımların ötesinde; Cannes, Berlin, Sundance, Rotterdam ve yerli festivallerden bağımsız filmler, diziler, belgeseller ve kısa metrajlar. Seyirci için küratörlü bir katalog, yapımcı için adil bir yayın alanı — bağımsız sinemanın buluşma noktası.',
+  title: 'Dünyanın bağımsız sinemacılarına açılan kapı.',
+  body: 'Hollywood ve ticari yapımların ötesinde; Cannes, Berlin, Sundance, Rotterdam ve yerli festivallerden bağımsız filmler, diziler, belgeseller ve kısa metrajlar. Özgün sesler, özenle seçildi — sakin, odaklı ve sinemaseverlere özel bir izleme deneyimi.',
 } as const
 
 export const BRAND_FEATURES = [
