@@ -11,6 +11,7 @@ const navItems = [
   { label: 'Dikey Diziler', to: '/dikey-diziler', match: (path: string) => path === '/dikey-diziler' },
   { label: 'Listem', to: '/listem', match: (path: string) => path === '/listem' },
   { label: 'Dergi', to: '/dergi', match: (path: string) => path === '/dergi' || path.startsWith('/dergi/') },
+  { label: 'Yapımcı', to: '/creator/giris', match: (path: string) => path.startsWith('/creator') },
 ]
 
 export function Header() {
