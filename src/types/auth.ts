@@ -23,6 +23,7 @@ export interface CreatorProfile {
 export interface Subscription {
   status: string
   plan: string | null
+  startedAt?: string | null
   expiresAt: string | null
 }
 

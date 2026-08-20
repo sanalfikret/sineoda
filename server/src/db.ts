@@ -127,6 +127,7 @@ function runMigrations() {
   ensureColumn('users', 'subscription_status', "TEXT DEFAULT 'free'")
   ensureColumn('users', 'subscription_plan', 'TEXT')
   ensureColumn('users', 'subscription_expires_at', 'TEXT')
+  ensureColumn('users', 'subscription_started_at', 'TEXT')
   ensureColumn('users', 'phone', 'TEXT')
   ensureColumn('users', 'phone_verified', 'INTEGER DEFAULT 0')
 

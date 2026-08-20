@@ -49,6 +49,7 @@ export function mapUser(row: UserRow, profiles: ProfileRow[] = []) {
     subscription: {
       status: row.subscription_status ?? 'free',
       plan: row.subscription_plan ?? null,
+      startedAt: row.subscription_started_at ?? null,
       expiresAt: row.subscription_expires_at ?? null,
     },
   }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useSearchUI } from '../context/SearchContext'
 
@@ -24,8 +24,9 @@ const creatorNavItems = [
 ]
 
 export function Header() {
-  const { user, activeProfile, logout, isCreator } = useAuth()
+  const { user, activeProfile, logout, isCreator, clearActiveProfile } = useAuth()
   const { openSearch } = useSearchUI()
+  const navigate = useNavigate()
   const location = useLocation()
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -138,12 +139,23 @@ export function Header() {
                   ) : (
                     <>
                       <Link
-                        to="/profiller"
+                        to="/hesap"
                         className="block px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
                         onClick={() => setUserMenuOpen(false)}
                       >
-                        Profil Değiştir
+                        Hesabım
                       </Link>
+                      <button
+                        type="button"
+                        className="block w-full px-4 py-2.5 text-left text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
+                        onClick={() => {
+                          clearActiveProfile()
+                          setUserMenuOpen(false)
+                          navigate('/profiller')
+                        }}
+                      >
+                        Profil Değiştir
+                      </button>
                       <Link
                         to="/planlar"
                         className="block px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"

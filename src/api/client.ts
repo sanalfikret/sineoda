@@ -228,6 +228,29 @@ export async function createProfileRequest(
   })
 }
 
+export async function updateAccountRequest(name: string): Promise<{ user: User }> {
+  return api<{ user: User }>('/api/auth/me', {
+    method: 'PATCH',
+    body: JSON.stringify({ name }),
+  })
+}
+
+export async function updateProfileRequest(
+  profileId: string,
+  data: { name?: string; avatar?: string; isKids?: boolean },
+): Promise<{ user: User; profile: Profile }> {
+  return api<{ user: User; profile: Profile }>(`/api/auth/profiles/${profileId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteProfileRequest(profileId: string): Promise<{ user: User }> {
+  return api<{ user: User }>(`/api/auth/profiles/${profileId}`, {
+    method: 'DELETE',
+  })
+}
+
 export async function fetchBootstrap(): Promise<BootstrapResponse> {
   return api<BootstrapResponse>('/api/bootstrap')
 }
@@ -365,6 +388,7 @@ export async function startCheckout(
 export async function fetchSubscription(): Promise<{
   status: string
   plan: string | null
+  startedAt: string | null
   expiresAt: string | null
   canPlay: boolean
   paymentRequired: boolean

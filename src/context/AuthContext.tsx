@@ -11,6 +11,7 @@ import {
   createProfileRequest,
   creatorLoginRequest,
   creatorSignupRequest,
+  deleteProfileRequest,
   fetchMe,
   getProfileId,
   getToken,
@@ -18,6 +19,8 @@ import {
   setProfileId,
   setToken,
   signupRequest,
+  updateAccountRequest,
+  updateProfileRequest,
 } from '../api/client'
 import type { Profile, User } from '../types/auth'
 
@@ -44,8 +47,13 @@ interface AuthContextValue {
     studentIdFileUrl?: string
   }) => Promise<void>
   logout: () => void
+  clearActiveProfile: () => void
+  refreshUser: () => Promise<void>
   selectProfile: (profileId: string) => void
   addProfile: (name: string, avatar: string, isKids?: boolean) => Promise<void>
+  updateAccount: (name: string) => Promise<void>
+  updateProfile: (profileId: string, data: { name?: string; avatar?: string; isKids?: boolean }) => Promise<void>
+  deleteProfile: (profileId: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -153,6 +161,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setActiveProfile(null)
   }, [])
 
+  const clearActiveProfile = useCallback(() => {
+    setProfileId(null)
+    setActiveProfile(null)
+  }, [])
+
+  const refreshUser = useCallback(async () => {
+    const { user: me } = await fetchMe()
+    setUser(me)
+    syncProfile(me)
+  }, [syncProfile])
+
   const selectProfile = useCallback(
     (profileId: string) => {
       if (!user) return
@@ -172,6 +191,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  const updateAccount = useCallback(async (name: string) => {
+    const { user: updatedUser } = await updateAccountRequest(name)
+    setUser(updatedUser)
+    syncProfile(updatedUser)
+  }, [syncProfile])
+
+  const updateProfile = useCallback(
+    async (profileId: string, data: { name?: string; avatar?: string; isKids?: boolean }) => {
+      const { user: updatedUser } = await updateProfileRequest(profileId, data)
+      setUser(updatedUser)
+      if (activeProfile?.id === profileId) {
+        const nextProfile = updatedUser.profiles.find((entry) => entry.id === profileId) ?? null
+        setActiveProfile(nextProfile)
+      }
+    },
+    [activeProfile?.id],
+  )
+
+  const deleteProfile = useCallback(
+    async (profileId: string) => {
+      const { user: updatedUser } = await deleteProfileRequest(profileId)
+      setUser(updatedUser)
+      if (activeProfile?.id === profileId) {
+        setActiveProfile(null)
+        setProfileId(null)
+      }
+    },
+    [activeProfile?.id],
+  )
+
   const isAdmin = user?.role === 'admin'
   const isCreator = user?.role === 'creator'
 
@@ -187,10 +236,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       creatorLogin,
       creatorSignup,
       logout,
+      clearActiveProfile,
+      refreshUser,
       selectProfile,
       addProfile,
+      updateAccount,
+      updateProfile,
+      deleteProfile,
     }),
-    [user, activeProfile, isLoading, isAdmin, isCreator, login, signup, creatorLogin, creatorSignup, logout, selectProfile, addProfile],
+    [user, activeProfile, isLoading, isAdmin, isCreator, login, signup, creatorLogin, creatorSignup, logout, clearActiveProfile, refreshUser, selectProfile, addProfile, updateAccount, updateProfile, deleteProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

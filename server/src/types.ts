@@ -19,6 +19,7 @@ export interface UserRow {
   subscription_status?: string
   subscription_plan?: string | null
   subscription_expires_at?: string | null
+  subscription_started_at?: string | null
 }
 
 export interface ProfileRow {
