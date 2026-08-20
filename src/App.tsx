@@ -17,6 +17,7 @@ import { AdminLandingPage } from './pages/admin/AdminLandingPage'
 import { AdminUsersPage } from './pages/admin/AdminUsersPage'
 import { AdminCreatorsPage } from './pages/admin/AdminCreatorsPage'
 import { AdminStudentCinemaPage } from './pages/admin/AdminStudentCinemaPage'
+import { AccountPage } from './pages/AccountPage'
 import { BrowsePage } from './pages/BrowsePage'
 import { LandingPage } from './pages/LandingPage'
 import { LoginPage } from './pages/LoginPage'
@@ -115,6 +116,14 @@ function App() {
       <Route path="/odeme/paytr" element={<PaytrCheckoutPage />} />
       <Route path="/odeme/basarili" element={<PaymentSuccessPage />} />
       <Route path="/odeme/basarisiz" element={<PaymentFailPage />} />
+      <Route
+        path="/hesap"
+        element={
+          <ProtectedRoute>
+            <AccountPage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/profiller"
         element={

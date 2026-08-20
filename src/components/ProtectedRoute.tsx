@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 interface ProtectedRouteProps {
@@ -8,7 +8,6 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, requireProfile = false }: ProtectedRouteProps) {
   const { user, activeProfile, isLoading } = useAuth()
-  const location = useLocation()
 
   if (isLoading) {
     return (
@@ -19,15 +18,11 @@ export function ProtectedRoute({ children, requireProfile = false }: ProtectedRo
   }
 
   if (!user) {
-    return <Navigate to="/giris" state={{ from: location.pathname }} replace />
+    return <Navigate to="/giris" replace />
   }
 
   if (requireProfile && !activeProfile) {
     return <Navigate to="/profiller" replace />
-  }
-
-  if (!requireProfile && activeProfile && location.pathname === '/profiller') {
-    return <Navigate to="/" replace />
   }
 
   return children

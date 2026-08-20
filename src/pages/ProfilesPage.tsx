@@ -1,5 +1,5 @@
+import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { PageFooter } from '../components/PageFooter'
 import { PROFILE_AVATARS } from '../types/auth'
@@ -10,6 +10,7 @@ export function ProfilesPage() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [newName, setNewName] = useState('')
   const [newAvatar, setNewAvatar] = useState<string>(PROFILE_AVATARS[0])
+  const [newKids, setNewKids] = useState(false)
 
   if (!user) return null
 
@@ -20,9 +21,10 @@ export function ProfilesPage() {
 
   const handleAddProfile = async () => {
     if (!newName.trim()) return
-    await addProfile(newName, newAvatar)
+    await addProfile(newName, newAvatar, newKids)
     setNewName('')
     setNewAvatar(PROFILE_AVATARS[0])
+    setNewKids(false)
     setShowAddForm(false)
   }
 
@@ -33,6 +35,15 @@ export function ProfilesPage() {
         <p className="mt-2 text-sm text-sineoda-muted sm:text-base">
           Profilini seç veya yeni bir profil ekle
         </p>
+
+        <div className="mt-4 flex flex-wrap justify-center gap-3">
+          <Link
+            to="/hesap"
+            className="rounded-lg border border-white/15 px-4 py-2 text-sm text-white/85 hover:bg-white/5"
+          >
+            Hesabım ve Abonelik
+          </Link>
+        </div>
 
         <div className="mt-10 flex flex-wrap justify-center gap-4 sm:gap-8">
           {user.profiles.map((profile) => (
@@ -94,6 +105,15 @@ export function ProfilesPage() {
                 </button>
               ))}
             </div>
+            <label className="mt-3 flex items-center justify-center gap-2 text-sm text-white/85">
+              <input
+                type="checkbox"
+                checked={newKids}
+                onChange={(event) => setNewKids(event.target.checked)}
+                className="accent-sineoda-gold"
+              />
+              Çocuk profili
+            </label>
             <div className="mt-4 flex gap-2">
               <button
                 type="button"

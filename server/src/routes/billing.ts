@@ -4,8 +4,9 @@ import { config } from '../config.js'
 import { dbGet, dbRun } from '../db.js'
 import { createIyzicoCheckout, retrieveIyzicoCheckout } from '../services/iyzico.js'
 import { createPaytrToken, verifyPaytrCallback } from '../services/paytr.js'
-import { BILLING_PLANS, getPlan, planExpiry } from '../services/plans.js'
+import { BILLING_PLANS, getPlan } from '../services/plans.js'
 import { canUserPlay, getUserSubscription } from '../services/subscription.js'
+import { activateUserSubscription } from '../services/subscriptionActivation.js'
 import { requireAuth, type AuthRequest } from '../middleware/auth.js'
 import type { UserRow } from '../types.js'
 
@@ -39,14 +40,29 @@ router.get('/can-play', requireAuth, (req: AuthRequest, res) => {
 
 router.get('/subscription', requireAuth, (req: AuthRequest, res) => {
   const user = dbGet<UserRow>(
-    'SELECT subscription_status, subscription_plan, subscription_expires_at, role FROM users WHERE id = ?',
+    'SELECT subscription_status, subscription_plan, subscription_started_at, subscription_expires_at, role FROM users WHERE id = ?',
     [req.auth!.userId],
   )
 
+  let startedAt = user?.subscription_started_at ?? null
+  if (!startedAt) {
+    const order = dbGet<{ completed_at: string | null }>(
+      "SELECT completed_at FROM payment_orders WHERE user_id = ? AND status = 'paid' ORDER BY completed_at DESC LIMIT 1",
+      [req.auth!.userId],
+    )
+    startedAt = order?.completed_at ?? null
+  }
+
+  const expiresAt = user?.subscription_expires_at ?? null
+  const isExpired = Boolean(expiresAt && new Date(expiresAt) < new Date())
+  const status =
+    user?.subscription_status === 'active' && isExpired ? 'expired' : (user?.subscription_status ?? 'free')
+
   res.json({
-    status: user?.subscription_status ?? 'free',
+    status,
     plan: user?.subscription_plan ?? null,
-    expiresAt: user?.subscription_expires_at ?? null,
+    startedAt,
+    expiresAt,
     canPlay: canUserPlay(user),
     paymentRequired: config.isPaymentConfigured() && config.requireSubscription,
   })
@@ -69,14 +85,11 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
   }
 
   if (!config.isPaymentConfigured()) {
-    const expiresAt = planExpiry(planId)
-    dbRun(
-      'UPDATE users SET subscription_status = ?, subscription_plan = ?, subscription_expires_at = ? WHERE id = ?',
-      ['active', planId, expiresAt, user.id],
-    )
+    const { startedAt, expiresAt } = activateUserSubscription(user.id, planId)
     res.json({
       message: 'Demo modu: ödeme sağlayıcısı yapılandırılmadı, abonelik otomatik aktif edildi.',
       demoMode: true,
+      startedAt,
       expiresAt,
     })
     return
@@ -189,10 +202,7 @@ router.post('/callback/paytr', (req, res) => {
       new Date().toISOString(),
       order.id,
     ])
-    dbRun(
-      'UPDATE users SET subscription_status = ?, subscription_plan = ?, subscription_expires_at = ? WHERE id = ?',
-      ['active', order.plan_id, planExpiry(order.plan_id), order.user_id],
-    )
+    activateUserSubscription(order.user_id, order.plan_id)
   } else {
     dbRun("UPDATE payment_orders SET status = 'failed', completed_at = ? WHERE id = ?", [
       new Date().toISOString(),
@@ -221,10 +231,7 @@ router.post('/callback/iyzico', async (req, res) => {
       new Date().toISOString(),
       order.id,
     ])
-    dbRun(
-      'UPDATE users SET subscription_status = ?, subscription_plan = ?, subscription_expires_at = ? WHERE id = ?',
-      ['active', order.plan_id, planExpiry(order.plan_id), order.user_id],
-    )
+    activateUserSubscription(order.user_id, order.plan_id)
     res.redirect(`${config.frontendUrl}/odeme/basarili`)
     return
   }
