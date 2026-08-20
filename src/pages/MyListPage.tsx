@@ -1,10 +1,17 @@
 import { AppShell, useContentUI } from '../components/AppShell'
 import { ContentCard } from '../components/ContentCard'
 import { useWatchlist } from '../context/WatchlistContext'
+import { useAuth } from '../context/AuthContext'
+import { isContentAllowedForKids } from '../utils/contentRating'
 
 function MyListContent() {
   const { watchlistItems } = useWatchlist()
+  const { activeProfile } = useAuth()
   const { openDetail, openPlayer } = useContentUI()
+
+  const items = activeProfile?.isKids
+    ? watchlistItems.filter((item) => isContentAllowedForKids(item.rating))
+    : watchlistItems
 
   return (
     <main className="px-4 pb-24 pt-28 sm:px-6 lg:px-8">
@@ -14,9 +21,9 @@ function MyListContent() {
           Daha sonra izlemek için kaydettiğin içerikler
         </p>
 
-        {watchlistItems.length > 0 ? (
+        {items.length > 0 ? (
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {watchlistItems.map((item) => (
+            {items.map((item) => (
               <div key={item.id} className="space-y-2">
                 <ContentCard item={item} onSelect={openDetail} />
                 <button

@@ -18,6 +18,7 @@ import { VideoPlayer } from './VideoPlayer'
 import { VerticalPlayer } from './VerticalPlayer'
 import { useAuth } from '../context/AuthContext'
 import { isSeriesContent } from '../constants/contentTypes'
+import { isContentAllowedForKids } from '../utils/contentRating'
 import { isVerticalContent } from '../utils/vertical'
 import { saveBrowseScroll } from '../utils/browseState'
 
@@ -33,11 +34,12 @@ export function useOptionalContentUI() {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { isAdmin } = useAuth()
+  const { isAdmin, activeProfile } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [playingTarget, setPlayingTarget] = useState<PlayTarget | null>(null)
   const [paywallOpen, setPaywallOpen] = useState(false)
+  const [kidsBlockMessage, setKidsBlockMessage] = useState<string | null>(null)
 
   const openDetail = useCallback(
     (item: ContentItem) => {
@@ -51,6 +53,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const openPlayer = useCallback(
     async (item: ContentItem, episode?: Episode) => {
+      if (activeProfile?.isKids && !isContentAllowedForKids(item.rating)) {
+        setKidsBlockMessage('Bu içerik çocuk profili için uygun değil.')
+        return
+      }
+
       if (!isAdmin) {
         try {
           const { allowed } = await fetchCanPlay()
@@ -111,7 +118,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         subtitles: resolvedEpisode?.subtitles?.length ? resolvedEpisode.subtitles : item.subtitles,
       })
     },
-    [isAdmin, openDetail],
+    [activeProfile?.isKids, isAdmin, openDetail],
   )
 
   const playNextEpisode = useCallback(
@@ -137,7 +144,29 @@ export function AppShell({ children }: { children: ReactNode }) {
         />
         <VerticalPlayer target={playingTarget && isVerticalContent(playingTarget.item) ? playingTarget : null} onClose={() => setPlayingTarget(null)} />
         <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} />
-        <SearchModal onSelect={openDetail} />
+        {kidsBlockMessage && (
+          <div
+            className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="kids-block-title"
+          >
+            <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#11141c] p-6 shadow-2xl">
+              <p id="kids-block-title" className="text-lg font-semibold text-white">
+                Çocuk profili
+              </p>
+              <p className="mt-2 text-sm text-sineoda-muted">{kidsBlockMessage}</p>
+              <button
+                type="button"
+                onClick={() => setKidsBlockMessage(null)}
+                className="mt-5 w-full rounded-lg bg-sineoda-gold px-4 py-2.5 text-sm font-semibold text-sineoda-bg"
+              >
+                Tamam
+              </button>
+            </div>
+          </div>
+        )}
+        <SearchModal onSelect={openDetail} kidsSafe={Boolean(activeProfile?.isKids)} />
         <InstallPrompt />
       </div>
     </ContentUIContext.Provider>

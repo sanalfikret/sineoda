@@ -13,6 +13,7 @@ import { buildBrowseRows, filterCatalog, genresForCatalog, pickFeatured } from '
 import { restoreBrowseScroll } from '../utils/browseState'
 import { isVerticalContent } from '../utils/vertical'
 import { getContentTypeLabel } from '../constants/contentTypes'
+import { isContentAllowedForKids } from '../utils/contentRating'
 
 interface BrowsePageProps {
   contentType?: ContentType | null
@@ -53,8 +54,14 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
   }, [contentType, verticalOnly, refresh])
 
   const genreOptions = useMemo(
-    () => genresForCatalog(catalog, { type: contentType, verticalOnly, genre: null }),
-    [catalog, contentType, verticalOnly],
+    () =>
+      genresForCatalog(catalog, {
+        type: contentType,
+        verticalOnly,
+        genre: null,
+        kidsSafe: Boolean(activeProfile?.isKids),
+      }),
+    [catalog, contentType, verticalOnly, activeProfile?.isKids],
   )
 
   useEffect(() => {
@@ -102,8 +109,13 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
   }, [activeProfile])
 
   const browseOptions = useMemo(
-    () => ({ type: contentType, genre: activeGenre, verticalOnly }),
-    [contentType, activeGenre, verticalOnly],
+    () => ({
+      type: contentType,
+      genre: activeGenre,
+      verticalOnly,
+      kidsSafe: Boolean(activeProfile?.isKids),
+    }),
+    [contentType, activeGenre, verticalOnly, activeProfile?.isKids],
   )
 
   const filteredCatalog = useMemo(
@@ -115,8 +127,22 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
     if (activeGenre) {
       return filteredCatalog[0] ?? null
     }
-    return pickFeatured(catalog, featuredContent, contentType, verticalOnly)
-  }, [catalog, featuredContent, contentType, activeGenre, filteredCatalog, verticalOnly])
+    const pool = activeProfile?.isKids ? filteredCatalog : catalog
+    const featured = activeProfile?.isKids
+      ? featuredContent && isContentAllowedForKids(featuredContent.rating)
+        ? featuredContent
+        : null
+      : featuredContent
+    return pickFeatured(pool, featured, contentType, verticalOnly)
+  }, [
+    catalog,
+    featuredContent,
+    contentType,
+    activeGenre,
+    filteredCatalog,
+    verticalOnly,
+    activeProfile?.isKids,
+  ])
 
   const rows = useMemo(
     () => buildBrowseRows(catalog, browseOptions, categories, getContentById),
@@ -142,10 +168,13 @@ function BrowseContent({ contentType = null, pageTitle, verticalOnly = false }: 
 
   const filteredWatchlist = useMemo(() => {
     let items = watchlistItems
+    if (activeProfile?.isKids) {
+      items = items.filter((item) => isContentAllowedForKids(item.rating))
+    }
     if (contentType) items = items.filter((item) => item.type === contentType)
     if (activeGenre) items = items.filter((item) => item.genres.includes(activeGenre))
     return items
-  }, [watchlistItems, contentType, activeGenre])
+  }, [watchlistItems, contentType, activeGenre, activeProfile?.isKids])
 
   const continueWatching = useMemo(() => {
     if (!activeProfile) return []

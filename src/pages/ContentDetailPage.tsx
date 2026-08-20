@@ -1,16 +1,22 @@
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { AppShell, useContentUI } from '../components/AppShell'
 import { ContentDetailView } from '../components/ContentDetailView'
+import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
+import { isContentAllowedForKids } from '../utils/contentRating'
 
 function ContentDetailContent() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
   const { getContentById, isLoading } = useContent()
+  const { activeProfile } = useAuth()
   const { openPlayer } = useContentUI()
 
   const item = getContentById(id)
+  const kidsProfileBlocked = Boolean(
+    activeProfile?.isKids && item && !isContentAllowedForKids(item.rating),
+  )
   const storedFrom = sessionStorage.getItem('content-detail-from')
   const from = (location.state as { from?: string } | null)?.from ?? storedFrom ?? '/'
 
@@ -40,6 +46,7 @@ function ContentDetailContent() {
       onPlay={openPlayer}
       onBack={handleBack}
       mode="page"
+      kidsProfileBlocked={kidsProfileBlocked}
     />
   )
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ContentItem, SearchFilters } from '../types/content'
 import { getAllGenres, getAllYears, searchContent } from '../utils/search'
+import { isContentAllowedForKids } from '../utils/contentRating'
 import { ContentCard } from './ContentCard'
 import { useContent } from '../context/ContentContext'
 import { CONTENT_TYPES } from '../constants/contentTypes'
@@ -8,9 +9,10 @@ import { useSearchUI } from '../context/SearchContext'
 
 interface SearchModalProps {
   onSelect: (item: ContentItem) => void
+  kidsSafe?: boolean
 }
 
-export function SearchModal({ onSelect }: SearchModalProps) {
+export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
   const { catalog } = useContent()
   const { isOpen, closeSearch } = useSearchUI()
   const [query, setQuery] = useState('')
@@ -22,7 +24,11 @@ export function SearchModal({ onSelect }: SearchModalProps) {
   const years = useMemo(() => getAllYears(catalog), [catalog])
 
   const filters: SearchFilters = { query, genre, year, type }
-  const results = useMemo(() => searchContent(catalog, filters), [catalog, query, genre, year, type])
+  const results = useMemo(() => {
+    const found = searchContent(catalog, filters)
+    if (!kidsSafe) return found
+    return found.filter((item) => isContentAllowedForKids(item.rating))
+  }, [catalog, query, genre, year, type, kidsSafe])
 
   useEffect(() => {
     if (!isOpen) return

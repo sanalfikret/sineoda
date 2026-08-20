@@ -1,11 +1,13 @@
 import { BROWSE_GENRES, genreToCategoryId } from '../constants/genres'
 import { getContentTypeLabel } from '../constants/contentTypes'
 import type { ContentCategory, ContentItem, ContentType } from '../types/content'
+import { isContentAllowedForKids } from './contentRating'
 
 export type BrowseFilterOptions = {
   type?: ContentType | null
   genre?: string | null
   verticalOnly?: boolean
+  kidsSafe?: boolean
 }
 
 export type BrowseRow = {
@@ -22,6 +24,7 @@ export const BROWSE_ITEMS_PER_ROW = 20
 
 export function filterCatalog(catalog: ContentItem[], options: BrowseFilterOptions) {
   return catalog.filter((item) => {
+    if (options.kidsSafe && !isContentAllowedForKids(item.rating)) return false
     if (options.verticalOnly && item.videoFormat !== 'vertical') return false
     if (!options.verticalOnly && item.videoFormat === 'vertical') return false
     if (options.type && item.type !== options.type) return false
