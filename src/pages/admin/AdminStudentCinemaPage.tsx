@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
+  bulkReviewAdminStudentCinemaContent,
+  bulkDeleteAdminStudentCinemaContent,
   createAdminFilmSchool,
   deleteAdminFilmSchool,
   fetchAdminFilmSchools,
@@ -12,8 +14,15 @@ import {
   type AdminStudentCinemaItem,
 } from '../../api/client'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
-import { ShareButton } from '../../components/ShareButton'
+import { AdminStudentCinemaDetailDrawer } from '../../components/admin/AdminStudentCinemaDetailDrawer'
+import { AdminStudentCinemaFilmActions } from '../../components/admin/AdminStudentCinemaFilmActions'
 import { fuzzySearchMatch, sortByTurkishTitle } from '../../utils/search'
+import {
+  formatPublishDate,
+  isScheduledStudentFilm,
+  studentFilmStatusClass,
+  studentFilmStatusLabel,
+} from '../../utils/studentCinemaAdmin'
 
 const FORMAT_LABELS: Record<string, string> = {
   main: 'Ana film',
@@ -35,6 +44,25 @@ const REVIEW_LABELS: Record<string, string> = {
   rejected: 'Reddedildi',
 }
 
+const STATUS_FILTERS = [
+  { id: 'all', label: 'Tümü' },
+  { id: 'published', label: 'Yayında' },
+  { id: 'scheduled', label: 'Planlandı' },
+  { id: 'pending', label: 'İncelemede' },
+  { id: 'rejected', label: 'Reddedildi' },
+] as const
+
+type StatusFilter = (typeof STATUS_FILTERS)[number]['id']
+
+function matchesStatusFilter(item: AdminStudentCinemaItem, filter: StatusFilter) {
+  if (filter === 'all') return true
+  if (filter === 'scheduled') return isScheduledStudentFilm(item)
+  if (filter === 'published') {
+    return item.reviewStatus === 'published' && !isScheduledStudentFilm(item)
+  }
+  return item.reviewStatus === filter
+}
+
 export function AdminStudentCinemaPage() {
   const [tab, setTab] = useState<'schools' | 'queue' | 'films'>('films')
   const [schools, setSchools] = useState<AdminFilmSchool[]>([])
@@ -45,6 +73,11 @@ export function AdminStudentCinemaPage() {
   const [schoolQuery, setSchoolQuery] = useState('')
   const [queueQuery, setQueueQuery] = useState('')
   const [filmsQuery, setFilmsQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [schoolFilter, setSchoolFilter] = useState('all')
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [detailId, setDetailId] = useState<string | null>(null)
+  const [bulkLoading, setBulkLoading] = useState(false)
   const [schoolForm, setSchoolForm] = useState({ name: '', website: '' })
   const [submittingSchool, setSubmittingSchool] = useState(false)
   const [togglingSchoolId, setTogglingSchoolId] = useState<string | null>(null)
@@ -84,17 +117,20 @@ export function AdminStudentCinemaPage() {
   )
 
   const filteredFilms = useMemo(() => {
-    return films.filter((item) =>
-      fuzzySearchMatch(
+    return films.filter((item) => {
+      if (!matchesStatusFilter(item, statusFilter)) return false
+      if (schoolFilter !== 'all' && item.schoolId !== schoolFilter) return false
+      return fuzzySearchMatch(
         filmsQuery,
         item.title,
         item.studioName ?? '',
         item.schoolName ?? '',
         item.creatorName ?? '',
+        item.creatorEmail ?? '',
         FORMAT_LABELS[item.contentFormat] ?? item.contentFormat,
-      ),
-    )
-  }, [films, filmsQuery])
+      )
+    })
+  }, [films, filmsQuery, statusFilter, schoolFilter])
 
   const publishedFilms = useMemo(
     () => filteredFilms.filter((item) => item.reviewStatus === 'published'),
@@ -104,6 +140,7 @@ export function AdminStudentCinemaPage() {
   const filmTotals = useMemo(
     () => ({
       watchMinutes: publishedFilms.reduce((sum, item) => sum + (item.watchMinutes ?? 0), 0),
+      watchCount: publishedFilms.reduce((sum, item) => sum + (item.watchCount ?? 0), 0),
       likes: publishedFilms.reduce((sum, item) => sum + (item.likes ?? 0), 0),
       viewers: publishedFilms.reduce((sum, item) => sum + (item.viewers ?? 0), 0),
     }),
@@ -117,10 +154,72 @@ export function AdminStudentCinemaPage() {
         item.title,
         item.studioName ?? '',
         item.schoolName ?? '',
+        item.creatorName ?? '',
         FORMAT_LABELS[item.contentFormat] ?? item.contentFormat,
       ),
     )
   }, [queue, queueQuery])
+
+  const allVisibleSelected =
+    filteredFilms.length > 0 && filteredFilms.every((item) => selectedIds.includes(item.id))
+
+  const toggleSelectAll = () => {
+    if (allVisibleSelected) {
+      setSelectedIds((current) => current.filter((id) => !filteredFilms.some((item) => item.id === id)))
+      return
+    }
+    setSelectedIds((current) => [...new Set([...current, ...filteredFilms.map((item) => item.id)])])
+  }
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((current) =>
+      current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id],
+    )
+  }
+
+  const runBulkReview = async (
+    reviewStatus: 'published' | 'rejected' | 'pending',
+    schoolReviewStatus?: 'approved' | 'rejected' | 'pending' | 'none',
+  ) => {
+    if (selectedIds.length === 0) return
+    setBulkLoading(true)
+    setError('')
+    try {
+      const result = await bulkReviewAdminStudentCinemaContent({
+        ids: selectedIds,
+        reviewStatus,
+        schoolReviewStatus,
+      })
+      if (result.errors.length > 0) {
+        setError(`${result.updated} güncellendi. Hatalar: ${result.errors.join('; ')}`)
+      }
+      setSelectedIds([])
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Toplu işlem başarısız.')
+    } finally {
+      setBulkLoading(false)
+    }
+  }
+
+  const runBulkDelete = async () => {
+    if (selectedIds.length === 0) return
+    if (!window.confirm(`${selectedIds.length} film kalıcı olarak silinsin mi?`)) return
+    setBulkLoading(true)
+    setError('')
+    try {
+      const result = await bulkDeleteAdminStudentCinemaContent(selectedIds)
+      if (result.errors.length > 0) {
+        setError(`${result.deleted} silindi. Hatalar: ${result.errors.join('; ')}`)
+      }
+      setSelectedIds([])
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Toplu silme başarısız.')
+    } finally {
+      setBulkLoading(false)
+    }
+  }
 
   const handleCreateSchool = async (event: FormEvent) => {
     event.preventDefault()
@@ -194,7 +293,7 @@ export function AdminStudentCinemaPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Genç Sinema</h1>
           <p className="mt-1 text-sm text-sineoda-muted">
-            Sinema okulları, okul onayı ve Sineoda inceleme kuyruğu
+            Her satırda Yayınla, Yayından Al, Tarih Planla ve Sil butonları var. Detay ile künyeyi düzenleyin.
           </p>
         </div>
         {tab === 'schools' && (
@@ -284,11 +383,12 @@ export function AdminStudentCinemaPage() {
         <p className="text-sm text-sineoda-muted">Yükleniyor...</p>
       ) : tab === 'films' ? (
         <>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-4">
             {[
               { label: 'Toplam izlenme', value: `${filmTotals.watchMinutes} dk` },
-              { label: 'Toplam izleyici', value: String(filmTotals.viewers) },
+              { label: 'Toplam izlenme sayısı', value: String(filmTotals.watchCount) },
               { label: 'Toplam beğeni', value: String(filmTotals.likes) },
+              { label: 'Toplam izleyici', value: String(filmTotals.viewers) },
             ].map((stat) => (
               <div key={stat.label} className="rounded-xl border border-white/10 bg-[#11141c] p-4">
                 <p className="text-xs text-sineoda-muted">{stat.label}</p>
@@ -297,49 +397,156 @@ export function AdminStudentCinemaPage() {
             ))}
           </div>
 
-          <AdminSearchBar value={filmsQuery} onChange={setFilmsQuery} placeholder="Film, okul veya öğrenci ara..." />
+          <div className="flex flex-wrap items-center gap-2">
+            {STATUS_FILTERS.map((filter) => (
+              <button
+                key={filter.id}
+                type="button"
+                onClick={() => setStatusFilter(filter.id)}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+                  statusFilter === filter.id
+                    ? 'bg-emerald-500/15 text-emerald-300'
+                    : 'bg-white/5 text-white/70 hover:bg-white/10'
+                }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+            <select
+              value={schoolFilter}
+              onChange={(event) => setSchoolFilter(event.target.value)}
+              className="rounded-lg border border-white/10 bg-[#11141c] px-3 py-1.5 text-sm text-white"
+            >
+              <option value="all">Tüm okullar</option>
+              {schools.map((school) => (
+                <option key={school.id} value={school.id}>
+                  {school.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <AdminSearchBar value={filmsQuery} onChange={setFilmsQuery} placeholder="Film, okul, öğrenci veya e-posta ara..." />
+
+          {selectedIds.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3">
+              <span className="text-sm text-emerald-200">{selectedIds.length} seçili</span>
+              <button
+                type="button"
+                disabled={bulkLoading}
+                onClick={() => void runBulkReview('published', 'approved')}
+                className="rounded-lg bg-sineoda-gold px-3 py-1.5 text-xs font-semibold text-sineoda-bg disabled:opacity-60"
+              >
+                Toplu Yayınla
+              </button>
+              <button
+                type="button"
+                disabled={bulkLoading}
+                onClick={() => void runBulkReview('pending')}
+                className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/80"
+              >
+                Toplu Yayından Al
+              </button>
+              <button
+                type="button"
+                disabled={bulkLoading}
+                onClick={() => void runBulkReview('rejected')}
+                className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs text-red-300"
+              >
+                Toplu Reddet
+              </button>
+              <button
+                type="button"
+                disabled={bulkLoading}
+                onClick={() => void runBulkDelete()}
+                className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs text-red-300"
+              >
+                Toplu Sil
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedIds([])}
+                className="rounded-lg px-3 py-1.5 text-xs text-sineoda-muted"
+              >
+                Seçimi Temizle
+              </button>
+            </div>
+          )}
 
           {filteredFilms.length === 0 ? (
             <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-sineoda-muted">
-              Henüz Genç Sinema içeriği yok.
+              Filtrelere uygun Genç Sinema içeriği yok.
             </p>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-white/10">
               <table className="min-w-full text-left text-sm">
                 <thead className="bg-[#11141c] text-sineoda-muted">
                   <tr>
+                    <th className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={allVisibleSelected}
+                        onChange={toggleSelectAll}
+                        className="accent-emerald-400"
+                      />
+                    </th>
                     <th className="px-4 py-3 font-medium">Film</th>
-                    <th className="px-4 py-3 font-medium">Öğrenci / Proje</th>
+                    <th className="px-4 py-3 font-medium">Öğrenci</th>
                     <th className="px-4 py-3 font-medium">Okul</th>
                     <th className="px-4 py-3 font-medium">Tür</th>
                     <th className="px-4 py-3 font-medium">Durum</th>
+                    <th className="px-4 py-3 font-medium">Yayın tarihi</th>
                     <th className="px-4 py-3 font-medium">İzlenme</th>
-                    <th className="px-4 py-3 font-medium">İzleyici</th>
+                    <th className="px-4 py-3 font-medium">İzlenme sayısı</th>
                     <th className="px-4 py-3 font-medium">Beğeni</th>
-                    <th className="px-4 py-3 font-medium">Paylaş</th>
+                    <th className="px-4 py-3 font-medium min-w-[240px]">Yönetim</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredFilms.map((item) => (
                     <tr key={item.id} className="border-t border-white/5">
-                      <td className="px-4 py-3 font-medium text-white">{item.title}</td>
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(item.id)}
+                          onChange={() => toggleSelect(item.id)}
+                          className="accent-emerald-400"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={() => setDetailId(item.id)}
+                          className="font-medium text-white hover:text-emerald-300"
+                        >
+                          {item.title}
+                        </button>
+                      </td>
                       <td className="px-4 py-3 text-sineoda-muted">
-                        {item.creatorName ?? '—'}
-                        {item.studioName ? ` · ${item.studioName}` : ''}
+                        <p>{item.creatorName ?? '—'}</p>
+                        {item.studioName ? <p className="text-xs">{item.studioName}</p> : null}
                       </td>
                       <td className="px-4 py-3 text-sineoda-muted">{item.schoolName ?? '—'}</td>
                       <td className="px-4 py-3 text-sineoda-muted">
                         {FORMAT_LABELS[item.contentFormat] ?? item.contentFormat}
                       </td>
-                      <td className="px-4 py-3">{REVIEW_LABELS[item.reviewStatus] ?? item.reviewStatus}</td>
-                      <td className="px-4 py-3">{item.watchMinutes ?? 0} dk</td>
-                      <td className="px-4 py-3">{item.viewers ?? 0}</td>
-                      <td className="px-4 py-3">{item.likes ?? 0}</td>
                       <td className="px-4 py-3">
-                        <ShareButton
-                          contentId={item.id}
-                          title={item.title}
-                          disabled={item.reviewStatus !== 'published'}
+                        <span className={`rounded-full px-2.5 py-1 text-xs ${studentFilmStatusClass(item)}`}>
+                          {studentFilmStatusLabel(item)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-sineoda-muted">
+                        {formatPublishDate(item.publishedAt)}
+                      </td>
+                      <td className="px-4 py-3">{item.watchMinutes ?? 0} dk</td>
+                      <td className="px-4 py-3">{item.watchCount ?? 0}</td>
+                      <td className="px-4 py-3">{item.likes ?? 0}</td>
+                      <td className="px-4 py-3 align-top">
+                        <AdminStudentCinemaFilmActions
+                          item={item}
+                          onDetail={() => setDetailId(item.id)}
+                          onChanged={() => void load()}
+                          onError={setError}
                         />
                       </td>
                     </tr>
@@ -435,7 +642,7 @@ export function AdminStudentCinemaPage() {
         </>
       ) : (
         <>
-          <AdminSearchBar value={queueQuery} onChange={setQueueQuery} placeholder="Başlık, okul veya yapımcı ara..." />
+          <AdminSearchBar value={queueQuery} onChange={setQueueQuery} placeholder="Başlık, okul veya öğrenci ara..." />
           {filteredQueue.length === 0 ? (
             <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-sineoda-muted">
               Bekleyen Genç Sinema başvurusu yok.
@@ -451,7 +658,10 @@ export function AdminStudentCinemaPage() {
                       </p>
                       <h3 className="mt-1 text-lg font-semibold text-white">{item.title}</h3>
                       <p className="mt-1 text-sm text-sineoda-muted">
-                        {item.studioName ?? 'Yapımcı'} · {item.schoolName ?? 'Okul belirtilmemiş'}
+                        {item.creatorName ?? 'Öğrenci belirtilmemiş'} · {item.schoolName ?? 'Okul belirtilmemiş'}
+                      </p>
+                      <p className="mt-1 text-xs text-sineoda-muted">
+                        {item.watchCount ?? 0} izlenme · {item.likes ?? 0} beğeni
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs">
@@ -465,6 +675,13 @@ export function AdminStudentCinemaPage() {
                   </div>
 
                   <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setDetailId(item.id)}
+                      className="rounded-lg border border-white/15 px-3 py-1.5 text-xs hover:bg-white/5"
+                    >
+                      Detay & Künye
+                    </button>
                     {item.schoolReviewStatus !== 'approved' && (
                       <button
                         type="button"
@@ -505,6 +722,13 @@ export function AdminStudentCinemaPage() {
           )}
         </>
       )}
+
+      <AdminStudentCinemaDetailDrawer
+        contentId={detailId}
+        schools={schools}
+        onClose={() => setDetailId(null)}
+        onUpdated={() => void load()}
+      />
     </div>
   )
 }

@@ -11,6 +11,7 @@ import {
 import { mapContent, serializeSubtitles, slugify } from '../mappers.js'
 import { normalizeContentType } from '../constants/contentTypes.js'
 import { parseContentAddedAt } from '../services/license.js'
+import { serializeCredits } from '../services/credits.js'
 import { getContentEngagementStats } from '../services/studentCinema.js'
 import type { ContentRow, CreatorRow } from '../types.js'
 
@@ -273,7 +274,7 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
       null,
       0,
       serializeSubtitles(body.subtitles ?? []),
-      '{}',
+      body.credits !== undefined ? serializeCredits(body.credits) : '{}',
       parseContentAddedAt(now),
       null,
       null,
@@ -320,7 +321,7 @@ router.patch('/content/:id', requireApprovedCreator, (req: CreatorAuthRequest, r
   dbRun(
     `UPDATE content SET
       title = ?, description = ?, year = ?, duration = ?, rating = ?, type = ?,
-      genres = ?, poster = ?, backdrop = ?, video_url = ?, review_status = ?
+      genres = ?, poster = ?, backdrop = ?, video_url = ?, credits_json = ?, review_status = ?
     WHERE id = ? AND creator_id = ?`,
     [
       body.title !== undefined ? String(body.title) : existing.title,
@@ -333,6 +334,7 @@ router.patch('/content/:id', requireApprovedCreator, (req: CreatorAuthRequest, r
       body.poster !== undefined ? String(body.poster) : existing.poster,
       body.backdrop !== undefined ? String(body.backdrop) : existing.backdrop,
       body.videoUrl !== undefined ? String(body.videoUrl) : existing.video_url,
+      body.credits !== undefined ? serializeCredits(body.credits) : existing.credits_json ?? '{}',
       'pending',
       existing.id,
       creator.id,
