@@ -20,6 +20,7 @@ import {
 } from '../data/demoLandingPosters'
 import { fetchBootstrap, fetchLandingConfig } from '../api/client'
 import type { LandingHeroConfig } from '../api/client'
+import { DEFAULT_LANDING_SECTIONS, mergeLandingSections } from '../constants/landingDefaults'
 import { resolveLandingSliderItems } from '../utils/landingSlider'
 import type { ContentItem } from '../types/content'
 
@@ -40,6 +41,7 @@ function findContent(catalog: ContentItem[], contentId: string | null | undefine
 export function LandingPage() {
   const [catalog, setCatalog] = useState<ContentItem[]>([])
   const [heroConfig, setHeroConfig] = useState<LandingHeroConfig | null>(null)
+  const [sections, setSections] = useState(DEFAULT_LANDING_SECTIONS)
   const [sliderItems, setSliderItems] = useState<ContentItem[]>([])
   const [showcases, setShowcases] = useState(DEMO_LANDING_SHOWCASES)
   const [studentPicks, setStudentPicks] = useState<ContentItem[]>([])
@@ -57,6 +59,7 @@ export function LandingPage() {
 
     setCatalog(mergedCatalog)
     setHeroConfig(landing.hero ?? bootstrap.landing?.hero ?? null)
+    setSections(mergeLandingSections(landing.sections ?? bootstrap.landing?.sections))
     const apiSlider = resolveLandingSliderItems(landing, mergedCatalog, bootstrap.trailers ?? [])
     setSliderItems(
       apiSlider.length > 0 ? apiSlider : DEMO_LANDING_SHOWCASES[1].items.slice(0, 8),
@@ -117,17 +120,17 @@ export function LandingPage() {
         featuredItem={featuredItem}
         fallbackImage={FALLBACK_HERO}
       />
-      <LandingManifesto />
+      <LandingManifesto section={sections.manifesto} />
       <LandingSlider items={sliderItems} />
       <StudentCinemaPicksRow items={studentPicks} guestMode className="pt-4" />
       <LandingCategoryShowcase showcases={showcases} />
-      <LandingJournalTeaser />
-      <LandingFeatures />
-      <LandingPricing />
-      <LandingStudentCinemaSection />
-      <LandingFaq />
-      <LandingEmailSignup />
-      <LandingCreatorSection />
+      <LandingJournalTeaser section={sections.journal} />
+      <LandingFeatures section={sections.features} />
+      <LandingPricing section={sections.campaign} />
+      <LandingStudentCinemaSection section={sections.studentCinema} />
+      <LandingFaq section={sections.faq} />
+      <LandingEmailSignup section={sections.emailSignup} />
+      <LandingCreatorSection section={sections.creator} />
       <SiteFooter />
     </div>
   )

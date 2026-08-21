@@ -1,22 +1,20 @@
-import { BRAND_FEATURES } from '../../constants/brand'
+import type { LandingSectionsConfig } from '../../constants/landingDefaults'
 
-export function LandingFeatures() {
+export function LandingFeatures({ section }: { section: LandingSectionsConfig['features'] }) {
   return (
     <section className="border-y border-white/[0.06] bg-sineoda-bg px-5 py-20 sm:px-8 sm:py-24">
       <div className="mx-auto max-w-[1400px]">
         <div className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sineoda-accent">
-            Neden Sineoda
+            {section.eyebrow}
           </p>
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            Dünya bağımsız sineması için tasarlandı.
-            <br />
-            Göz yormaz.
+          <h2 className="mt-4 whitespace-pre-line text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+            {section.title}
           </h2>
         </div>
 
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {BRAND_FEATURES.map((feature) => (
+          {section.items.map((feature) => (
             <article
               key={feature.title}
               className="rounded-xl border border-white/[0.06] bg-sineoda-surface/60 p-6"

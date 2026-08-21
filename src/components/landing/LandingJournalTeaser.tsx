@@ -2,10 +2,15 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchJournalPosts } from '../../api/client'
 import { DEMO_JOURNAL_POSTS } from '../../data/demoJournal'
+import type { LandingSectionsConfig } from '../../constants/landingDefaults'
 import type { JournalPost } from '../../types/journal'
 import { JournalCard } from '../journal/JournalCard'
 
-export function LandingJournalTeaser() {
+export function LandingJournalTeaser({
+  section,
+}: {
+  section: LandingSectionsConfig['journal']
+}) {
   const [posts, setPosts] = useState<JournalPost[]>(DEMO_JOURNAL_POSTS.slice(0, 3))
 
   useEffect(() => {
@@ -26,14 +31,12 @@ export function LandingJournalTeaser() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sineoda-accent">
-              Sineoda Dergi
+              {section.eyebrow}
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              Bağımsız sinema üzerine yazılar
+              {section.title}
             </h2>
-            <p className="mt-3 max-w-2xl text-base text-sineoda-muted">
-              Festival notları, küratör seçkileri ve dünya bağımsız sinemasından haberler.
-            </p>
+            <p className="mt-3 max-w-2xl text-base text-sineoda-muted">{section.description}</p>
           </div>
           <Link
             to="/dergi"

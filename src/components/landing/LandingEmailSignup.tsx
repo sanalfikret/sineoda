@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import type { LandingSectionsConfig } from '../../constants/landingDefaults'
 
-export function LandingEmailSignup() {
+export function LandingEmailSignup({ section }: { section: LandingSectionsConfig['emailSignup'] }) {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
 
@@ -14,12 +15,8 @@ export function LandingEmailSignup() {
   return (
     <section className="border-t border-white/5 bg-gradient-to-b from-sineoda-bg to-black px-4 py-16 sm:px-6 sm:py-20">
       <div className="mx-auto max-w-3xl text-center">
-        <h2 className="text-2xl font-bold text-white sm:text-3xl lg:text-4xl">
-          İzlemeye hazır mısın?
-        </h2>
-        <p className="mt-3 text-sm text-white/60 sm:text-base">
-          E-posta adresini gir, üyeliğini oluştur ve sınırsız içeriğe hemen başla.
-        </p>
+        <h2 className="text-2xl font-bold text-white sm:text-3xl lg:text-4xl">{section.title}</h2>
+        <p className="mt-3 text-sm text-white/60 sm:text-base">{section.description}</p>
 
         <form
           onSubmit={handleSubmit}
@@ -36,7 +33,7 @@ export function LandingEmailSignup() {
             type="submit"
             className="h-14 rounded-md bg-sineoda-gold px-8 text-base font-bold text-sineoda-bg transition hover:brightness-110"
           >
-            Başla
+            {section.buttonLabel}
           </button>
         </form>
       </div>
