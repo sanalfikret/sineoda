@@ -38,7 +38,7 @@ import { backfillEpisodeVideoUrls } from './services/episodeVideos.js'
 import { ensureDemoCatalog } from './demoCatalog.js'
 import { ensureGenreCatalog } from './genreCatalog.js'
 import { ensureJournalPosts } from './journalSeed.js'
-import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureLandingShowcases, ensureFilmSchools, ensureStudentCinemaDemoFilms, ensureStudentCinemaDemoCredits } from './seed.js'
+import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureLandingShowcases, ensureFilmSchools, ensureStudentCinemaDemoFilms, ensureStudentCinemaDemoCredits, ensureCreatorDemoSeed } from './seed.js'
 import type { ContentRow } from './types.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -58,6 +58,7 @@ ensureJournalPosts()
 ensureFilmSchools()
 ensureStudentCinemaDemoFilms()
 ensureStudentCinemaDemoCredits()
+ensureCreatorDemoSeed()
 backfillMissingImages()
 backfillEpisodeVideoUrls()
 fillCategoriesToTarget()

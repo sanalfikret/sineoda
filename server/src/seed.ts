@@ -762,3 +762,221 @@ export function ensureStudentCinemaDemoFilms() {
     )
   }
 }
+
+const CREATOR_DEMO_PROFILES = [
+  {
+    id: 'creator-demo-01',
+    userId: 'creator-user-01',
+    email: 'mehmet@kuzeyfilm.demo',
+    name: 'Mehmet Arslan',
+    studioName: 'Kuzey Film Atölyesi',
+    bio: 'Bağımsız kısa ve uzun metraj yapımlar.',
+    filmCount: 2,
+  },
+  {
+    id: 'creator-demo-02',
+    userId: 'creator-user-02',
+    email: 'ayse@perdearkasi.demo',
+    name: 'Ayşe Demir',
+    studioName: 'Perde Arkası Prodüksiyon',
+    bio: 'Belgesel ve deneysel sinema.',
+    filmCount: 4,
+  },
+  {
+    id: 'creator-demo-03',
+    userId: 'creator-user-03',
+    email: 'can@anadoluisk.demo',
+    name: 'Can Yılmaz',
+    studioName: 'Anadolu Işık Yapım',
+    bio: 'Yerel hikâyeler, yerel sesler.',
+    filmCount: 3,
+  },
+  {
+    id: 'creator-demo-04',
+    userId: 'creator-user-04',
+    email: 'elif@istanbulkisa.demo',
+    name: 'Elif Şahin',
+    studioName: 'İstanbul Kısa Film',
+    bio: 'Festival odaklı kısa filmler.',
+    filmCount: 5,
+  },
+  {
+    id: 'creator-demo-05',
+    userId: 'creator-user-05',
+    email: 'burak@bagimsizsinema.demo',
+    name: 'Burak Koç',
+    studioName: 'Bağımsız Sinema Kolektifi',
+    bio: 'Kolektif yapım modeli ile çalışan stüdyo.',
+    filmCount: 6,
+  },
+] as const
+
+const CREATOR_DEMO_TITLES = [
+  'Sessiz Mahalle',
+  'Son Perde',
+  'Kuzey Rüzgarı',
+  'Gece Vardiyası',
+  'Cam Kenarı',
+  'Boş Sahne',
+  'Deniz Feneri',
+  'Arka Sokak',
+  'İki Şehir',
+  'Kırık Lens',
+  'Sabah Işığı',
+  'Uzak Hat',
+  'Küçük Oda',
+  'Yağmur Sonrası',
+  'Son Vagon Notu',
+  'Perde Açılıyor',
+  'Gölge Oyunu',
+  'Merdiven',
+  'Bekleyen',
+  'Son Kare',
+] as const
+
+const CREATOR_DEMO_POSTERS = [
+  'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&h=600&fit=crop',
+  'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=400&h=600&fit=crop',
+  'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=400&h=600&fit=crop',
+  'https://images.unsplash.com/photo-1509281373367-fa7cf25a27f8?w=400&h=600&fit=crop',
+  'https://images.unsplash.com/photo-1535016120720-40c6464ebe02?w=400&h=600&fit=crop',
+] as const
+
+const CREATOR_DEMO_VIDEOS = [V.tears, V.sintel, V.elephants, V.bunny, V.escapes] as const
+
+function creatorDemoCredits(director: string, studio: string) {
+  return serializeCredits({
+    directors: [director],
+    producers: [director],
+    cast: [director],
+    studio,
+    audioLanguages: ['Türkçe'],
+    subtitleLanguages: ['Türkçe'],
+  })
+}
+
+function creatorDemoReviewState(index: number): {
+  reviewStatus: 'pending' | 'published' | 'rejected'
+  publishedAt: string | null
+  licenseExpiresAt: string | null
+} {
+  const now = Date.now()
+  const mod = index % 6
+  if (mod === 0) {
+    return {
+      reviewStatus: 'pending',
+      publishedAt: null,
+      licenseExpiresAt: new Date(now + 365 * 24 * 60 * 60 * 1000).toISOString(),
+    }
+  }
+  if (mod === 1) {
+    return {
+      reviewStatus: 'published',
+      publishedAt: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      licenseExpiresAt: new Date(now + 180 * 24 * 60 * 60 * 1000).toISOString(),
+    }
+  }
+  if (mod === 2) {
+    return {
+      reviewStatus: 'published',
+      publishedAt: new Date(now + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      licenseExpiresAt: null,
+    }
+  }
+  if (mod === 3) {
+    return {
+      reviewStatus: 'rejected',
+      publishedAt: null,
+      licenseExpiresAt: new Date(now + 90 * 24 * 60 * 60 * 1000).toISOString(),
+    }
+  }
+  if (mod === 4) {
+    return {
+      reviewStatus: 'published',
+      publishedAt: new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      licenseExpiresAt: new Date(now - 10 * 24 * 60 * 60 * 1000).toISOString(),
+    }
+  }
+  return {
+    reviewStatus: 'published',
+    publishedAt: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    licenseExpiresAt: null,
+  }
+}
+
+export function ensureCreatorDemoSeed() {
+  const now = new Date().toISOString()
+  const passwordHash = bcrypt.hashSync('creator123', 10)
+  let titleIndex = 0
+
+  for (const profile of CREATOR_DEMO_PROFILES) {
+    const userExists = dbGet('SELECT id FROM users WHERE id = ? OR email = ?', [profile.userId, profile.email])
+    if (!userExists) {
+      dbRun(
+        'INSERT INTO users (id, name, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+        [profile.userId, profile.name, profile.email, passwordHash, 'creator', now],
+      )
+    }
+
+    const creatorExists = dbGet('SELECT id FROM creators WHERE id = ?', [profile.id])
+    if (!creatorExists) {
+      dbRun(
+        'INSERT INTO creators (id, user_id, studio_name, bio, status, legal_accepted_at, created_at, program) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [profile.id, profile.userId, profile.studioName, profile.bio, 'approved', now, now, 'standard'],
+      )
+    }
+
+    for (let filmIndex = 0; filmIndex < profile.filmCount; filmIndex += 1) {
+      const globalIndex = titleIndex
+      const contentId = `creator-film-${String(globalIndex + 1).padStart(2, '0')}`
+      titleIndex += 1
+
+      if (dbGet('SELECT id FROM content WHERE id = ?', [contentId])) continue
+
+      const review = creatorDemoReviewState(globalIndex)
+      const title = CREATOR_DEMO_TITLES[globalIndex]
+      const poster = CREATOR_DEMO_POSTERS[globalIndex % CREATOR_DEMO_POSTERS.length]
+      const videoUrl = CREATOR_DEMO_VIDEOS[globalIndex % CREATOR_DEMO_VIDEOS.length]
+
+      dbRun(
+        `INSERT INTO content (
+          id, title, description, year, duration, rating, type, genres, poster, backdrop,
+          video_url, stream_provider, trailer_url, video_format, is_new, new_until, featured,
+          subtitles_json, credits_json, content_added_at, license_expires_at, published_at,
+          creator_id, review_status, program, content_format, parent_content_id, school_id, school_review_status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          contentId,
+          title,
+          `${profile.studioName} yapımı bağımsız film — admin incelemesi için demo kayıt.`,
+          2024 + (globalIndex % 2),
+          globalIndex % 3 === 0 ? '22 dk' : '1s 18dk',
+          globalIndex % 2 === 0 ? '13+' : '16+',
+          globalIndex % 4 === 0 ? 'kisa-film' : 'film',
+          JSON.stringify(globalIndex % 2 === 0 ? ['Dram', 'Yerli'] : ['Belgesel', 'Dram']),
+          poster,
+          poster.replace('w=400&h=600', 'w=1600&h=900'),
+          videoUrl,
+          'custom',
+          videoUrl,
+          'standard',
+          0,
+          null,
+          0,
+          '[]',
+          creatorDemoCredits(profile.name, profile.studioName),
+          now,
+          review.licenseExpiresAt,
+          review.publishedAt,
+          profile.id,
+          review.reviewStatus,
+          'standard',
+          'main',
+          null,
+          null,
+          'none',
+        ],
+      )
+    }
+  }
+}
