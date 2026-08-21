@@ -131,6 +131,24 @@ export const EDITORIAL_GENRE_MERGE_RULES: readonly EditorialGenreMergeRule[] = [
     mergeTitles: ['Komedi', 'Komedi Özel'],
     mergeIds: ['genre-row-komedi'],
   },
+  {
+    keepId: 'romance',
+    canonicalTitle: 'Romantik',
+    mergeTitles: ['Romantik'],
+    mergeIds: ['genre-row-romantik'],
+  },
+  {
+    keepId: 'standup',
+    canonicalTitle: 'Stand-up',
+    mergeTitles: ['Stand-up'],
+    mergeIds: ['genre-row-stand-up'],
+  },
+  {
+    keepId: 'scifi-fantasy',
+    canonicalTitle: 'Bilim Kurgu ve Fantastik',
+    mergeTitles: ['Bilim Kurgu', 'Fantastik'],
+    mergeIds: ['genre-row-bilim-kurgu', 'genre-row-fantastik'],
+  },
 ]
 
 export function normalizeCategoryTitle(title: string) {
