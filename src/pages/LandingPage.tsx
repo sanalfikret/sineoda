@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { SiteFooter } from '../components/SiteFooter'
 import { LandingFeatures } from '../components/landing/LandingFeatures'
 import { LandingManifesto } from '../components/landing/LandingManifesto'
@@ -19,6 +19,7 @@ import {
   resolveLandingShowcases,
 } from '../data/demoLandingPosters'
 import { fetchBootstrap, fetchLandingConfig } from '../api/client'
+import type { LandingHeroConfig } from '../api/client'
 import { resolveLandingSliderItems } from '../utils/landingSlider'
 import type { ContentItem } from '../types/content'
 
@@ -31,8 +32,14 @@ function mergeCatalog(catalog: ContentItem[]) {
   return [...catalog, ...demo.filter((item) => !ids.has(item.id))]
 }
 
+function findContent(catalog: ContentItem[], contentId: string | null | undefined) {
+  if (!contentId) return null
+  return catalog.find((item) => item.id === contentId) ?? null
+}
+
 export function LandingPage() {
-  const [heroItem, setHeroItem] = useState<ContentItem | null>(null)
+  const [catalog, setCatalog] = useState<ContentItem[]>([])
+  const [heroConfig, setHeroConfig] = useState<LandingHeroConfig | null>(null)
   const [sliderItems, setSliderItems] = useState<ContentItem[]>([])
   const [showcases, setShowcases] = useState(DEMO_LANDING_SHOWCASES)
   const [studentPicks, setStudentPicks] = useState<ContentItem[]>([])
@@ -47,9 +54,9 @@ export function LandingPage() {
         return
       }
 
-      const catalog =
+      const mergedCatalog =
         bootstrap.catalog.length >= 20 ? bootstrap.catalog : mergeCatalog(bootstrap.catalog)
-      setHeroItem(bootstrap.featuredContent ?? catalog[0] ?? null)
+      setCatalog(mergedCatalog)
 
       let landing = bootstrap.landing ?? null
       if (!landing) {
@@ -60,7 +67,9 @@ export function LandingPage() {
         }
       }
 
-      const apiSlider = resolveLandingSliderItems(landing, catalog, bootstrap.trailers ?? [])
+      setHeroConfig(landing?.hero ?? null)
+
+      const apiSlider = resolveLandingSliderItems(landing, mergedCatalog, bootstrap.trailers ?? [])
       setSliderItems(
         apiSlider.length > 0 ? apiSlider : DEMO_LANDING_SHOWCASES[1].items.slice(0, 8),
       )
@@ -76,10 +85,30 @@ export function LandingPage() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  const backgroundContent = useMemo(() => {
+    const fromHero = findContent(catalog, heroConfig?.backgroundContentId)
+    if (fromHero) return fromHero
+    if (heroConfig?.backgroundType === 'content') {
+      return catalog.find((item) => item.featured && item.program !== 'student_cinema') ?? catalog[0] ?? null
+    }
+    return null
+  }, [catalog, heroConfig])
+
+  const featuredItem = useMemo(() => {
+    const fromHero = findContent(catalog, heroConfig?.featuredContentId)
+    if (fromHero) return fromHero
+    return catalog.find((item) => item.featured && item.program !== 'student_cinema') ?? catalog[0] ?? null
+  }, [catalog, heroConfig])
+
   return (
     <div className="min-h-dvh bg-sineoda-bg text-white">
       <LandingHeader scrolled={scrolled} />
-      <LandingHero heroItem={heroItem} fallbackImage={FALLBACK_HERO} />
+      <LandingHero
+        hero={heroConfig}
+        backgroundContent={backgroundContent}
+        featuredItem={featuredItem}
+        fallbackImage={FALLBACK_HERO}
+      />
       <LandingManifesto />
       <LandingSlider items={sliderItems} />
       <StudentCinemaPicksRow items={studentPicks} guestMode className="pt-4" />

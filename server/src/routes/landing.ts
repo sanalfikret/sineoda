@@ -1,7 +1,13 @@
 import { Router } from 'express'
-import { dbAll, dbRun } from '../db.js'
+import { dbAll, dbGet, dbRun } from '../db.js'
 import { mapContent } from '../mappers.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
+import {
+  getLandingHeroConfig,
+  normalizeLandingHero,
+  saveLandingHeroConfig,
+  type LandingHeroConfig,
+} from '../services/landingHero.js'
 import type { ContentRow } from '../types.js'
 
 const router = Router()
@@ -43,7 +49,26 @@ export function getLandingConfig() {
       .filter((item): item is NonNullable<typeof item> => Boolean(item)),
   }))
 
-  return { slider, sliderContentIds, showcases }
+  const hero = getLandingHeroConfig()
+
+  return { slider, sliderContentIds, showcases, hero }
+}
+
+function contentExists(contentId: string | null) {
+  if (!contentId) return true
+  const row = dbGet<{ id: string }>('SELECT id FROM content WHERE id = ?', [contentId])
+  return Boolean(row)
+}
+
+function validateHeroPayload(raw: unknown): LandingHeroConfig {
+  const hero = normalizeLandingHero(raw as Partial<LandingHeroConfig>)
+  if (hero.backgroundContentId && !contentExists(hero.backgroundContentId)) {
+    hero.backgroundContentId = null
+  }
+  if (hero.featuredContentId && !contentExists(hero.featuredContentId)) {
+    hero.featuredContentId = null
+  }
+  return hero
 }
 
 router.get('/', (_req, res) => {
@@ -55,10 +80,15 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
     ? req.body.sliderIds.map(String)
     : null
   const showcases = Array.isArray(req.body.showcases) ? req.body.showcases : null
+  const heroPayload = req.body.hero
 
   if (!sliderIds || !showcases) {
     res.status(400).json({ error: 'sliderIds ve showcases zorunlu.' })
     return
+  }
+
+  if (heroPayload !== undefined && heroPayload !== null) {
+    saveLandingHeroConfig(validateHeroPayload(heroPayload))
   }
 
   dbRun('DELETE FROM landing_slider')
