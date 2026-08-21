@@ -104,6 +104,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<HomeRoute />} />
+      <Route path="/tanitim" element={<LandingPage />} />
       <Route path="/giris" element={<LoginPage />} />
       <Route path="/kayit" element={<SignupPage />} />
       <Route path="/eposta-dogrula" element={<VerifyEmailPage />} />

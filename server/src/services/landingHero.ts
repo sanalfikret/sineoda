@@ -44,10 +44,30 @@ function normalizeBackgroundType(value: unknown): LandingHeroBackgroundType {
   return 'image'
 }
 
+function isEmbeddableVideoUrl(url: string) {
+  if (!url) return false
+  return !/youtube\.com|youtu\.be/i.test(url)
+}
+
 export function normalizeLandingHero(input: Partial<LandingHeroConfig> | null | undefined): LandingHeroConfig {
   const source = input ?? {}
-  const backgroundContentId = trimOrEmpty(source.backgroundContentId) || null
+  const backgroundType = normalizeBackgroundType(source.backgroundType)
+  let backgroundImage = trimOrEmpty(source.backgroundImage)
+  let backgroundVideo = trimOrEmpty(source.backgroundVideo)
+  let backgroundContentId = trimOrEmpty(source.backgroundContentId) || null
   const featuredContentId = trimOrEmpty(source.featuredContentId) || null
+
+  if (backgroundType === 'image') {
+    backgroundVideo = ''
+    backgroundContentId = null
+  } else if (backgroundType === 'video') {
+    backgroundImage = ''
+    backgroundContentId = null
+    if (!isEmbeddableVideoUrl(backgroundVideo)) backgroundVideo = ''
+  } else {
+    backgroundImage = ''
+    backgroundVideo = ''
+  }
 
   return {
     line1: trimOrEmpty(source.line1) || DEFAULT_LANDING_HERO.line1,
@@ -56,9 +76,9 @@ export function normalizeLandingHero(input: Partial<LandingHeroConfig> | null | 
     ctaPrimary: trimOrEmpty(source.ctaPrimary) || DEFAULT_LANDING_HERO.ctaPrimary,
     ctaSecondary: trimOrEmpty(source.ctaSecondary) || DEFAULT_LANDING_HERO.ctaSecondary,
     legalNote: trimOrEmpty(source.legalNote) || DEFAULT_LANDING_HERO.legalNote,
-    backgroundType: normalizeBackgroundType(source.backgroundType),
-    backgroundImage: trimOrEmpty(source.backgroundImage),
-    backgroundVideo: trimOrEmpty(source.backgroundVideo),
+    backgroundType,
+    backgroundImage,
+    backgroundVideo,
     backgroundContentId,
     featuredContentId,
     showFeaturedCard: source.showFeaturedCard !== false,

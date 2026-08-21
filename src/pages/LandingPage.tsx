@@ -48,33 +48,34 @@ export function LandingPage() {
   useEffect(() => {
     void (async () => {
       let bootstrap = null
+      let landing = null
       try {
-        bootstrap = await fetchBootstrap()
+        ;[bootstrap, landing] = await Promise.all([
+          fetchBootstrap(),
+          fetchLandingConfig().catch(() => null),
+        ])
       } catch {
         return
       }
+
+      if (!bootstrap) return
 
       const mergedCatalog =
         bootstrap.catalog.length >= 20 ? bootstrap.catalog : mergeCatalog(bootstrap.catalog)
       setCatalog(mergedCatalog)
 
-      let landing = bootstrap.landing ?? null
-      if (!landing) {
-        try {
-          landing = await fetchLandingConfig()
-        } catch {
-          landing = null
-        }
-      }
+      setHeroConfig(landing?.hero ?? bootstrap.landing?.hero ?? null)
 
-      setHeroConfig(landing?.hero ?? null)
-
-      const apiSlider = resolveLandingSliderItems(landing, mergedCatalog, bootstrap.trailers ?? [])
+      const apiSlider = resolveLandingSliderItems(
+        landing ?? bootstrap.landing ?? null,
+        mergedCatalog,
+        bootstrap.trailers ?? [],
+      )
       setSliderItems(
         apiSlider.length > 0 ? apiSlider : DEMO_LANDING_SHOWCASES[1].items.slice(0, 8),
       )
 
-      setShowcases(resolveLandingShowcases(landing?.showcases))
+      setShowcases(resolveLandingShowcases(landing?.showcases ?? bootstrap.landing?.showcases))
       setStudentPicks(bootstrap.studentCinemaPicks ?? [])
     })()
   }, [])
@@ -85,20 +86,39 @@ export function LandingPage() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  const lookupCatalog = useMemo(() => {
+    const seen = new Set<string>()
+    const merged: ContentItem[] = []
+    for (const item of [...catalog, ...studentPicks, ...sliderItems]) {
+      if (seen.has(item.id)) continue
+      seen.add(item.id)
+      merged.push(item)
+    }
+    return merged
+  }, [catalog, studentPicks, sliderItems])
+
   const backgroundContent = useMemo(() => {
-    const fromHero = findContent(catalog, heroConfig?.backgroundContentId)
+    const fromHero = findContent(lookupCatalog, heroConfig?.backgroundContentId)
     if (fromHero) return fromHero
     if (heroConfig?.backgroundType === 'content') {
-      return catalog.find((item) => item.featured && item.program !== 'student_cinema') ?? catalog[0] ?? null
+      return (
+        lookupCatalog.find((item) => item.featured && item.program !== 'student_cinema') ??
+        lookupCatalog[0] ??
+        null
+      )
     }
     return null
-  }, [catalog, heroConfig])
+  }, [lookupCatalog, heroConfig])
 
   const featuredItem = useMemo(() => {
-    const fromHero = findContent(catalog, heroConfig?.featuredContentId)
+    const fromHero = findContent(lookupCatalog, heroConfig?.featuredContentId)
     if (fromHero) return fromHero
-    return catalog.find((item) => item.featured && item.program !== 'student_cinema') ?? catalog[0] ?? null
-  }, [catalog, heroConfig])
+    return (
+      lookupCatalog.find((item) => item.featured && item.program !== 'student_cinema') ??
+      lookupCatalog[0] ??
+      null
+    )
+  }, [lookupCatalog, heroConfig])
 
   return (
     <div className="min-h-dvh bg-sineoda-bg text-white">

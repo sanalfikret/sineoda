@@ -27,9 +27,12 @@ export function LandingHero({
   }
 
   const backgroundType = hero?.backgroundType ?? 'content'
+  const rawVideoUrl = hero?.backgroundVideo ?? ''
   const backgroundVideo =
-    backgroundType === 'video' && hero?.backgroundVideo
-      ? resolveMediaUrl(hero.backgroundVideo)
+    backgroundType === 'video' &&
+    rawVideoUrl &&
+    !/youtube\.com|youtu\.be/i.test(rawVideoUrl)
+      ? resolveMediaUrl(rawVideoUrl)
       : ''
   const backgroundImage =
     backgroundType === 'image' && hero?.backgroundImage

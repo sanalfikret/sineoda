@@ -72,6 +72,7 @@ function validateHeroPayload(raw: unknown): LandingHeroConfig {
 }
 
 router.get('/', (_req, res) => {
+  res.set('Cache-Control', 'no-store')
   res.json(getLandingConfig())
 })
 

@@ -202,7 +202,22 @@ export function AdminLandingPage() {
   }
 
   const updateHero = (patch: Partial<LandingHeroConfig>) => {
-    setHero((current) => ({ ...current, ...patch }))
+    setHero((current) => {
+      const next = { ...current, ...patch }
+      if (patch.backgroundType) {
+        if (patch.backgroundType === 'image') {
+          next.backgroundVideo = ''
+          next.backgroundContentId = null
+        } else if (patch.backgroundType === 'video') {
+          next.backgroundImage = ''
+          next.backgroundContentId = null
+        } else {
+          next.backgroundImage = ''
+          next.backgroundVideo = ''
+        }
+      }
+      return next
+    })
   }
 
   const handleSave = async () => {
@@ -250,14 +265,24 @@ export function AdminLandingPage() {
             Üye olmadan önceki ana sayfa: hero, slider ve kategori şeritleri
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => void handleSave()}
-          disabled={saving}
-          className="rounded-lg bg-sineoda-gold px-5 py-2.5 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
-        >
-          {saving ? 'Kaydediliyor...' : 'Kaydet'}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <a
+            href="/tanitim"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-lg border border-white/10 px-5 py-2.5 text-sm font-medium text-white/85 hover:bg-white/5"
+          >
+            Misafir ana sayfayı önizle
+          </a>
+          <button
+            type="button"
+            onClick={() => void handleSave()}
+            disabled={saving}
+            className="rounded-lg bg-sineoda-gold px-5 py-2.5 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
+          >
+            {saving ? 'Kaydediliyor...' : 'Kaydet'}
+          </button>
+        </div>
       </div>
 
       {message && (
@@ -270,7 +295,8 @@ export function AdminLandingPage() {
         <h2 className="text-lg font-semibold text-white">Hero (üst bölüm)</h2>
         <p className="mt-1 text-sm text-sineoda-muted">
           Giriş yapmadan görünen ana sayfanın başlık metinleri, arka plan görseli/videosu ve öne
-          çıkan içerik kutusu.
+          çıkan içerik kutusu. Giriş yapmışken <code className="text-white/70">/</code> farklı bir
+          sayfadır — önizleme için yukarıdaki butonu kullanın.
         </p>
 
         <div className="mt-5 grid gap-4 lg:grid-cols-2">
@@ -360,12 +386,18 @@ export function AdminLandingPage() {
           )}
 
           {hero.backgroundType === 'video' && (
-            <div className="mt-4">
+            <div className="mt-4 space-y-2">
               <VideoUpload
                 label="Hero arka plan videosu"
                 value={hero.backgroundVideo}
                 onChange={(url) => updateHero({ backgroundVideo: url })}
               />
+              {/youtube\.com|youtu\.be/i.test(hero.backgroundVideo) && (
+                <p className="text-xs text-amber-300">
+                  YouTube linki doğrudan arka planda oynatılamaz. Video dosyası yükleyin veya .mp4
+                  URL kullanın.
+                </p>
+              )}
             </div>
           )}
 
