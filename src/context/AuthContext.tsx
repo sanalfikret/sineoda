@@ -31,7 +31,13 @@ interface AuthContextValue {
   isAdmin: boolean
   isCreator: boolean
   login: (email: string, password: string, options?: { requireAdmin?: boolean }) => Promise<void>
-  signup: (name: string, email: string, password: string, phone: string, smsCode: string) => Promise<void>
+  signup: (
+    name: string,
+    email: string,
+    password: string,
+    phone: string,
+    smsCode: string,
+  ) => Promise<{ message: string; email: string; devVerifyUrl?: string }>
   creatorLogin: (email: string, password: string) => Promise<void>
   creatorSignup: (data: {
     name: string
@@ -116,11 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const signup = useCallback(async (name: string, email: string, password: string, phone: string, smsCode: string) => {
-    const { token, user: newUser } = await signupRequest(name, email, password, phone, smsCode)
-    setToken(token)
-    setUser(newUser)
-    setProfileId(null)
-    setActiveProfile(null)
+    return signupRequest(name, email, password, phone, smsCode)
   }, [])
 
   const creatorLogin = useCallback(async (email: string, password: string) => {
