@@ -1,5 +1,8 @@
 import type { Profile, User } from '../types/auth'
 import type { AdminContentItem, ContentCategory, ContentItem, Episode } from '../types/content'
+import type { LandingSectionsConfig } from '../constants/landingDefaults'
+
+export type { LandingSectionsConfig } from '../constants/landingDefaults'
 
 const TOKEN_KEY = 'sineoda_token'
 const PROFILE_KEY = 'sineoda_profile_id'
@@ -207,6 +210,7 @@ export interface LandingConfigResponse {
   sliderContentIds?: string[]
   showcases: LandingShowcaseResponse[]
   hero?: LandingHeroConfig
+  sections?: LandingSectionsConfig
 }
 
 export async function loginRequest(
@@ -330,6 +334,15 @@ export async function updateLandingHeroConfig(
   return api<{ hero: LandingHeroConfig }>('/api/admin/landing/hero', {
     method: 'PATCH',
     body: JSON.stringify(hero),
+  })
+}
+
+export async function updateLandingSectionsConfig(
+  sections: LandingSectionsConfig,
+): Promise<{ sections: LandingSectionsConfig }> {
+  return api('/api/admin/landing/sections', {
+    method: 'PATCH',
+    body: JSON.stringify(sections),
   })
 }
 

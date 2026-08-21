@@ -8,6 +8,12 @@ import {
   saveLandingHeroConfig,
   type LandingHeroConfig,
 } from '../services/landingHero.js'
+import {
+  getLandingSectionsConfig,
+  parseLandingSections,
+  saveLandingSectionsConfig,
+  type LandingSectionsConfig,
+} from '../services/landingSections.js'
 import type { ContentRow } from '../types.js'
 
 const router = Router()
@@ -50,8 +56,9 @@ export function getLandingConfig() {
   }))
 
   const hero = getLandingHeroConfig()
+  const sections = getLandingSectionsConfig()
 
-  return { slider, sliderContentIds, showcases, hero }
+  return { slider, sliderContentIds, showcases, hero, sections }
 }
 
 function contentExists(contentId: string | null) {
@@ -74,6 +81,11 @@ function validateHeroPayload(raw: unknown): LandingHeroConfig {
 router.patch('/hero', requireAdmin, (req: AuthRequest, res) => {
   const hero = saveLandingHeroConfig(validateHeroPayload(req.body))
   res.json({ hero })
+})
+
+router.patch('/sections', requireAdmin, (req: AuthRequest, res) => {
+  const sections = saveLandingSectionsConfig(req.body as Partial<LandingSectionsConfig>)
+  res.json({ sections })
 })
 
 router.get('/', (_req, res) => {
