@@ -33,12 +33,14 @@ function matchesCategory(categoryTitle: string, categoryId: string, row: Content
   if (title === 'animasyon') return genres.includes('Animasyon')
   if (title === 'anime') return genres.includes('Anime')
   if (title === 'yerli yapımlar') return genres.includes('Yerli')
-  if (title === 'suç ve gizem') return genres.some((g) => ['Suç', 'Gizem', 'Gerilim'].includes(g))
+  if (title === 'suç-gizem' || title === 'suç ve gizem' || title === 'suç gizem') {
+    return genres.some((g) => ['Suç', 'Gizem', 'Gerilim'].includes(g))
+  }
   if (title === 'romantik') return genres.includes('Romantik')
   if (title === 'bilim kurgu ve fantastik') {
     return genres.some((g) => ['Bilim Kurgu', 'Fantastik'].includes(g))
   }
-  if (title === 'komedi özel') return genres.includes('Komedi')
+  if (title === 'komedi filmleri' || title === 'komedi özel') return genres.includes('Komedi')
 
   if (genres.includes(categoryTitle)) return true
   if (categoryId.startsWith('genre-') && title) {

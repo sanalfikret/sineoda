@@ -56,6 +56,26 @@ function removeIdFromSavedOrder(categoryId: string) {
   saveCategoryOrder(saved.filter((id) => id !== categoryId))
 }
 
+function normalizeCategoryTitle(title: string) {
+  return title
+    .trim()
+    .toLocaleLowerCase('tr')
+    .replace(/\s+ve\s+/g, '-')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+}
+
+function findCategoryIdsByTitleAliases(aliases: readonly string[]) {
+  const normalizedAliases = new Set(aliases.map(normalizeCategoryTitle))
+  const matches: string[] = []
+  for (const category of dbAll<{ id: string; title: string }>('SELECT id, title FROM categories')) {
+    if (normalizedAliases.has(normalizeCategoryTitle(category.title))) {
+      matches.push(category.id)
+    }
+  }
+  return matches
+}
+
 /** Eski seed kategorilerini (genre-dram) yeni satırlarla (genre-row-dram) birleştir. */
 export function dedupeLegacyGenreCategories() {
   const legacyRows = dbAll<{ id: string }>(
@@ -95,7 +115,7 @@ export function dedupeCategoriesByTitle() {
   const groups = new Map<string, Array<{ id: string; title: string }>>()
 
   for (const category of categories) {
-    const key = category.title.trim().toLocaleLowerCase('tr')
+    const key = normalizeCategoryTitle(category.title)
     const list = groups.get(key) ?? []
     list.push(category)
     groups.set(key, list)
@@ -112,39 +132,60 @@ export function dedupeCategoriesByTitle() {
   }
 }
 
-/** Editöryel satırlarla çakışan tür satırlarını birleştir (Yerli → Yerli Yapımlar, Suç → Suç ve Gizem). */
-export function dedupeEditorialGenreOverlaps() {
-  const rules = [
-    {
-      keepId: 'local',
-      keepTitles: ['Yerli Yapımlar'],
-      dropTitles: ['Yerli'],
-      dropIds: ['genre-row-yerli'],
-    },
-    {
-      keepId: 'crime',
-      keepTitles: ['Suç ve Gizem'],
-      dropTitles: ['Suç', 'Suç Gizem'],
-      dropIds: ['genre-row-suc'],
-    },
-  ] as const
+type EditorialMergeRule = {
+  keepId: string
+  canonicalTitle: string
+  dropTitleAliases: readonly string[]
+  dropIds: readonly string[]
+}
 
-  for (const rule of rules) {
+const EDITORIAL_MERGE_RULES: readonly EditorialMergeRule[] = [
+  {
+    keepId: 'local',
+    canonicalTitle: 'Yerli Yapımlar',
+    dropTitleAliases: ['Yerli'],
+    dropIds: ['genre-row-yerli'],
+  },
+  {
+    keepId: 'crime',
+    canonicalTitle: 'Suç-Gizem',
+    dropTitleAliases: ['Suç', 'Gizem', 'Suç ve Gizem', 'Suç Gizem', 'Suç-Gizem'],
+    dropIds: ['genre-row-suc', 'genre-row-gizem'],
+  },
+  {
+    keepId: 'comedy-specials',
+    canonicalTitle: 'Komedi Filmleri',
+    dropTitleAliases: ['Komedi', 'Komedi Özel', 'Komedi Filmleri'],
+    dropIds: ['genre-row-komedi'],
+  },
+]
+
+/** Editöryel satırlarla çakışan tür satırlarını birleştir. */
+export function dedupeEditorialGenreOverlaps() {
+  for (const rule of EDITORIAL_MERGE_RULES) {
     let keeper = dbGet<{ id: string }>('SELECT id FROM categories WHERE id = ?', [rule.keepId])
     if (!keeper) {
-      for (const title of rule.keepTitles) {
-        keeper = dbGet<{ id: string }>('SELECT id FROM categories WHERE title = ?', [title])
-        if (keeper) break
+      const aliasIds = findCategoryIdsByTitleAliases([
+        ...rule.dropTitleAliases,
+        rule.canonicalTitle,
+      ])
+      if (aliasIds.length) {
+        const candidates = aliasIds
+          .map((id) => dbGet<{ id: string; title: string }>('SELECT id, title FROM categories WHERE id = ?', [id]))
+          .filter((row): row is { id: string; title: string } => Boolean(row))
+        const promoted = pickKeeper(candidates)
+        if (promoted.id !== rule.keepId) {
+          dbRun('UPDATE categories SET id = ? WHERE id = ?', [rule.keepId, promoted.id])
+          replaceIdInSavedOrder(promoted.id, rule.keepId)
+        }
+        keeper = { id: rule.keepId }
       }
     }
     if (!keeper) continue
 
     const dropIds = new Set<string>(rule.dropIds)
-    for (const title of rule.dropTitles) {
-      const matches = dbAll<{ id: string }>('SELECT id FROM categories WHERE title = ?', [title])
-      for (const match of matches) {
-        dropIds.add(match.id)
-      }
+    for (const id of findCategoryIdsByTitleAliases(rule.dropTitleAliases)) {
+      dropIds.add(id)
     }
 
     for (const dropId of dropIds) {
@@ -154,6 +195,8 @@ export function dedupeEditorialGenreOverlaps() {
       mergeCategoryItems(keeper.id, dropId)
       removeIdFromSavedOrder(dropId)
     }
+
+    dbRun('UPDATE categories SET title = ? WHERE id = ?', [rule.canonicalTitle, keeper.id])
   }
 }
 
