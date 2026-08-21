@@ -3,12 +3,78 @@ import bcrypt from 'bcryptjs'
 import { v4 as uuid } from 'uuid'
 import { dbGet, dbRun } from '../db.js'
 import { signToken } from '../middleware/auth.js'
-import { mapUser } from '../mappers.js'
+import { mapUser, slugify } from '../mappers.js'
+import { parseContentAddedAt } from '../services/license.js'
 import type { UserRow } from '../types.js'
 
 const router = Router()
 
 const LEGAL_VERSION = '2026-08-20'
+
+function isValidHttpUrl(value: string) {
+  try {
+    const url = new URL(value)
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+function createStudentFilmSubmission(input: {
+  creatorId: string
+  schoolId: string
+  title: string
+  description: string
+  filmLink: string
+  now: string
+}) {
+  let contentId = slugify(input.title)
+  let counter = 1
+  while (dbGet('SELECT id FROM content WHERE id = ?', [contentId])) {
+    contentId = `${slugify(input.title)}-${counter++}`
+  }
+
+  dbRun(
+    `INSERT INTO content (
+      id, title, description, year, duration, rating, type, genres, poster, backdrop,
+      video_url, source_video_url, stream_provider, trailer_url, video_format, is_new, new_until, featured,
+      subtitles_json, credits_json, content_added_at, license_expires_at, published_at,
+      creator_id, review_status, program, content_format, parent_content_id, school_id, school_review_status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      contentId,
+      input.title,
+      input.description,
+      new Date().getFullYear(),
+      '',
+      '13+',
+      'film',
+      '[]',
+      '',
+      '',
+      input.filmLink,
+      input.filmLink,
+      'custom',
+      '',
+      'standard',
+      0,
+      null,
+      0,
+      '[]',
+      '{}',
+      parseContentAddedAt(input.now),
+      null,
+      null,
+      input.creatorId,
+      'pending',
+      'student_cinema',
+      'main',
+      null,
+      input.schoolId,
+      'pending',
+    ],
+  )
+}
 
 function mapCreatorUser(user: UserRow) {
   const creator = dbGet<{
@@ -40,7 +106,7 @@ function mapCreatorUser(user: UserRow) {
 }
 
 router.post('/signup', (req, res) => {
-  const { name, email, password, studioName, bio, acceptLegal, program, schoolId, phone, projectCrew, studentIdFileUrl } = req.body as {
+  const { name, email, password, studioName, bio, acceptLegal, program, schoolId, phone, projectCrew, filmLink, studentIdFileUrl } = req.body as {
     name?: string
     email?: string
     password?: string
@@ -51,6 +117,7 @@ router.post('/signup', (req, res) => {
     schoolId?: string
     phone?: string
     projectCrew?: string
+    filmLink?: string
     studentIdFileUrl?: string
   }
 
@@ -86,6 +153,16 @@ router.post('/signup', (req, res) => {
 
     if (!String(studentIdFileUrl ?? '').trim()) {
       res.status(400).json({ error: 'Öğrenci kimliği yüklemeniz zorunludur.' })
+      return
+    }
+
+    const normalizedFilmLink = String(filmLink ?? '').trim()
+    if (!normalizedFilmLink) {
+      res.status(400).json({ error: 'Filminizin izlenebilir linkini girmelisiniz.' })
+      return
+    }
+    if (!isValidHttpUrl(normalizedFilmLink)) {
+      res.status(400).json({ error: 'Geçerli bir film linki girin (http veya https ile başlamalı).' })
       return
     }
 
@@ -146,6 +223,18 @@ router.post('/signup', (req, res) => {
       'INSERT INTO creator_documents (id, creator_id, doc_type, file_url, uploaded_at) VALUES (?, ?, ?, ?, ?)',
       [uuid(), creatorId, 'student_id', studentIdFileUrl.trim(), now],
     )
+  }
+
+  if (creatorProgram === 'student_cinema' && resolvedSchoolId) {
+    const normalizedFilmLink = String(filmLink ?? '').trim()
+    createStudentFilmSubmission({
+      creatorId,
+      schoolId: resolvedSchoolId,
+      title: studioName.trim(),
+      description: bio?.trim() ?? '',
+      filmLink: normalizedFilmLink,
+      now,
+    })
   }
 
   const user = dbGet<UserRow>('SELECT * FROM users WHERE id = ?', [userId])!

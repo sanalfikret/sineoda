@@ -60,8 +60,6 @@ ensureFilmSchools()
 ensureStudentCinemaDemoFilms()
 ensureStudentCinemaDemoCredits()
 ensureCreatorDemoSeed()
-ensureMonthlyRollover()
-seedDemoMonthlyIfEmpty()
 backfillMissingImages()
 backfillEpisodeVideoUrls()
 fillCategoriesToTarget()
@@ -200,4 +198,11 @@ app.listen(config.port, () => {
   console.log(`Database: ${path.join(config.dataDir, 'sineoda.db')}`)
   console.log(`Frontend: ${config.frontendUrl}`)
   console.log(`Email: ${config.isEmailConfigured() ? 'configured' : 'dev mode (console log)'}`)
+
+  try {
+    ensureMonthlyRollover()
+    seedDemoMonthlyIfEmpty()
+  } catch (error) {
+    console.error('[watch-accounting] startup init failed:', error)
+  }
 })
