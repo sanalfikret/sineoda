@@ -181,21 +181,29 @@ export function AdminUsersPage() {
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => setTab('members')}
+          onClick={() => {
+            setTab('members')
+            setSelectedUser(null)
+            setShowForm(false)
+          }}
           className={`rounded-full px-4 py-1.5 text-sm font-medium ${
             tab === 'members' ? 'bg-sineoda-gold/15 text-sineoda-gold' : 'bg-white/5 text-white/70'
           }`}
         >
-          Üyeler
+          İzleyiciler ({members.length})
         </button>
         <button
           type="button"
-          onClick={() => setTab('staff')}
+          onClick={() => {
+            setTab('staff')
+            setSelectedUser(null)
+            setShowBroadcast(false)
+          }}
           className={`rounded-full px-4 py-1.5 text-sm font-medium ${
             tab === 'staff' ? 'bg-sineoda-gold/15 text-sineoda-gold' : 'bg-white/5 text-white/70'
           }`}
         >
-          Yöneticiler
+          Yöneticiler ({staff.length})
         </button>
       </div>
 
@@ -376,13 +384,22 @@ export function AdminUsersPage() {
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-2">
                           {tab === 'members' && (
-                            <button
-                              type="button"
-                              onClick={() => setSelectedUser(user)}
-                              className="rounded-lg bg-white/5 px-3 py-1.5 text-xs text-white hover:bg-white/10"
-                            >
-                              Detay
-                            </button>
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedUser(user)}
+                                className="rounded-lg bg-white/5 px-3 py-1.5 text-xs text-white hover:bg-white/10"
+                              >
+                                Detay
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedUser(user)}
+                                className="rounded-lg bg-sineoda-gold/10 px-3 py-1.5 text-xs text-sineoda-gold hover:bg-sineoda-gold/20"
+                              >
+                                Mesaj
+                              </button>
+                            </>
                           )}
                           <button
                             type="button"
