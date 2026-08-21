@@ -6,7 +6,6 @@ import {
   updateLandingConfig,
   updateLandingHeroConfig,
   type LandingHeroConfig,
-  type LandingHeroBackgroundType,
 } from '../../api/client'
 import { ImageUpload } from '../../components/admin/ImageUpload'
 import { VideoUpload } from '../../components/admin/VideoUpload'
@@ -30,7 +29,6 @@ const DEFAULT_HERO: LandingHeroConfig = {
   ctaPrimary: BRAND_HERO.ctaPrimary,
   ctaSecondary: BRAND_HERO.ctaSecondary,
   legalNote: BRAND_HERO.legalNote,
-  backgroundType: 'content',
   backgroundImage: '',
   backgroundVideo: '',
   backgroundContentId: null,
@@ -38,11 +36,12 @@ const DEFAULT_HERO: LandingHeroConfig = {
   showFeaturedCard: true,
 }
 
-const BACKGROUND_TYPE_OPTIONS: Array<{ id: LandingHeroBackgroundType; label: string }> = [
-  { id: 'content', label: 'Katalog içeriği' },
-  { id: 'image', label: 'Görsel' },
-  { id: 'video', label: 'Video' },
-]
+function heroBackgroundMode(hero: LandingHeroConfig): 'image' | 'video' | 'content' | 'none' {
+  if (hero.backgroundImage) return 'image'
+  if (hero.backgroundVideo) return 'video'
+  if (hero.backgroundContentId) return 'content'
+  return 'none'
+}
 
 const ICON_OPTIONS = [
   { value: 'dizi', label: 'Dizi' },
@@ -200,6 +199,33 @@ export function AdminLandingPage() {
     )
   }
 
+  const setHeroImage = (url: string) => {
+    setHero((current) => ({
+      ...current,
+      backgroundImage: url,
+      backgroundVideo: '',
+      backgroundContentId: null,
+    }))
+  }
+
+  const setHeroVideo = (url: string) => {
+    setHero((current) => ({
+      ...current,
+      backgroundVideo: url,
+      backgroundImage: '',
+      backgroundContentId: null,
+    }))
+  }
+
+  const setHeroContent = (contentId: string | null) => {
+    setHero((current) => ({
+      ...current,
+      backgroundContentId: contentId,
+      backgroundImage: '',
+      backgroundVideo: '',
+    }))
+  }
+
   const updateHero = (patch: Partial<LandingHeroConfig>) => {
     setHero((current) => ({ ...current, ...patch }))
   }
@@ -341,63 +367,55 @@ export function AdminLandingPage() {
           />
         </label>
 
-        <div className="mt-6 border-t border-white/10 pt-5">
-          <p className="text-sm font-medium text-white">Arka plan</p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {BACKGROUND_TYPE_OPTIONS.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => updateHero({ backgroundType: option.id })}
-                className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
-                  hero.backgroundType === option.id
-                    ? 'bg-sineoda-gold text-sineoda-bg'
-                    : 'bg-white/10 text-white/80 hover:bg-white/15'
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
+        <div className="mt-6 border-t border-white/10 pt-5 space-y-5">
+          <div>
+            <p className="text-sm font-medium text-white">Arka plan görseli</p>
+            <p className="mt-1 text-xs text-sineoda-muted">
+              Özel görsel yükleyin. Kaydedince katalog görselinin yerine geçer.
+            </p>
+            <div className="mt-3">
+              <ImageUpload label="Görsel" value={hero.backgroundImage} onChange={setHeroImage} />
+            </div>
           </div>
 
-          {hero.backgroundType === 'image' && (
-            <div className="mt-4">
-              <ImageUpload
-                label="Hero arka plan görseli"
-                value={hero.backgroundImage}
-                onChange={(url) => updateHero({ backgroundImage: url, backgroundType: 'image' })}
-              />
-            </div>
-          )}
-
-          {hero.backgroundType === 'video' && (
-            <div className="mt-4 space-y-2">
-              <VideoUpload
-                label="Hero arka plan videosu"
-                value={hero.backgroundVideo}
-                onChange={(url) => updateHero({ backgroundVideo: url, backgroundType: 'video' })}
-              />
+          <div>
+            <p className="text-sm font-medium text-white">Arka plan videosu</p>
+            <p className="mt-1 text-xs text-sineoda-muted">.mp4 dosyası veya doğrudan video URL.</p>
+            <div className="mt-3 space-y-2">
+              <VideoUpload label="Video" value={hero.backgroundVideo} onChange={setHeroVideo} />
               {/youtube\.com|youtu\.be/i.test(hero.backgroundVideo) && (
                 <p className="text-xs text-amber-300">
-                  YouTube linki doğrudan arka planda oynatılamaz. Video dosyası yükleyin veya .mp4
-                  URL kullanın.
+                  YouTube linki çalışmaz. Video dosyası yükleyin.
                 </p>
               )}
             </div>
-          )}
+          </div>
 
-          {hero.backgroundType === 'content' && (
-            <div className="mt-4">
+          <div>
+            <p className="text-sm font-medium text-white">Katalog içeriğinden arka plan</p>
+            <p className="mt-1 text-xs text-sineoda-muted">
+              Özel görsel/video yoksa seçilen içeriğin backdrop/poster görseli kullanılır.
+            </p>
+            <div className="mt-3">
               <SingleContentPicker
                 catalog={pickerCatalog}
                 selectedId={hero.backgroundContentId}
-                onSelect={(contentId) =>
-                  updateHero({ backgroundContentId: contentId, backgroundType: 'content' })
-                }
-                label="Arka plan için içerik (backdrop/poster kullanılır)"
-                emptyLabel="Seçilmedi — öne çıkan içerik kullanılır"
+                onSelect={setHeroContent}
+                label=""
+                emptyLabel="Seçilmedi — varsayılan görsel kullanılır"
               />
             </div>
+          </div>
+
+          {heroBackgroundMode(hero) !== 'none' && (
+            <p className="text-xs text-sineoda-gold">
+              Aktif arka plan:{' '}
+              {heroBackgroundMode(hero) === 'image'
+                ? 'Özel görsel'
+                : heroBackgroundMode(hero) === 'video'
+                  ? 'Video'
+                  : 'Katalog içeriği'}
+            </p>
           )}
         </div>
 

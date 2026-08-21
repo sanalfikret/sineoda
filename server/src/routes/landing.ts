@@ -86,15 +86,10 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
     ? req.body.sliderIds.map(String)
     : null
   const showcases = Array.isArray(req.body.showcases) ? req.body.showcases : null
-  const heroPayload = req.body.hero
 
   if (!sliderIds || !showcases) {
     res.status(400).json({ error: 'sliderIds ve showcases zorunlu.' })
     return
-  }
-
-  if (heroPayload !== undefined && heroPayload !== null) {
-    saveLandingHeroConfig(validateHeroPayload(heroPayload))
   }
 
   dbRun('DELETE FROM landing_slider')
