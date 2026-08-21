@@ -45,10 +45,10 @@ const EDITORIAL_CATEGORIES = [
   ['anime', 'Anime', 7, ['anime-horizon']],
   ['vertical-series', 'Dikey Diziler', 8, ['kalp-satirlari']],
   ['local', 'Yerli Yapımlar', 9, ['wind-road', 'midnight-istanbul', 'golden-era', 'stage-lights']],
-  ['crime', 'Suç ve Gizem', 10, ['neon-pulse', 'silent-forest', 'code-breakers']],
+  ['crime', 'Suç-Gizem', 10, ['neon-pulse', 'silent-forest', 'code-breakers']],
   ['romance', 'Romantik', 11, ['kalp-satirlari', 'midnight-istanbul', 'wind-road']],
   ['scifi-fantasy', 'Bilim Kurgu ve Fantastik', 12, ['aurora-dreams', 'ocean-whispers', 'anime-horizon']],
-  ['comedy-specials', 'Komedi Özel', 13, ['stage-lights', 'little-stars', 'chef-table']],
+  ['comedy-specials', 'Komedi Filmleri', 13, ['stage-lights', 'little-stars', 'chef-table']],
 ] as const
 
 const SEED_CATEGORIES = [
