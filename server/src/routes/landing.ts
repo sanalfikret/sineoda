@@ -4,7 +4,7 @@ import { mapContent } from '../mappers.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import {
   getLandingHeroConfig,
-  normalizeLandingHero,
+  parseLandingHero,
   saveLandingHeroConfig,
   type LandingHeroConfig,
 } from '../services/landingHero.js'
@@ -61,7 +61,7 @@ function contentExists(contentId: string | null) {
 }
 
 function validateHeroPayload(raw: unknown): LandingHeroConfig {
-  const hero = normalizeLandingHero(raw as Partial<LandingHeroConfig>)
+  const hero = parseLandingHero(raw as Partial<LandingHeroConfig>)
   if (hero.backgroundContentId && !contentExists(hero.backgroundContentId)) {
     hero.backgroundContentId = null
   }
@@ -70,6 +70,11 @@ function validateHeroPayload(raw: unknown): LandingHeroConfig {
   }
   return hero
 }
+
+router.patch('/hero', requireAdmin, (req: AuthRequest, res) => {
+  const hero = saveLandingHeroConfig(validateHeroPayload(req.body))
+  res.json({ hero })
+})
 
 router.get('/', (_req, res) => {
   res.set('Cache-Control', 'no-store')

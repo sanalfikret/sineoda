@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { SiteFooter } from '../components/SiteFooter'
 import { LandingFeatures } from '../components/landing/LandingFeatures'
 import { LandingManifesto } from '../components/landing/LandingManifesto'
@@ -44,40 +44,57 @@ export function LandingPage() {
   const [showcases, setShowcases] = useState(DEMO_LANDING_SHOWCASES)
   const [studentPicks, setStudentPicks] = useState<ContentItem[]>([])
   const [scrolled, setScrolled] = useState(false)
+  const [ready, setReady] = useState(false)
+
+  const loadLanding = useCallback(async () => {
+    let bootstrap = null
+    let landing = null
+    try {
+      ;[bootstrap, landing] = await Promise.all([
+        fetchBootstrap(),
+        fetchLandingConfig().catch(() => null),
+      ])
+    } catch {
+      return
+    }
+
+    if (!bootstrap) return
+
+    const mergedCatalog =
+      bootstrap.catalog.length >= 20 ? bootstrap.catalog : mergeCatalog(bootstrap.catalog)
+    setCatalog(mergedCatalog)
+    setHeroConfig(landing?.hero ?? bootstrap.landing?.hero ?? null)
+
+    const apiSlider = resolveLandingSliderItems(
+      landing ?? bootstrap.landing ?? null,
+      mergedCatalog,
+      bootstrap.trailers ?? [],
+    )
+    setSliderItems(
+      apiSlider.length > 0 ? apiSlider : DEMO_LANDING_SHOWCASES[1].items.slice(0, 8),
+    )
+
+    setShowcases(resolveLandingShowcases(landing?.showcases ?? bootstrap.landing?.showcases))
+    setStudentPicks(bootstrap.studentCinemaPicks ?? [])
+    setReady(true)
+  }, [])
 
   useEffect(() => {
-    void (async () => {
-      let bootstrap = null
-      let landing = null
-      try {
-        ;[bootstrap, landing] = await Promise.all([
-          fetchBootstrap(),
-          fetchLandingConfig().catch(() => null),
-        ])
-      } catch {
-        return
+    void loadLanding()
+  }, [loadLanding])
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        void fetchLandingConfig()
+          .then((landing) => {
+            if (landing.hero) setHeroConfig(landing.hero)
+          })
+          .catch(() => undefined)
       }
-
-      if (!bootstrap) return
-
-      const mergedCatalog =
-        bootstrap.catalog.length >= 20 ? bootstrap.catalog : mergeCatalog(bootstrap.catalog)
-      setCatalog(mergedCatalog)
-
-      setHeroConfig(landing?.hero ?? bootstrap.landing?.hero ?? null)
-
-      const apiSlider = resolveLandingSliderItems(
-        landing ?? bootstrap.landing ?? null,
-        mergedCatalog,
-        bootstrap.trailers ?? [],
-      )
-      setSliderItems(
-        apiSlider.length > 0 ? apiSlider : DEMO_LANDING_SHOWCASES[1].items.slice(0, 8),
-      )
-
-      setShowcases(resolveLandingShowcases(landing?.showcases ?? bootstrap.landing?.showcases))
-      setStudentPicks(bootstrap.studentCinemaPicks ?? [])
-    })()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
   }, [])
 
   useEffect(() => {
@@ -119,6 +136,14 @@ export function LandingPage() {
       null
     )
   }, [lookupCatalog, heroConfig])
+
+  if (!ready || !heroConfig) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-sineoda-bg">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-sineoda-gold border-t-transparent" />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-dvh bg-sineoda-bg text-white">
