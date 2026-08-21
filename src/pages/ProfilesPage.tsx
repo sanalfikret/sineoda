@@ -127,7 +127,10 @@ export function ProfilesPage() {
 
         <button
           type="button"
-          onClick={logout}
+          onClick={() => {
+            logout()
+            navigate('/', { replace: true })
+          }}
           className="mt-12 text-sm text-sineoda-muted transition hover:text-white"
         >
           Hesaptan çıkış yap

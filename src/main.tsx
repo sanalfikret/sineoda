@@ -9,7 +9,12 @@ import { AnalyticsTracker } from './components/AnalyticsTracker'
 import { CookieConsent } from './components/CookieConsent'
 import App from './App.tsx'
 
-registerSW({ immediate: true })
+registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    // Admin düzenleme sırasında otomatik sayfa yenilemesi yapma.
+  },
+})
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
