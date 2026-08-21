@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
+  broadcastAdminMessage,
   createAdminUser,
   deleteAdminUser,
   fetchAdminUsers,
-  type AdminUser,
   updateAdminUser,
+  type AdminUser,
 } from '../../api/client'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
+import { AdminUserDetailPanel } from '../../components/admin/AdminUserDetailPanel'
 import { fuzzySearchMatch, sortByTurkishTitle } from '../../utils/search'
+
+type TabId = 'members' | 'staff'
 
 function subscriptionLabel(user: AdminUser) {
   const status = user.subscription?.status ?? 'free'
@@ -26,17 +30,33 @@ function subscriptionClass(user: AdminUser) {
   return 'bg-white/10 text-white/70'
 }
 
+function roleLabel(role: AdminUser['role']) {
+  if (role === 'admin') return 'Admin'
+  if (role === 'manager') return 'Yönetici'
+  return 'Üye'
+}
+
 export function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [query, setQuery] = useState('')
+  const [tab, setTab] = useState<TabId>('members')
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [showBroadcast, setShowBroadcast] = useState(false)
+  const [broadcasting, setBroadcasting] = useState(false)
   const [form, setForm] = useState({
     name: '',
     email: '',
     password: '',
-    role: 'user' as 'user' | 'admin',
+    role: 'manager' as 'admin' | 'manager',
+  })
+  const [broadcastForm, setBroadcastForm] = useState({
+    subject: '',
+    body: '',
+    audience: 'all' as 'all' | 'active_subscribers',
   })
 
   const loadUsers = async () => {
@@ -55,22 +75,34 @@ export function AdminUsersPage() {
     void loadUsers()
   }, [])
 
-  const viewerCount = useMemo(() => users.filter((user) => user.role !== 'creator').length, [users])
+  const members = useMemo(() => users.filter((user) => user.role === 'user'), [users])
+  const staff = useMemo(
+    () => users.filter((user) => user.role === 'admin' || user.role === 'manager'),
+    [users],
+  )
+
+  const listUsers = tab === 'members' ? members : staff
 
   const filteredUsers = useMemo(() => {
-    const viewers = users.filter((user) => user.role !== 'creator')
-    const searched = viewers.filter((user) =>
-      fuzzySearchMatch(query, user.name, user.email, subscriptionLabel(user)),
+    const searched = listUsers.filter((user) =>
+      fuzzySearchMatch(
+        query,
+        user.name,
+        user.email,
+        user.phone ?? '',
+        subscriptionLabel(user),
+        roleLabel(user.role),
+      ),
     )
     return sortByTurkishTitle(searched, (user) => user.name)
-  }, [users, query])
+  }, [listUsers, query])
 
-  const handleCreate = async (event: FormEvent) => {
+  const handleCreateStaff = async (event: FormEvent) => {
     event.preventDefault()
     setError('')
     try {
       await createAdminUser(form)
-      setForm({ name: '', email: '', password: '', role: 'user' })
+      setForm({ name: '', email: '', password: '', role: 'manager' })
       setShowForm(false)
       await loadUsers()
     } catch (err) {
@@ -78,17 +110,35 @@ export function AdminUsersPage() {
     }
   }
 
+  const handleBroadcast = async (event: FormEvent) => {
+    event.preventDefault()
+    setError('')
+    setSuccess('')
+    setBroadcasting(true)
+    try {
+      const result = await broadcastAdminMessage(broadcastForm)
+      setSuccess(`${result.sent} izleyiciye mesaj gönderildi.`)
+      setBroadcastForm({ subject: '', body: '', audience: 'all' })
+      setShowBroadcast(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Toplu mesaj gönderilemedi.')
+    } finally {
+      setBroadcasting(false)
+    }
+  }
+
   const handleDelete = async (id: string, name: string) => {
     if (!window.confirm(`"${name}" kullanıcısını silmek istediğine emin misin?`)) return
     try {
       await deleteAdminUser(id)
+      if (selectedUser?.id === id) setSelectedUser(null)
       await loadUsers()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Silme başarısız.')
     }
   }
 
-  const handleRoleChange = async (id: string, role: 'user' | 'admin') => {
+  const handleRoleChange = async (id: string, role: 'admin' | 'manager') => {
     try {
       await updateAdminUser(id, { role })
       await loadUsers()
@@ -103,24 +153,58 @@ export function AdminUsersPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">İzleyiciler</h1>
           <p className="mt-1 text-sm text-sineoda-muted">
-            Alfabetik sıralı · {filteredUsers.length} kayıtlı izleyici / admin
+            {members.length} üye · {staff.length} yönetici
           </p>
         </div>
+        <div className="flex flex-wrap gap-2">
+          {tab === 'members' && (
+            <button
+              type="button"
+              onClick={() => setShowBroadcast(true)}
+              className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-white hover:bg-white/5"
+            >
+              Toplu mesaj
+            </button>
+          )}
+          {tab === 'staff' && (
+            <button
+              type="button"
+              onClick={() => setShowForm((open) => !open)}
+              className="rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg"
+            >
+              + Yönetici ekle
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => setShowForm((open) => !open)}
-          className="rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg"
+          onClick={() => setTab('members')}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium ${
+            tab === 'members' ? 'bg-sineoda-gold/15 text-sineoda-gold' : 'bg-white/5 text-white/70'
+          }`}
         >
-          + Yeni Kullanıcı
+          Üyeler
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('staff')}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium ${
+            tab === 'staff' ? 'bg-sineoda-gold/15 text-sineoda-gold' : 'bg-white/5 text-white/70'
+          }`}
+        >
+          Yöneticiler
         </button>
       </div>
 
       <AdminSearchBar
         value={query}
         onChange={setQuery}
-        placeholder="Ad, e-posta veya abonelik ara..."
+        placeholder={tab === 'members' ? 'Ad, e-posta, telefon veya abonelik ara...' : 'Ad, e-posta ara...'}
         resultCount={filteredUsers.length}
-        totalCount={viewerCount}
+        totalCount={listUsers.length}
       />
 
       {error && (
@@ -128,13 +212,15 @@ export function AdminUsersPage() {
           {error}
         </div>
       )}
+      {success && (
+        <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+          {success}
+        </div>
+      )}
 
-      {showForm && (
-        <form
-          onSubmit={handleCreate}
-          className="space-y-4 rounded-2xl border border-white/10 bg-[#11141c] p-5"
-        >
-          <h2 className="font-semibold text-white">Yeni kullanıcı</h2>
+      {showForm && tab === 'staff' && (
+        <form onSubmit={handleCreateStaff} className="space-y-4 rounded-2xl border border-white/10 bg-[#11141c] p-5">
+          <h2 className="font-semibold text-white">Yeni yönetici</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <input
               required
@@ -163,21 +249,74 @@ export function AdminUsersPage() {
             <select
               value={form.role}
               onChange={(event) =>
-                setForm({ ...form, role: event.target.value as 'user' | 'admin' })
+                setForm({ ...form, role: event.target.value as 'admin' | 'manager' })
               }
               className="rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
             >
-              <option value="user">Kullanıcı</option>
+              <option value="manager">Yönetici</option>
               <option value="admin">Admin</option>
             </select>
           </div>
-          <button
-            type="submit"
-            className="rounded-lg bg-sineoda-gold px-5 py-2.5 text-sm font-semibold text-sineoda-bg"
-          >
+          <button type="submit" className="rounded-lg bg-sineoda-gold px-5 py-2.5 text-sm font-semibold text-sineoda-bg">
             Oluştur
           </button>
         </form>
+      )}
+
+      {showBroadcast && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowBroadcast(false)}>
+          <form
+            onSubmit={handleBroadcast}
+            className="w-full max-w-lg space-y-4 rounded-2xl border border-white/10 bg-[#11141c] p-6"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 className="text-lg font-semibold text-white">Toplu mesaj gönder</h2>
+            <select
+              value={broadcastForm.audience}
+              onChange={(event) =>
+                setBroadcastForm({
+                  ...broadcastForm,
+                  audience: event.target.value as 'all' | 'active_subscribers',
+                })
+              }
+              className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white"
+            >
+              <option value="all">Tüm üyeler</option>
+              <option value="active_subscribers">Aktif aboneler</option>
+            </select>
+            <input
+              required
+              value={broadcastForm.subject}
+              onChange={(event) => setBroadcastForm({ ...broadcastForm, subject: event.target.value })}
+              placeholder="Konu (ör. Yeni film eklendi)"
+              className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white"
+            />
+            <textarea
+              required
+              rows={5}
+              value={broadcastForm.body}
+              onChange={(event) => setBroadcastForm({ ...broadcastForm, body: event.target.value })}
+              placeholder="Mesaj metni..."
+              className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowBroadcast(false)}
+                className="rounded-lg border border-white/10 px-4 py-2 text-sm text-white/80"
+              >
+                İptal
+              </button>
+              <button
+                type="submit"
+                disabled={broadcasting}
+                className="rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg disabled:opacity-50"
+              >
+                {broadcasting ? 'Gönderiliyor...' : 'Gönder'}
+              </button>
+            </div>
+          </form>
+        </div>
       )}
 
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#11141c]">
@@ -190,8 +329,9 @@ export function AdminUsersPage() {
                 <tr>
                   <th className="px-4 py-3 font-medium">Ad</th>
                   <th className="px-4 py-3 font-medium">E-posta</th>
-                  <th className="px-4 py-3 font-medium">Abonelik</th>
-                  <th className="px-4 py-3 font-medium">Rol</th>
+                  {tab === 'members' && <th className="px-4 py-3 font-medium">Telefon</th>}
+                  {tab === 'members' && <th className="px-4 py-3 font-medium">Abonelik</th>}
+                  {tab === 'staff' && <th className="px-4 py-3 font-medium">Rol</th>}
                   <th className="px-4 py-3 font-medium">Profiller</th>
                   <th className="px-4 py-3 font-medium">İşlem</th>
                 </tr>
@@ -200,7 +340,7 @@ export function AdminUsersPage() {
                 {filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-10 text-center text-sineoda-muted">
-                      Aramanızla eşleşen kullanıcı bulunamadı.
+                      Kayıt bulunamadı.
                     </td>
                   </tr>
                 ) : (
@@ -208,37 +348,50 @@ export function AdminUsersPage() {
                     <tr key={user.id} className="border-b border-white/5 last:border-0">
                       <td className="px-4 py-3 font-medium text-white">{user.name}</td>
                       <td className="px-4 py-3 text-white/80">{user.email}</td>
-                      <td className="px-4 py-3">
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${subscriptionClass(user)}`}>
-                          {subscriptionLabel(user)}
-                        </span>
-                        {user.subscription?.expiresAt && user.subscription.status === 'active' && (
-                          <p className="mt-1 text-[11px] text-sineoda-muted">
-                            Bitiş: {new Date(user.subscription.expiresAt).toLocaleDateString('tr-TR')}
-                          </p>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <select
-                          value={user.role}
-                          onChange={(event) =>
-                            void handleRoleChange(user.id, event.target.value as 'user' | 'admin')
-                          }
-                          className="rounded-lg border border-white/10 bg-[#0d0f14] px-2 py-1 text-xs text-white"
-                        >
-                          <option value="user">Kullanıcı</option>
-                          <option value="admin">Admin</option>
-                        </select>
-                      </td>
+                      {tab === 'members' && (
+                        <td className="px-4 py-3 text-white/70">{user.phone?.trim() || '—'}</td>
+                      )}
+                      {tab === 'members' && (
+                        <td className="px-4 py-3">
+                          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${subscriptionClass(user)}`}>
+                            {subscriptionLabel(user)}
+                          </span>
+                        </td>
+                      )}
+                      {tab === 'staff' && (
+                        <td className="px-4 py-3">
+                          <select
+                            value={user.role === 'admin' ? 'admin' : 'manager'}
+                            onChange={(event) =>
+                              void handleRoleChange(user.id, event.target.value as 'admin' | 'manager')
+                            }
+                            className="rounded-lg border border-white/10 bg-[#0d0f14] px-2 py-1 text-xs text-white"
+                          >
+                            <option value="manager">Yönetici</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        </td>
+                      )}
                       <td className="px-4 py-3 text-white/70">{user.profiles.length}</td>
                       <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          onClick={() => void handleDelete(user.id, user.name)}
-                          className="rounded-lg bg-red-500/10 px-3 py-1.5 text-xs text-red-300 hover:bg-red-500/20"
-                        >
-                          Sil
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          {tab === 'members' && (
+                            <button
+                              type="button"
+                              onClick={() => setSelectedUser(user)}
+                              className="rounded-lg bg-white/5 px-3 py-1.5 text-xs text-white hover:bg-white/10"
+                            >
+                              Detay
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => void handleDelete(user.id, user.name)}
+                            className="rounded-lg bg-red-500/10 px-3 py-1.5 text-xs text-red-300 hover:bg-red-500/20"
+                          >
+                            Sil
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -248,6 +401,19 @@ export function AdminUsersPage() {
           </div>
         )}
       </div>
+
+      {selectedUser && (
+        <AdminUserDetailPanel
+          user={selectedUser}
+          onClose={() => setSelectedUser(null)}
+          onUpdated={async () => {
+            const { users: data } = await fetchAdminUsers()
+            setUsers(data)
+            const refreshed = data.find((entry) => entry.id === selectedUser.id)
+            if (refreshed) setSelectedUser(refreshed)
+          }}
+        />
+      )}
     </div>
   )
 }

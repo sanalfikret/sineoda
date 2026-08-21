@@ -256,7 +256,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [activeProfile?.id, applyUser],
   )
 
-  const isAdmin = user?.role === 'admin'
+  const isAdmin = user?.role === 'admin' || user?.role === 'manager'
   const isCreator = user?.role === 'creator'
 
   const value = useMemo(

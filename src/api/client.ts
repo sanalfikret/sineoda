@@ -458,7 +458,7 @@ export async function createAdminUser(data: {
   name: string
   email: string
   password: string
-  role: 'user' | 'admin'
+  role: 'user' | 'admin' | 'manager'
 }) {
   return api<{ user: AdminUser }>('/api/admin/users', {
     method: 'POST',
@@ -468,7 +468,7 @@ export async function createAdminUser(data: {
 
 export async function updateAdminUser(
   id: string,
-  data: Partial<{ name: string; email: string; password: string; role: 'user' | 'admin' }>,
+  data: Partial<{ name: string; email: string; password: string; role: 'user' | 'admin' | 'manager' }>,
 ) {
   return api<{ user: AdminUser }>(`/api/admin/users/${id}`, {
     method: 'PATCH',
@@ -476,8 +476,61 @@ export async function updateAdminUser(
   })
 }
 
+export async function giftAdminUserSubscription(id: string, months: number) {
+  return api<{ user: AdminUser; gift: { months: number; expiresAt: string } }>(
+    `/api/admin/users/${id}/gift-subscription`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ months }),
+    },
+  )
+}
+
 export async function deleteAdminUser(id: string) {
   return api(`/api/admin/users/${id}`, { method: 'DELETE' })
+}
+
+export interface UserMessage {
+  id: string
+  userId: string
+  subject: string
+  body: string
+  sentByAdminId: string | null
+  readAt: string | null
+  createdAt: string
+  isRead: boolean
+}
+
+export async function fetchUserMessages() {
+  return api<{ messages: UserMessage[] }>('/api/messages')
+}
+
+export async function fetchUnreadMessageCount() {
+  return api<{ count: number }>('/api/messages/unread-count')
+}
+
+export async function markUserMessageRead(id: string) {
+  return api<{ message: UserMessage }>(`/api/messages/${encodeURIComponent(id)}/read`, {
+    method: 'PATCH',
+  })
+}
+
+export async function sendAdminUserMessage(userId: string, data: { subject: string; body: string }) {
+  return api<{ message: UserMessage }>(`/api/admin/messages/users/${encodeURIComponent(userId)}`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function broadcastAdminMessage(data: {
+  subject: string
+  body: string
+  audience?: 'all' | 'active_subscribers'
+}) {
+  return api<{ sent: number; audience: string }>('/api/admin/messages/broadcast', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
 }
 
 export interface BillingPlan {

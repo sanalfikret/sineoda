@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { fetchUnreadMessageCount } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { useSearchUI } from '../context/SearchContext'
 import { ProfileAvatar } from './ProfileAvatar'
@@ -33,6 +34,17 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [unreadMessages, setUnreadMessages] = useState(0)
+
+  useEffect(() => {
+    if (!user || isCreator || user.role !== 'user') {
+      setUnreadMessages(0)
+      return
+    }
+    void fetchUnreadMessageCount()
+      .then((data) => setUnreadMessages(data.count))
+      .catch(() => setUnreadMessages(0))
+  }, [user, isCreator, location.pathname])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -147,6 +159,18 @@ export function Header() {
                     </>
                   ) : (
                     <>
+                      <Link
+                        to="/mesajlar"
+                        className="flex items-center justify-between px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <span>Mesajlarım</span>
+                        {unreadMessages > 0 && (
+                          <span className="rounded-full bg-sineoda-gold px-2 py-0.5 text-xs font-semibold text-sineoda-bg">
+                            {unreadMessages}
+                          </span>
+                        )}
+                      </Link>
                       <Link
                         to="/hesap"
                         className="block px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
