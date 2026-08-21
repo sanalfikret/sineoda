@@ -152,16 +152,19 @@ export function ensureGenreContentById(contentId: string): boolean {
   return true
 }
 
-const SKIP_GENRE_ROW_LABELS = new Set(['Yerli', 'Suç'])
+const EDITORIAL_GENRE_ROW_IDS: Record<string, string> = {
+  Yerli: 'local',
+  Suç: 'crime',
+  Gizem: 'crime',
+  Komedi: 'comedy-specials',
+}
 
 export function ensureGenreCatalog() {
   for (const item of GENRE_ITEMS) upsertGenreItem(item)
 
   FEATURED_BROWSE_GENRES.forEach((genre, index) => {
-    if (SKIP_GENRE_ROW_LABELS.has(genre)) {
-      const editorialId = genre === 'Yerli' ? 'local' : 'crime'
-      if (dbGet('SELECT id FROM categories WHERE id = ?', [editorialId])) return
-    }
+    const editorialId = EDITORIAL_GENRE_ROW_IDS[genre]
+    if (editorialId && dbGet('SELECT id FROM categories WHERE id = ?', [editorialId])) return
 
     const ids = GENRE_ITEMS.filter((item) => item.genres.includes(genre)).map((item) => item.id)
     const categoryId = `genre-row-${slug(genre)}`

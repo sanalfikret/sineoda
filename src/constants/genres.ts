@@ -76,8 +76,8 @@ export const EDITORIAL_CATEGORY_LABELS = [
   'Anime',
   'Dikey Diziler',
   'Yerli Yapımlar',
-  'Suç ve Gizem',
+  'Suç-Gizem',
   'Romantik',
   'Bilim Kurgu ve Fantastik',
-  'Komedi Özel',
+  'Komedi Filmleri',
 ] as const
