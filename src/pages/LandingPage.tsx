@@ -47,55 +47,28 @@ export function LandingPage() {
   const [ready, setReady] = useState(false)
 
   const loadLanding = useCallback(async () => {
-    let bootstrap = null
-    let landing = null
-    try {
-      ;[bootstrap, landing] = await Promise.all([
-        fetchBootstrap(),
-        fetchLandingConfig().catch(() => null),
-      ])
-    } catch {
-      return
-    }
-
-    if (!bootstrap) return
+    const [bootstrap, landing] = await Promise.all([
+      fetchBootstrap(),
+      fetchLandingConfig(),
+    ])
 
     const mergedCatalog =
       bootstrap.catalog.length >= 20 ? bootstrap.catalog : mergeCatalog(bootstrap.catalog)
-    setCatalog(mergedCatalog)
-    setHeroConfig(landing?.hero ?? bootstrap.landing?.hero ?? null)
 
-    const apiSlider = resolveLandingSliderItems(
-      landing ?? bootstrap.landing ?? null,
-      mergedCatalog,
-      bootstrap.trailers ?? [],
-    )
+    setCatalog(mergedCatalog)
+    setHeroConfig(landing.hero ?? bootstrap.landing?.hero ?? null)
+    const apiSlider = resolveLandingSliderItems(landing, mergedCatalog, bootstrap.trailers ?? [])
     setSliderItems(
       apiSlider.length > 0 ? apiSlider : DEMO_LANDING_SHOWCASES[1].items.slice(0, 8),
     )
-
-    setShowcases(resolveLandingShowcases(landing?.showcases ?? bootstrap.landing?.showcases))
+    setShowcases(resolveLandingShowcases(landing.showcases))
     setStudentPicks(bootstrap.studentCinemaPicks ?? [])
     setReady(true)
   }, [])
 
   useEffect(() => {
-    void loadLanding()
+    void loadLanding().catch(() => setReady(true))
   }, [loadLanding])
-
-  useEffect(() => {
-    const onVisible = () => {
-      if (document.visibilityState === 'visible') {
-        void fetchLandingConfig()
-          .then((landing) => {
-            if (landing.hero) setHeroConfig(landing.hero)
-          })
-          .catch(() => undefined)
-      }
-    }
-    document.addEventListener('visibilitychange', onVisible)
-    return () => document.removeEventListener('visibilitychange', onVisible)
-  }, [])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -105,27 +78,17 @@ export function LandingPage() {
 
   const lookupCatalog = useMemo(() => {
     const seen = new Set<string>()
-    const merged: ContentItem[] = []
-    for (const item of [...catalog, ...studentPicks, ...sliderItems]) {
-      if (seen.has(item.id)) continue
+    return [...catalog, ...studentPicks, ...sliderItems].filter((item) => {
+      if (seen.has(item.id)) return false
       seen.add(item.id)
-      merged.push(item)
-    }
-    return merged
+      return true
+    })
   }, [catalog, studentPicks, sliderItems])
 
-  const backgroundContent = useMemo(() => {
-    const fromHero = findContent(lookupCatalog, heroConfig?.backgroundContentId)
-    if (fromHero) return fromHero
-    if (heroConfig?.backgroundType === 'content') {
-      return (
-        lookupCatalog.find((item) => item.featured && item.program !== 'student_cinema') ??
-        lookupCatalog[0] ??
-        null
-      )
-    }
-    return null
-  }, [lookupCatalog, heroConfig])
+  const backgroundContent = useMemo(
+    () => findContent(lookupCatalog, heroConfig?.backgroundContentId),
+    [lookupCatalog, heroConfig?.backgroundContentId],
+  )
 
   const featuredItem = useMemo(() => {
     const fromHero = findContent(lookupCatalog, heroConfig?.featuredContentId)
@@ -135,7 +98,7 @@ export function LandingPage() {
       lookupCatalog[0] ??
       null
     )
-  }, [lookupCatalog, heroConfig])
+  }, [lookupCatalog, heroConfig?.featuredContentId])
 
   if (!ready || !heroConfig) {
     return (
