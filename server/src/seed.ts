@@ -941,10 +941,10 @@ export function ensureCreatorDemoSeed() {
       dbRun(
         `INSERT INTO content (
           id, title, description, year, duration, rating, type, genres, poster, backdrop,
-          video_url, stream_provider, trailer_url, video_format, is_new, new_until, featured,
+          video_url, source_video_url, stream_provider, trailer_url, video_format, is_new, new_until, featured,
           subtitles_json, credits_json, content_added_at, license_expires_at, published_at,
           creator_id, review_status, program, content_format, parent_content_id, school_id, school_review_status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           contentId,
           title,
@@ -956,6 +956,7 @@ export function ensureCreatorDemoSeed() {
           JSON.stringify(globalIndex % 2 === 0 ? ['Dram', 'Yerli'] : ['Belgesel', 'Dram']),
           poster,
           poster.replace('w=400&h=600', 'w=1600&h=900'),
+          videoUrl,
           videoUrl,
           'custom',
           videoUrl,

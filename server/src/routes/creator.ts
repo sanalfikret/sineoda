@@ -251,10 +251,10 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
   dbRun(
     `INSERT INTO content (
       id, title, description, year, duration, rating, type, genres, poster, backdrop,
-      video_url, stream_provider, trailer_url, video_format, is_new, new_until, featured,
+      video_url, source_video_url, stream_provider, trailer_url, video_format, is_new, new_until, featured,
       subtitles_json, credits_json, content_added_at, license_expires_at, published_at,
       creator_id, review_status, program, content_format, parent_content_id, school_id, school_review_status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       title,
@@ -266,6 +266,7 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
       JSON.stringify(body.genres ?? []),
       String(body.poster ?? '').trim(),
       String(body.backdrop ?? body.poster ?? '').trim(),
+      videoUrl,
       videoUrl,
       String(body.streamProvider ?? body.stream_provider ?? 'custom'),
       String(body.trailerUrl ?? body.trailer_url ?? ''),
@@ -318,10 +319,11 @@ router.patch('/content/:id', requireApprovedCreator, (req: CreatorAuthRequest, r
   }
 
   const body = req.body as Record<string, unknown>
+  const nextVideoUrl = body.videoUrl !== undefined ? String(body.videoUrl).trim() : existing.video_url
   dbRun(
     `UPDATE content SET
       title = ?, description = ?, year = ?, duration = ?, rating = ?, type = ?,
-      genres = ?, poster = ?, backdrop = ?, video_url = ?, credits_json = ?, review_status = ?
+      genres = ?, poster = ?, backdrop = ?, video_url = ?, source_video_url = ?, credits_json = ?, review_status = ?
     WHERE id = ? AND creator_id = ?`,
     [
       body.title !== undefined ? String(body.title) : existing.title,
@@ -333,7 +335,8 @@ router.patch('/content/:id', requireApprovedCreator, (req: CreatorAuthRequest, r
       body.genres !== undefined ? JSON.stringify(body.genres) : existing.genres,
       body.poster !== undefined ? String(body.poster) : existing.poster,
       body.backdrop !== undefined ? String(body.backdrop) : existing.backdrop,
-      body.videoUrl !== undefined ? String(body.videoUrl) : existing.video_url,
+      nextVideoUrl,
+      nextVideoUrl,
       body.credits !== undefined ? serializeCredits(body.credits) : existing.credits_json ?? '{}',
       'pending',
       existing.id,

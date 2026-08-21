@@ -832,6 +832,7 @@ export interface AdminCreatorDocument {
 
 export interface AdminCreatorContent extends ContentItem, AdminContentMeta {
   reviewStatus: string
+  sourceVideoUrl?: string
   qualifiedMinutes: number
   watchMinutes: number
   watchCount: number
@@ -888,6 +889,36 @@ export async function updateAdminCreatorContent(contentId: string, data: Record<
     method: 'PATCH',
     body: JSON.stringify(data),
   })
+}
+
+export async function fetchAdminCreatorSourceDownload(contentId: string) {
+  const token = getToken()
+  const base = getApiBase()
+  const response = await fetch(`${base}/api/admin/creators/content/${contentId}/source-download`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { error?: string } | null
+    throw new Error(payload?.error ?? 'Video indirilemedi.')
+  }
+
+  const contentType = response.headers.get('content-type') ?? ''
+  if (contentType.includes('application/json')) {
+    return response.json() as Promise<{ url: string; external: true }>
+  }
+
+  const blob = await response.blob()
+  const disposition = response.headers.get('content-disposition') ?? ''
+  const match = disposition.match(/filename="?([^";]+)"?/)
+  const filename = match?.[1] ?? 'creator-video.mp4'
+  const objectUrl = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = objectUrl
+  anchor.download = filename
+  anchor.click()
+  URL.revokeObjectURL(objectUrl)
+  return { downloaded: true as const }
 }
 
 export interface FilmSchool {
