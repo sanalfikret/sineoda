@@ -112,7 +112,53 @@ export function dedupeCategoriesByTitle() {
   }
 }
 
+/** Editöryel satırlarla çakışan tür satırlarını birleştir (Yerli → Yerli Yapımlar, Suç → Suç ve Gizem). */
+export function dedupeEditorialGenreOverlaps() {
+  const rules = [
+    {
+      keepId: 'local',
+      keepTitles: ['Yerli Yapımlar'],
+      dropTitles: ['Yerli'],
+      dropIds: ['genre-row-yerli'],
+    },
+    {
+      keepId: 'crime',
+      keepTitles: ['Suç ve Gizem'],
+      dropTitles: ['Suç', 'Suç Gizem'],
+      dropIds: ['genre-row-suc'],
+    },
+  ] as const
+
+  for (const rule of rules) {
+    let keeper = dbGet<{ id: string }>('SELECT id FROM categories WHERE id = ?', [rule.keepId])
+    if (!keeper) {
+      for (const title of rule.keepTitles) {
+        keeper = dbGet<{ id: string }>('SELECT id FROM categories WHERE title = ?', [title])
+        if (keeper) break
+      }
+    }
+    if (!keeper) continue
+
+    const dropIds = new Set<string>(rule.dropIds)
+    for (const title of rule.dropTitles) {
+      const matches = dbAll<{ id: string }>('SELECT id FROM categories WHERE title = ?', [title])
+      for (const match of matches) {
+        dropIds.add(match.id)
+      }
+    }
+
+    for (const dropId of dropIds) {
+      if (dropId === keeper.id) continue
+      const exists = dbGet<{ id: string }>('SELECT id FROM categories WHERE id = ?', [dropId])
+      if (!exists) continue
+      mergeCategoryItems(keeper.id, dropId)
+      removeIdFromSavedOrder(dropId)
+    }
+  }
+}
+
 export function dedupeAllCategories() {
   dedupeLegacyGenreCategories()
   dedupeCategoriesByTitle()
+  dedupeEditorialGenreOverlaps()
 }
