@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { resolveMediaUrl } from '../api/client'
 import { backdropUrlForId, enrichContentImages, posterUrlForId } from '../utils/contentImages'
 import type { ContentItem } from '../types/content'
@@ -11,6 +12,7 @@ interface ContentCardProps {
   size?: 'default' | 'large'
   layout?: 'landscape' | 'portrait'
   variant?: 'carousel' | 'grid'
+  guestHref?: string
 }
 
 export function ContentCard({
@@ -20,6 +22,7 @@ export function ContentCard({
   size = 'default',
   layout = 'landscape',
   variant = 'carousel',
+  guestHref,
 }: ContentCardProps) {
   const isGrid = variant === 'grid'
   const isPortrait = !isGrid && (layout === 'portrait' || item.videoFormat === 'vertical')
@@ -43,14 +46,12 @@ export function ContentCard({
   const metaLine = [item.rating, item.duration, String(item.year)].filter(Boolean).join(' · ')
   const genreLine = item.genres.slice(0, 3).join(' · ')
 
-  return (
-    <button
-      type="button"
-      onClick={() => onSelect(item)}
-      className={`group relative overflow-hidden rounded-md bg-sineoda-surface text-left transition duration-200 hover:z-10 hover:ring-2 hover:ring-white/20 focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold ${widthClass} ${
-        isGrid ? '' : 'shrink-0 snap-start'
-      }`}
-    >
+  const shellClass = `group relative overflow-hidden rounded-md bg-sineoda-surface text-left transition duration-200 hover:z-10 hover:ring-2 hover:ring-white/20 focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold ${widthClass} ${
+    isGrid ? '' : 'shrink-0 snap-start'
+  }`
+
+  const body = (
+    <>
       <div className={isPortrait ? 'aspect-[9/16]' : 'aspect-video'}>
         <img
           src={imageSrc}
@@ -98,6 +99,20 @@ export function ContentCard({
           <p className="line-clamp-2 text-xs leading-relaxed text-white/55">{item.description}</p>
         </div>
       </div>
+    </>
+  )
+
+  if (guestHref) {
+    return (
+      <Link to={guestHref} className={shellClass}>
+        {body}
+      </Link>
+    )
+  }
+
+  return (
+    <button type="button" onClick={() => onSelect(item)} className={shellClass}>
+      {body}
     </button>
   )
 }
