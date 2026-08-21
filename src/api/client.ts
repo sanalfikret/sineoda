@@ -112,6 +112,31 @@ export async function uploadImage(file: File): Promise<string> {
   return result.url
 }
 
+export async function uploadProfileAvatar(file: File): Promise<string> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const result = await api<{ url: string }>('/api/auth/upload/avatar', {
+    method: 'POST',
+    body: formData,
+  })
+  return result.url
+}
+
+export interface ProfileWatchStats {
+  totalSeconds: number
+  totalTitles: number
+  byCategory: Array<{
+    key: string
+    label: string
+    totalSeconds: number
+    titlesWatched: number
+  }>
+}
+
+export async function fetchProfileWatchStats(profileId: string) {
+  return api<ProfileWatchStats>(`/api/watch-progress/stats?profileId=${encodeURIComponent(profileId)}`)
+}
+
 export async function uploadVideo(file: File): Promise<string> {
   const formData = new FormData()
   formData.append('file', file)

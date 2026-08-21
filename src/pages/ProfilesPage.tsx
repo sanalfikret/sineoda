@@ -2,6 +2,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { PageFooter } from '../components/PageFooter'
+import { ProfileAvatar } from '../components/ProfileAvatar'
+import { ProfileAvatarPicker } from '../components/ProfileAvatarPicker'
 import { PROFILE_AVATARS } from '../types/auth'
 
 export function ProfilesPage() {
@@ -53,9 +55,12 @@ export function ProfilesPage() {
               onClick={() => handleSelect(profile.id)}
               className="group flex w-[120px] flex-col items-center gap-3 sm:w-[140px]"
             >
-              <div className="flex h-24 w-24 items-center justify-center rounded-2xl border-2 border-transparent bg-sineoda-elevated text-4xl transition group-hover:border-sineoda-gold group-hover:scale-105 sm:h-28 sm:w-28 sm:text-5xl">
-                {profile.avatar}
-              </div>
+              <ProfileAvatar
+                avatar={profile.avatar}
+                name={profile.name}
+                className="h-24 w-24 border-2 border-transparent transition group-hover:border-sineoda-gold group-hover:scale-105 sm:h-28 sm:w-28"
+                emojiClassName="text-4xl sm:text-5xl"
+              />
               <span className="text-sm font-medium text-white/80 transition group-hover:text-white sm:text-base">
                 {profile.name}
               </span>
@@ -89,21 +94,8 @@ export function ProfilesPage() {
               placeholder="Profil adı"
               className="mt-3 w-full rounded-lg border border-white/10 bg-sineoda-bg px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
             />
-            <div className="mt-3 flex flex-wrap gap-2">
-              {PROFILE_AVATARS.map((avatar) => (
-                <button
-                  key={avatar}
-                  type="button"
-                  onClick={() => setNewAvatar(avatar)}
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg text-xl transition ${
-                    newAvatar === avatar
-                      ? 'bg-sineoda-gold/20 ring-2 ring-sineoda-gold'
-                      : 'bg-sineoda-bg hover:bg-white/5'
-                  }`}
-                >
-                  {avatar}
-                </button>
-              ))}
+            <div className="mt-3">
+              <ProfileAvatarPicker value={newAvatar} onChange={setNewAvatar} name={newName} />
             </div>
             <label className="mt-3 flex items-center justify-center gap-2 text-sm text-white/85">
               <input

@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { fetchBillingPlans, fetchSubscription } from '../api/client'
 import { PageFooter } from '../components/PageFooter'
+import { ProfileAvatar } from '../components/ProfileAvatar'
+import { ProfileAvatarPicker } from '../components/ProfileAvatarPicker'
+import { ProfileWatchStatsPanel } from '../components/ProfileWatchStatsPanel'
 import { useAuth } from '../context/AuthContext'
 import { PROFILE_AVATARS, type Profile } from '../types/auth'
 
@@ -211,11 +214,25 @@ export function AccountPage() {
           </dl>
 
           {activeProfile && (
-            <p className="mt-4 text-sm text-sineoda-muted">
-              Aktif profil: <span className="text-white">{activeProfile.avatar} {activeProfile.name}</span>
-            </p>
+            <div className="mt-4 flex items-center gap-3 text-sm text-sineoda-muted">
+              <span>Aktif profil:</span>
+              <ProfileAvatar avatar={activeProfile.avatar} name={activeProfile.name} className="h-8 w-8" emojiClassName="text-lg" />
+              <span className="text-white">{activeProfile.name}</span>
+            </div>
           )}
         </section>
+
+        {activeProfile && (
+          <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
+            <h2 className="text-lg font-semibold">İzleme İstatistikleri</h2>
+            <p className="mt-1 text-sm text-sineoda-muted">
+              Aktif profilin için film, dizi ve diğer içeriklerde geçirdiğin süre.
+            </p>
+            <div className="mt-4">
+              <ProfileWatchStatsPanel profileId={activeProfile.id} profileName={activeProfile.name} />
+            </div>
+          </section>
+        )}
 
         <section className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -241,22 +258,7 @@ export function AccountPage() {
                       onChange={(event) => setEditName(event.target.value)}
                       className="w-full rounded-lg border border-white/10 bg-sineoda-bg px-4 py-2.5 outline-none focus:border-sineoda-gold"
                     />
-                    <div className="flex flex-wrap gap-2">
-                      {PROFILE_AVATARS.map((avatar) => (
-                        <button
-                          key={avatar}
-                          type="button"
-                          onClick={() => setEditAvatar(avatar)}
-                          className={`flex h-10 w-10 items-center justify-center rounded-lg text-xl ${
-                            editAvatar === avatar
-                              ? 'bg-sineoda-gold/20 ring-2 ring-sineoda-gold'
-                              : 'bg-sineoda-bg hover:bg-white/5'
-                          }`}
-                        >
-                          {avatar}
-                        </button>
-                      ))}
-                    </div>
+                    <ProfileAvatarPicker value={editAvatar} onChange={setEditAvatar} name={editName} />
                     <label className="flex items-center gap-2 text-sm text-white/85">
                       <input
                         type="checkbox"
@@ -294,12 +296,15 @@ export function AccountPage() {
                   </div>
                 ) : (
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="text-lg">{profile.avatar} {profile.name}</p>
-                      <p className="text-sm text-sineoda-muted">
-                        {profile.isKids ? 'Çocuk profili' : 'Standart profil'}
-                        {activeProfile?.id === profile.id ? ' · Şu an aktif' : ''}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <ProfileAvatar avatar={profile.avatar} name={profile.name} className="h-12 w-12" emojiClassName="text-2xl" />
+                      <div>
+                        <p className="text-lg">{profile.name}</p>
+                        <p className="text-sm text-sineoda-muted">
+                          {profile.isKids ? 'Çocuk profili' : 'Standart profil'}
+                          {activeProfile?.id === profile.id ? ' · Şu an aktif' : ''}
+                        </p>
+                      </div>
                     </div>
                     <button
                       type="button"
@@ -323,22 +328,7 @@ export function AccountPage() {
                 placeholder="Profil adı"
                 className="mt-3 w-full rounded-lg border border-white/10 bg-sineoda-bg px-4 py-2.5 outline-none focus:border-sineoda-gold"
               />
-              <div className="mt-3 flex flex-wrap gap-2">
-                {PROFILE_AVATARS.map((avatar) => (
-                  <button
-                    key={avatar}
-                    type="button"
-                    onClick={() => setNewAvatar(avatar)}
-                    className={`flex h-10 w-10 items-center justify-center rounded-lg text-xl ${
-                      newAvatar === avatar
-                        ? 'bg-sineoda-gold/20 ring-2 ring-sineoda-gold'
-                        : 'bg-sineoda-bg hover:bg-white/5'
-                    }`}
-                  >
-                    {avatar}
-                  </button>
-                ))}
-              </div>
+              <ProfileAvatarPicker value={newAvatar} onChange={setNewAvatar} name={newName} />
               <label className="mt-3 flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
