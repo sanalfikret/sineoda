@@ -56,6 +56,7 @@ interface AuthContextValue {
     schoolId?: string
     phone?: string
     projectCrew?: string
+    filmLink?: string
     studentIdFileUrl?: string
   }) => Promise<void>
   logout: () => void
@@ -174,6 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       schoolId?: string
       phone?: string
       projectCrew?: string
+      filmLink?: string
       studentIdFileUrl?: string
     }) => {
       const { token, user: newUser } = await creatorSignupRequest(data)

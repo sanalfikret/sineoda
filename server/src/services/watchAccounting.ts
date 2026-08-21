@@ -117,7 +117,6 @@ function readArchivedMonth(month: string) {
 }
 
 function buildReportItems(
-  month: string,
   qualifiedRows: Array<{
     content_id: string
     creator_id: string | null
@@ -290,7 +289,6 @@ export function getMonthlyReport(month: string, options?: { creatorId?: string; 
       : period.total_qualified_seconds
 
     const items = buildReportItems(
-      month,
       rows.map((row) => ({
         content_id: row.content_id,
         creator_id: row.creator_id,
@@ -365,7 +363,7 @@ export function getMonthlyReport(month: string, options?: { creatorId?: string; 
   const shareTotal =
     options?.creatorId || (options?.program && options.program !== 'all') ? scopedTotal : platformTotal
 
-  const items = buildReportItems(month, enriched, watchByContent, shareTotal)
+  const items = buildReportItems(enriched, watchByContent, shareTotal)
   const totalQualifiedSeconds = enriched.reduce((sum, row) => sum + row.qualified_seconds, 0)
   const totalWatchSeconds = enriched.reduce((sum, row) => sum + (row.watch_seconds ?? 0), 0)
 
@@ -400,14 +398,26 @@ export function seedDemoMonthlyIfEmpty() {
     totalW += watch
     dbRun(
       `INSERT INTO content_watch_monthly (content_id, month, creator_id, program, qualified_seconds, watch_seconds, viewer_count, archived_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(content_id, month) DO UPDATE SET
+         creator_id = excluded.creator_id,
+         program = excluded.program,
+         qualified_seconds = excluded.qualified_seconds,
+         watch_seconds = excluded.watch_seconds,
+         viewer_count = excluded.viewer_count,
+         archived_at = excluded.archived_at`,
       [row.content_id, prevMonth, row.creator_id, row.program, qualified, watch, index + 3, new Date().toISOString()],
     )
   })
 
   dbRun(
     `INSERT INTO watch_accounting_periods (month, total_qualified_seconds, total_watch_seconds, status, closed_at)
-     VALUES (?, ?, ?, 'closed', ?)`,
+     VALUES (?, ?, ?, 'closed', ?)
+     ON CONFLICT(month) DO UPDATE SET
+       total_qualified_seconds = excluded.total_qualified_seconds,
+       total_watch_seconds = excluded.total_watch_seconds,
+       status = 'closed',
+       closed_at = excluded.closed_at`,
     [prevMonth, totalQ, totalW, new Date().toISOString()],
   )
 }
