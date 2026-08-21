@@ -251,7 +251,7 @@ export function AdminStudentCinemaDetailDrawer({
                 <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
                   <div>
                     <dt className="text-sineoda-muted">Öğrenci</dt>
-                    <dd className="mt-0.5 text-white">{item.creatorName ?? '—'}</dd>
+                    <dd className="mt-0.5 text-white">{item.displayName ?? item.creatorName ?? '—'}</dd>
                   </div>
                   <div>
                     <dt className="text-sineoda-muted">E-posta</dt>

@@ -785,6 +785,7 @@ export interface AdminStudentCinemaItem extends ContentItem {
   studioName: string | null
   creatorId: string | null
   creatorName?: string | null
+  displayName?: string | null
   creatorEmail?: string | null
   projectCrew?: string | null
   parentTitle?: string | null

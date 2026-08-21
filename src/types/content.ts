@@ -41,6 +41,8 @@ export interface ContentItem {
   credits?: ContentCredits
   program?: 'standard' | 'student_cinema'
   contentFormat?: 'main' | 'bts' | 'teacher_note'
+  schoolName?: string | null
+  creatorName?: string | null
 }
 
 export interface Episode {

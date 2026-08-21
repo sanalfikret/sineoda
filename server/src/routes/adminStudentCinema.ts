@@ -4,7 +4,7 @@ import { dbAll, dbGet, dbRun } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import { mapContent } from '../mappers.js'
 import { normalizeContentType } from '../constants/contentTypes.js'
-import { serializeCredits } from '../services/credits.js'
+import { parseCredits, serializeCredits } from '../services/credits.js'
 import { parsePublishedAt } from '../services/publish.js'
 import {
   addToGencSinemaCategory,
@@ -40,6 +40,7 @@ function mapQueueItem(
   row: ContentRow & { studio_name: string | null; school_name: string | null; creator_name?: string | null },
   stats?: ContentEngagementStats,
 ) {
+  const credits = parseCredits(row.credits_json)
   return {
     ...mapContent(row),
     reviewStatus: row.review_status ?? 'pending',
@@ -52,6 +53,7 @@ function mapQueueItem(
     studioName: row.studio_name,
     creatorId: row.creator_id ?? null,
     creatorName: row.creator_name ?? null,
+    displayName: row.creator_name ?? credits.directors?.[0] ?? credits.cast?.[0] ?? null,
     qualifiedMinutes: stats?.qualifiedMinutes ?? 0,
     watchMinutes: stats?.watchMinutes ?? 0,
     watchCount: stats?.watchCount ?? 0,
