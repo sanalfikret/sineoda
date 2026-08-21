@@ -337,12 +337,20 @@ export function AdminCreatorsPage() {
                           <span>Nitelikli: {item.qualifiedMinutes ?? 0} dk</span>
                           <span>İzleyici: {item.viewers ?? 0}</span>
                           <span>Beğeni: {item.likes ?? 0}</span>
+                          {item.publishedAt && (
+                            <span>Yayın: {formatPublishDate(item.publishedAt)}</span>
+                          )}
                           {item.licenseExpiresAt && (
                             <span>
                               Telif: {new Date(item.licenseExpiresAt).toLocaleDateString('tr-TR')}
                             </span>
                           )}
                         </div>
+                        {item.sourceVideoUrl && (
+                          <p className="mt-2 truncate text-xs text-sky-300/80" title={item.sourceVideoUrl}>
+                            Kaynak: {item.sourceVideoUrl}
+                          </p>
+                        )}
                         <div className="mt-3">
                           <button
                             type="button"

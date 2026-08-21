@@ -113,6 +113,14 @@ function runMigrations() {
   ensureColumn('content', 'content_added_at', 'TEXT')
   ensureColumn('content', 'license_expires_at', 'TEXT')
   ensureColumn('content', 'published_at', 'TEXT')
+  ensureColumn('content', 'source_video_url', 'TEXT')
+
+  db.run(`
+    UPDATE content
+    SET source_video_url = video_url
+    WHERE creator_id IS NOT NULL
+      AND (source_video_url IS NULL OR source_video_url = '')
+  `)
 
   db.run(`
     UPDATE content
