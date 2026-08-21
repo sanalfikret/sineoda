@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs'
 import { v4 as uuid } from 'uuid'
 import { TURKEY_FILM_SCHOOLS } from './turkeyFilmSchools.js'
 import { dbAll, dbExec, dbGet, dbRun } from './db.js'
+import { parseCredits, serializeCredits } from './services/credits.js'
 import type { UserRow } from './types.js'
 
 const V = {
@@ -672,10 +673,45 @@ const GENC_SINEMA_DEMO_FILMS = [
   },
 ] as const
 
+const GENC_SINEMA_DEMO_DIRECTORS = [
+  'Elif Yılmaz',
+  'Can Demir',
+  'Zeynep Koç',
+  'Arda Güneş',
+  'Selin Kara',
+  'Hakan Şanal',
+  'Deniz Acar',
+  'Aylin Er',
+  'Burak Öztürk',
+  'Cemre Aydın',
+] as const
+
+function demoStudentCredits(index: number) {
+  const director = GENC_SINEMA_DEMO_DIRECTORS[index % GENC_SINEMA_DEMO_DIRECTORS.length]
+  return serializeCredits({
+    directors: [director],
+    producers: [director],
+    cast: [director],
+    studio: '',
+    audioLanguages: ['Türkçe'],
+    subtitleLanguages: ['Türkçe', 'Türkçe [CC]'],
+  })
+}
+
+export function ensureStudentCinemaDemoCredits() {
+  GENC_SINEMA_DEMO_FILMS.forEach((film, index) => {
+    const row = dbGet<{ credits_json?: string | null }>('SELECT credits_json FROM content WHERE id = ?', [film.id])
+    if (!row) return
+    const credits = parseCredits(row.credits_json)
+    if ((credits.directors?.length ?? 0) > 0) return
+    dbRun('UPDATE content SET credits_json = ? WHERE id = ?', [demoStudentCredits(index), film.id])
+  })
+}
+
 export function ensureStudentCinemaDemoFilms() {
   const now = Date.now()
 
-  for (const film of GENC_SINEMA_DEMO_FILMS) {
+  for (const [index, film] of GENC_SINEMA_DEMO_FILMS.entries()) {
     const exists = dbGet('SELECT id FROM content WHERE id = ?', [film.id])
     if (exists) continue
 
@@ -710,7 +746,7 @@ export function ensureStudentCinemaDemoFilms() {
         null,
         0,
         '[]',
-        '{}',
+        demoStudentCredits(index),
         publishedAt,
         null,
         publishedAt,

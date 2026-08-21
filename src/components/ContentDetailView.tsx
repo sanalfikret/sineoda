@@ -8,6 +8,7 @@ import { sortEpisodes } from '../utils/episodes'
 import { ContentActionButtons } from './ContentActionButtons'
 import { SeriesEpisodeSection } from './SeriesEpisodeSection'
 import { StudentCinemaMetaDetails } from './StudentCinemaMetaDetails'
+import { getStudentDisplayName } from '../utils/studentDisplayName'
 
 interface ContentDetailViewProps {
   item: ContentItem
@@ -173,6 +174,12 @@ export function ContentDetailView({
       <div className={`p-5 sm:p-6 ${mode === 'page' ? 'mx-auto max-w-4xl' : ''}`}>
         <h1 className="text-2xl font-bold text-white sm:text-3xl">{item.title}</h1>
 
+        {item.program === 'student_cinema' && (item.schoolName || getStudentDisplayName(item)) ? (
+          <p className="mt-2 text-sm text-emerald-200/90">
+            {[getStudentDisplayName(item), item.schoolName].filter(Boolean).join(' · ')}
+          </p>
+        ) : null}
+
         <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-sineoda-muted">
           <span className="rounded bg-white/10 px-2 py-0.5 text-xs font-semibold text-white">
             {item.rating}
@@ -317,6 +324,12 @@ export function ContentDetailView({
               <CreditList label="Yönetmenler" items={credits.directors ?? []} />
               <CreditList label="Yapımcılar" items={credits.producers ?? []} />
               <CreditList label="Oyuncu Kadrosu" items={credits.cast ?? []} />
+              {item.program === 'student_cinema' && item.schoolName ? (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">Okul</p>
+                  <p className="mt-1 text-sm text-white/90">{item.schoolName}</p>
+                </div>
+              ) : null}
               {credits.studio && (
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">Stüdyo</p>

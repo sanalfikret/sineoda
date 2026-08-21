@@ -68,7 +68,14 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   }, [refresh])
 
   const getContentById = useCallback(
-    (id: string) => catalog.find((item) => item.id === id) ?? studentCinemaPicks.find((item) => item.id === id),
+    (id: string) => {
+      const fromCatalog = catalog.find((item) => item.id === id)
+      const fromPicks = studentCinemaPicks.find((item) => item.id === id)
+      if (!fromCatalog && !fromPicks) return undefined
+      if (!fromCatalog) return fromPicks
+      if (!fromPicks) return fromCatalog
+      return { ...fromCatalog, ...fromPicks, credits: fromPicks.credits ?? fromCatalog.credits }
+    },
     [catalog, studentCinemaPicks],
   )
 

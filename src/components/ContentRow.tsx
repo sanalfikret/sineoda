@@ -12,6 +12,7 @@ interface ContentRowProps {
   prominent?: boolean
   layout?: 'landscape' | 'portrait'
   variant?: 'carousel' | 'grid'
+  guestMode?: boolean
 }
 
 export function ContentRow({
@@ -23,6 +24,7 @@ export function ContentRow({
   prominent,
   layout = 'landscape',
   variant = 'carousel',
+  guestMode = false,
 }: ContentRowProps) {
   const rowRef = useRef<HTMLDivElement>(null)
   const isGrid = variant === 'grid'
@@ -74,6 +76,7 @@ export function ContentRow({
             size={prominent ? 'large' : 'default'}
             layout={layout}
             variant={variant}
+            guestHref={guestMode ? '/giris' : undefined}
           />
         ))}
       </div>

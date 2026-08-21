@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   bulkReviewAdminStudentCinemaContent,
   bulkDeleteAdminStudentCinemaContent,
@@ -14,8 +15,8 @@ import {
   type AdminStudentCinemaItem,
 } from '../../api/client'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
-import { AdminStudentCinemaDetailDrawer } from '../../components/admin/AdminStudentCinemaDetailDrawer'
 import { AdminStudentCinemaFilmActions } from '../../components/admin/AdminStudentCinemaFilmActions'
+import { getStudentDisplayName } from '../../utils/studentDisplayName'
 import { fuzzySearchMatch, sortByTurkishTitle } from '../../utils/search'
 import {
   formatPublishDate,
@@ -54,6 +55,10 @@ const STATUS_FILTERS = [
 
 type StatusFilter = (typeof STATUS_FILTERS)[number]['id']
 
+function resolveStudentLabel(item: AdminStudentCinemaItem) {
+  return item.displayName ?? item.creatorName ?? getStudentDisplayName(item) ?? '—'
+}
+
 function matchesStatusFilter(item: AdminStudentCinemaItem, filter: StatusFilter) {
   if (filter === 'all') return true
   if (filter === 'scheduled') return isScheduledStudentFilm(item)
@@ -64,6 +69,7 @@ function matchesStatusFilter(item: AdminStudentCinemaItem, filter: StatusFilter)
 }
 
 export function AdminStudentCinemaPage() {
+  const navigate = useNavigate()
   const [tab, setTab] = useState<'schools' | 'queue' | 'films'>('films')
   const [schools, setSchools] = useState<AdminFilmSchool[]>([])
   const [queue, setQueue] = useState<AdminStudentCinemaItem[]>([])
@@ -76,7 +82,6 @@ export function AdminStudentCinemaPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [schoolFilter, setSchoolFilter] = useState('all')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [detailId, setDetailId] = useState<string | null>(null)
   const [bulkLoading, setBulkLoading] = useState(false)
   const [schoolForm, setSchoolForm] = useState({ name: '', website: '' })
   const [submittingSchool, setSubmittingSchool] = useState(false)
@@ -125,7 +130,7 @@ export function AdminStudentCinemaPage() {
         item.title,
         item.studioName ?? '',
         item.schoolName ?? '',
-        item.displayName ?? item.creatorName ?? '',
+        item.displayName ?? item.creatorName ?? getStudentDisplayName(item) ?? '',
         item.creatorEmail ?? '',
         FORMAT_LABELS[item.contentFormat] ?? item.contentFormat,
       )
@@ -154,7 +159,7 @@ export function AdminStudentCinemaPage() {
         item.title,
         item.studioName ?? '',
         item.schoolName ?? '',
-        item.displayName ?? item.creatorName ?? '',
+        item.displayName ?? item.creatorName ?? getStudentDisplayName(item) ?? '',
         FORMAT_LABELS[item.contentFormat] ?? item.contentFormat,
       ),
     )
@@ -516,14 +521,14 @@ export function AdminStudentCinemaPage() {
                       <td className="px-4 py-3">
                         <button
                           type="button"
-                          onClick={() => setDetailId(item.id)}
+                          onClick={() => navigate(`/admin/genc-sinema/${item.id}`)}
                           className="font-medium text-white hover:text-emerald-300"
                         >
                           {item.title}
                         </button>
                       </td>
                       <td className="px-4 py-3 text-sineoda-muted">
-                        <p>{item.displayName ?? item.creatorName ?? '—'}</p>
+                        <p>{resolveStudentLabel(item)}</p>
                         {item.studioName ? <p className="text-xs">{item.studioName}</p> : null}
                       </td>
                       <td className="px-4 py-3 text-sineoda-muted">{item.schoolName ?? '—'}</td>
@@ -544,7 +549,7 @@ export function AdminStudentCinemaPage() {
                       <td className="px-4 py-3 align-top">
                         <AdminStudentCinemaFilmActions
                           item={item}
-                          onDetail={() => setDetailId(item.id)}
+                          onDetail={() => navigate(`/admin/genc-sinema/${item.id}`)}
                           onChanged={() => void load()}
                           onError={setError}
                         />
@@ -658,7 +663,7 @@ export function AdminStudentCinemaPage() {
                       </p>
                       <h3 className="mt-1 text-lg font-semibold text-white">{item.title}</h3>
                       <p className="mt-1 text-sm text-sineoda-muted">
-                        {item.displayName ?? item.creatorName ?? 'Öğrenci belirtilmemiş'} · {item.schoolName ?? 'Okul belirtilmemiş'}
+                        {resolveStudentLabel(item) === '—' ? 'Öğrenci belirtilmemiş' : resolveStudentLabel(item)} · {item.schoolName ?? 'Okul belirtilmemiş'}
                       </p>
                       <p className="mt-1 text-xs text-sineoda-muted">
                         {item.watchCount ?? 0} izlenme · {item.likes ?? 0} beğeni
@@ -677,7 +682,7 @@ export function AdminStudentCinemaPage() {
                   <div className="mt-4 flex flex-wrap gap-2">
                     <button
                       type="button"
-                      onClick={() => setDetailId(item.id)}
+                      onClick={() => navigate(`/admin/genc-sinema/${item.id}`)}
                       className="rounded-lg border border-white/15 px-3 py-1.5 text-xs hover:bg-white/5"
                     >
                       Detay & Künye
@@ -722,13 +727,6 @@ export function AdminStudentCinemaPage() {
           )}
         </>
       )}
-
-      <AdminStudentCinemaDetailDrawer
-        contentId={detailId}
-        schools={schools}
-        onClose={() => setDetailId(null)}
-        onUpdated={() => void load()}
-      />
     </div>
   )
 }
