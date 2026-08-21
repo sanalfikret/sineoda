@@ -32,7 +32,7 @@ router.post('/', requireAdmin, (req: AuthRequest, res) => {
     name?: string
     email?: string
     password?: string
-    role?: 'user' | 'admin'
+    role?: 'user' | 'admin' | 'manager'
   }
 
   if (!name?.trim() || !email?.trim() || !password || password.length < 6) {
@@ -73,7 +73,7 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
     name?: string
     email?: string
     password?: string
-    role?: 'user' | 'admin'
+    role?: 'user' | 'admin' | 'manager'
   }
 
   if (name !== undefined) dbRun('UPDATE users SET name = ? WHERE id = ?', [name.trim(), req.params.id])
