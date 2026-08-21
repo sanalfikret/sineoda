@@ -40,8 +40,8 @@ function trimOrEmpty(value: unknown) {
 }
 
 function normalizeBackgroundType(value: unknown): LandingHeroBackgroundType {
-  if (value === 'video' || value === 'content') return value
-  return 'image'
+  if (value === 'video' || value === 'image') return value
+  return 'content'
 }
 
 function isEmbeddableVideoUrl(url: string) {
@@ -49,25 +49,9 @@ function isEmbeddableVideoUrl(url: string) {
   return !/youtube\.com|youtu\.be/i.test(url)
 }
 
-export function normalizeLandingHero(input: Partial<LandingHeroConfig> | null | undefined): LandingHeroConfig {
+/** DB'den okunan veya admin'den gelen ham veriyi birleştir — alan silme. */
+export function parseLandingHero(input: Partial<LandingHeroConfig> | null | undefined): LandingHeroConfig {
   const source = input ?? {}
-  const backgroundType = normalizeBackgroundType(source.backgroundType)
-  let backgroundImage = trimOrEmpty(source.backgroundImage)
-  let backgroundVideo = trimOrEmpty(source.backgroundVideo)
-  let backgroundContentId = trimOrEmpty(source.backgroundContentId) || null
-  const featuredContentId = trimOrEmpty(source.featuredContentId) || null
-
-  if (backgroundType === 'image') {
-    backgroundVideo = ''
-    backgroundContentId = null
-  } else if (backgroundType === 'video') {
-    backgroundImage = ''
-    backgroundContentId = null
-    if (!isEmbeddableVideoUrl(backgroundVideo)) backgroundVideo = ''
-  } else {
-    backgroundImage = ''
-    backgroundVideo = ''
-  }
 
   return {
     line1: trimOrEmpty(source.line1) || DEFAULT_LANDING_HERO.line1,
@@ -76,11 +60,11 @@ export function normalizeLandingHero(input: Partial<LandingHeroConfig> | null | 
     ctaPrimary: trimOrEmpty(source.ctaPrimary) || DEFAULT_LANDING_HERO.ctaPrimary,
     ctaSecondary: trimOrEmpty(source.ctaSecondary) || DEFAULT_LANDING_HERO.ctaSecondary,
     legalNote: trimOrEmpty(source.legalNote) || DEFAULT_LANDING_HERO.legalNote,
-    backgroundType,
-    backgroundImage,
-    backgroundVideo,
-    backgroundContentId,
-    featuredContentId,
+    backgroundType: normalizeBackgroundType(source.backgroundType),
+    backgroundImage: trimOrEmpty(source.backgroundImage),
+    backgroundVideo: trimOrEmpty(source.backgroundVideo),
+    backgroundContentId: trimOrEmpty(source.backgroundContentId) || null,
+    featuredContentId: trimOrEmpty(source.featuredContentId) || null,
     showFeaturedCard: source.showFeaturedCard !== false,
   }
 }
@@ -91,14 +75,19 @@ export function getLandingHeroConfig(): LandingHeroConfig {
 
   try {
     const parsed = JSON.parse(row.value) as Partial<LandingHeroConfig>
-    return normalizeLandingHero(parsed)
+    return parseLandingHero(parsed)
   } catch {
     return { ...DEFAULT_LANDING_HERO }
   }
 }
 
 export function saveLandingHeroConfig(input: Partial<LandingHeroConfig>): LandingHeroConfig {
-  const hero = normalizeLandingHero(input)
+  const hero = parseLandingHero(input)
+
+  if (hero.backgroundType === 'video' && !isEmbeddableVideoUrl(hero.backgroundVideo)) {
+    hero.backgroundVideo = ''
+  }
+
   dbRun('INSERT OR REPLACE INTO site_settings (key, value) VALUES (?, ?)', [
     SETTINGS_KEY,
     JSON.stringify(hero),

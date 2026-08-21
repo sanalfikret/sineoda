@@ -4,13 +4,13 @@ import {
   fetchBootstrap,
   fetchLandingConfig,
   updateLandingConfig,
+  updateLandingHeroConfig,
   type LandingHeroConfig,
   type LandingHeroBackgroundType,
 } from '../../api/client'
 import { ImageUpload } from '../../components/admin/ImageUpload'
 import { VideoUpload } from '../../components/admin/VideoUpload'
 import { BRAND_HERO } from '../../constants/brand'
-import { useContent } from '../../context/ContentContext'
 import { getContentDisplayLabel, getContentTypeLabel } from '../../constants/contentTypes'
 import type { ContentItem, ContentType } from '../../types/content'
 import { fuzzySearchMatch } from '../../utils/search'
@@ -89,7 +89,6 @@ function filterPickerCatalog(
 }
 
 export function AdminLandingPage() {
-  const { refresh } = useContent()
   const [pickerCatalog, setPickerCatalog] = useState<ContentItem[]>([])
   const [hero, setHero] = useState<LandingHeroConfig>(DEFAULT_HERO)
   const [sliderIds, setSliderIds] = useState<string[]>([])
@@ -102,7 +101,7 @@ export function AdminLandingPage() {
     Promise.all([fetchBootstrap(), fetchLandingConfig()])
       .then(([bootstrap, data]) => {
         setPickerCatalog(bootstrap.catalog)
-        setHero(data.hero ? { ...DEFAULT_HERO, ...data.hero } : DEFAULT_HERO)
+        setHero(data.hero ?? DEFAULT_HERO)
         setSliderIds(
           data.sliderContentIds?.length
             ? data.sliderContentIds
@@ -202,22 +201,7 @@ export function AdminLandingPage() {
   }
 
   const updateHero = (patch: Partial<LandingHeroConfig>) => {
-    setHero((current) => {
-      const next = { ...current, ...patch }
-      if (patch.backgroundType) {
-        if (patch.backgroundType === 'image') {
-          next.backgroundVideo = ''
-          next.backgroundContentId = null
-        } else if (patch.backgroundType === 'video') {
-          next.backgroundImage = ''
-          next.backgroundContentId = null
-        } else {
-          next.backgroundImage = ''
-          next.backgroundVideo = ''
-        }
-      }
-      return next
-    })
+    setHero((current) => ({ ...current, ...patch }))
   }
 
   const handleSave = async () => {
@@ -228,14 +212,15 @@ export function AdminLandingPage() {
       const persistedSliderIds = sliderIds.filter((id) => validIds.has(id))
       const skipped = sliderIds.length - persistedSliderIds.length
 
-      const data = await updateLandingConfig({ sliderIds: persistedSliderIds, showcases, hero })
-      setHero(data.hero ? { ...DEFAULT_HERO, ...data.hero } : DEFAULT_HERO)
+      const heroResult = await updateLandingHeroConfig(hero)
+      setHero(heroResult.hero)
+
+      const data = await updateLandingConfig({ sliderIds: persistedSliderIds, showcases })
       setSliderIds(
         data.sliderContentIds?.length
           ? data.sliderContentIds
           : data.slider.map((item) => item.id),
       )
-      await refresh()
       setMessage(
         skipped > 0
           ? `Kaydedildi. ${skipped} demo içerik slider'a eklenemedi — yalnızca veritabanındaki içerikler kullanılır.`
@@ -380,7 +365,7 @@ export function AdminLandingPage() {
               <ImageUpload
                 label="Hero arka plan görseli"
                 value={hero.backgroundImage}
-                onChange={(url) => updateHero({ backgroundImage: url })}
+                onChange={(url) => updateHero({ backgroundImage: url, backgroundType: 'image' })}
               />
             </div>
           )}
@@ -390,7 +375,7 @@ export function AdminLandingPage() {
               <VideoUpload
                 label="Hero arka plan videosu"
                 value={hero.backgroundVideo}
-                onChange={(url) => updateHero({ backgroundVideo: url })}
+                onChange={(url) => updateHero({ backgroundVideo: url, backgroundType: 'video' })}
               />
               {/youtube\.com|youtu\.be/i.test(hero.backgroundVideo) && (
                 <p className="text-xs text-amber-300">
@@ -406,7 +391,9 @@ export function AdminLandingPage() {
               <SingleContentPicker
                 catalog={pickerCatalog}
                 selectedId={hero.backgroundContentId}
-                onSelect={(contentId) => updateHero({ backgroundContentId: contentId })}
+                onSelect={(contentId) =>
+                  updateHero({ backgroundContentId: contentId, backgroundType: 'content' })
+                }
                 label="Arka plan için içerik (backdrop/poster kullanılır)"
                 emptyLabel="Seçilmedi — öne çıkan içerik kullanılır"
               />

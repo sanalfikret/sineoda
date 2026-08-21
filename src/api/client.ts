@@ -324,7 +324,16 @@ export async function fetchBootstrap(): Promise<BootstrapResponse> {
 }
 
 export async function fetchLandingConfig(): Promise<LandingConfigResponse> {
-  return api<LandingConfigResponse>('/api/landing')
+  return api<LandingConfigResponse>(`/api/landing?_=${Date.now()}`)
+}
+
+export async function updateLandingHeroConfig(
+  hero: LandingHeroConfig,
+): Promise<{ hero: LandingHeroConfig }> {
+  return api<{ hero: LandingHeroConfig }>('/api/admin/landing/hero', {
+    method: 'PATCH',
+    body: JSON.stringify(hero),
+  })
 }
 
 export async function updateLandingConfig(payload: {
