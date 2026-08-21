@@ -2,14 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   fetchAdminCreatorDetail,
   fetchAdminCreators,
-  reviewAdminCreatorContent,
   updateAdminCreatorStatus,
   type AdminCreator,
   type AdminCreatorContent,
   type AdminCreatorDetail,
 } from '../../api/client'
+import { AdminCreatorFilmEditor } from '../../components/admin/AdminCreatorFilmEditor'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { CREATOR_DOC_TYPES } from '../../constants/creatorLegal'
+import { formatPublishDate } from '../../utils/publish'
 import { fuzzySearchMatch, sortByTurkishTitle } from '../../utils/search'
 
 const STATUS_LABELS: Record<AdminCreator['status'], string> = {
@@ -33,6 +34,23 @@ const REVIEW_LABELS: Record<string, string> = {
   rejected: 'Reddedildi',
 }
 
+const REVIEW_CLASS: Record<string, string> = {
+  draft: 'bg-white/10 text-white/60',
+  pending: 'bg-amber-500/15 text-amber-200',
+  published: 'bg-emerald-500/15 text-emerald-300',
+  rejected: 'bg-red-500/15 text-red-300',
+}
+
+function reviewBadge(item: AdminCreatorContent) {
+  if (item.reviewStatus === 'published' && item.isScheduled) {
+    return `Planlandı · ${formatPublishDate(item.publishedAt)}`
+  }
+  if (item.reviewStatus === 'published' && item.isPublished) {
+    return REVIEW_LABELS.published
+  }
+  return REVIEW_LABELS[item.reviewStatus] ?? item.reviewStatus
+}
+
 function docTypeLabel(value: string) {
   return CREATOR_DOC_TYPES.find((entry) => entry.value === value)?.label ?? value
 }
@@ -45,6 +63,7 @@ export function AdminCreatorsPage() {
   const [detailLoading, setDetailLoading] = useState(false)
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
+  const [editingContentId, setEditingContentId] = useState<string | null>(null)
 
   const loadCreators = useCallback(async () => {
     setLoading(true)
@@ -105,15 +124,9 @@ export function AdminCreatorsPage() {
     }
   }
 
-  const handleReview = async (contentId: string, reviewStatus: 'published' | 'rejected' | 'pending') => {
-    if (!selectedId) return
-    try {
-      await reviewAdminCreatorContent(contentId, reviewStatus)
-      await loadCreators()
-      await loadDetail(selectedId)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'İçerik durumu güncellenemedi.')
-    }
+  const handleReviewSaved = async () => {
+    await loadCreators()
+    if (selectedId) await loadDetail(selectedId)
   }
 
   const selectedCreator = detail?.creator ?? creators.find((entry) => entry.id === selectedId) ?? null
@@ -311,32 +324,34 @@ export function AdminCreatorsPage() {
                               {item.type} · {item.year} · {item.duration || 'Süre belirtilmemiş'}
                             </p>
                           </div>
-                          <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-white/80">
-                            {REVIEW_LABELS[item.reviewStatus] ?? item.reviewStatus}
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                              REVIEW_CLASS[item.reviewStatus] ?? 'bg-white/10 text-white/80'
+                            }`}
+                          >
+                            {reviewBadge(item)}
                           </span>
                         </div>
-                        <div className="mt-3 flex flex-wrap gap-4 text-xs text-sineoda-muted">
-                          <span>İzlenme: {item.qualifiedMinutes} dk</span>
-                          <span>Beğeni: {item.likes}</span>
+                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-sineoda-muted">
+                          <span>İzlenme: {item.watchMinutes ?? 0} dk</span>
+                          <span>Nitelikli: {item.qualifiedMinutes ?? 0} dk</span>
+                          <span>İzleyici: {item.viewers ?? 0}</span>
+                          <span>Beğeni: {item.likes ?? 0}</span>
+                          {item.licenseExpiresAt && (
+                            <span>
+                              Telif: {new Date(item.licenseExpiresAt).toLocaleDateString('tr-TR')}
+                            </span>
+                          )}
                         </div>
-                        {item.reviewStatus === 'pending' && (
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              onClick={() => void handleReview(item.id, 'published')}
-                              className="rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-medium text-emerald-300 hover:bg-emerald-500/25"
-                            >
-                              Yayınla
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => void handleReview(item.id, 'rejected')}
-                              className="rounded-lg bg-red-500/15 px-3 py-1.5 text-xs font-medium text-red-300 hover:bg-red-500/25"
-                            >
-                              Reddet
-                            </button>
-                          </div>
-                        )}
+                        <div className="mt-3">
+                          <button
+                            type="button"
+                            onClick={() => setEditingContentId(item.id)}
+                            className="rounded-lg bg-sineoda-gold/15 px-3 py-1.5 text-xs font-medium text-sineoda-gold hover:bg-sineoda-gold/25"
+                          >
+                            İncele ve düzenle
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -346,6 +361,14 @@ export function AdminCreatorsPage() {
           )}
         </div>
       </div>
+
+      {editingContentId && (
+        <AdminCreatorFilmEditor
+          contentId={editingContentId}
+          onClose={() => setEditingContentId(null)}
+          onSaved={() => void handleReviewSaved()}
+        />
+      )}
     </div>
   )
 }
