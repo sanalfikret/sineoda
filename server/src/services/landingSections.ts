@@ -154,11 +154,30 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
     items: [
       {
         question: 'Sineoda nedir?',
-        answer: 'Bağımsız sinemacıların filmlerini izleyebileceğiniz küratörlü bir dijital yayın platformudur.',
+        answer:
+          'Sineoda; dünyanın dört bir yanından bağımsız sinemacıların filmlerini, dizilerini ve belgesellerini izleyebileceğiniz küratörlü bir dijital yayın platformudur.',
       },
       {
         question: "Sineoda'nın maliyeti nedir?",
-        answer: 'Aylık ₺149 veya yıllık ₺1.290 planlarımız mevcuttur.',
+        answer:
+          'Aylık ₺149 veya yıllık ₺1.290 planlarımız mevcuttur. Yıllık planda 2 ay bedava avantajı sunulur.',
+      },
+      {
+        question: 'Nerede izleyebilirim?',
+        answer:
+          "Sineoda'yı web tarayıcısı, Android, iOS ve Android TV üzerinden izleyebilirsiniz.",
+      },
+      {
+        question: 'Nasıl iptal ederim?',
+        answer: 'Hesabınızdan Abonelik bölümünden planınızı istediğiniz zaman iptal edebilirsiniz.',
+      },
+      {
+        question: "Sineoda'da ne izleyebilirim?",
+        answer: 'Dünya bağımsız sinemasından filmler, diziler, belgeseller ve kısa metrajlar.',
+      },
+      {
+        question: 'Sineoda çocuklar için uygun mudur?',
+        answer: 'Evet. Çocuk profili ile yaşa uygun içerikler sunulur.',
       },
     ],
     footerText: 'İzlemeye hazır mısın?',
@@ -193,12 +212,22 @@ function parseTextItems(raw: unknown, fallback: LandingTextItem[]) {
 
 function parseFaqItems(raw: unknown, fallback: LandingFaqItem[]) {
   if (!Array.isArray(raw)) return fallback
-  return raw
+  const parsed = raw
     .map((item) => ({
       question: trim((item as LandingFaqItem)?.question),
       answer: trim((item as LandingFaqItem)?.answer),
     }))
     .filter((item) => item.question && item.answer)
+  return mergeFaqItems(parsed, fallback)
+}
+
+function mergeFaqItems(saved: LandingFaqItem[], defaults: LandingFaqItem[]) {
+  if (!saved.length) return defaults
+  const seen = new Set(saved.map((item) => item.question.trim().toLocaleLowerCase('tr')))
+  const missing = defaults.filter(
+    (item) => !seen.has(item.question.trim().toLocaleLowerCase('tr')),
+  )
+  return missing.length > 0 ? [...saved, ...missing] : saved
 }
 
 export function parseLandingSections(input: Partial<LandingSectionsConfig> | null | undefined): LandingSectionsConfig {
