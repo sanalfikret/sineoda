@@ -20,6 +20,9 @@ export interface UserRow {
   subscription_plan?: string | null
   subscription_expires_at?: string | null
   subscription_started_at?: string | null
+  phone?: string | null
+  phone_verified?: number
+  email_verified?: number
 }
 
 export interface ProfileRow {

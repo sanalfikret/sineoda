@@ -34,6 +34,7 @@ import { ContactPage } from './pages/ContactPage'
 import { JournalLayout } from './components/journal/JournalLayout'
 import { JournalListPage } from './pages/JournalListPage'
 import { JournalPostPage } from './pages/JournalPostPage'
+import { VerifyEmailPage } from './pages/VerifyEmailPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { ContentDetailPage } from './pages/ContentDetailPage'
 import { SignupPage } from './pages/SignupPage'
@@ -105,6 +106,7 @@ function App() {
       <Route path="/" element={<HomeRoute />} />
       <Route path="/giris" element={<LoginPage />} />
       <Route path="/kayit" element={<SignupPage />} />
+      <Route path="/eposta-dogrula" element={<VerifyEmailPage />} />
       <Route path="/sifremi-unuttum" element={<ForgotPasswordPage />} />
       <Route path="/sifre-sifirla" element={<ResetPasswordPage />} />
       <Route path="/planlar" element={<PricingPage />} />

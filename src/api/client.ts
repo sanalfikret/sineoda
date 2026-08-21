@@ -75,8 +75,13 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     const contentType = response.headers.get('content-type') ?? ''
     try {
       if (contentType.includes('application/json')) {
-        const body = (await response.json()) as { error?: string }
+        const body = (await response.json()) as { error?: string; code?: string; email?: string }
         message = body.error || message
+        const err = new Error(message) as Error & { code?: string; email?: string; status?: number }
+        err.code = body.code
+        err.email = body.email
+        err.status = response.status
+        throw err
       } else if (response.status === 404) {
         message =
           path.includes('/categories/reorder') || path.includes('/reactions/')
@@ -85,7 +90,10 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
       } else {
         await response.text()
       }
-    } catch {
+    } catch (parseError) {
+      if (parseError instanceof Error && 'status' in parseError) {
+        throw parseError
+      }
       if (response.status === 502 || response.status === 503) {
         message = 'Sunucuya bağlanılamıyor. baslat.bat ile API\'nin çalıştığından emin olun.'
       } else if (response.status === 404) {
@@ -214,10 +222,27 @@ export async function signupRequest(
   password: string,
   phone: string,
   smsCode: string,
-): Promise<AuthResponse> {
-  return api<AuthResponse>('/api/auth/signup', {
+): Promise<{ message: string; email: string; devVerifyUrl?: string }> {
+  return api('/api/auth/signup', {
     method: 'POST',
     body: JSON.stringify({ name, email, password, phone, smsCode }),
+  })
+}
+
+export async function verifyEmailRequest(token: string): Promise<{ message: string }> {
+  return api('/api/auth/verify-email', {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+  })
+}
+
+export async function resendVerificationRequest(email: string): Promise<{
+  message: string
+  devVerifyUrl?: string
+}> {
+  return api('/api/auth/resend-verification', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
   })
 }
 

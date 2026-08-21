@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { sendSmsCode } from '../api/client'
 import { AuthLayout } from '../components/AuthLayout'
 import { LEGAL_LINKS } from '../constants/legal'
@@ -7,7 +7,6 @@ import { useAuth } from '../context/AuthContext'
 
 export function SignupPage() {
   const { signup, user } = useAuth()
-  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [name, setName] = useState('')
   const [email, setEmail] = useState(() => searchParams.get('email') ?? '')
@@ -19,6 +18,9 @@ export function SignupPage() {
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
   const [loading, setLoading] = useState(false)
+  const [completed, setCompleted] = useState(false)
+  const [pendingEmail, setPendingEmail] = useState('')
+  const [devVerifyUrl, setDevVerifyUrl] = useState<string | null>(null)
   const [sendingCode, setSendingCode] = useState(false)
 
   if (user) {
@@ -57,8 +59,11 @@ export function SignupPage() {
 
     setLoading(true)
     try {
-      await signup(name, email, password, phone.trim(), smsCode.trim())
-      navigate('/profiller', { replace: true })
+      const result = await signup(name, email, password, phone.trim(), smsCode.trim())
+      setPendingEmail(result.email)
+      setDevVerifyUrl(result.devVerifyUrl ?? null)
+      setCompleted(true)
+      setInfo(result.message)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kayıt başarısız.')
     } finally {
@@ -68,9 +73,48 @@ export function SignupPage() {
 
   return (
     <AuthLayout
-      title="Sineoda'ya katıl"
-      subtitle="Ücretsiz hesap oluştur, binlerce içeriği keşfet."
+      title={completed ? 'E-postanı kontrol et' : "Sineoda'ya katıl"}
+      subtitle={
+        completed
+          ? 'Üyeliğini tamamlamak için e-posta adresine gönderilen bağlantıya tıkla.'
+          : 'Ücretsiz hesap oluştur, binlerce içeriği keşfet.'
+      }
     >
+      {completed ? (
+        <div className="space-y-4">
+          <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+            {info || 'Doğrulama e-postası gönderildi.'}
+            {pendingEmail ? (
+              <p className="mt-2 text-white/85">
+                Gönderilen adres: <strong>{pendingEmail}</strong>
+              </p>
+            ) : null}
+            {devVerifyUrl ? (
+              <p className="mt-2 break-all text-xs text-white/70">
+                Geliştirme modu bağlantısı:{' '}
+                <a href={devVerifyUrl} className="text-sineoda-gold underline">
+                  {devVerifyUrl}
+                </a>
+              </p>
+            ) : null}
+          </div>
+          <p className="text-sm text-sineoda-muted">
+            E-postayı doğruladıktan sonra giriş yapabilirsin. Bağlantı gelmediyse spam klasörünü de kontrol et.
+          </p>
+          <Link
+            to={`/eposta-dogrula?email=${encodeURIComponent(pendingEmail || email)}`}
+            className="block w-full rounded-lg border border-sineoda-gold/40 bg-sineoda-gold/10 py-3 text-center text-sm font-semibold text-sineoda-gold"
+          >
+            Doğrulama E-postasını Yeniden Gönder
+          </Link>
+          <Link
+            to="/giris"
+            className="block w-full rounded-lg bg-sineoda-gold py-3 text-center text-sm font-semibold text-sineoda-bg"
+          >
+            Giriş Sayfasına Git
+          </Link>
+        </div>
+      ) : (
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
@@ -193,21 +237,26 @@ export function SignupPage() {
           {loading ? 'Hesap oluşturuluyor...' : 'Kayıt Ol'}
         </button>
       </form>
+      )}
 
-      <div className="mt-4 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-sineoda-muted">
-        {LEGAL_LINKS.map((link) => (
-          <Link key={link.slug} to={`/yasal/${link.slug}`} className="hover:text-white">
-            {link.label}
-          </Link>
-        ))}
-      </div>
+      {!completed ? (
+        <>
+          <div className="mt-4 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-sineoda-muted">
+            {LEGAL_LINKS.map((link) => (
+              <Link key={link.slug} to={`/yasal/${link.slug}`} className="hover:text-white">
+                {link.label}
+              </Link>
+            ))}
+          </div>
 
-      <p className="mt-6 text-center text-sm text-sineoda-muted">
-        Zaten hesabın var mı?{' '}
-        <Link to="/giris" className="font-medium text-sineoda-gold hover:underline">
-          Giriş yap
-        </Link>
-      </p>
+          <p className="mt-6 text-center text-sm text-sineoda-muted">
+            Zaten hesabın var mı?{' '}
+            <Link to="/giris" className="font-medium text-sineoda-gold hover:underline">
+              Giriş yap
+            </Link>
+          </p>
+        </>
+      ) : null}
     </AuthLayout>
   )
 }

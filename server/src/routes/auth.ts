@@ -7,7 +7,7 @@ import { config, publicAssetUrl } from '../config.js'
 import { dbAll, dbGet, dbRun, uploadsDir } from '../db.js'
 import { getProfileId, requireAuth, signToken, type AuthRequest } from '../middleware/auth.js'
 import { mapProfile, mapUser } from '../mappers.js'
-import { sendPasswordResetEmail } from '../services/email.js'
+import { sendPasswordResetEmail, sendEmailVerificationEmail } from '../services/email.js'
 import { isValidTurkishMobile, normalizePhone, sendVerificationSms } from '../services/sms.js'
 import type { ProfileRow, UserRow } from '../types.js'
 
@@ -33,6 +33,24 @@ function getUserWithProfiles(userId: string) {
   if (!user) return null
   const profiles = dbAll<ProfileRow>('SELECT * FROM profiles WHERE user_id = ? ORDER BY name', [userId])
   return mapUser(user, profiles)
+}
+
+function isEmailVerified(user: UserRow) {
+  return user.role === 'admin' || Boolean(user.email_verified)
+}
+
+async function createEmailVerificationToken(userId: string, email: string) {
+  const token = uuid()
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+
+  dbRun('UPDATE email_verification_tokens SET used = 1 WHERE user_id = ? AND used = 0', [userId])
+  dbRun(
+    'INSERT INTO email_verification_tokens (id, user_id, token, expires_at, used) VALUES (?, ?, ?, ?, 0)',
+    [uuid(), userId, token, expiresAt],
+  )
+
+  const verifyUrl = `${config.frontendUrl}/eposta-dogrula?token=${token}`
+  return sendEmailVerificationEmail(email, verifyUrl)
 }
 
 router.post('/sms/send', async (req, res) => {
@@ -129,8 +147,8 @@ router.post('/signup', async (req, res) => {
   const userId = uuid()
   const hash = bcrypt.hashSync(password, 10)
   dbRun(
-    'INSERT INTO users (id, name, email, password_hash, role, created_at, phone, phone_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    [userId, name.trim(), normalizedEmail, hash, 'user', new Date().toISOString(), normalizedPhone, phoneVerified],
+    'INSERT INTO users (id, name, email, password_hash, role, created_at, phone, phone_verified, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [userId, name.trim(), normalizedEmail, hash, 'user', new Date().toISOString(), normalizedPhone, phoneVerified, 0],
   )
   dbRun('INSERT INTO profiles (id, user_id, name, avatar, is_kids) VALUES (?, ?, ?, ?, ?)', [
     uuid(), userId, 'Ana Profil', '🎬', 0,
@@ -139,9 +157,13 @@ router.post('/signup', async (req, res) => {
     uuid(), userId, 'Çocuk', '🚀', 1,
   ])
 
-  const user = getUserWithProfiles(userId)!
-  const token = signToken({ userId, role: user.role })
-  res.status(201).json({ token, user })
+  const emailResult = await createEmailVerificationToken(userId, normalizedEmail)
+
+  res.status(201).json({
+    message: 'Kayıt alındı. Üyeliğini tamamlamak için e-posta adresine gönderilen doğrulama bağlantısına tıkla.',
+    email: normalizedEmail,
+    ...(emailResult.devMode ? { devVerifyUrl: emailResult.verifyUrl } : {}),
+  })
 })
 
 router.post('/login', (req, res) => {
@@ -159,6 +181,15 @@ router.post('/login', (req, res) => {
   const user = dbGet<UserRow>('SELECT * FROM users WHERE email = ?', [email.trim().toLowerCase()])
   if (!user || !bcrypt.compareSync(password, user.password_hash)) {
     res.status(401).json({ error: 'E-posta veya şifre hatalı.' })
+    return
+  }
+
+  if (!isEmailVerified(user)) {
+    res.status(403).json({
+      error: 'E-posta adresin henüz doğrulanmadı. Gelen kutunu kontrol et veya doğrulama e-postasını yeniden gönder.',
+      code: 'EMAIL_NOT_VERIFIED',
+      email: user.email,
+    })
     return
   }
 
@@ -390,6 +421,51 @@ router.post('/reset-password', (req, res) => {
   dbRun('UPDATE password_reset_tokens SET used = 1 WHERE token = ?', [token])
 
   res.json({ message: 'Şifren güncellendi. Giriş yapabilirsin.' })
+})
+
+router.post('/verify-email', (req, res) => {
+  const token = String(req.body.token ?? req.query?.token ?? '').trim()
+  if (!token) {
+    res.status(400).json({ error: 'Doğrulama bağlantısı geçersiz.' })
+    return
+  }
+
+  const record = dbGet<{ user_id: string; expires_at: string; used: number }>(
+    'SELECT user_id, expires_at, used FROM email_verification_tokens WHERE token = ?',
+    [token],
+  )
+
+  if (!record || record.used || new Date(record.expires_at) < new Date()) {
+    res.status(400).json({ error: 'Geçersiz veya süresi dolmuş doğrulama bağlantısı.' })
+    return
+  }
+
+  dbRun('UPDATE users SET email_verified = 1 WHERE id = ?', [record.user_id])
+  dbRun('UPDATE email_verification_tokens SET used = 1 WHERE token = ?', [token])
+
+  res.json({ message: 'E-posta adresin doğrulandı. Artık giriş yapabilirsin.' })
+})
+
+router.post('/resend-verification', async (req, res) => {
+  const email = String(req.body.email ?? '').trim().toLowerCase()
+  if (!email) {
+    res.status(400).json({ error: 'E-posta gerekli.' })
+    return
+  }
+
+  const user = dbGet<UserRow>('SELECT * FROM users WHERE email = ?', [email])
+  if (!user || isEmailVerified(user) || user.role !== 'user') {
+    res.json({
+      message: 'Kayıtlı ve doğrulanmamış bir hesap varsa doğrulama e-postası gönderildi.',
+    })
+    return
+  }
+
+  const emailResult = await createEmailVerificationToken(user.id, user.email)
+  res.json({
+    message: 'Doğrulama e-postası gönderildi.',
+    ...(emailResult.devMode ? { devVerifyUrl: emailResult.verifyUrl } : {}),
+  })
 })
 
 router.post('/upload/avatar', requireAuth, avatarUpload.single('file'), (req: AuthRequest, res) => {

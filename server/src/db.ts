@@ -130,6 +130,25 @@ function runMigrations() {
   ensureColumn('users', 'subscription_started_at', 'TEXT')
   ensureColumn('users', 'phone', 'TEXT')
   ensureColumn('users', 'phone_verified', 'INTEGER DEFAULT 0')
+  ensureColumn('users', 'email_verified', 'INTEGER DEFAULT 0')
+
+  const emailVerificationBackfill = dbGet<{ value: string }>(
+    "SELECT value FROM site_settings WHERE key = 'email_verification_backfill'",
+  )
+  if (!emailVerificationBackfill) {
+    db.run('UPDATE users SET email_verified = 1')
+    db.run("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('email_verification_backfill', '1')")
+  }
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS email_verification_tokens (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      token TEXT UNIQUE NOT NULL,
+      expires_at TEXT NOT NULL,
+      used INTEGER NOT NULL DEFAULT 0
+    );
+  `)
 
   db.run(`
     CREATE TABLE IF NOT EXISTS phone_verification_codes (
