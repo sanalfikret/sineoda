@@ -1,4 +1,5 @@
 import { dbAll, dbGet, dbRun } from '../db.js'
+import { matchesEditorialFillRule } from '../editorialCategories.js'
 import { PUBLISHED_CONTENT_SQL } from './publish.js'
 import { GENC_SINEMA_CATEGORY_ID, MAIN_CATALOG_SQL, STANDARD_PROGRAM_SQL } from './studentCinema.js'
 import type { ContentRow } from '../types.js'
@@ -18,29 +19,12 @@ function matchesCategory(categoryTitle: string, categoryId: string, row: Content
   if ((row.content_format ?? 'main') !== 'main') return false
 
   const genres = parseGenres(row)
-  const title = categoryTitle.toLocaleLowerCase('tr')
-  const vertical = row.video_format === 'vertical'
+  const editorialMatch = matchesEditorialFillRule(categoryTitle, row, genres)
+  if (editorialMatch !== null) return editorialMatch
 
-  if (title === 'bu hafta trend') return Boolean(row.featured) || Boolean(row.is_new)
-  if (title === 'yeni eklenenler') return Boolean(row.is_new)
-  if (title === 'popüler diziler') return row.type === 'dizi' && !vertical
-  if (title === 'belgeseller') return row.type === 'belgesel'
-  if (title === 'dikey diziler') return vertical
+  const title = categoryTitle.toLocaleLowerCase('tr')
   if (title === 'filmler') return row.type === 'film'
   if (title === 'kısa filmler') return row.type === 'kisa-film'
-  if (title === 'aile için') return genres.some((g) => ['Aile', 'Animasyon', 'Çocuk'].includes(g))
-  if (title === 'stand-up') return genres.includes('Stand-up')
-  if (title === 'animasyon') return genres.includes('Animasyon')
-  if (title === 'anime') return genres.includes('Anime')
-  if (title === 'yerli yapımlar') return genres.includes('Yerli')
-  if (title === 'suç-gizem' || title === 'suç ve gizem' || title === 'suç gizem') {
-    return genres.some((g) => ['Suç', 'Gizem', 'Gerilim'].includes(g))
-  }
-  if (title === 'romantik') return genres.includes('Romantik')
-  if (title === 'bilim kurgu ve fantastik') {
-    return genres.some((g) => ['Bilim Kurgu', 'Fantastik'].includes(g))
-  }
-  if (title === 'komedi filmleri' || title === 'komedi özel') return genres.includes('Komedi')
 
   if (genres.includes(categoryTitle)) return true
   if (categoryId.startsWith('genre-') && title) {

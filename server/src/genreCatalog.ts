@@ -1,4 +1,5 @@
 import { dbGet, dbRun } from './db.js'
+import { buildGenreToEditorialIdMap } from './editorialCategories.js'
 
 const FEATURED_BROWSE_GENRES = [
   'Aksiyon', 'Dram', 'Suç', 'Gerilim', 'Komedi', 'Romantik', 'Aile', 'Belgesel',
@@ -152,12 +153,7 @@ export function ensureGenreContentById(contentId: string): boolean {
   return true
 }
 
-const EDITORIAL_GENRE_ROW_IDS: Record<string, string> = {
-  Yerli: 'local',
-  Suç: 'crime',
-  Gizem: 'crime',
-  Komedi: 'comedy-specials',
-}
+const EDITORIAL_GENRE_ROW_IDS = buildGenreToEditorialIdMap()
 
 export function ensureGenreCatalog() {
   for (const item of GENRE_ITEMS) upsertGenreItem(item)
