@@ -383,7 +383,7 @@ function syncBrowseCategories() {
   replaceCategoryItems('vertical-series', 'Dikey Diziler', 8, dikey.slice(0, TARGET_PER_TYPE))
   replaceCategoryItems('filmler-row', 'Filmler', 9, film.slice(0, TARGET_PER_TYPE))
   replaceCategoryItems('kisa-filmler-row', 'Kısa Filmler', 10, kisa.slice(0, TARGET_PER_TYPE))
-  replaceCategoryItems('family', 'Aile İçin', 5, getKidsIds().slice(0, TARGET_PER_TYPE))
+  replaceCategoryItems('family', 'Aile Filmleri', 5, getKidsIds().slice(0, TARGET_PER_TYPE))
 }
 
 export function ensureDemoContentById(contentId: string): boolean {
