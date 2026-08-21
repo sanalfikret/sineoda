@@ -9,6 +9,11 @@ import {
   type LandingHeroConfig,
 } from '../services/landingHero.js'
 import {
+  getLandingLayoutConfig,
+  saveLandingLayoutConfig,
+  type LandingLayoutConfig,
+} from '../services/landingLayout.js'
+import {
   getLandingSectionsConfig,
   parseLandingSections,
   saveLandingSectionsConfig,
@@ -57,8 +62,9 @@ export function getLandingConfig() {
 
   const hero = getLandingHeroConfig()
   const sections = getLandingSectionsConfig()
+  const layout = getLandingLayoutConfig()
 
-  return { slider, sliderContentIds, showcases, hero, sections }
+  return { slider, sliderContentIds, showcases, hero, sections, layout }
 }
 
 function contentExists(contentId: string | null) {
@@ -86,6 +92,11 @@ router.patch('/hero', requireAdmin, (req: AuthRequest, res) => {
 router.patch('/sections', requireAdmin, (req: AuthRequest, res) => {
   const sections = saveLandingSectionsConfig(req.body as Partial<LandingSectionsConfig>)
   res.json({ sections })
+})
+
+router.patch('/layout', requireAdmin, (req: AuthRequest, res) => {
+  const layout = saveLandingLayoutConfig(req.body as Partial<LandingLayoutConfig>)
+  res.json({ layout })
 })
 
 router.get('/', (_req, res) => {
