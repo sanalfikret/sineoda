@@ -17,6 +17,7 @@ import { AdminLandingPage } from './pages/admin/AdminLandingPage'
 import { AdminUsersPage } from './pages/admin/AdminUsersPage'
 import { AdminCreatorsPage } from './pages/admin/AdminCreatorsPage'
 import { AdminStudentCinemaPage } from './pages/admin/AdminStudentCinemaPage'
+import { AdminStudentCinemaFormPage } from './pages/admin/AdminStudentCinemaFormPage'
 import { AccountPage } from './pages/AccountPage'
 import { BrowsePage } from './pages/BrowsePage'
 import { LandingPage } from './pages/LandingPage'
@@ -244,6 +245,7 @@ function App() {
         <Route path="kullanicilar" element={<AdminUsersPage />} />
         <Route path="yapimcilar" element={<AdminCreatorsPage />} />
         <Route path="genc-sinema" element={<AdminStudentCinemaPage />} />
+        <Route path="genc-sinema/:id" element={<AdminStudentCinemaFormPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
