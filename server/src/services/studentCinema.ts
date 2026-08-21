@@ -43,9 +43,17 @@ export function removeStudentFromOtherCategories(contentId: string) {
   ])
 }
 
+export function removeFromGencSinemaCategory(contentId: string) {
+  dbRun('DELETE FROM category_items WHERE category_id = ? AND content_id = ?', [
+    GENC_SINEMA_CATEGORY_ID,
+    contentId,
+  ])
+}
+
 export interface ContentEngagementStats {
   qualifiedMinutes: number
   watchMinutes: number
+  watchCount: number
   likes: number
   viewers: number
 }
@@ -58,6 +66,7 @@ export function getContentEngagementStats(contentIds: string[]) {
     content_id: string
     qualified_seconds: number
     watch_seconds: number
+    watch_count: number
     likes: number
     viewers: number
   }>(
@@ -69,6 +78,11 @@ export function getContentEngagementStats(contentIds: string[]) {
         FROM watch_progress wp
         WHERE wp.content_id = c.id
       ), 0) AS watch_seconds,
+      COALESCE((
+        SELECT COUNT(*)
+        FROM watch_progress wp
+        WHERE wp.content_id = c.id AND wp.total_watched_seconds > 0
+      ), 0) AS watch_count,
       COALESCE((
         SELECT COUNT(*)
         FROM content_reactions cr
@@ -92,6 +106,7 @@ export function getContentEngagementStats(contentIds: string[]) {
       {
         qualifiedMinutes: Math.round(row.qualified_seconds / 60),
         watchMinutes: Math.round(row.watch_seconds / 60),
+        watchCount: row.watch_count,
         likes: row.likes,
         viewers: row.viewers,
       },
@@ -108,6 +123,7 @@ export function attachStats<T extends { id: string }>(
     ...(stats.get(item.id) ?? {
       qualifiedMinutes: 0,
       watchMinutes: 0,
+      watchCount: 0,
       likes: 0,
       viewers: 0,
     }),
