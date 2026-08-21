@@ -117,13 +117,6 @@ function runMigrations() {
 
   db.run(`
     UPDATE content
-    SET source_video_url = video_url
-    WHERE creator_id IS NOT NULL
-      AND (source_video_url IS NULL OR source_video_url = '')
-  `)
-
-  db.run(`
-    UPDATE content
     SET content_added_at = COALESCE(content_added_at, datetime('now'))
     WHERE content_added_at IS NULL OR content_added_at = ''
   `)
@@ -319,6 +312,12 @@ function runMigrations() {
   `)
 
   ensureColumn('content', 'creator_id', 'TEXT')
+  db.run(`
+    UPDATE content
+    SET source_video_url = video_url
+    WHERE creator_id IS NOT NULL
+      AND (source_video_url IS NULL OR source_video_url = '')
+  `)
   ensureColumn('content', 'review_status', "TEXT DEFAULT 'published'")
   ensureColumn('watch_progress', 'qualified', 'INTEGER DEFAULT 0')
   ensureColumn('watch_progress', 'qualified_seconds', 'REAL DEFAULT 0')
