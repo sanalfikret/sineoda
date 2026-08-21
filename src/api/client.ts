@@ -1,5 +1,5 @@
 import type { Profile, User } from '../types/auth'
-import type { AdminContentItem, ContentCategory, ContentItem, Episode } from '../types/content'
+import type { AdminContentItem, AdminContentMeta, ContentCategory, ContentItem, Episode } from '../types/content'
 import type { LandingSectionsConfig } from '../constants/landingDefaults'
 import { isTransientApiError, sleep } from '../utils/authSession'
 
@@ -830,10 +830,19 @@ export interface AdminCreatorDocument {
   uploadedAt: string
 }
 
-export interface AdminCreatorContent extends ContentItem {
+export interface AdminCreatorContent extends ContentItem, AdminContentMeta {
   reviewStatus: string
   qualifiedMinutes: number
+  watchMinutes: number
+  watchCount: number
   likes: number
+  viewers: number
+}
+
+export interface AdminCreatorContentDetail extends AdminCreatorContent {
+  studioName?: string | null
+  creatorName?: string | null
+  creatorEmail?: string | null
 }
 
 export interface AdminCreatorDetail {
@@ -867,6 +876,17 @@ export async function reviewAdminCreatorContent(contentId: string, reviewStatus:
   return api<{ item: ContentItem; reviewStatus: string }>(`/api/admin/creators/content/${contentId}/review`, {
     method: 'PATCH',
     body: JSON.stringify({ reviewStatus }),
+  })
+}
+
+export async function fetchAdminCreatorContentDetail(contentId: string) {
+  return api<{ item: AdminCreatorContentDetail }>(`/api/admin/creators/content/${contentId}`)
+}
+
+export async function updateAdminCreatorContent(contentId: string, data: Record<string, unknown>) {
+  return api<{ item: AdminCreatorContentDetail }>(`/api/admin/creators/content/${contentId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
   })
 }
 

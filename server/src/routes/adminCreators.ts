@@ -1,11 +1,40 @@
 import { Router } from 'express'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
-import { mapContent } from '../mappers.js'
+import { mapContent, mapContentAdmin } from '../mappers.js'
 import { addToGencSinemaCategory, isStudentMainRow } from '../services/studentCinema.js'
+import {
+  applyCreatorReviewStatus,
+  resolveCreatorPublishUpdate,
+  updateCreatorContentFields,
+} from '../services/creatorContentAdmin.js'
+import { attachStats, getContentEngagementStats } from '../services/studentCinema.js'
 import type { ContentRow, CreatorRow } from '../types.js'
 
 const router = Router()
+
+function mapCreatorContentItem(row: ContentRow, stats?: ReturnType<typeof getContentEngagementStats> extends Map<string, infer V> ? V : never) {
+  return {
+    ...mapContentAdmin(row),
+    reviewStatus: row.review_status ?? 'pending',
+    creatorId: row.creator_id ?? null,
+    ...(stats ?? {
+      qualifiedMinutes: 0,
+      watchMinutes: 0,
+      watchCount: 0,
+      likes: 0,
+      viewers: 0,
+    }),
+  }
+}
+
+function getStandardCreatorContent(contentId: string) {
+  return dbGet<ContentRow>(
+    `SELECT * FROM content
+     WHERE id = ? AND creator_id IS NOT NULL AND program = 'standard'`,
+    [contentId],
+  )
+}
 
 router.get('/creators', requireAdmin, (_req: AuthRequest, res) => {
   const rows = dbAll<
@@ -66,26 +95,7 @@ router.get('/creators/:id', requireAdmin, (req: AuthRequest, res) => {
     [row.id],
   )
 
-  const stats = dbAll<{
-    content_id: string
-    qualified_seconds: number
-    likes: number
-  }>(
-    `SELECT
-      c.id AS content_id,
-      COALESCE(SUM(cqa.seconds_watched), 0) AS qualified_seconds,
-      COALESCE((
-        SELECT COUNT(*) FROM content_reactions cr
-        WHERE cr.content_id = c.id AND cr.reaction = 'like'
-      ), 0) AS likes
-    FROM content c
-    LEFT JOIN creator_qualified_activity cqa ON cqa.content_id = c.id AND cqa.creator_id = c.creator_id
-    WHERE c.creator_id = ?
-    GROUP BY c.id`,
-    [row.id],
-  )
-
-  const statsByContent = new Map(stats.map((entry) => [entry.content_id, entry]))
+  const stats = getContentEngagementStats(contentRows.map((item) => item.id))
 
   res.json({
     creator: {
@@ -108,15 +118,13 @@ router.get('/creators/:id', requireAdmin, (req: AuthRequest, res) => {
       fileUrl: doc.file_url,
       uploadedAt: doc.uploaded_at,
     })),
-    content: contentRows.map((item) => {
-      const stat = statsByContent.get(item.id)
-      return {
-        ...mapContent(item),
+    content: attachStats(
+      contentRows.map((item) => ({
+        ...mapContentAdmin(item),
         reviewStatus: item.review_status ?? 'pending',
-        qualifiedMinutes: Math.round((stat?.qualified_seconds ?? 0) / 60),
-        likes: stat?.likes ?? 0,
-      }
-    }),
+      })),
+      stats,
+    ),
   })
 })
 
@@ -138,11 +146,12 @@ router.patch('/creators/:id', requireAdmin, (req: AuthRequest, res) => {
 })
 
 router.get('/content/pending', requireAdmin, (_req: AuthRequest, res) => {
-  const rows = dbAll<ContentRow & { studio_name: string }>(
-    `SELECT c.*, cr.studio_name
+  const rows = dbAll<ContentRow & { studio_name: string; creator_name: string }>(
+    `SELECT c.*, cr.studio_name, u.name AS creator_name
      FROM content c
      LEFT JOIN creators cr ON cr.id = c.creator_id
-     WHERE c.review_status = 'pending'
+     LEFT JOIN users u ON u.id = cr.user_id
+     WHERE c.review_status = 'pending' AND c.program = 'standard' AND c.creator_id IS NOT NULL
      ORDER BY c.content_added_at DESC`,
   )
 
@@ -151,8 +160,72 @@ router.get('/content/pending', requireAdmin, (_req: AuthRequest, res) => {
       ...mapContent(row),
       reviewStatus: row.review_status,
       studioName: row.studio_name,
+      creatorName: row.creator_name,
     })),
   })
+})
+
+router.get('/content/:id', requireAdmin, (req: AuthRequest, res) => {
+  const row = dbGet<
+    ContentRow & { studio_name: string | null; creator_name: string | null; creator_email: string | null }
+  >(
+    `SELECT c.*, cr.studio_name, u.name AS creator_name, u.email AS creator_email
+     FROM content c
+     LEFT JOIN creators cr ON cr.id = c.creator_id
+     LEFT JOIN users u ON u.id = cr.user_id
+     WHERE c.id = ? AND c.creator_id IS NOT NULL AND c.program = 'standard'`,
+    [req.params.id],
+  )
+
+  if (!row) {
+    res.status(404).json({ error: 'Yapımcı filmi bulunamadı.' })
+    return
+  }
+
+  const stats = getContentEngagementStats([row.id]).get(row.id)
+
+  res.json({
+    item: {
+      ...mapCreatorContentItem(row, stats),
+      studioName: row.studio_name,
+      creatorName: row.creator_name,
+      creatorEmail: row.creator_email,
+    },
+  })
+})
+
+router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
+  const existing = getStandardCreatorContent(req.params.id)
+  if (!existing) {
+    res.status(404).json({ error: 'Yapımcı filmi bulunamadı.' })
+    return
+  }
+
+  const body = req.body as Record<string, unknown>
+  const reviewStatus =
+    body.reviewStatus !== undefined || body.review_status !== undefined
+      ? String(body.reviewStatus ?? body.review_status).trim()
+      : existing.review_status ?? 'pending'
+
+  if (body.reviewStatus !== undefined || body.review_status !== undefined) {
+    if (!['published', 'rejected', 'pending'].includes(reviewStatus)) {
+      res.status(400).json({ error: 'Geçersiz inceleme durumu.' })
+      return
+    }
+  }
+
+  try {
+    updateCreatorContentFields(existing, body)
+    resolveCreatorPublishUpdate(existing, body, reviewStatus)
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'Film güncellenemedi.' })
+    return
+  }
+
+  const row = dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [existing.id])!
+  const stats = getContentEngagementStats([row.id]).get(row.id)
+
+  res.json({ item: mapCreatorContentItem(row, stats) })
 })
 
 router.patch('/content/:id/review', requireAdmin, (req: AuthRequest, res) => {
@@ -162,31 +235,29 @@ router.patch('/content/:id/review', requireAdmin, (req: AuthRequest, res) => {
     return
   }
 
-  const existing = dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [req.params.id])
+  const existing = getStandardCreatorContent(req.params.id)
   if (!existing) {
-    res.status(404).json({ error: 'İçerik bulunamadı.' })
+    res.status(404).json({ error: 'Yapımcı filmi bulunamadı.' })
     return
   }
 
-  const publishedAt =
-    reviewStatus === 'published'
-      ? existing.published_at ?? new Date().toISOString()
-      : reviewStatus === 'rejected'
-        ? null
-        : existing.published_at
-
-  dbRun('UPDATE content SET review_status = ?, published_at = ? WHERE id = ?', [
-    reviewStatus,
-    publishedAt,
-    existing.id,
-  ])
+  try {
+    if (req.body.publishedAt !== undefined || req.body.publishNow === true) {
+      resolveCreatorPublishUpdate(existing, req.body as Record<string, unknown>, reviewStatus)
+    } else {
+      applyCreatorReviewStatus(existing, reviewStatus)
+    }
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'İnceleme güncellenemedi.' })
+    return
+  }
 
   if (reviewStatus === 'published' && isStudentMainRow(existing)) {
     addToGencSinemaCategory(existing.id)
   }
 
   const row = dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [existing.id])!
-  res.json({ item: mapContent(row), reviewStatus })
+  res.json({ item: mapContent(row), reviewStatus: row.review_status })
 })
 
 export default router
