@@ -1,6 +1,7 @@
 import type { Profile, User } from '../types/auth'
 import type { AdminContentItem, ContentCategory, ContentItem, Episode } from '../types/content'
 import type { LandingSectionsConfig } from '../constants/landingDefaults'
+import { isTransientApiError, sleep } from '../utils/authSession'
 
 export type { LandingSectionsConfig } from '../constants/landingDefaults'
 
@@ -106,7 +107,9 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
             : 'Bu özellik sunucuda henüz aktif değil. API güncellenmeli.'
       }
     }
-    throw new Error(message)
+    const err = new Error(message) as Error & { status?: number }
+    err.status = response.status
+    throw err
   }
 
   if (response.status === 204) return undefined as T
@@ -374,10 +377,20 @@ export async function saveLandingPageConfig(payload: {
     itemIds: string[]
   }>
 }): Promise<LandingConfigResponse> {
-  return api<LandingConfigResponse>('/api/admin/landing', {
-    method: 'PUT',
-    body: JSON.stringify(payload),
-  })
+  let lastError: unknown
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await api<LandingConfigResponse>('/api/admin/landing', {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      })
+    } catch (error) {
+      lastError = error
+      if (!isTransientApiError(error) || attempt === 2) throw error
+      await sleep(900 * (attempt + 1))
+    }
+  }
+  throw lastError
 }
 
 export async function updateLandingConfig(payload: {
