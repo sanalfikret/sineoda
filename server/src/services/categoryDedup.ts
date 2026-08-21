@@ -96,14 +96,13 @@ export function dedupeLegacyGenreCategories() {
 
 function pickKeeper(group: Array<{ id: string; title: string }>) {
   return [...group].sort((a, b) => {
-    const countDiff = itemCount(b.id) - itemCount(a.id)
-    if (countDiff !== 0) return countDiff
     const priority = (id: string) => {
-      if (id.startsWith('genre-row-')) return 1
-      if (id.startsWith('genre-')) return 0
-      return 3
+      if (id.startsWith('genre-row-') || id.startsWith('genre-')) return 0
+      return 10
     }
-    return priority(b.id) - priority(a.id)
+    const priorityDiff = priority(b.id) - priority(a.id)
+    if (priorityDiff !== 0) return priorityDiff
+    return itemCount(b.id) - itemCount(a.id)
   })[0]
 }
 
@@ -171,6 +170,21 @@ export function dedupeEditorialGenreOverlaps() {
 
 export function dedupeAllCategories() {
   dedupeLegacyGenreCategories()
-  dedupeCategoriesByTitle()
   dedupeEditorialGenreOverlaps()
+  dedupeCategoriesByTitle()
+  auditRemainingOverlaps()
+}
+
+/** Boot sonrası kalan editöryel/tür çakışmalarını logla. */
+function auditRemainingOverlaps() {
+  const overlaps: string[] = []
+  for (const rule of EDITORIAL_GENRE_MERGE_RULES) {
+    for (const title of rule.mergeTitles) {
+      const matches = findCategoryIdsByTitleAliases([title]).filter((id) => id !== rule.keepId)
+      if (matches.length) overlaps.push(`${title} → hâlâ ayrı: ${matches.join(', ')}`)
+    }
+  }
+  if (overlaps.length) {
+    console.warn('[categoryDedup] Kalan çakışmalar:', overlaps.join(' | '))
+  }
 }
