@@ -97,11 +97,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { user: me } = await fetchMe()
         setUser(me)
         syncProfile(me)
-      } catch {
-        setToken(null)
-        setProfileId(null)
-        setUser(null)
-        setActiveProfile(null)
+      } catch (error) {
+        const status = (error as Error & { status?: number }).status
+        if (status === 401 || status === 403) {
+          setToken(null)
+          setProfileId(null)
+          setUser(null)
+          setActiveProfile(null)
+        }
       } finally {
         setIsLoading(false)
       }

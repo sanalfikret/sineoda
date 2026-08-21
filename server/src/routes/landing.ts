@@ -105,61 +105,77 @@ router.get('/', (_req, res) => {
 })
 
 router.put('/', requireAdmin, (req: AuthRequest, res) => {
-  const sliderIds = Array.isArray(req.body.sliderIds)
-    ? req.body.sliderIds.map(String)
-    : null
-  const showcases = Array.isArray(req.body.showcases) ? req.body.showcases : null
-
-  if (!sliderIds || !showcases) {
-    res.status(400).json({ error: 'sliderIds ve showcases zorunlu.' })
-    return
+  const body = req.body as {
+    hero?: Partial<LandingHeroConfig>
+    sections?: Partial<LandingSectionsConfig>
+    layout?: Partial<LandingLayoutConfig>
+    sliderIds?: unknown
+    showcases?: unknown
   }
 
-  dbRun('DELETE FROM landing_slider')
-  sliderIds.forEach((contentId: string, index: number) => {
-    dbRun('INSERT INTO landing_slider (content_id, sort_order) VALUES (?, ?)', [
-      contentId,
-      index,
-    ])
-  })
+  if (body.hero) {
+    saveLandingHeroConfig(validateHeroPayload(body.hero))
+  }
+  if (body.sections) {
+    saveLandingSectionsConfig(body.sections)
+  }
+  if (body.layout) {
+    saveLandingLayoutConfig(body.layout)
+  }
 
-  dbRun('DELETE FROM landing_showcase_items')
-  dbRun('DELETE FROM landing_showcases')
+  const sliderIds = Array.isArray(body.sliderIds) ? body.sliderIds.map(String) : null
+  const showcases = Array.isArray(body.showcases) ? body.showcases : null
 
-  showcases.forEach(
-    (
-      showcase: {
-        id: string
-        title: string
-        icon?: string
-        description?: string
-        itemIds?: string[]
-      },
-      index: number,
-    ) => {
-      const id = String(showcase.id ?? '').trim()
-      const title = String(showcase.title ?? '').trim()
-      if (!id || !title) return
+  if (sliderIds && showcases) {
+    dbRun('DELETE FROM landing_slider')
+    sliderIds.forEach((contentId: string, index: number) => {
+      dbRun('INSERT INTO landing_slider (content_id, sort_order) VALUES (?, ?)', [
+        contentId,
+        index,
+      ])
+    })
 
-      dbRun(
-        'INSERT INTO landing_showcases (id, title, icon, description, sort_order) VALUES (?, ?, ?, ?, ?)',
-        [
-          id,
-          title,
-          String(showcase.icon ?? 'film'),
-          String(showcase.description ?? ''),
-          index,
-        ],
-      )
+    dbRun('DELETE FROM landing_showcase_items')
+    dbRun('DELETE FROM landing_showcases')
 
-      ;(showcase.itemIds ?? []).forEach((contentId: string, itemIndex: number) => {
+    showcases.forEach(
+      (
+        showcase: {
+          id: string
+          title: string
+          icon?: string
+          description?: string
+          itemIds?: string[]
+        },
+        index: number,
+      ) => {
+        const id = String(showcase.id ?? '').trim()
+        const title = String(showcase.title ?? '').trim()
+        if (!id || !title) return
+
         dbRun(
-          'INSERT INTO landing_showcase_items (showcase_id, content_id, sort_order) VALUES (?, ?, ?)',
-          [id, contentId, itemIndex],
+          'INSERT INTO landing_showcases (id, title, icon, description, sort_order) VALUES (?, ?, ?, ?, ?)',
+          [
+            id,
+            title,
+            String(showcase.icon ?? 'film'),
+            String(showcase.description ?? ''),
+            index,
+          ],
         )
-      })
-    },
-  )
+
+        ;(showcase.itemIds ?? []).forEach((contentId: string, itemIndex: number) => {
+          dbRun(
+            'INSERT INTO landing_showcase_items (showcase_id, content_id, sort_order) VALUES (?, ?, ?)',
+            [id, contentId, itemIndex],
+          )
+        })
+      },
+    )
+  } else if (!body.hero && !body.sections && !body.layout) {
+    res.status(400).json({ error: 'Kaydedilecek ana sayfa verisi bulunamadı.' })
+    return
+  }
 
   res.json(getLandingConfig())
 })
