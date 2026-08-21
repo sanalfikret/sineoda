@@ -88,7 +88,7 @@ export function mapContentAdmin(row: ContentRow) {
   }
 }
 
-export function mapContent(row: ContentRow) {
+export function mapContent(row: ContentRow & { school_name?: string | null; creator_name?: string | null }) {
   const newUntil = row.new_until ?? null
   const isNewFlag = Boolean(row.is_new) || (newUntil ? new Date(newUntil) > new Date() : false)
   const images = resolveContentImages(row)
@@ -114,6 +114,8 @@ export function mapContent(row: ContentRow) {
     credits: parseCredits(row.credits_json),
     program: row.program ?? 'standard',
     contentFormat: row.content_format ?? 'main',
+    schoolName: row.school_name ?? null,
+    creatorName: row.creator_name ?? null,
   }
 }
 

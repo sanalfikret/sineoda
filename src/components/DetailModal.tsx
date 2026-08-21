@@ -7,6 +7,7 @@ import { getContentTypeLabel, hasEpisodicContent } from '../constants/contentTyp
 import { sortEpisodes } from '../utils/episodes'
 import { ContentActionButtons } from './ContentActionButtons'
 import { SeriesEpisodeSection } from './SeriesEpisodeSection'
+import { StudentCinemaMetaDetails } from './StudentCinemaMetaDetails'
 
 interface DetailModalProps {
   item: ContentItem | null
@@ -288,6 +289,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
                   <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">Alt Yazılar</p>
                   <p className="mt-1 text-sm text-white/90">{subtitleLanguages.join(', ')}</p>
                 </div>
+                <StudentCinemaMetaDetails item={item} />
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">
                     İçerik Danışma
