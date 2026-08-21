@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useSearchUI } from '../context/SearchContext'
+import { ProfileAvatar } from './ProfileAvatar'
+import { PROFILE_AVATARS } from '../types/auth'
 
 const viewerNavItems = [
   { label: 'Ana Sayfa', to: '/', match: (path: string) => path === '/' },
@@ -108,7 +110,13 @@ export function Header() {
                   </span>
                 ) : (
                   <>
-                    <span className="text-lg leading-none tv:text-xl">{activeProfile?.avatar}</span>
+                    <ProfileAvatar
+                      avatar={activeProfile?.avatar ?? PROFILE_AVATARS[0]}
+                      name={activeProfile?.name ?? ''}
+                      className="h-7 w-7 rounded-full tv:h-8 tv:w-8"
+                      imageClassName="h-full w-full rounded-full object-cover"
+                      emojiClassName="text-base tv:text-lg"
+                    />
                     <span className="hidden max-w-[100px] truncate sm:inline">{activeProfile?.name}</span>
                   </>
                 )}

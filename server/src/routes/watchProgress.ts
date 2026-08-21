@@ -52,6 +52,73 @@ router.get('/', requireAuth, (req: AuthRequest, res) => {
   })
 })
 
+const WATCH_CATEGORY_LABELS: Record<string, string> = {
+  film: 'Filmler',
+  dizi: 'Diziler',
+  belgesel: 'Belgeseller',
+  'kisa-film': 'Kısa Filmler',
+  vertical: 'Dikey Diziler',
+}
+
+function resolveOwnedProfileId(req: AuthRequest, requestedProfileId?: string) {
+  const profileId = requestedProfileId || getProfileId(req)
+  if (!profileId) return null
+  const owned = dbGet<{ id: string }>('SELECT id FROM profiles WHERE id = ? AND user_id = ?', [
+    profileId,
+    req.auth!.userId,
+  ])
+  return owned ? profileId : null
+}
+
+router.get('/stats', requireAuth, (req: AuthRequest, res) => {
+  const requestedProfileId = req.query.profileId ? String(req.query.profileId) : undefined
+  const profileId = resolveOwnedProfileId(req, requestedProfileId)
+  if (!profileId) {
+    res.status(400).json({ error: 'Profil gerekli.' })
+    return
+  }
+
+  const totals = dbGet<{ total_seconds: number; total_titles: number }>(
+    `SELECT
+      COALESCE(SUM(total_watched_seconds), 0) as total_seconds,
+      COUNT(DISTINCT content_id) as total_titles
+    FROM watch_progress
+    WHERE profile_id = ? AND total_watched_seconds > 0`,
+    [profileId],
+  )
+
+  const rows = dbAll<{
+    category: string
+    total_seconds: number
+    titles_watched: number
+  }>(
+    `SELECT
+      CASE
+        WHEN COALESCE(c.video_format, 'standard') = 'vertical' THEN 'vertical'
+        ELSE c.type
+      END as category,
+      COALESCE(SUM(wp.total_watched_seconds), 0) as total_seconds,
+      COUNT(DISTINCT wp.content_id) as titles_watched
+    FROM watch_progress wp
+    JOIN content c ON c.id = wp.content_id
+    WHERE wp.profile_id = ? AND wp.total_watched_seconds > 0
+    GROUP BY category
+    ORDER BY total_seconds DESC`,
+    [profileId],
+  )
+
+  res.json({
+    totalSeconds: totals?.total_seconds ?? 0,
+    totalTitles: totals?.total_titles ?? 0,
+    byCategory: rows.map((row) => ({
+      key: row.category,
+      label: WATCH_CATEGORY_LABELS[row.category] ?? row.category,
+      totalSeconds: row.total_seconds,
+      titlesWatched: row.titles_watched,
+    })),
+  })
+})
+
 router.get('/all', requireAuth, (req: AuthRequest, res) => {
   const profileId = getProfileId(req)
   if (!profileId) {

@@ -1,8 +1,10 @@
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
+import multer from 'multer'
+import path from 'node:path'
 import { v4 as uuid } from 'uuid'
-import { config } from '../config.js'
-import { dbAll, dbGet, dbRun } from '../db.js'
+import { config, publicAssetUrl } from '../config.js'
+import { dbAll, dbGet, dbRun, uploadsDir } from '../db.js'
 import { getProfileId, requireAuth, signToken, type AuthRequest } from '../middleware/auth.js'
 import { mapProfile, mapUser } from '../mappers.js'
 import { sendPasswordResetEmail } from '../services/email.js'
@@ -10,6 +12,21 @@ import { isValidTurkishMobile, normalizePhone, sendVerificationSms } from '../se
 import type { ProfileRow, UserRow } from '../types.js'
 
 const router = Router()
+
+const avatarUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadsDir),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase() || '.jpg'
+      cb(null, `avatar-${uuid()}${ext}`)
+    },
+  }),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) cb(null, true)
+    else cb(new Error('Sadece görsel dosyaları yüklenebilir.'))
+  },
+})
 
 function getUserWithProfiles(userId: string) {
   const user = dbGet<UserRow>('SELECT * FROM users WHERE id = ?', [userId])
@@ -373,6 +390,15 @@ router.post('/reset-password', (req, res) => {
   dbRun('UPDATE password_reset_tokens SET used = 1 WHERE token = ?', [token])
 
   res.json({ message: 'Şifren güncellendi. Giriş yapabilirsin.' })
+})
+
+router.post('/upload/avatar', requireAuth, avatarUpload.single('file'), (req: AuthRequest, res) => {
+  if (!req.file) {
+    res.status(400).json({ error: 'Dosya gerekli.' })
+    return
+  }
+  const url = publicAssetUrl(`/uploads/${req.file.filename}`)
+  res.status(201).json({ url, filename: req.file.filename })
 })
 
 export default router
