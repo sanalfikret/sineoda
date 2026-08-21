@@ -313,6 +313,21 @@ export function AdminLandingSectionBlock({
           items={sections.faq.items}
           onChange={(items) => patch('faq', { ...sections.faq, items })}
         />
+        <Field
+          label="Alt metin"
+          value={sections.faq.footerText}
+          onChange={(footerText) => patch('faq', { ...sections.faq, footerText })}
+        />
+        <Field
+          label="Alt link metni"
+          value={sections.faq.footerLinkLabel}
+          onChange={(footerLinkLabel) => patch('faq', { ...sections.faq, footerLinkLabel })}
+        />
+        <Field
+          label="Alt link adresi"
+          value={sections.faq.footerLink}
+          onChange={(footerLink) => patch('faq', { ...sections.faq, footerLink })}
+        />
       </>
     ),
     emailSignup: (

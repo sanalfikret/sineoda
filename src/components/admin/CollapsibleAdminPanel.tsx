@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { DragEvent, ReactNode } from 'react'
 
 export function CollapsibleAdminPanel({
   title,
@@ -11,6 +11,12 @@ export function CollapsibleAdminPanel({
   canMoveDown,
   hidden = false,
   onToggleHidden,
+  draggable = false,
+  isDragging = false,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
   children,
 }: {
   title: string
@@ -23,15 +29,48 @@ export function CollapsibleAdminPanel({
   canMoveDown: boolean
   hidden?: boolean
   onToggleHidden?: () => void
+  draggable?: boolean
+  isDragging?: boolean
+  onDragStart?: (event: DragEvent<HTMLElement>) => void
+  onDragOver?: (event: DragEvent<HTMLElement>) => void
+  onDrop?: (event: DragEvent<HTMLElement>) => void
+  onDragEnd?: () => void
   children: ReactNode
 }) {
   return (
     <section
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
       className={`rounded-2xl border bg-[#11141c] transition ${
-        hidden ? 'border-white/5 opacity-70' : 'border-white/10'
+        isDragging
+          ? 'border-sineoda-gold/50 opacity-70'
+          : hidden
+            ? 'border-white/5 opacity-70'
+            : 'border-white/10'
       }`}
     >
       <div className="flex items-center gap-3 p-4">
+        {draggable && (
+          <button
+            type="button"
+            aria-label="Sürükleyerek sırala"
+            className="cursor-grab rounded-lg border border-white/10 px-2 py-3 text-sineoda-muted hover:bg-white/5 active:cursor-grabbing"
+            title="Sürükleyerek sırala"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <circle cx="9" cy="7" r="1.5" />
+              <circle cx="15" cy="7" r="1.5" />
+              <circle cx="9" cy="12" r="1.5" />
+              <circle cx="15" cy="12" r="1.5" />
+              <circle cx="9" cy="17" r="1.5" />
+              <circle cx="15" cy="17" r="1.5" />
+            </svg>
+          </button>
+        )}
+
         <div className="flex flex-col gap-1">
           <button
             type="button"

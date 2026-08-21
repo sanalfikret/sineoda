@@ -181,13 +181,26 @@ export function mergeLandingSections(
 ): LandingSectionsConfig {
   if (!input) return DEFAULT_LANDING_SECTIONS
 
+  const mergeFaqItems = (saved: LandingFaqItem[] | undefined, defaults: LandingFaqItem[]) => {
+    if (!saved?.length) return defaults
+    const seen = new Set(saved.map((item) => item.question.trim().toLocaleLowerCase('tr')))
+    const missing = defaults.filter(
+      (item) => !seen.has(item.question.trim().toLocaleLowerCase('tr')),
+    )
+    return missing.length > 0 ? [...saved, ...missing] : saved
+  }
+
   return {
     manifesto: { ...DEFAULT_LANDING_SECTIONS.manifesto, ...input.manifesto },
     features: { ...DEFAULT_LANDING_SECTIONS.features, ...input.features },
     campaign: { ...DEFAULT_LANDING_SECTIONS.campaign, ...input.campaign },
     studentCinema: { ...DEFAULT_LANDING_SECTIONS.studentCinema, ...input.studentCinema },
     creator: { ...DEFAULT_LANDING_SECTIONS.creator, ...input.creator },
-    faq: { ...DEFAULT_LANDING_SECTIONS.faq, ...input.faq },
+    faq: {
+      ...DEFAULT_LANDING_SECTIONS.faq,
+      ...input.faq,
+      items: mergeFaqItems(input.faq?.items, DEFAULT_LANDING_SECTIONS.faq.items),
+    },
     emailSignup: { ...DEFAULT_LANDING_SECTIONS.emailSignup, ...input.emailSignup },
     journal: { ...DEFAULT_LANDING_SECTIONS.journal, ...input.journal },
   }
