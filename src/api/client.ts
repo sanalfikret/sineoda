@@ -361,6 +361,25 @@ export async function updateLandingLayoutConfig(
   })
 }
 
+export async function saveLandingPageConfig(payload: {
+  hero: LandingHeroConfig
+  sections: LandingSectionsConfig
+  layout: LandingLayoutConfig
+  sliderIds: string[]
+  showcases: Array<{
+    id: string
+    title: string
+    icon: string
+    description: string
+    itemIds: string[]
+  }>
+}): Promise<LandingConfigResponse> {
+  return api<LandingConfigResponse>('/api/admin/landing', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+}
+
 export async function updateLandingConfig(payload: {
   sliderIds: string[]
   showcases: Array<{

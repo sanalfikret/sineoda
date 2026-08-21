@@ -3,10 +3,7 @@ import {
   resolveMediaUrl,
   fetchBootstrap,
   fetchLandingConfig,
-  updateLandingConfig,
-  updateLandingHeroConfig,
-  updateLandingLayoutConfig,
-  updateLandingSectionsConfig,
+  saveLandingPageConfig,
   type LandingHeroConfig,
 } from '../../api/client'
 import {
@@ -335,20 +332,30 @@ export function AdminLandingPage() {
       const persistedSliderIds = sliderIds.filter((id) => validIds.has(id))
       const skipped = sliderIds.length - persistedSliderIds.length
 
-      const [heroResult, sectionsResult, layoutResult] = await Promise.all([
-        updateLandingHeroConfig(hero),
-        updateLandingSectionsConfig(sections),
-        updateLandingLayoutConfig(layout),
-      ])
-      setHero(heroResult.hero)
-      setSections(mergeLandingSections(sectionsResult.sections))
-      setLayout(normalizeLandingLayout(layoutResult.layout))
+      const data = await saveLandingPageConfig({
+        hero,
+        sections,
+        layout,
+        sliderIds: persistedSliderIds,
+        showcases,
+      })
 
-      const data = await updateLandingConfig({ sliderIds: persistedSliderIds, showcases })
+      setHero(data.hero ?? hero)
+      setSections(mergeLandingSections(data.sections))
+      setLayout(normalizeLandingLayout(data.layout))
       setSliderIds(
         data.sliderContentIds?.length
           ? data.sliderContentIds
           : data.slider.map((item) => item.id),
+      )
+      setShowcases(
+        data.showcases.map((showcase) => ({
+          id: showcase.id,
+          title: showcase.title,
+          icon: showcase.icon,
+          description: showcase.description,
+          itemIds: showcase.items.map((item) => item.id),
+        })),
       )
       setMessage(
         skipped > 0
@@ -356,7 +363,12 @@ export function AdminLandingPage() {
           : 'Ana sayfa ayarları kaydedildi.',
       )
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Kayıt başarısız.')
+      const status = (err as Error & { status?: number }).status
+      if (status === 401 || status === 403) {
+        setMessage('Oturum süresi doldu veya yetki yok. Lütfen tekrar giriş yapın.')
+      } else {
+        setMessage(err instanceof Error ? err.message : 'Kayıt başarısız.')
+      }
     } finally {
       setSaving(false)
     }

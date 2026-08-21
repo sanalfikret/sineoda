@@ -297,6 +297,7 @@ export function seedEpisodes() {
 }
 
 const DEFAULT_ADMIN_EMAIL = 'admin@sineoda.com'
+const DEFAULT_ADMIN_ID = 'sineoda-admin'
 
 export function ensureDefaultAdmin() {
   const existing = dbGet<UserRow>('SELECT * FROM users WHERE email = ?', [DEFAULT_ADMIN_EMAIL])
@@ -304,7 +305,7 @@ export function ensureDefaultAdmin() {
     const adminHash = bcrypt.hashSync('admin123', 10)
     dbRun(
       'INSERT INTO users (id, name, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-      [uuid(), 'Sineoda Admin', DEFAULT_ADMIN_EMAIL, adminHash, 'admin', new Date().toISOString()],
+      [DEFAULT_ADMIN_ID, 'Sineoda Admin', DEFAULT_ADMIN_EMAIL, adminHash, 'admin', new Date().toISOString()],
     )
     return
   }
