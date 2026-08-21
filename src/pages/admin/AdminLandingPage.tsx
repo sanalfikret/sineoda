@@ -5,11 +5,14 @@ import {
   fetchLandingConfig,
   updateLandingConfig,
   updateLandingHeroConfig,
+  updateLandingSectionsConfig,
   type LandingHeroConfig,
 } from '../../api/client'
+import { AdminLandingSectionsEditor } from '../../components/admin/AdminLandingSectionsEditor'
 import { ImageUpload } from '../../components/admin/ImageUpload'
 import { VideoUpload } from '../../components/admin/VideoUpload'
 import { BRAND_HERO } from '../../constants/brand'
+import { DEFAULT_LANDING_SECTIONS, mergeLandingSections } from '../../constants/landingDefaults'
 import { getContentDisplayLabel, getContentTypeLabel } from '../../constants/contentTypes'
 import type { ContentItem, ContentType } from '../../types/content'
 import { fuzzySearchMatch } from '../../utils/search'
@@ -90,6 +93,7 @@ function filterPickerCatalog(
 export function AdminLandingPage() {
   const [pickerCatalog, setPickerCatalog] = useState<ContentItem[]>([])
   const [hero, setHero] = useState<LandingHeroConfig>(DEFAULT_HERO)
+  const [sections, setSections] = useState(DEFAULT_LANDING_SECTIONS)
   const [sliderIds, setSliderIds] = useState<string[]>([])
   const [showcases, setShowcases] = useState<ShowcaseDraft[]>([])
   const [loading, setLoading] = useState(true)
@@ -101,6 +105,7 @@ export function AdminLandingPage() {
       .then(([bootstrap, data]) => {
         setPickerCatalog(bootstrap.catalog)
         setHero(data.hero ?? DEFAULT_HERO)
+        setSections(mergeLandingSections(data.sections))
         setSliderIds(
           data.sliderContentIds?.length
             ? data.sliderContentIds
@@ -238,8 +243,12 @@ export function AdminLandingPage() {
       const persistedSliderIds = sliderIds.filter((id) => validIds.has(id))
       const skipped = sliderIds.length - persistedSliderIds.length
 
-      const heroResult = await updateLandingHeroConfig(hero)
+      const [heroResult, sectionsResult] = await Promise.all([
+        updateLandingHeroConfig(hero),
+        updateLandingSectionsConfig(sections),
+      ])
       setHero(heroResult.hero)
+      setSections(mergeLandingSections(sectionsResult.sections))
 
       const data = await updateLandingConfig({ sliderIds: persistedSliderIds, showcases })
       setSliderIds(
@@ -443,6 +452,8 @@ export function AdminLandingPage() {
           )}
         </div>
       </section>
+
+      <AdminLandingSectionsEditor sections={sections} onChange={setSections} />
 
       <section className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
         <h2 className="text-lg font-semibold text-white">Slider</h2>
