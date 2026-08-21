@@ -242,6 +242,30 @@ function runMigrations() {
   `)
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS content_watch_monthly (
+      content_id TEXT NOT NULL,
+      month TEXT NOT NULL,
+      creator_id TEXT,
+      program TEXT NOT NULL DEFAULT 'standard',
+      qualified_seconds REAL NOT NULL DEFAULT 0,
+      watch_seconds REAL NOT NULL DEFAULT 0,
+      viewer_count INTEGER NOT NULL DEFAULT 0,
+      archived_at TEXT,
+      PRIMARY KEY (content_id, month)
+    );
+  `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS watch_accounting_periods (
+      month TEXT PRIMARY KEY,
+      total_qualified_seconds REAL NOT NULL DEFAULT 0,
+      total_watch_seconds REAL NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'open',
+      closed_at TEXT
+    );
+  `)
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS content_reactions (
       profile_id TEXT NOT NULL,
       content_id TEXT NOT NULL,
@@ -298,6 +322,7 @@ function runMigrations() {
   ensureColumn('content', 'review_status', "TEXT DEFAULT 'published'")
   ensureColumn('watch_progress', 'qualified', 'INTEGER DEFAULT 0')
   ensureColumn('watch_progress', 'qualified_seconds', 'REAL DEFAULT 0')
+  ensureColumn('watch_activity', 'content_id', 'TEXT')
 
   db.run(`
     UPDATE content

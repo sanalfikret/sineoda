@@ -9,6 +9,9 @@ import {
   creatorUploadDocument,
   creatorUploadImage,
   creatorUploadVideo,
+  fetchCreatorAccounting,
+  fetchCreatorAccountingMonths,
+  type CreatorAccountingReport,
 } from '../../api/client'
 import { ShareButton } from '../../components/ShareButton'
 import { useAuth } from '../../context/AuthContext'
@@ -61,6 +64,11 @@ const REVIEW_LABELS: Record<string, string> = {
   rejected: 'Reddedildi',
 }
 
+function formatMonthLabel(month: string) {
+  const [year, mon] = month.split('-').map(Number)
+  return new Date(year, mon - 1, 1).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })
+}
+
 export function CreatorDashboardPage() {
   const { user, logout } = useAuth()
   const [documents, setDocuments] = useState<CreatorDocument[]>([])
@@ -78,6 +86,9 @@ export function CreatorDashboardPage() {
   const [documentCount, setDocumentCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [accountingMonths, setAccountingMonths] = useState<Array<{ month: string; status: string }>>([])
+  const [accountingMonth, setAccountingMonth] = useState('')
+  const [accounting, setAccounting] = useState<CreatorAccountingReport | null>(null)
 
   const [docType, setDocType] = useState('ownership')
   const [docUploading, setDocUploading] = useState(false)
@@ -123,6 +134,27 @@ export function CreatorDashboardPage() {
   useEffect(() => {
     void load()
   }, [load])
+
+  const loadAccounting = useCallback(async (month?: string) => {
+    try {
+      const { months } = await fetchCreatorAccountingMonths()
+      setAccountingMonths(months)
+      const selected = month ?? months[0]?.month ?? ''
+      setAccountingMonth(selected)
+      if (!selected) {
+        setAccounting(null)
+        return
+      }
+      const report = await fetchCreatorAccounting(selected)
+      setAccounting(report)
+    } catch {
+      setAccounting(null)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (status === 'approved') void loadAccounting()
+  }, [status, loadAccounting])
 
   const handleDocumentUpload = async (file: File) => {
     setDocUploading(true)
@@ -297,6 +329,74 @@ export function CreatorDashboardPage() {
             </div>
           ))}
         </section>
+
+        {status === 'approved' && (
+          <section className="mb-8 rounded-xl border border-sineoda-gold/20 bg-sineoda-gold/5 p-6">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-sineoda-gold">Bu ayın izlenme özeti</h2>
+                <p className="mt-1 text-sm text-sineoda-muted">
+                  Her ayın 1&apos;inde sıfırlanır. Yalnızca kendi filmlerinizin nitelikli izlenme dakikalarını görürsünüz.
+                </p>
+              </div>
+              {accountingMonths.length > 0 && (
+                <select
+                  value={accountingMonth}
+                  onChange={(event) => void loadAccounting(event.target.value)}
+                  className="rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white"
+                >
+                  {accountingMonths.map((entry) => (
+                    <option key={entry.month} value={entry.month}>
+                      {formatMonthLabel(entry.month)}
+                      {entry.status === 'open' ? ' (bu ay)' : ''}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            {accounting ? (
+              <>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-lg border border-white/10 bg-[#11141c] p-4">
+                    <p className="text-xs text-sineoda-muted">Nitelikli izlenme</p>
+                    <p className="mt-1 text-2xl font-bold text-sineoda-gold">{accounting.totalQualifiedMinutes} dk</p>
+                  </div>
+                  <div className="rounded-lg border border-white/10 bg-[#11141c] p-4">
+                    <p className="text-xs text-sineoda-muted">Toplam izlenme</p>
+                    <p className="mt-1 text-2xl font-bold text-white">{accounting.totalWatchMinutes} dk</p>
+                  </div>
+                </div>
+                {accounting.items.length > 0 ? (
+                  <div className="mt-4 overflow-hidden rounded-lg border border-white/10">
+                    <table className="min-w-full text-left text-sm">
+                      <thead className="bg-[#11141c] text-sineoda-muted">
+                        <tr>
+                          <th className="px-4 py-2 font-medium">Film</th>
+                          <th className="px-4 py-2 font-medium">Nitelikli dk</th>
+                          <th className="px-4 py-2 font-medium">İzleyici</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {accounting.items.map((item) => (
+                          <tr key={item.contentId} className="border-t border-white/5">
+                            <td className="px-4 py-2 text-white">{item.title}</td>
+                            <td className="px-4 py-2 text-sineoda-gold">{item.qualifiedMinutes} dk</td>
+                            <td className="px-4 py-2 text-sineoda-muted">{item.viewerCount}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="mt-4 text-sm text-sineoda-muted">Bu dönemde henüz izlenme kaydı yok.</p>
+                )}
+              </>
+            ) : (
+              <p className="mt-4 text-sm text-sineoda-muted">Muhasebe verisi yüklenemedi.</p>
+            )}
+          </section>
+        )}
 
         <section className="mb-8 rounded-xl border border-white/10 bg-[#11141c] p-6">
           <h2 className="text-lg font-semibold">Gelir paylaşımı</h2>
