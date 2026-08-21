@@ -195,8 +195,8 @@ router.post('/', requireAuth, (req: AuthRequest, res) => {
 
   if (delta > 0) {
     dbRun(
-      'INSERT INTO watch_activity (id, profile_id, seconds_watched, activity_date, created_at) VALUES (?, ?, ?, ?, ?)',
-      [uuid(), profileId, delta, new Date().toISOString().slice(0, 10), new Date().toISOString()],
+      'INSERT INTO watch_activity (id, profile_id, content_id, seconds_watched, activity_date, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+      [uuid(), profileId, contentId, delta, new Date().toISOString().slice(0, 10), new Date().toISOString()],
     )
   }
 

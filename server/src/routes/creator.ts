@@ -13,6 +13,7 @@ import { normalizeContentType } from '../constants/contentTypes.js'
 import { parseContentAddedAt } from '../services/license.js'
 import { serializeCredits } from '../services/credits.js'
 import { getContentEngagementStats } from '../services/studentCinema.js'
+import { getMonthlyReport, monthKey } from '../services/watchAccounting.js'
 import type { ContentRow, CreatorRow } from '../types.js'
 
 const router = Router()
@@ -346,6 +347,58 @@ router.patch('/content/:id', requireApprovedCreator, (req: CreatorAuthRequest, r
 
   const row = dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [existing.id])!
   res.json({ item: mapContent(row), reviewStatus: 'pending' })
+})
+
+router.get('/accounting/months', requireCreator, (req: AuthRequest, res) => {
+  const creator = getCreatorForUser(req.auth!.userId)
+  if (!creator) {
+    res.status(404).json({ error: 'Yapımcı profili bulunamadı.' })
+    return
+  }
+
+  const archived = dbAll<{ month: string }>(
+    'SELECT DISTINCT month FROM content_watch_monthly WHERE creator_id = ? ORDER BY month DESC',
+    [creator.id],
+  )
+  const current = monthKey()
+  const months = new Set(archived.map((row) => row.month))
+  months.add(current)
+  res.json({
+    months: [...months].sort((a, b) => b.localeCompare(a)).map((month) => ({
+      month,
+      status: month === current ? 'open' : 'closed',
+    })),
+  })
+})
+
+router.get('/accounting', requireCreator, (req: AuthRequest, res) => {
+  const creator = getCreatorForUser(req.auth!.userId)
+  if (!creator) {
+    res.status(404).json({ error: 'Yapımcı profili bulunamadı.' })
+    return
+  }
+
+  try {
+    const month = String(req.query.month ?? monthKey()).trim()
+    const report = getMonthlyReport(month, { creatorId: creator.id })
+    res.json({
+      month: report.month,
+      status: report.status,
+      totalQualifiedMinutes: report.totalQualifiedMinutes,
+      totalWatchMinutes: report.totalWatchMinutes,
+      items: report.items.map((item) => ({
+        contentId: item.contentId,
+        title: item.title,
+        type: item.type,
+        program: item.program,
+        qualifiedMinutes: item.qualifiedMinutes,
+        watchMinutes: item.watchMinutes,
+        viewerCount: item.viewerCount,
+      })),
+    })
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'Muhasebe verisi yüklenemedi.' })
+  }
 })
 
 export default router
