@@ -231,6 +231,12 @@ export function AdminDashboardPage() {
           <h2 className="font-semibold text-white">Hızlı İşlemler</h2>
           <div className="mt-4 flex flex-col gap-2">
             <Link
+              to="/admin/muhasebe"
+              className="rounded-lg bg-emerald-500/15 px-4 py-3 text-sm font-medium text-emerald-300 hover:bg-emerald-500/20"
+            >
+              Aylık izlenme muhasebesi
+            </Link>
+            <Link
               to="/admin/icerikler/yeni"
               className="rounded-lg bg-sineoda-gold/15 px-4 py-3 text-sm font-medium text-sineoda-gold hover:bg-sineoda-gold/20"
             >
