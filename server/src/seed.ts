@@ -1,3 +1,4 @@
+import { EDITORIAL_CATEGORY_ROWS } from './editorialCategories.js'
 import bcrypt from 'bcryptjs'
 import { v4 as uuid } from 'uuid'
 import { TURKEY_FILM_SCHOOLS } from './turkeyFilmSchools.js'
@@ -34,26 +35,9 @@ const SEED_CONTENT = [
   ['anime-horizon', 'Anime Ufku', 'Geleceğin savaşçılarının epik macerası.', 2025, '12 bölüm', '13+', 'dizi', '["Anime","Aksiyon","Bilim Kurgu"]', 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400&h=600&fit=crop', 'https://images.unsplash.com/photo-1612036782180-6f0b06ea7512?w=1600&h=900&fit=crop', V.sintel, 0],
 ] as const
 
-const EDITORIAL_CATEGORIES = [
-  ['trending', 'Bu Hafta Trend', 0, ['aurora-dreams', 'neon-pulse', 'code-breakers', 'ocean-whispers']],
-  ['new', 'Yeni Eklenenler', 1, ['aurora-dreams', 'ocean-whispers', 'neon-pulse', 'little-stars', 'kalp-satirlari']],
-  ['series', 'Popüler Diziler', 2, ['code-breakers', 'neon-pulse', 'chef-table', 'kalp-satirlari', 'anime-horizon']],
-  ['documentary', 'Belgeseller', 3, ['golden-era', 'chef-table', 'wild-planet']],
-  ['standup', 'Stand-up', 4, ['stage-lights']],
-  ['family', 'Aile İçin', 5, ['little-stars']],
-  ['animation', 'Animasyon', 6, ['little-stars']],
-  ['anime', 'Anime', 7, ['anime-horizon']],
-  ['vertical-series', 'Dikey Diziler', 8, ['kalp-satirlari']],
-  ['local', 'Yerli Yapımlar', 9, ['wind-road', 'midnight-istanbul', 'golden-era', 'stage-lights']],
-  ['crime', 'Suç-Gizem', 10, ['neon-pulse', 'silent-forest', 'code-breakers']],
-  ['romance', 'Romantik', 11, ['kalp-satirlari', 'midnight-istanbul', 'wind-road']],
-  ['scifi-fantasy', 'Bilim Kurgu ve Fantastik', 12, ['aurora-dreams', 'ocean-whispers', 'anime-horizon']],
-  ['comedy-specials', 'Komedi Filmleri', 13, ['stage-lights', 'little-stars', 'chef-table']],
-] as const
-
-const SEED_CATEGORIES = [
-  ...EDITORIAL_CATEGORIES,
-] as const
+const SEED_CATEGORIES = EDITORIAL_CATEGORY_ROWS.map(
+  (row) => [row.id, row.title, row.sortOrder, row.seedItems] as const,
+)
 
 export function ensureGenreCategories() {
   ensureCatalogCategories()
