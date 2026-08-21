@@ -23,11 +23,13 @@ import contactRoutes from './routes/contact.js'
 import journalRoutes from './routes/journal.js'
 import adminJournalRoutes from './routes/adminJournal.js'
 import adminCreatorsRoutes from './routes/adminCreators.js'
+import adminMessagesRoutes from './routes/adminMessages.js'
 import adminStudentCinemaRoutes from './routes/adminStudentCinema.js'
 import studentCinemaRoutes from './routes/studentCinema.js'
 import creatorAuthRoutes from './routes/creatorAuth.js'
 import creatorRoutes from './routes/creator.js'
 import creatorUploadRoutes from './routes/creatorUpload.js'
+import messagesRoutes from './routes/messages.js'
 import { PUBLISHED_CONTENT_SQL } from './services/publish.js'
 import { MAIN_CATALOG_SQL, STANDARD_PROGRAM_SQL, ensureStudentCinemaCatalog } from './services/studentCinema.js'
 import { mapCategoriesResponse, reconcileCategoryOrder } from './services/categoryOrder.js'
@@ -186,6 +188,8 @@ app.use('/api/admin/creators', adminCreatorsRoutes)
 app.use('/api/admin/student-cinema', adminStudentCinemaRoutes)
 app.use('/api/student-cinema', studentCinemaRoutes)
 app.use('/api/admin/users', userRoutes)
+app.use('/api/admin/messages', adminMessagesRoutes)
+app.use('/api/messages', messagesRoutes)
 app.use('/api/admin/upload', uploadRoutes)
 
 app.use((error: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

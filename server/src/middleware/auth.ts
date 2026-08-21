@@ -34,7 +34,7 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
 export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
   requireAuth(req, res, () => {
     const user = dbGet<UserRow>('SELECT role FROM users WHERE id = ?', [req.auth!.userId])
-    if (!user || user.role !== 'admin') {
+    if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
       res.status(403).json({ error: 'Admin yetkisi gerekli.' })
       return
     }

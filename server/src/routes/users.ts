@@ -4,9 +4,15 @@ import { v4 as uuid } from 'uuid'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import { mapUser } from '../mappers.js'
+import { giftSubscriptionMonths } from '../services/subscriptionGift.js'
 import type { ProfileRow, UserRow } from '../types.js'
 
 const router = Router()
+
+function normalizeStaffRole(role?: string) {
+  if (role === 'admin' || role === 'manager') return role
+  return 'user'
+}
 
 function getUsersWithProfiles() {
   const users = dbAll<UserRow>('SELECT * FROM users ORDER BY name COLLATE NOCASE ASC')
@@ -41,7 +47,7 @@ router.post('/', requireAdmin, (req: AuthRequest, res) => {
   }
 
   const userId = uuid()
-  const userRole = role === 'admin' ? 'admin' : 'user'
+  const userRole = normalizeStaffRole(role)
   dbRun(
     'INSERT INTO users (id, name, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)',
     [userId, name.trim(), normalizedEmail, bcrypt.hashSync(password, 10), userRole, new Date().toISOString()],
@@ -93,10 +99,26 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
   }
 
   if (role !== undefined) {
-    dbRun('UPDATE users SET role = ? WHERE id = ?', [role === 'admin' ? 'admin' : 'user', req.params.id])
+    dbRun('UPDATE users SET role = ? WHERE id = ?', [normalizeStaffRole(role), req.params.id])
   }
 
   res.json({ user: getUsersWithProfiles().find((entry) => entry.id === req.params.id)! })
+})
+
+router.post('/:id/gift-subscription', requireAdmin, (req: AuthRequest, res) => {
+  const existing = dbGet<UserRow>('SELECT * FROM users WHERE id = ?', [req.params.id])
+  if (!existing) {
+    res.status(404).json({ error: 'Kullanıcı bulunamadı.' })
+    return
+  }
+
+  const months = Number((req.body as { months?: number }).months ?? 1)
+  try {
+    const result = giftSubscriptionMonths(req.params.id, months)
+    res.json({ user: getUsersWithProfiles().find((entry) => entry.id === req.params.id)!, gift: result })
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'Hediye abonelik verilemedi.' })
+  }
 })
 
 router.delete('/:id', requireAdmin, (req: AuthRequest, res) => {
