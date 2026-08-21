@@ -795,6 +795,7 @@ export async function creatorSignupRequest(data: {
   schoolId?: string
   phone?: string
   projectCrew?: string
+  filmLink?: string
   studentIdFileUrl?: string
 }): Promise<AuthResponse> {
   return api<AuthResponse>('/api/creator/auth/signup', {

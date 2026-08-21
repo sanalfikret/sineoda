@@ -19,6 +19,7 @@ export function CreatorRegisterPage() {
   const [password, setPassword] = useState('')
   const [phone, setPhone] = useState('')
   const [projectCrew, setProjectCrew] = useState('')
+  const [filmLink, setFilmLink] = useState('')
   const [bio, setBio] = useState('')
   const [schoolId, setSchoolId] = useState('')
   const [schools, setSchools] = useState<Array<{ id: string; name: string }>>([])
@@ -65,6 +66,10 @@ export function CreatorRegisterPage() {
       setError('Yönetmen ve yapım ekibi bilgisini girmelisiniz.')
       return
     }
+    if (isStudentProgram && !filmLink.trim()) {
+      setError('Filminizin izlenebilir linkini girmelisiniz.')
+      return
+    }
     if (isStudentProgram && !studentIdFile) {
       setError('Öğrenci kimliği yüklemeniz zorunludur.')
       return
@@ -88,6 +93,7 @@ export function CreatorRegisterPage() {
         schoolId: isStudentProgram ? schoolId : undefined,
         phone: isStudentProgram ? phone : undefined,
         projectCrew: isStudentProgram ? projectCrew : undefined,
+        filmLink: isStudentProgram ? filmLink : undefined,
         studentIdFileUrl,
       })
       navigate('/creator', { replace: true })
@@ -206,6 +212,22 @@ export function CreatorRegisterPage() {
                 />
                 <span className="mt-1.5 block text-xs text-white/40">
                   Her satıra bir isim ve rol yazabilirsiniz.
+                </span>
+              </label>
+
+              <label className="block">
+                <span className="mb-1.5 block text-sm text-white/90">Film linki</span>
+                <input
+                  type="url"
+                  required
+                  value={filmLink}
+                  onChange={(event) => setFilmLink(event.target.value)}
+                  placeholder="https://vimeo.com/... veya Google Drive / WeTransfer"
+                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-emerald-400"
+                />
+                <span className="mt-1.5 block text-xs text-white/40">
+                  Filminizin izlenebilir bağlantısını paylaşın. Vimeo, YouTube (gizli), Google Drive veya WeTransfer
+                  kabul edilir.
                 </span>
               </label>
 
