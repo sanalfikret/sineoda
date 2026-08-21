@@ -17,6 +17,7 @@ import {
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { AdminStudentCinemaFilmActions } from '../../components/admin/AdminStudentCinemaFilmActions'
 import { getStudentDisplayName } from '../../utils/studentDisplayName'
+import { formatLicenseDate } from '../../utils/license'
 import { fuzzySearchMatch, sortByTurkishTitle } from '../../utils/search'
 import {
   formatPublishDate,
@@ -132,6 +133,7 @@ export function AdminStudentCinemaPage() {
         item.schoolName ?? '',
         item.displayName ?? item.creatorName ?? getStudentDisplayName(item) ?? '',
         item.creatorEmail ?? '',
+        item.creatorPhone ?? '',
         FORMAT_LABELS[item.contentFormat] ?? item.contentFormat,
       )
     })
@@ -160,6 +162,8 @@ export function AdminStudentCinemaPage() {
         item.studioName ?? '',
         item.schoolName ?? '',
         item.displayName ?? item.creatorName ?? getStudentDisplayName(item) ?? '',
+        item.creatorEmail ?? '',
+        item.creatorPhone ?? '',
         FORMAT_LABELS[item.contentFormat] ?? item.contentFormat,
       ),
     )
@@ -431,7 +435,13 @@ export function AdminStudentCinemaPage() {
             </select>
           </div>
 
-          <AdminSearchBar value={filmsQuery} onChange={setFilmsQuery} placeholder="Film, okul, öğrenci veya e-posta ara..." />
+          <AdminSearchBar
+            value={filmsQuery}
+            onChange={setFilmsQuery}
+            placeholder="Film, isim, telefon, e-posta veya okul ara..."
+            resultCount={filteredFilms.length}
+            totalCount={films.length}
+          />
 
           {selectedIds.length > 0 && (
             <div className="flex flex-wrap items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3">
@@ -483,81 +493,99 @@ export function AdminStudentCinemaPage() {
               Filtrelere uygun Genç Sinema içeriği yok.
             </p>
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-white/10">
-              <table className="min-w-full text-left text-sm">
-                <thead className="bg-[#11141c] text-sineoda-muted">
-                  <tr>
-                    <th className="px-4 py-3">
-                      <input
-                        type="checkbox"
-                        checked={allVisibleSelected}
-                        onChange={toggleSelectAll}
-                        className="accent-emerald-400"
-                      />
-                    </th>
-                    <th className="px-4 py-3 font-medium">Film</th>
-                    <th className="px-4 py-3 font-medium">Öğrenci</th>
-                    <th className="px-4 py-3 font-medium">Okul</th>
-                    <th className="px-4 py-3 font-medium">Tür</th>
-                    <th className="px-4 py-3 font-medium">Durum</th>
-                    <th className="px-4 py-3 font-medium">Yayın tarihi</th>
-                    <th className="px-4 py-3 font-medium">İzlenme</th>
-                    <th className="px-4 py-3 font-medium">İzlenme sayısı</th>
-                    <th className="px-4 py-3 font-medium">Beğeni</th>
-                    <th className="px-4 py-3 font-medium min-w-[240px]">Yönetim</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredFilms.map((item) => (
-                    <tr key={item.id} className="border-t border-white/5">
-                      <td className="px-4 py-3">
+            <div className="overflow-hidden rounded-xl border border-white/10 bg-[#11141c]">
+              <div className="max-h-[min(70vh,680px)] overflow-auto">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="sticky top-0 z-10 bg-[#11141c] text-sineoda-muted shadow-[0_1px_0_rgba(255,255,255,0.06)]">
+                    <tr>
+                      <th className="px-4 py-3">
                         <input
                           type="checkbox"
-                          checked={selectedIds.includes(item.id)}
-                          onChange={() => toggleSelect(item.id)}
+                          checked={allVisibleSelected}
+                          onChange={toggleSelectAll}
                           className="accent-emerald-400"
                         />
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/admin/genc-sinema/${item.id}`)}
-                          className="font-medium text-white hover:text-emerald-300"
-                        >
-                          {item.title}
-                        </button>
-                      </td>
-                      <td className="px-4 py-3 text-sineoda-muted">
-                        <p>{resolveStudentLabel(item)}</p>
-                        {item.studioName ? <p className="text-xs">{item.studioName}</p> : null}
-                      </td>
-                      <td className="px-4 py-3 text-sineoda-muted">{item.schoolName ?? '—'}</td>
-                      <td className="px-4 py-3 text-sineoda-muted">
-                        {FORMAT_LABELS[item.contentFormat] ?? item.contentFormat}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`rounded-full px-2.5 py-1 text-xs ${studentFilmStatusClass(item)}`}>
-                          {studentFilmStatusLabel(item)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-sineoda-muted">
-                        {formatPublishDate(item.publishedAt)}
-                      </td>
-                      <td className="px-4 py-3">{item.watchMinutes ?? 0} dk</td>
-                      <td className="px-4 py-3">{item.watchCount ?? 0}</td>
-                      <td className="px-4 py-3">{item.likes ?? 0}</td>
-                      <td className="px-4 py-3 align-top">
-                        <AdminStudentCinemaFilmActions
-                          item={item}
-                          onDetail={() => navigate(`/admin/genc-sinema/${item.id}`)}
-                          onChanged={() => void load()}
-                          onError={setError}
-                        />
-                      </td>
+                      </th>
+                      <th className="px-4 py-3 font-medium">Film</th>
+                      <th className="px-4 py-3 font-medium">Öğrenci</th>
+                      <th className="px-4 py-3 font-medium">İletişim</th>
+                      <th className="px-4 py-3 font-medium">Okul</th>
+                      <th className="px-4 py-3 font-medium">Tür</th>
+                      <th className="px-4 py-3 font-medium">Durum</th>
+                      <th className="px-4 py-3 font-medium">Yayın</th>
+                      <th className="px-4 py-3 font-medium">Telif</th>
+                      <th className="px-4 py-3 font-medium">İzlenme</th>
+                      <th className="px-4 py-3 font-medium min-w-[240px]">Yönetim</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {filteredFilms.map((item) => (
+                      <tr key={item.id} className="border-t border-white/5 hover:bg-white/[0.02]">
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(item.id)}
+                            onChange={() => toggleSelect(item.id)}
+                            className="accent-emerald-400"
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/admin/genc-sinema/${item.id}`)}
+                            className="font-medium text-white hover:text-emerald-300"
+                          >
+                            {item.title}
+                          </button>
+                        </td>
+                        <td className="px-4 py-3 text-sineoda-muted">
+                          <p>{resolveStudentLabel(item)}</p>
+                          {item.studioName ? <p className="text-xs">{item.studioName}</p> : null}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-sineoda-muted">
+                          {item.creatorEmail ? <p>{item.creatorEmail}</p> : null}
+                          {item.creatorPhone ? <p>{item.creatorPhone}</p> : null}
+                          {!item.creatorEmail && !item.creatorPhone ? '—' : null}
+                        </td>
+                        <td className="px-4 py-3 text-sineoda-muted">{item.schoolName ?? '—'}</td>
+                        <td className="px-4 py-3 text-sineoda-muted">
+                          {FORMAT_LABELS[item.contentFormat] ?? item.contentFormat}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`rounded-full px-2.5 py-1 text-xs ${studentFilmStatusClass(item)}`}>
+                            {studentFilmStatusLabel(item)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-xs text-sineoda-muted">
+                          {formatPublishDate(item.publishedAt)}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-sineoda-muted">
+                          {item.licenseUnlimited ? (
+                            <span>Sınırsız</span>
+                          ) : item.licenseExpiresAt ? (
+                            <span className={item.licenseExpired ? 'text-red-300' : ''}>
+                              {formatLicenseDate(item.licenseExpiresAt)}
+                            </span>
+                          ) : (
+                            '—'
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-sineoda-muted">
+                          {item.watchMinutes ?? 0} dk · {item.likes ?? 0} ♥
+                        </td>
+                        <td className="px-4 py-3 align-top">
+                          <AdminStudentCinemaFilmActions
+                            item={item}
+                            onDetail={() => navigate(`/admin/genc-sinema/${item.id}`)}
+                            onChanged={() => void load()}
+                            onError={setError}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </>
@@ -647,13 +675,20 @@ export function AdminStudentCinemaPage() {
         </>
       ) : (
         <>
-          <AdminSearchBar value={queueQuery} onChange={setQueueQuery} placeholder="Başlık, okul veya öğrenci ara..." />
+          <AdminSearchBar
+            value={queueQuery}
+            onChange={setQueueQuery}
+            placeholder="Başlık, isim, telefon, e-posta veya okul ara..."
+            resultCount={filteredQueue.length}
+            totalCount={queue.length}
+          />
           {filteredQueue.length === 0 ? (
             <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-sineoda-muted">
               Bekleyen Genç Sinema başvurusu yok.
             </p>
           ) : (
-            <div className="space-y-4">
+            <div className="overflow-hidden rounded-xl border border-white/10 bg-[#11141c]">
+              <div className="max-h-[min(65vh,560px)] space-y-3 overflow-y-auto p-4">
               {filteredQueue.map((item) => (
                 <article key={item.id} className="rounded-xl border border-white/10 bg-[#11141c] p-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -665,6 +700,11 @@ export function AdminStudentCinemaPage() {
                       <p className="mt-1 text-sm text-sineoda-muted">
                         {resolveStudentLabel(item) === '—' ? 'Öğrenci belirtilmemiş' : resolveStudentLabel(item)} · {item.schoolName ?? 'Okul belirtilmemiş'}
                       </p>
+                      {(item.creatorEmail || item.creatorPhone) && (
+                        <p className="mt-1 text-xs text-sineoda-muted">
+                          {[item.creatorEmail, item.creatorPhone].filter(Boolean).join(' · ')}
+                        </p>
+                      )}
                       <p className="mt-1 text-xs text-sineoda-muted">
                         {item.watchCount ?? 0} izlenme · {item.likes ?? 0} beğeni
                       </p>
@@ -723,6 +763,7 @@ export function AdminStudentCinemaPage() {
                   </div>
                 </article>
               ))}
+              </div>
             </div>
           )}
         </>

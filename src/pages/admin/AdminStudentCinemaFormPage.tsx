@@ -14,6 +14,9 @@ import { VideoUpload } from '../../components/admin/VideoUpload'
 import { CREATOR_DOC_TYPES } from '../../constants/creatorLegal'
 import { buildCredits, creditsToForm } from '../../utils/credits'
 import { getStudentDisplayName } from '../../utils/studentDisplayName'
+import { formatLicenseDate, getLicenseDaysRemaining, toDateInputValue } from '../../utils/license'
+
+const todayInput = () => new Date().toISOString().slice(0, 10)
 
 const FORMAT_LABELS: Record<string, string> = {
   main: 'Ana film',
@@ -56,6 +59,16 @@ interface DetailForm {
   producers: string
   cast: string
   studio: string
+  contentAddedAt: string
+  licenseUnlimited: boolean
+  licenseExpiresAt: string
+}
+
+function addYearsToDateInput(base: string, years: number) {
+  const date = new Date(base)
+  if (Number.isNaN(date.getTime())) return ''
+  date.setFullYear(date.getFullYear() + years)
+  return date.toISOString().slice(0, 10)
 }
 
 function itemToForm(item: AdminStudentCinemaItem): DetailForm {
@@ -74,6 +87,9 @@ function itemToForm(item: AdminStudentCinemaItem): DetailForm {
     trailerUrl: item.trailerUrl ?? '',
     schoolId: item.schoolId ?? '',
     ...credits,
+    contentAddedAt: toDateInputValue(item.contentAddedAt) || todayInput(),
+    licenseUnlimited: item.licenseUnlimited,
+    licenseExpiresAt: toDateInputValue(item.licenseExpiresAt),
   }
 }
 
@@ -141,6 +157,9 @@ export function AdminStudentCinemaFormPage() {
         trailerUrl: form.trailerUrl.trim(),
         schoolId: form.schoolId || null,
         credits: buildCredits(form),
+        contentAddedAt: form.contentAddedAt,
+        licenseUnlimited: form.licenseUnlimited,
+        licenseExpiresAt: form.licenseUnlimited ? null : form.licenseExpiresAt || null,
       })
       setItem(result.item)
       setForm(itemToForm(result.item))
@@ -258,6 +277,10 @@ export function AdminStudentCinemaFormPage() {
                 <dd className="mt-0.5 text-white">{item.creatorEmail ?? '—'}</dd>
               </div>
               <div>
+                <dt className="text-sineoda-muted">Telefon</dt>
+                <dd className="mt-0.5 text-white">{item.creatorPhone ?? '—'}</dd>
+              </div>
+              <div>
                 <dt className="text-sineoda-muted">Proje / Stüdyo</dt>
                 <dd className="mt-0.5 text-white">{item.studioName ?? '—'}</dd>
               </div>
@@ -339,6 +362,68 @@ export function AdminStudentCinemaFormPage() {
                 Reddet
               </button>
             </div>
+          </section>
+
+          <section className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+            <h2 className="font-medium text-amber-200">Telif hakkı süresi</h2>
+            <p className="mt-1 text-xs text-sineoda-muted">
+              Sınırsız veya belirli bitiş tarihi. Yalnızca admin görür.
+            </p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <label className="block">
+                <span className="mb-1 block text-xs text-sineoda-muted">Platforma eklenme</span>
+                <input
+                  type="date"
+                  required
+                  value={form.contentAddedAt}
+                  onChange={(event) => setForm({ ...form, contentAddedAt: event.target.value })}
+                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs text-sineoda-muted">Telif bitiş tarihi</span>
+                <input
+                  type="date"
+                  value={form.licenseExpiresAt}
+                  disabled={form.licenseUnlimited}
+                  onChange={(event) => setForm({ ...form, licenseExpiresAt: event.target.value })}
+                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white disabled:opacity-50"
+                />
+              </label>
+            </div>
+            <label className="mt-3 flex items-center gap-2 text-sm text-white/85">
+              <input
+                type="checkbox"
+                checked={form.licenseUnlimited}
+                onChange={(event) => setForm({ ...form, licenseUnlimited: event.target.checked })}
+                className="rounded"
+              />
+              Sınırsız telif hakkı
+            </label>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {[1, 2, 3, 5].map((years) => (
+                <button
+                  key={years}
+                  type="button"
+                  disabled={form.licenseUnlimited}
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      licenseUnlimited: false,
+                      licenseExpiresAt: addYearsToDateInput(form.contentAddedAt, years),
+                    })
+                  }
+                  className="rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white hover:bg-white/15 disabled:opacity-50"
+                >
+                  +{years} yıl
+                </button>
+              ))}
+            </div>
+            {!form.licenseUnlimited && form.licenseExpiresAt && (
+              <p className="mt-2 text-xs text-sineoda-muted">
+                {formatLicenseDate(form.licenseExpiresAt)} · {getLicenseDaysRemaining(form.licenseExpiresAt)} gün kaldı
+              </p>
+            )}
           </section>
 
           <form onSubmit={handleSave} className="space-y-4 rounded-xl border border-white/10 bg-[#11141c] p-4">
