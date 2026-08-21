@@ -188,10 +188,28 @@ export interface LandingShowcaseResponse {
   items: ContentItem[]
 }
 
+export type LandingHeroBackgroundType = 'image' | 'video' | 'content'
+
+export interface LandingHeroConfig {
+  line1: string
+  line2: string
+  description: string
+  ctaPrimary: string
+  ctaSecondary: string
+  legalNote: string
+  backgroundType: LandingHeroBackgroundType
+  backgroundImage: string
+  backgroundVideo: string
+  backgroundContentId: string | null
+  featuredContentId: string | null
+  showFeaturedCard: boolean
+}
+
 export interface LandingConfigResponse {
   slider: ContentItem[]
   sliderContentIds?: string[]
   showcases: LandingShowcaseResponse[]
+  hero?: LandingHeroConfig
 }
 
 export async function loginRequest(
@@ -318,6 +336,7 @@ export async function updateLandingConfig(payload: {
     description: string
     itemIds: string[]
   }>
+  hero?: LandingHeroConfig
 }): Promise<LandingConfigResponse> {
   return api<LandingConfigResponse>('/api/admin/landing', {
     method: 'PUT',
