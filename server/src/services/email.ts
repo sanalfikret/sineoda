@@ -46,6 +46,34 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string) {
   return { devMode: false }
 }
 
+export async function sendEmailVerificationEmail(email: string, verifyUrl: string) {
+  const transport = getTransporter()
+  const subject = 'Sineoda — E-posta Adresini Doğrula'
+  const html = `
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+      <h2 style="color:#e8b84a">Sineoda'ya hoş geldin</h2>
+      <p>Üyeliğini tamamlamak için e-posta adresini doğrula:</p>
+      <p><a href="${verifyUrl}" style="display:inline-block;background:#e8b84a;color:#0d0f14;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600">E-postamı Doğrula</a></p>
+      <p style="word-break:break-all"><a href="${verifyUrl}" style="color:#e8b84a">${verifyUrl}</a></p>
+      <p style="color:#888;font-size:13px">Bu bağlantı 24 saat geçerlidir. Sen kaydolmadıysan bu e-postayı yok say.</p>
+    </div>
+  `
+
+  if (!transport) {
+    console.log('[email-dev] E-posta doğrulama bağlantısı:', verifyUrl)
+    return { devMode: true, verifyUrl }
+  }
+
+  await transport.sendMail({
+    from: config.smtp.from,
+    to: email,
+    subject,
+    html,
+  })
+
+  return { devMode: false }
+}
+
 const CONTACT_SUBJECT_LABELS: Record<string, string> = {
   oneri: 'Öneri',
   istek: 'İstek',

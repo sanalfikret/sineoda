@@ -10,6 +10,7 @@ export function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [resendEmail, setResendEmail] = useState('')
   const [loading, setLoading] = useState(false)
 
   const from = (location.state as { from?: string } | null)?.from ?? '/'
@@ -33,7 +34,11 @@ export function LoginPage() {
       await login(email, password)
       navigate('/profiller', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Giriş başarısız.')
+      const authError = err as Error & { code?: string; email?: string }
+      if (authError.code === 'EMAIL_NOT_VERIFIED') {
+        setResendEmail(authError.email ?? email)
+      }
+      setError(authError.message || 'Giriş başarısız.')
     } finally {
       setLoading(false)
     }
@@ -45,6 +50,16 @@ export function LoginPage() {
         {error && (
           <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
             {error}
+            {resendEmail ? (
+              <p className="mt-3">
+                <Link
+                  to={`/eposta-dogrula?email=${encodeURIComponent(resendEmail)}`}
+                  className="font-medium text-sineoda-gold hover:underline"
+                >
+                  Doğrulama e-postasını yeniden gönder
+                </Link>
+              </p>
+            ) : null}
           </div>
         )}
 
