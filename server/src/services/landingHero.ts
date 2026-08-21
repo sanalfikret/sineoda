@@ -1,7 +1,5 @@
 import { dbGet, dbRun } from '../db.js'
 
-export type LandingHeroBackgroundType = 'image' | 'video' | 'content'
-
 export interface LandingHeroConfig {
   line1: string
   line2: string
@@ -9,7 +7,6 @@ export interface LandingHeroConfig {
   ctaPrimary: string
   ctaSecondary: string
   legalNote: string
-  backgroundType: LandingHeroBackgroundType
   backgroundImage: string
   backgroundVideo: string
   backgroundContentId: string | null
@@ -27,7 +24,6 @@ export const DEFAULT_LANDING_HERO: LandingHeroConfig = {
   ctaPrimary: 'Ücretsiz Dene',
   ctaSecondary: 'Giriş Yap',
   legalNote: "Üye olarak Kullanım Koşulları ve Gizlilik Politikası'nı kabul etmiş olursun.",
-  backgroundType: 'content',
   backgroundImage: '',
   backgroundVideo: '',
   backgroundContentId: null,
@@ -39,19 +35,45 @@ function trimOrEmpty(value: unknown) {
   return String(value ?? '').trim()
 }
 
-function normalizeBackgroundType(value: unknown): LandingHeroBackgroundType {
-  if (value === 'video' || value === 'image') return value
-  return 'content'
-}
-
 function isEmbeddableVideoUrl(url: string) {
-  if (!url) return false
-  return !/youtube\.com|youtu\.be/i.test(url)
+  return Boolean(url) && !/youtube\.com|youtu\.be/i.test(url)
 }
 
-/** DB'den okunan veya admin'den gelen ham veriyi birleştir — alan silme. */
 export function parseLandingHero(input: Partial<LandingHeroConfig> | null | undefined): LandingHeroConfig {
   const source = input ?? {}
+
+  let backgroundImage = trimOrEmpty(source.backgroundImage)
+  let backgroundVideo = trimOrEmpty(source.backgroundVideo)
+  let backgroundContentId = trimOrEmpty(source.backgroundContentId) || null
+
+  const legacyType = (source as { backgroundType?: string }).backgroundType
+  if (legacyType === 'image') {
+    backgroundVideo = ''
+    backgroundContentId = null
+  } else if (legacyType === 'video') {
+    backgroundImage = ''
+    backgroundContentId = null
+  } else if (legacyType === 'content') {
+    backgroundImage = ''
+    backgroundVideo = ''
+  }
+
+  if (backgroundImage) {
+    backgroundVideo = ''
+    backgroundContentId = null
+  } else if (isEmbeddableVideoUrl(backgroundVideo)) {
+    backgroundImage = ''
+    backgroundContentId = null
+  } else if (backgroundContentId) {
+    backgroundImage = ''
+    backgroundVideo = ''
+  } else {
+    backgroundVideo = ''
+  }
+
+  if (!isEmbeddableVideoUrl(backgroundVideo)) {
+    backgroundVideo = ''
+  }
 
   return {
     line1: trimOrEmpty(source.line1) || DEFAULT_LANDING_HERO.line1,
@@ -60,10 +82,9 @@ export function parseLandingHero(input: Partial<LandingHeroConfig> | null | unde
     ctaPrimary: trimOrEmpty(source.ctaPrimary) || DEFAULT_LANDING_HERO.ctaPrimary,
     ctaSecondary: trimOrEmpty(source.ctaSecondary) || DEFAULT_LANDING_HERO.ctaSecondary,
     legalNote: trimOrEmpty(source.legalNote) || DEFAULT_LANDING_HERO.legalNote,
-    backgroundType: normalizeBackgroundType(source.backgroundType),
-    backgroundImage: trimOrEmpty(source.backgroundImage),
-    backgroundVideo: trimOrEmpty(source.backgroundVideo),
-    backgroundContentId: trimOrEmpty(source.backgroundContentId) || null,
+    backgroundImage,
+    backgroundVideo,
+    backgroundContentId,
     featuredContentId: trimOrEmpty(source.featuredContentId) || null,
     showFeaturedCard: source.showFeaturedCard !== false,
   }
@@ -74,8 +95,7 @@ export function getLandingHeroConfig(): LandingHeroConfig {
   if (!row?.value) return { ...DEFAULT_LANDING_HERO }
 
   try {
-    const parsed = JSON.parse(row.value) as Partial<LandingHeroConfig>
-    return parseLandingHero(parsed)
+    return parseLandingHero(JSON.parse(row.value) as Partial<LandingHeroConfig>)
   } catch {
     return { ...DEFAULT_LANDING_HERO }
   }
@@ -83,11 +103,6 @@ export function getLandingHeroConfig(): LandingHeroConfig {
 
 export function saveLandingHeroConfig(input: Partial<LandingHeroConfig>): LandingHeroConfig {
   const hero = parseLandingHero(input)
-
-  if (hero.backgroundType === 'video' && !isEmbeddableVideoUrl(hero.backgroundVideo)) {
-    hero.backgroundVideo = ''
-  }
-
   dbRun('INSERT OR REPLACE INTO site_settings (key, value) VALUES (?, ?)', [
     SETTINGS_KEY,
     JSON.stringify(hero),
