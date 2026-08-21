@@ -23,6 +23,12 @@ import {
   updateProfileRequest,
 } from '../api/client'
 import type { Profile, User } from '../types/auth'
+import {
+  cacheAuthUser,
+  isAuthSessionError,
+  readCachedAuthUser,
+  sleep,
+} from '../utils/authSession'
 
 interface AuthContextValue {
   user: User | null
@@ -69,16 +75,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [activeProfile, setActiveProfile] = useState<Profile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const syncProfile = useCallback((nextUser: User) => {
-    const savedProfileId = getProfileId()
-    if (!savedProfileId) {
-      setActiveProfile(null)
-      return
-    }
-    const profile = nextUser.profiles.find((entry) => entry.id === savedProfileId) ?? null
-    setActiveProfile(profile)
-    if (!profile) setProfileId(null)
+  const clearSession = useCallback(() => {
+    setToken(null)
+    setProfileId(null)
+    setUser(null)
+    setActiveProfile(null)
+    cacheAuthUser(null)
   }, [])
+
+  const applyUser = useCallback(
+    (nextUser: User) => {
+      setUser(nextUser)
+      cacheAuthUser(nextUser)
+      const savedProfileId = getProfileId()
+      if (!savedProfileId) {
+        setActiveProfile(null)
+        return
+      }
+      const profile = nextUser.profiles.find((entry) => entry.id === savedProfileId) ?? null
+      setActiveProfile(profile)
+      if (!profile) setProfileId(null)
+    },
+    [],
+  )
 
   useEffect(() => {
     if (activeProfile && !getProfileId()) {
@@ -88,40 +107,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const init = async () => {
-      if (!getToken()) {
+      const token = getToken()
+      if (!token) {
         setIsLoading(false)
         return
       }
 
-      try {
-        const { user: me } = await fetchMe()
-        setUser(me)
-        syncProfile(me)
-      } catch (error) {
-        const status = (error as Error & { status?: number }).status
-        if (status === 401 || status === 403) {
-          setToken(null)
-          setProfileId(null)
-          setUser(null)
-          setActiveProfile(null)
-        }
-      } finally {
-        setIsLoading(false)
+      const cached = readCachedAuthUser()
+      if (cached) {
+        applyUser(cached)
       }
+
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          const { user: me } = await fetchMe()
+          applyUser(me)
+          break
+        } catch (error) {
+          if (isAuthSessionError(error)) {
+            clearSession()
+            break
+          }
+          if (attempt === 2) break
+          await sleep(700 * (attempt + 1))
+        }
+      }
+
+      setIsLoading(false)
     }
 
     void init()
-  }, [syncProfile])
+  }, [applyUser, clearSession])
 
   const login = useCallback(
     async (email: string, password: string, options?: { requireAdmin?: boolean }) => {
       const { token, user: loggedInUser } = await loginRequest(email, password, options?.requireAdmin)
       setToken(token)
-      setUser(loggedInUser)
       setProfileId(null)
       setActiveProfile(null)
+      applyUser(loggedInUser)
     },
-    [],
+    [applyUser],
   )
 
   const signup = useCallback(async (name: string, email: string, password: string, phone: string, smsCode: string) => {
@@ -131,10 +157,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const creatorLogin = useCallback(async (email: string, password: string) => {
     const { token, user: loggedInUser } = await creatorLoginRequest(email, password)
     setToken(token)
-    setUser(loggedInUser)
     setProfileId(null)
     setActiveProfile(null)
-  }, [])
+    applyUser(loggedInUser)
+  }, [applyUser])
 
   const creatorSignup = useCallback(
     async (data: {
@@ -152,19 +178,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }) => {
       const { token, user: newUser } = await creatorSignupRequest(data)
       setToken(token)
-      setUser(newUser)
       setProfileId(null)
       setActiveProfile(null)
+      applyUser(newUser)
     },
-    [],
+    [applyUser],
   )
 
   const logout = useCallback(() => {
-    setToken(null)
-    setProfileId(null)
-    setUser(null)
-    setActiveProfile(null)
-  }, [])
+    clearSession()
+  }, [clearSession])
 
   const clearActiveProfile = useCallback(() => {
     setProfileId(null)
@@ -172,10 +195,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const refreshUser = useCallback(async () => {
-    const { user: me } = await fetchMe()
-    setUser(me)
-    syncProfile(me)
-  }, [syncProfile])
+    try {
+      const { user: me } = await fetchMe()
+      applyUser(me)
+    } catch (error) {
+      if (isAuthSessionError(error)) {
+        clearSession()
+      }
+      throw error
+    }
+  }, [applyUser, clearSession])
 
   const selectProfile = useCallback(
     (profileId: string) => {
@@ -191,39 +220,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const addProfile = useCallback(
     async (name: string, avatar: string, isKids = false) => {
       const { user: updatedUser } = await createProfileRequest(name, avatar, isKids)
-      setUser(updatedUser)
+      applyUser(updatedUser)
     },
-    [],
+    [applyUser],
   )
 
   const updateAccount = useCallback(async (name: string) => {
     const { user: updatedUser } = await updateAccountRequest(name)
-    setUser(updatedUser)
-    syncProfile(updatedUser)
-  }, [syncProfile])
+    applyUser(updatedUser)
+  }, [applyUser])
 
   const updateProfile = useCallback(
     async (profileId: string, data: { name?: string; avatar?: string; isKids?: boolean }) => {
       const { user: updatedUser } = await updateProfileRequest(profileId, data)
-      setUser(updatedUser)
+      applyUser(updatedUser)
       if (activeProfile?.id === profileId) {
         const nextProfile = updatedUser.profiles.find((entry) => entry.id === profileId) ?? null
         setActiveProfile(nextProfile)
       }
     },
-    [activeProfile?.id],
+    [activeProfile?.id, applyUser],
   )
 
   const deleteProfile = useCallback(
     async (profileId: string) => {
       const { user: updatedUser } = await deleteProfileRequest(profileId)
-      setUser(updatedUser)
+      applyUser(updatedUser)
       if (activeProfile?.id === profileId) {
         setActiveProfile(null)
         setProfileId(null)
       }
     },
-    [activeProfile?.id],
+    [activeProfile?.id, applyUser],
   )
 
   const isAdmin = user?.role === 'admin'

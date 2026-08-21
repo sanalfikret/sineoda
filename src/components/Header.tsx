@@ -139,6 +139,7 @@ export function Header() {
                         onClick={() => {
                           logout()
                           setUserMenuOpen(false)
+                          navigate('/')
                         }}
                       >
                         Çıkış Yap
@@ -184,6 +185,7 @@ export function Header() {
                         onClick={() => {
                           logout()
                           setUserMenuOpen(false)
+                          navigate('/')
                         }}
                       >
                         Çıkış Yap
