@@ -1,5 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
-import { resolveMediaUrl, fetchBootstrap, fetchLandingConfig, updateLandingConfig } from '../../api/client'
+import {
+  resolveMediaUrl,
+  fetchBootstrap,
+  fetchLandingConfig,
+  updateLandingConfig,
+  type LandingHeroConfig,
+  type LandingHeroBackgroundType,
+} from '../../api/client'
+import { ImageUpload } from '../../components/admin/ImageUpload'
+import { VideoUpload } from '../../components/admin/VideoUpload'
+import { BRAND_HERO } from '../../constants/brand'
 import { useContent } from '../../context/ContentContext'
 import { getContentDisplayLabel, getContentTypeLabel } from '../../constants/contentTypes'
 import type { ContentItem, ContentType } from '../../types/content'
@@ -12,6 +22,27 @@ interface ShowcaseDraft {
   description: string
   itemIds: string[]
 }
+
+const DEFAULT_HERO: LandingHeroConfig = {
+  line1: BRAND_HERO.line1,
+  line2: BRAND_HERO.line2,
+  description: BRAND_HERO.description,
+  ctaPrimary: BRAND_HERO.ctaPrimary,
+  ctaSecondary: BRAND_HERO.ctaSecondary,
+  legalNote: BRAND_HERO.legalNote,
+  backgroundType: 'content',
+  backgroundImage: '',
+  backgroundVideo: '',
+  backgroundContentId: null,
+  featuredContentId: null,
+  showFeaturedCard: true,
+}
+
+const BACKGROUND_TYPE_OPTIONS: Array<{ id: LandingHeroBackgroundType; label: string }> = [
+  { id: 'content', label: 'Katalog içeriği' },
+  { id: 'image', label: 'Görsel' },
+  { id: 'video', label: 'Video' },
+]
 
 const ICON_OPTIONS = [
   { value: 'dizi', label: 'Dizi' },
@@ -60,6 +91,7 @@ function filterPickerCatalog(
 export function AdminLandingPage() {
   const { refresh } = useContent()
   const [pickerCatalog, setPickerCatalog] = useState<ContentItem[]>([])
+  const [hero, setHero] = useState<LandingHeroConfig>(DEFAULT_HERO)
   const [sliderIds, setSliderIds] = useState<string[]>([])
   const [showcases, setShowcases] = useState<ShowcaseDraft[]>([])
   const [loading, setLoading] = useState(true)
@@ -70,6 +102,7 @@ export function AdminLandingPage() {
     Promise.all([fetchBootstrap(), fetchLandingConfig()])
       .then(([bootstrap, data]) => {
         setPickerCatalog(bootstrap.catalog)
+        setHero(data.hero ? { ...DEFAULT_HERO, ...data.hero } : DEFAULT_HERO)
         setSliderIds(
           data.sliderContentIds?.length
             ? data.sliderContentIds
@@ -168,6 +201,10 @@ export function AdminLandingPage() {
     )
   }
 
+  const updateHero = (patch: Partial<LandingHeroConfig>) => {
+    setHero((current) => ({ ...current, ...patch }))
+  }
+
   const handleSave = async () => {
     setSaving(true)
     setMessage('')
@@ -176,7 +213,8 @@ export function AdminLandingPage() {
       const persistedSliderIds = sliderIds.filter((id) => validIds.has(id))
       const skipped = sliderIds.length - persistedSliderIds.length
 
-      const data = await updateLandingConfig({ sliderIds: persistedSliderIds, showcases })
+      const data = await updateLandingConfig({ sliderIds: persistedSliderIds, showcases, hero })
+      setHero(data.hero ? { ...DEFAULT_HERO, ...data.hero } : DEFAULT_HERO)
       setSliderIds(
         data.sliderContentIds?.length
           ? data.sliderContentIds
@@ -209,7 +247,7 @@ export function AdminLandingPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Ana Sayfa</h1>
           <p className="mt-1 text-sm text-sineoda-muted">
-            Üye olmadan önceki ana sayfa: slider ve Tabii tarzı kategori şeritleri
+            Üye olmadan önceki ana sayfa: hero, slider ve kategori şeritleri
           </p>
         </div>
         <button
@@ -227,6 +265,147 @@ export function AdminLandingPage() {
           {message}
         </p>
       )}
+
+      <section className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
+        <h2 className="text-lg font-semibold text-white">Hero (üst bölüm)</h2>
+        <p className="mt-1 text-sm text-sineoda-muted">
+          Giriş yapmadan görünen ana sayfanın başlık metinleri, arka plan görseli/videosu ve öne
+          çıkan içerik kutusu.
+        </p>
+
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          <label className="block space-y-2">
+            <span className="text-sm text-white/85">Ana başlık</span>
+            <input
+              value={hero.line1}
+              onChange={(event) => updateHero({ line1: event.target.value })}
+              className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-sineoda-gold"
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className="text-sm text-white/85">Alt başlık</span>
+            <input
+              value={hero.line2}
+              onChange={(event) => updateHero({ line2: event.target.value })}
+              className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-sineoda-gold"
+            />
+          </label>
+        </div>
+
+        <label className="mt-4 block space-y-2">
+          <span className="text-sm text-white/85">Açıklama</span>
+          <textarea
+            value={hero.description}
+            onChange={(event) => updateHero({ description: event.target.value })}
+            rows={3}
+            className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold"
+          />
+        </label>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <label className="block space-y-2">
+            <span className="text-sm text-white/85">Birincil buton</span>
+            <input
+              value={hero.ctaPrimary}
+              onChange={(event) => updateHero({ ctaPrimary: event.target.value })}
+              className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-sineoda-gold"
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className="text-sm text-white/85">İkincil buton</span>
+            <input
+              value={hero.ctaSecondary}
+              onChange={(event) => updateHero({ ctaSecondary: event.target.value })}
+              className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-sineoda-gold"
+            />
+          </label>
+        </div>
+
+        <label className="mt-4 block space-y-2">
+          <span className="text-sm text-white/85">Yasal not (küçük metin)</span>
+          <input
+            value={hero.legalNote}
+            onChange={(event) => updateHero({ legalNote: event.target.value })}
+            className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold"
+          />
+        </label>
+
+        <div className="mt-6 border-t border-white/10 pt-5">
+          <p className="text-sm font-medium text-white">Arka plan</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {BACKGROUND_TYPE_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => updateHero({ backgroundType: option.id })}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                  hero.backgroundType === option.id
+                    ? 'bg-sineoda-gold text-sineoda-bg'
+                    : 'bg-white/10 text-white/80 hover:bg-white/15'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          {hero.backgroundType === 'image' && (
+            <div className="mt-4">
+              <ImageUpload
+                label="Hero arka plan görseli"
+                value={hero.backgroundImage}
+                onChange={(url) => updateHero({ backgroundImage: url })}
+              />
+            </div>
+          )}
+
+          {hero.backgroundType === 'video' && (
+            <div className="mt-4">
+              <VideoUpload
+                label="Hero arka plan videosu"
+                value={hero.backgroundVideo}
+                onChange={(url) => updateHero({ backgroundVideo: url })}
+              />
+            </div>
+          )}
+
+          {hero.backgroundType === 'content' && (
+            <div className="mt-4">
+              <SingleContentPicker
+                catalog={pickerCatalog}
+                selectedId={hero.backgroundContentId}
+                onSelect={(contentId) => updateHero({ backgroundContentId: contentId })}
+                label="Arka plan için içerik (backdrop/poster kullanılır)"
+                emptyLabel="Seçilmedi — öne çıkan içerik kullanılır"
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="mt-6 border-t border-white/10 pt-5">
+          <label className="flex items-center gap-2 text-sm text-white/85">
+            <input
+              type="checkbox"
+              checked={hero.showFeaturedCard}
+              onChange={(event) => updateHero({ showFeaturedCard: event.target.checked })}
+              className="accent-sineoda-gold"
+            />
+            &quot;Bu hafta öne çıkan&quot; kutusunu göster
+          </label>
+
+          {hero.showFeaturedCard && (
+            <div className="mt-4">
+              <SingleContentPicker
+                catalog={pickerCatalog}
+                selectedId={hero.featuredContentId}
+                onSelect={(contentId) => updateHero({ featuredContentId: contentId })}
+                label="Öne çıkan içerik"
+                emptyLabel="Seçilmedi — katalogdaki öne çıkan içerik kullanılır"
+              />
+            </div>
+          )}
+        </div>
+      </section>
 
       <section className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
         <h2 className="text-lg font-semibold text-white">Slider</h2>
@@ -429,6 +608,92 @@ export function AdminLandingPage() {
           </section>
         ))}
       </section>
+    </div>
+  )
+}
+
+function SingleContentPicker({
+  catalog,
+  selectedId,
+  onSelect,
+  label,
+  emptyLabel,
+}: {
+  catalog: ContentItem[]
+  selectedId: string | null
+  onSelect: (contentId: string | null) => void
+  label: string
+  emptyLabel: string
+}) {
+  const [query, setQuery] = useState('')
+  const selectedItem = selectedId ? catalog.find((item) => item.id === selectedId) : null
+
+  const filteredCatalog = useMemo(
+    () => filterPickerCatalog(catalog, query),
+    [catalog, query],
+  )
+
+  const visibleItems = filteredCatalog.slice(0, 24)
+
+  return (
+    <div className="space-y-3">
+      <span className="block text-sm text-white/85">{label}</span>
+
+      {selectedItem ? (
+        <div className="flex items-center gap-3 rounded-lg border border-sineoda-gold/30 bg-sineoda-gold/10 px-3 py-2">
+          <img
+            src={resolveMediaUrl(selectedItem.poster)}
+            alt=""
+            className="h-12 w-8 rounded object-cover"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-white">{selectedItem.title}</p>
+            <p className="text-xs text-sineoda-muted">{getContentDisplayLabel(selectedItem)}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onSelect(null)}
+            className="text-xs text-red-300 hover:text-red-200"
+          >
+            Temizle
+          </button>
+        </div>
+      ) : (
+        <p className="text-xs text-sineoda-muted">{emptyLabel}</p>
+      )}
+
+      <input
+        type="search"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="İçerik ara..."
+        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-sm text-white outline-none focus:border-sineoda-gold"
+      />
+
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {visibleItems.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => onSelect(item.id)}
+            className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-left transition ${
+              selectedId === item.id
+                ? 'border-sineoda-gold/40 bg-sineoda-gold/10'
+                : 'border-white/10 hover:bg-white/5'
+            }`}
+          >
+            <img
+              src={resolveMediaUrl(item.poster)}
+              alt=""
+              className="h-12 w-8 rounded object-cover"
+            />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-white">{item.title}</p>
+              <p className="text-xs text-sineoda-muted">{getContentDisplayLabel(item)}</p>
+            </div>
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
