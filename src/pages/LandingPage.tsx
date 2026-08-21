@@ -1,18 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { SiteFooter } from '../components/SiteFooter'
-import { LandingFeatures } from '../components/landing/LandingFeatures'
-import { LandingManifesto } from '../components/landing/LandingManifesto'
 import { LandingHeader } from '../components/landing/LandingHeader'
-import { LandingHero } from '../components/landing/LandingHero'
-import { LandingCategoryShowcase } from '../components/landing/LandingCategoryShowcase'
-import { LandingSlider } from '../components/landing/LandingSlider'
-import { LandingEmailSignup } from '../components/landing/LandingEmailSignup'
-import { LandingFaq } from '../components/landing/LandingFaq'
-import { LandingJournalTeaser } from '../components/landing/LandingJournalTeaser'
-import { LandingPricing } from '../components/landing/LandingPricing'
-import { LandingCreatorSection } from '../components/landing/LandingCreatorSection'
-import { LandingStudentCinemaSection } from '../components/landing/LandingStudentCinemaSection'
-import { StudentCinemaPicksRow } from '../components/StudentCinemaPicksRow'
+import { LandingPageBlocks } from '../components/landing/LandingPageBlocks'
 import {
   DEMO_LANDING_SHOWCASES,
   getDemoCatalog,
@@ -21,6 +10,7 @@ import {
 import { fetchBootstrap, fetchLandingConfig } from '../api/client'
 import type { LandingHeroConfig } from '../api/client'
 import { DEFAULT_LANDING_SECTIONS, mergeLandingSections } from '../constants/landingDefaults'
+import { normalizeLandingLayout } from '../constants/landingLayout'
 import { resolveLandingSliderItems } from '../utils/landingSlider'
 import type { ContentItem } from '../types/content'
 
@@ -42,6 +32,7 @@ export function LandingPage() {
   const [catalog, setCatalog] = useState<ContentItem[]>([])
   const [heroConfig, setHeroConfig] = useState<LandingHeroConfig | null>(null)
   const [sections, setSections] = useState(DEFAULT_LANDING_SECTIONS)
+  const [layout, setLayout] = useState(() => normalizeLandingLayout(null))
   const [sliderItems, setSliderItems] = useState<ContentItem[]>([])
   const [showcases, setShowcases] = useState(DEMO_LANDING_SHOWCASES)
   const [studentPicks, setStudentPicks] = useState<ContentItem[]>([])
@@ -60,6 +51,7 @@ export function LandingPage() {
     setCatalog(mergedCatalog)
     setHeroConfig(landing.hero ?? bootstrap.landing?.hero ?? null)
     setSections(mergeLandingSections(landing.sections ?? bootstrap.landing?.sections))
+    setLayout(normalizeLandingLayout(landing.layout ?? bootstrap.landing?.layout))
     const apiSlider = resolveLandingSliderItems(landing, mergedCatalog, bootstrap.trailers ?? [])
     setSliderItems(
       apiSlider.length > 0 ? apiSlider : DEMO_LANDING_SHOWCASES[1].items.slice(0, 8),
@@ -114,23 +106,19 @@ export function LandingPage() {
   return (
     <div className="min-h-dvh bg-sineoda-bg text-white">
       <LandingHeader scrolled={scrolled} />
-      <LandingHero
-        hero={heroConfig}
-        backgroundContent={backgroundContent}
-        featuredItem={featuredItem}
-        fallbackImage={FALLBACK_HERO}
+      <LandingPageBlocks
+        ctx={{
+          heroConfig,
+          backgroundContent,
+          featuredItem,
+          fallbackImage: FALLBACK_HERO,
+          sections,
+          sliderItems,
+          studentPicks,
+          showcases,
+          layout,
+        }}
       />
-      <LandingManifesto section={sections.manifesto} />
-      <LandingSlider items={sliderItems} />
-      <StudentCinemaPicksRow items={studentPicks} guestMode className="pt-4" />
-      <LandingCategoryShowcase showcases={showcases} />
-      <LandingJournalTeaser section={sections.journal} />
-      <LandingFeatures section={sections.features} />
-      <LandingPricing section={sections.campaign} />
-      <LandingStudentCinemaSection section={sections.studentCinema} />
-      <LandingFaq section={sections.faq} />
-      <LandingEmailSignup section={sections.emailSignup} />
-      <LandingCreatorSection section={sections.creator} />
       <SiteFooter />
     </div>
   )
