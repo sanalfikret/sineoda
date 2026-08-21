@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchAdminCatalog, resolveMediaUrl } from '../../api/client'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
+import { ADMIN_NEW_VERTICAL_HREF } from '../../components/admin/AdminContentActions'
 import { useContent } from '../../context/ContentContext'
 import { CONTENT_TYPES, getContentDisplayLabel } from '../../constants/contentTypes'
 import { useAdminAnalytics } from '../../hooks/useAdminAnalytics'
@@ -12,8 +13,6 @@ import { isVerticalContent } from '../../utils/vertical'
 import { fuzzySearchMatch } from '../../utils/search'
 
 type TypeFilter = 'all' | ContentType | 'dikey' | 'expiring'
-
-const NEW_VERTICAL_HREF = '/admin/icerikler/yeni?dikey=1'
 
 function PublishStatusBadge({ item }: { item: AdminContentItem }) {
   if (item.isScheduled) {
@@ -148,29 +147,13 @@ export function AdminContentListPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-white">İçerikler</h1>
-          <p className="mt-1 text-sm text-sineoda-muted">
-            Telif uyarıları önce · {adminCatalog.length} kayıt
-            {verticalCount > 0 && ` · ${verticalCount} dikey dizi`}
-            {expiringCount > 0 && ` · ${expiringCount} telif bitiyor`}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            to={NEW_VERTICAL_HREF}
-            className="rounded-lg border border-sineoda-gold/50 bg-sineoda-gold/10 px-4 py-2 text-sm font-semibold text-sineoda-gold transition hover:bg-sineoda-gold/20"
-          >
-            + Yeni Dikey Dizi
-          </Link>
-          <Link
-            to="/admin/icerikler/yeni"
-            className="rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg"
-          >
-            + Yeni İçerik
-          </Link>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-white">İçerikler</h1>
+        <p className="mt-1 text-sm text-sineoda-muted">
+          Telif uyarıları önce · {adminCatalog.length} kayıt
+          {verticalCount > 0 && ` · ${verticalCount} dikey dizi`}
+          {expiringCount > 0 && ` · ${expiringCount} telif bitiyor`}
+        </p>
       </div>
 
       {expiringCount > 0 && typeFilter !== 'expiring' && (
@@ -287,7 +270,7 @@ export function AdminContentListPage() {
                       <div className="space-y-3">
                         <p>Henüz dikey dizi eklenmemiş.</p>
                         <Link
-                          to={NEW_VERTICAL_HREF}
+                          to={ADMIN_NEW_VERTICAL_HREF}
                           className="inline-flex rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg"
                         >
                           + İlk Dikey Diziyi Ekle

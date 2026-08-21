@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { AdminContentActions } from './AdminContentActions'
 import { useAuth } from '../../context/AuthContext'
 
 const navItems = [
@@ -105,26 +106,7 @@ export function AdminLayout() {
             </svg>
           </button>
           <p className="text-sm text-sineoda-muted lg:hidden">Admin Panel</p>
-          <div className="ml-auto flex flex-wrap gap-2">
-            <Link
-              to="/admin/genc-sinema"
-              className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/20"
-            >
-              Genç Sinema
-            </Link>
-            <Link
-              to="/admin/icerikler/yeni?dikey=1"
-              className="rounded-lg border border-sineoda-gold/50 bg-sineoda-gold/10 px-4 py-2 text-sm font-semibold text-sineoda-gold transition hover:bg-sineoda-gold/20"
-            >
-              + Dikey Dizi
-            </Link>
-            <Link
-              to="/admin/icerikler/yeni"
-              className="rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg transition hover:brightness-110"
-            >
-              + Yeni İçerik
-            </Link>
-          </div>
+          <AdminContentActions />
         </header>
 
         <main className="p-4 sm:p-6">
