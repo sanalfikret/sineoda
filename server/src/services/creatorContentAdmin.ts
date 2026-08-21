@@ -36,6 +36,11 @@ export function updateCreatorContentFields(existing: ContentRow, body: Record<st
         ? parseLicenseDate(body.licenseExpiresAt ?? body.license_expires_at)
         : existing.license_expires_at ?? null
 
+  const sourceVideoUrl =
+    body.sourceVideoUrl !== undefined || body.source_video_url !== undefined
+      ? String(body.sourceVideoUrl ?? body.source_video_url ?? '').trim()
+      : existing.source_video_url ?? existing.video_url
+
   dbRun(
     `UPDATE content SET
       title = ?,
@@ -48,6 +53,7 @@ export function updateCreatorContentFields(existing: ContentRow, body: Record<st
       poster = ?,
       backdrop = ?,
       video_url = ?,
+      source_video_url = ?,
       trailer_url = ?,
       credits_json = ?,
       license_expires_at = ?,
@@ -68,6 +74,7 @@ export function updateCreatorContentFields(existing: ContentRow, body: Record<st
         : body.video_url !== undefined
           ? String(body.video_url).trim()
           : existing.video_url,
+      sourceVideoUrl,
       body.trailerUrl !== undefined
         ? String(body.trailerUrl).trim()
         : body.trailer_url !== undefined

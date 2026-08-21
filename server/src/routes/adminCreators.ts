@@ -1,5 +1,7 @@
 import { Router } from 'express'
-import { dbAll, dbGet, dbRun } from '../db.js'
+import fs from 'node:fs'
+import path from 'node:path'
+import { dbAll, dbGet, dbRun, uploadsDir } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import { mapContent, mapContentAdmin } from '../mappers.js'
 import { addToGencSinemaCategory, isStudentMainRow } from '../services/studentCinema.js'
@@ -14,10 +16,12 @@ import type { ContentRow, CreatorRow } from '../types.js'
 const router = Router()
 
 function mapCreatorContentItem(row: ContentRow, stats?: ReturnType<typeof getContentEngagementStats> extends Map<string, infer V> ? V : never) {
+  const sourceVideoUrl = row.source_video_url?.trim() || row.video_url
   return {
     ...mapContentAdmin(row),
     reviewStatus: row.review_status ?? 'pending',
     creatorId: row.creator_id ?? null,
+    sourceVideoUrl,
     ...(stats ?? {
       qualifiedMinutes: 0,
       watchMinutes: 0,
@@ -122,6 +126,7 @@ router.get('/creators/:id', requireAdmin, (req: AuthRequest, res) => {
       contentRows.map((item) => ({
         ...mapContentAdmin(item),
         reviewStatus: item.review_status ?? 'pending',
+        sourceVideoUrl: item.source_video_url?.trim() || item.video_url,
       })),
       stats,
     ),
@@ -163,6 +168,40 @@ router.get('/content/pending', requireAdmin, (_req: AuthRequest, res) => {
       creatorName: row.creator_name,
     })),
   })
+})
+
+function resolveUploadFilePath(url: string) {
+  const normalized = url.replace(/^\/uploads\//, '')
+  const filePath = path.join(uploadsDir, normalized)
+  if (!filePath.startsWith(uploadsDir)) return null
+  return fs.existsSync(filePath) ? filePath : null
+}
+
+router.get('/content/:id/source-download', requireAdmin, (req: AuthRequest, res) => {
+  const existing = getStandardCreatorContent(req.params.id)
+  if (!existing) {
+    res.status(404).json({ error: 'Yapımcı filmi bulunamadı.' })
+    return
+  }
+
+  const sourceUrl = existing.source_video_url?.trim() || existing.video_url
+  if (!sourceUrl) {
+    res.status(404).json({ error: 'Kaynak video linki yok.' })
+    return
+  }
+
+  if (sourceUrl.startsWith('http://') || sourceUrl.startsWith('https://')) {
+    res.json({ url: sourceUrl, external: true })
+    return
+  }
+
+  const filePath = resolveUploadFilePath(sourceUrl)
+  if (!filePath) {
+    res.status(404).json({ error: 'Video dosyası bulunamadı.' })
+    return
+  }
+
+  res.download(filePath, path.basename(filePath))
 })
 
 router.get('/content/:id', requireAdmin, (req: AuthRequest, res) => {

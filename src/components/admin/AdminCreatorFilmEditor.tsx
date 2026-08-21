@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import {
   fetchAdminCreatorContentDetail,
+  fetchAdminCreatorSourceDownload,
   resolveMediaUrl,
   updateAdminCreatorContent,
   type AdminCreatorContentDetail,
@@ -9,10 +10,11 @@ import { ImageUpload } from './ImageUpload'
 import { VideoUpload } from './VideoUpload'
 import { CONTENT_TYPES } from '../../constants/contentTypes'
 import { buildCredits, creditsToForm } from '../../utils/credits'
-import { formatLicenseDate, toDateInputValue } from '../../utils/license'
+import { formatLicenseDate, getLicenseDaysRemaining, toDateInputValue } from '../../utils/license'
 import { defaultScheduledDateTime, formatPublishDate, toDateTimeLocalValue } from '../../utils/publish'
 
 const RATINGS = ['Genel', '7+', '13+', '16+', '18+']
+const todayInput = () => new Date().toISOString().slice(0, 10)
 
 const REVIEW_LABELS: Record<string, string> = {
   draft: 'Taslak',
@@ -37,15 +39,16 @@ interface FilmForm {
   genres: string
   poster: string
   backdrop: string
+  sourceVideoUrl: string
   videoUrl: string
   directors: string
   producers: string
   cast: string
   studio: string
+  contentAddedAt: string
   licenseUnlimited: boolean
   licenseExpiresAt: string
-  reviewStatus: 'pending' | 'published' | 'rejected'
-  publishMode: 'now' | 'scheduled' | 'unpublished'
+  publishMode: 'review' | 'scheduled' | 'live'
   publishedAt: string
 }
 
@@ -64,14 +67,22 @@ function itemToForm(item: AdminCreatorContentDetail): FilmForm {
     genres: item.genres.join(', '),
     poster: item.poster,
     backdrop: item.backdrop,
+    sourceVideoUrl: item.sourceVideoUrl ?? item.videoUrl,
     videoUrl: item.videoUrl,
     ...credits,
+    contentAddedAt: toDateInputValue(item.contentAddedAt) || todayInput(),
     licenseUnlimited: item.licenseUnlimited,
     licenseExpiresAt: toDateInputValue(item.licenseExpiresAt),
-    reviewStatus: (item.reviewStatus as FilmForm['reviewStatus']) ?? 'pending',
-    publishMode: isLive ? 'now' : isScheduled ? 'scheduled' : 'unpublished',
+    publishMode: isLive ? 'live' : isScheduled ? 'scheduled' : 'review',
     publishedAt: toDateTimeLocalValue(item.publishedAt) || defaultScheduledDateTime(),
   }
+}
+
+function addYearsToDateInput(base: string, years: number) {
+  const date = new Date(base)
+  if (Number.isNaN(date.getTime())) return ''
+  date.setFullYear(date.getFullYear() + years)
+  return date.toISOString().slice(0, 10)
 }
 
 export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCreatorFilmEditorProps) {
@@ -79,6 +90,8 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
   const [form, setForm] = useState<FilmForm | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const [copied, setCopied] = useState(false)
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
@@ -103,27 +116,52 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev))
   }
 
+  const handleCopySource = async () => {
+    if (!form?.sourceVideoUrl) return
+    await navigator.clipboard.writeText(form.sourceVideoUrl)
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleDownloadSource = async () => {
+    setDownloading(true)
+    setError('')
+    try {
+      const result = await fetchAdminCreatorSourceDownload(contentId)
+      if ('url' in result && result.external) {
+        window.open(resolveMediaUrl(result.url), '_blank', 'noopener,noreferrer')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Video indirilemedi.')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     if (!form) return
+
+    if (!form.licenseUnlimited && !form.licenseExpiresAt) {
+      setError('Telif bitiş tarihi girin veya sınırsız lisans seçin.')
+      return
+    }
+
+    if (form.publishMode !== 'review' && !form.publishedAt) {
+      setError('İlk yayın tarihi zorunlu.')
+      return
+    }
 
     setSaving(true)
     setError('')
 
     try {
-      let reviewStatus = form.reviewStatus
-      let publishNow = false
-      let publishedAt: string | null | undefined
+      let reviewStatus: 'pending' | 'published' = 'pending'
+      let publishedAt: string | null = null
 
-      if (form.publishMode === 'now') {
-        reviewStatus = 'published'
-        publishNow = true
-      } else if (form.publishMode === 'scheduled') {
+      if (form.publishMode === 'scheduled' || form.publishMode === 'live') {
         reviewStatus = 'published'
         publishedAt = new Date(form.publishedAt).toISOString()
-      } else {
-        reviewStatus = 'pending'
-        publishedAt = null
       }
 
       await updateAdminCreatorContent(contentId, {
@@ -139,12 +177,13 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
           .filter(Boolean),
         poster: form.poster.trim(),
         backdrop: form.backdrop.trim() || form.poster.trim(),
-        videoUrl: form.videoUrl.trim(),
+        sourceVideoUrl: form.sourceVideoUrl.trim(),
+        videoUrl: form.videoUrl.trim() || form.sourceVideoUrl.trim(),
         credits: buildCredits(form),
+        contentAddedAt: form.contentAddedAt,
         licenseUnlimited: form.licenseUnlimited,
         licenseExpiresAt: form.licenseUnlimited ? null : form.licenseExpiresAt || null,
         reviewStatus,
-        publishNow,
         publishedAt,
       })
       onSaved()
@@ -169,6 +208,8 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
       setSaving(false)
     }
   }
+
+  const resolvedSourceUrl = form?.sourceVideoUrl ? resolveMediaUrl(form.sourceVideoUrl) : ''
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-end bg-black/60 p-4 backdrop-blur-sm">
@@ -233,6 +274,73 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
               )}
 
               <form id="creator-film-form" onSubmit={handleSubmit} className="space-y-5">
+                <section className="space-y-4 rounded-xl border border-sky-500/20 bg-sky-500/5 p-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-sky-200">Yapımcının gönderdiği video linki</h3>
+                    <p className="mt-1 text-xs text-sineoda-muted">
+                      CDN&apos;e yüklemeden önce bu linkten videoyu indirin. Dış linkler yeni sekmede açılır.
+                    </p>
+                  </div>
+                  <label className="block">
+                    <span className="mb-1 block text-sm text-white/85">Kaynak link</span>
+                    <input
+                      required
+                      type="url"
+                      value={form.sourceVideoUrl}
+                      onChange={(event) => update('sourceVideoUrl', event.target.value)}
+                      placeholder="https://..."
+                      className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white"
+                    />
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void handleCopySource()}
+                      className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/15"
+                    >
+                      {copied ? 'Kopyalandı' : 'Linki kopyala'}
+                    </button>
+                    {resolvedSourceUrl && (
+                      <a
+                        href={resolvedSourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/15"
+                      >
+                        Yeni sekmede aç
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      disabled={downloading || !form.sourceVideoUrl}
+                      onClick={() => void handleDownloadSource()}
+                      className="rounded-lg bg-sky-500/15 px-3 py-1.5 text-xs font-medium text-sky-200 hover:bg-sky-500/25 disabled:opacity-60"
+                    >
+                      {downloading ? 'İndiriliyor...' : 'Videoyu indir'}
+                    </button>
+                  </div>
+                </section>
+
+                <section className="space-y-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-emerald-200">Yayın videosu (CDN)</h3>
+                    <p className="mt-1 text-xs text-sineoda-muted">
+                      İndirdiğiniz videoyu CDN&apos;e yükleyin; üyelerin izleyeceği link buraya yazılır.
+                    </p>
+                  </div>
+                  <VideoUpload label="CDN video" value={form.videoUrl} onChange={(url) => update('videoUrl', url)} />
+                  <label className="block">
+                    <span className="mb-1 block text-sm text-white/85">CDN / yayın URL</span>
+                    <input
+                      type="url"
+                      value={form.videoUrl}
+                      onChange={(event) => update('videoUrl', event.target.value)}
+                      placeholder="Boş bırakılırsa kaynak link kullanılır"
+                      className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white"
+                    />
+                  </label>
+                </section>
+
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block sm:col-span-2">
                     <span className="mb-1 block text-sm text-white/85">Başlık</span>
@@ -357,18 +465,37 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
                 <section className="space-y-4">
                   <ImageUpload label="Afiş" value={form.poster} onChange={(url) => update('poster', url)} />
                   <ImageUpload label="Arka plan" value={form.backdrop} onChange={(url) => update('backdrop', url)} />
-                  <VideoUpload label="Video" value={form.videoUrl} onChange={(url) => update('videoUrl', url)} />
-                  {form.poster && (
-                    <img
-                      src={resolveMediaUrl(form.poster)}
-                      alt=""
-                      className="h-40 w-28 rounded-lg object-cover"
-                    />
-                  )}
                 </section>
 
-                <section className="space-y-4 rounded-xl border border-white/5 bg-[#0d0f14] p-4">
-                  <h3 className="text-sm font-semibold text-white">Telif hakkı</h3>
+                <section className="space-y-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-amber-200">Telif hakkı süresi</h3>
+                    <p className="mt-1 text-xs text-sineoda-muted">
+                      Yalnızca admin görür. Telif bitince film otomatik katalog dışı kalır.
+                    </p>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="mb-1 block text-sm text-white/85">Platforma eklenme</span>
+                      <input
+                        type="date"
+                        required
+                        value={form.contentAddedAt}
+                        onChange={(event) => update('contentAddedAt', event.target.value)}
+                        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-1 block text-sm text-white/85">Telif bitiş tarihi</span>
+                      <input
+                        type="date"
+                        value={form.licenseExpiresAt}
+                        disabled={form.licenseUnlimited}
+                        onChange={(event) => update('licenseExpiresAt', event.target.value)}
+                        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white disabled:opacity-50"
+                      />
+                    </label>
+                  </div>
                   <label className="flex items-center gap-2 text-sm text-white/85">
                     <input
                       type="checkbox"
@@ -376,36 +503,46 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
                       onChange={(event) => update('licenseUnlimited', event.target.checked)}
                       className="rounded"
                     />
-                    Sınırsız lisans
+                    Sınırsız telif hakkı
                   </label>
-                  {!form.licenseUnlimited && (
-                    <label className="block">
-                      <span className="mb-1 block text-sm text-white/85">Telif bitiş tarihi</span>
-                      <input
-                        type="date"
-                        value={form.licenseExpiresAt}
-                        onChange={(event) => update('licenseExpiresAt', event.target.value)}
-                        className="w-full rounded-lg border border-white/10 bg-[#11141c] px-3 py-2 text-sm text-white"
-                      />
-                    </label>
-                  )}
-                  {item && !form.licenseUnlimited && item.licenseExpiresAt && (
+                  <div className="flex flex-wrap gap-2">
+                    {[1, 2, 3, 5].map((years) => (
+                      <button
+                        key={years}
+                        type="button"
+                        disabled={form.licenseUnlimited}
+                        onClick={() => {
+                          update('licenseUnlimited', false)
+                          update('licenseExpiresAt', addYearsToDateInput(form.contentAddedAt, years))
+                        }}
+                        className="rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white hover:bg-white/15 disabled:opacity-50"
+                      >
+                        +{years} yıl
+                      </button>
+                    ))}
+                  </div>
+                  {!form.licenseUnlimited && form.licenseExpiresAt && (
                     <p className="text-xs text-sineoda-muted">
-                      Mevcut: {formatLicenseDate(item.licenseExpiresAt)}
-                      {item.licenseExpired && ' · Süresi dolmuş'}
-                      {item.licenseExpiringSoon && !item.licenseExpired && ' · Yakında bitiyor'}
+                      {formatLicenseDate(form.licenseExpiresAt)}
+                      {' · '}
+                      {getLicenseDaysRemaining(form.licenseExpiresAt)} gün kaldı
                     </p>
                   )}
                 </section>
 
-                <section className="space-y-4 rounded-xl border border-white/5 bg-[#0d0f14] p-4">
-                  <h3 className="text-sm font-semibold text-white">Yayın</h3>
+                <section className="space-y-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-emerald-200">İlk yayın tarihi</h3>
+                    <p className="mt-1 text-xs text-sineoda-muted">
+                      Admin yayın kararını verir. Planlanan tarih gelince film otomatik yayına girer.
+                    </p>
+                  </div>
                   <div className="space-y-2">
                     {(
                       [
-                        ['now', 'Hemen yayınla'],
-                        ['scheduled', 'İleri tarihte yayınla'],
-                        ['unpublished', 'Yayından kaldır / incelemede tut'],
+                        ['review', 'İncelemede — henüz yayın yok'],
+                        ['scheduled', 'Planlı yayın — ileri tarih'],
+                        ['live', 'Yayında — belirlenen tarihte görünür'],
                       ] as const
                     ).map(([value, label]) => (
                       <label key={value} className="flex items-center gap-2 text-sm text-white/85">
@@ -419,15 +556,21 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
                       </label>
                     ))}
                   </div>
-                  {form.publishMode === 'scheduled' && (
+                  {form.publishMode !== 'review' && (
                     <label className="block">
-                      <span className="mb-1 block text-sm text-white/85">Yayın tarihi</span>
+                      <span className="mb-1 block text-sm text-white/85">İlk yayın tarihi ve saati *</span>
                       <input
                         type="datetime-local"
+                        required
                         value={form.publishedAt}
                         onChange={(event) => update('publishedAt', event.target.value)}
-                        className="w-full rounded-lg border border-white/10 bg-[#11141c] px-3 py-2 text-sm text-white"
+                        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white"
                       />
+                      <p className="mt-1 text-xs text-sineoda-muted">
+                        {form.publishMode === 'scheduled'
+                          ? 'Bu tarihten önce film katalogda görünmez.'
+                          : 'Geçmiş veya bugünkü tarih seçerek hemen yayına alabilirsiniz.'}
+                      </p>
                     </label>
                   )}
                 </section>
