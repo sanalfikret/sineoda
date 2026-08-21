@@ -15,6 +15,7 @@ import { useAuth } from '../../context/AuthContext'
 import { CREATOR_DOC_TYPES } from '../../constants/creatorLegal'
 import type { ContentItem } from '../../types/content'
 import type { CreatorStatus } from '../../types/auth'
+import { buildCredits } from '../../utils/credits'
 
 interface CreatorDocument {
   id: string
@@ -95,6 +96,10 @@ export function CreatorDashboardPage() {
     poster: '',
     contentFormat: 'main' as 'main' | 'bts' | 'teacher_note',
     parentContentId: '',
+    directors: '',
+    producers: '',
+    cast: '',
+    studio: '',
   })
 
   const load = useCallback(async () => {
@@ -180,6 +185,7 @@ export function CreatorDashboardPage() {
         poster: form.poster,
         backdrop: form.poster,
         videoUrl: form.videoUrl,
+        credits: buildCredits(form),
         contentFormat: program === 'student_cinema' ? form.contentFormat : 'main',
         parentContentId:
           program === 'student_cinema' && form.contentFormat !== 'main' ? form.parentContentId : undefined,
@@ -197,6 +203,10 @@ export function CreatorDashboardPage() {
         poster: '',
         contentFormat: 'main',
         parentContentId: '',
+        directors: '',
+        producers: '',
+        cast: '',
+        studio: '',
       })
       await load()
     } catch (err) {
@@ -495,6 +505,47 @@ export function CreatorDashboardPage() {
                     className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
                   />
                 </label>
+                {program === 'student_cinema' && (
+                  <>
+                    <label className="block sm:col-span-2">
+                      <span className="mb-1 block text-sm">Yönetmen(ler)</span>
+                      <textarea
+                        rows={2}
+                        value={form.directors}
+                        onChange={(e) => setForm({ ...form, directors: e.target.value })}
+                        placeholder="Her satıra bir isim veya virgülle ayırın"
+                        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-1 block text-sm">Yapımcı(lar)</span>
+                      <textarea
+                        rows={2}
+                        value={form.producers}
+                        onChange={(e) => setForm({ ...form, producers: e.target.value })}
+                        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-1 block text-sm">Oyuncular / Ekip</span>
+                      <textarea
+                        rows={2}
+                        value={form.cast}
+                        onChange={(e) => setForm({ ...form, cast: e.target.value })}
+                        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
+                      />
+                    </label>
+                    <label className="block sm:col-span-2">
+                      <span className="mb-1 block text-sm">Yapım / Okul stüdyosu</span>
+                      <input
+                        value={form.studio}
+                        onChange={(e) => setForm({ ...form, studio: e.target.value })}
+                        placeholder="Örn: İstanbul Üniversitesi Sinema Kulübü"
+                        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
+                      />
+                    </label>
+                  </>
+                )}
                 <label className="block">
                   <span className="mb-1 block text-sm">Poster</span>
                   <input

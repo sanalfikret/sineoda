@@ -785,10 +785,28 @@ export interface AdminStudentCinemaItem extends ContentItem {
   studioName: string | null
   creatorId: string | null
   creatorName?: string | null
+  creatorEmail?: string | null
+  projectCrew?: string | null
+  parentTitle?: string | null
+  contentAddedAt?: string | null
+  publishedAt?: string | null
   qualifiedMinutes?: number
   watchMinutes?: number
+  watchCount?: number
   likes?: number
   viewers?: number
+}
+
+export interface AdminStudentCinemaDocument {
+  id: string
+  docType: string
+  fileUrl: string
+  uploadedAt: string
+}
+
+export interface AdminStudentCinemaDetail {
+  item: AdminStudentCinemaItem
+  documents: AdminStudentCinemaDocument[]
 }
 
 export async function fetchFilmSchools() {
@@ -838,6 +856,31 @@ export async function fetchAdminStudentCinemaContent() {
   return api<{ items: AdminStudentCinemaItem[] }>('/api/admin/student-cinema/content')
 }
 
+export async function fetchAdminStudentCinemaDetail(contentId: string) {
+  return api<AdminStudentCinemaDetail>(`/api/admin/student-cinema/content/${encodeURIComponent(contentId)}`)
+}
+
+export async function updateAdminStudentCinemaContent(
+  contentId: string,
+  data: Record<string, unknown>,
+) {
+  return api<{ item: AdminStudentCinemaItem }>(`/api/admin/student-cinema/content/${encodeURIComponent(contentId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function bulkReviewAdminStudentCinemaContent(data: {
+  ids: string[]
+  reviewStatus: 'published' | 'rejected' | 'pending'
+  schoolReviewStatus?: 'approved' | 'rejected' | 'pending' | 'none'
+}) {
+  return api<{ updated: number; errors: string[] }>('/api/admin/student-cinema/content/bulk-review', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
 export async function reviewAdminStudentCinemaSchool(
   contentId: string,
   schoolReviewStatus: 'approved' | 'rejected' | 'pending',
@@ -851,9 +894,23 @@ export async function reviewAdminStudentCinemaSchool(
 export async function reviewAdminStudentCinemaContent(
   contentId: string,
   reviewStatus: 'published' | 'rejected' | 'pending',
+  options?: { publishedAt?: string; publishNow?: boolean },
 ) {
   return api<{ item: AdminStudentCinemaItem }>(`/api/admin/student-cinema/content/${contentId}/review`, {
     method: 'PATCH',
-    body: JSON.stringify({ reviewStatus }),
+    body: JSON.stringify({ reviewStatus, ...options }),
+  })
+}
+
+export async function deleteAdminStudentCinemaContent(contentId: string) {
+  return api<void>(`/api/admin/student-cinema/content/${encodeURIComponent(contentId)}`, {
+    method: 'DELETE',
+  })
+}
+
+export async function bulkDeleteAdminStudentCinemaContent(ids: string[]) {
+  return api<{ deleted: number; errors: string[] }>('/api/admin/student-cinema/content/bulk-delete', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
   })
 }
