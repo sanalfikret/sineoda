@@ -7,6 +7,7 @@ import { getContentTypeLabel, hasEpisodicContent } from '../constants/contentTyp
 import { sortEpisodes } from '../utils/episodes'
 import { ContentActionButtons } from './ContentActionButtons'
 import { SeriesEpisodeSection } from './SeriesEpisodeSection'
+import { StudentCinemaMetaDetails } from './StudentCinemaMetaDetails'
 
 interface ContentDetailViewProps {
   item: ContentItem
@@ -335,6 +336,7 @@ export function ContentDetailView({
                 <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">Alt Yazılar</p>
                 <p className="mt-1 text-sm text-white/90">{subtitleLanguages.join(', ')}</p>
               </div>
+              <StudentCinemaMetaDetails item={item} />
               {isSeries && seriesMeta && (
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">Yapı</p>

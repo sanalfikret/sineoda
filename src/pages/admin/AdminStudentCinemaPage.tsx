@@ -125,7 +125,7 @@ export function AdminStudentCinemaPage() {
         item.title,
         item.studioName ?? '',
         item.schoolName ?? '',
-        item.creatorName ?? '',
+        item.displayName ?? item.creatorName ?? '',
         item.creatorEmail ?? '',
         FORMAT_LABELS[item.contentFormat] ?? item.contentFormat,
       )
@@ -154,7 +154,7 @@ export function AdminStudentCinemaPage() {
         item.title,
         item.studioName ?? '',
         item.schoolName ?? '',
-        item.creatorName ?? '',
+        item.displayName ?? item.creatorName ?? '',
         FORMAT_LABELS[item.contentFormat] ?? item.contentFormat,
       ),
     )
@@ -523,7 +523,7 @@ export function AdminStudentCinemaPage() {
                         </button>
                       </td>
                       <td className="px-4 py-3 text-sineoda-muted">
-                        <p>{item.creatorName ?? '—'}</p>
+                        <p>{item.displayName ?? item.creatorName ?? '—'}</p>
                         {item.studioName ? <p className="text-xs">{item.studioName}</p> : null}
                       </td>
                       <td className="px-4 py-3 text-sineoda-muted">{item.schoolName ?? '—'}</td>
@@ -658,7 +658,7 @@ export function AdminStudentCinemaPage() {
                       </p>
                       <h3 className="mt-1 text-lg font-semibold text-white">{item.title}</h3>
                       <p className="mt-1 text-sm text-sineoda-muted">
-                        {item.creatorName ?? 'Öğrenci belirtilmemiş'} · {item.schoolName ?? 'Okul belirtilmemiş'}
+                        {item.displayName ?? item.creatorName ?? 'Öğrenci belirtilmemiş'} · {item.schoolName ?? 'Okul belirtilmemiş'}
                       </p>
                       <p className="mt-1 text-xs text-sineoda-muted">
                         {item.watchCount ?? 0} izlenme · {item.likes ?? 0} beğeni

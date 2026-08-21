@@ -112,8 +112,15 @@ app.get('/api/health', (_req, res) => {
 app.get('/api/bootstrap', (_req, res) => {
   res.set('Cache-Control', 'no-store')
   try {
-    const catalog = dbAll<ContentRow>(
-      `SELECT * FROM content WHERE ${PUBLISHED_CONTENT_SQL} AND ${MAIN_CATALOG_SQL} ORDER BY title`,
+    const contentWithMetaSql = `
+      SELECT c.*, fs.name AS school_name, u.name AS creator_name
+      FROM content c
+      LEFT JOIN film_schools fs ON fs.id = c.school_id
+      LEFT JOIN creators cr ON cr.id = c.creator_id
+      LEFT JOIN users u ON u.id = cr.user_id
+    `
+    const catalog = dbAll<ContentRow & { school_name: string | null; creator_name: string | null }>(
+      `${contentWithMetaSql} WHERE ${PUBLISHED_CONTENT_SQL} AND ${MAIN_CATALOG_SQL} ORDER BY c.title`,
     ).map(mapContent)
     const featured =
       catalog.find(
@@ -127,12 +134,12 @@ app.get('/api/bootstrap', (_req, res) => {
     const newReleases = catalog
       .filter((item) => item.isNew && item.program !== 'student_cinema')
       .slice(0, 12)
-    const studentCinemaPicks = dbAll<ContentRow>(
-      `SELECT * FROM content
+    const studentCinemaPicks = dbAll<ContentRow & { school_name: string | null; creator_name: string | null }>(
+      `${contentWithMetaSql}
        WHERE ${PUBLISHED_CONTENT_SQL}
-         AND program = 'student_cinema'
+         AND c.program = 'student_cinema'
          AND ${MAIN_CATALOG_SQL}
-       ORDER BY published_at DESC
+       ORDER BY c.published_at DESC
        LIMIT 12`,
     ).map(mapContent)
 
