@@ -10,6 +10,7 @@ import { fuzzySearchMatch } from '../../utils/search'
 
 const PROGRAM_FILTERS = [
   { id: 'all', label: 'Tümü' },
+  { id: 'platform', label: 'Platform' },
   { id: 'standard', label: 'Bağımsız yapımcı' },
   { id: 'student_cinema', label: 'Genç Sinema' },
 ] as const
@@ -23,7 +24,9 @@ function formatMonthLabel(month: string) {
 }
 
 function programLabel(program: MonthlyAccountingItem['program']) {
-  return program === 'student_cinema' ? 'Genç Sinema' : 'Bağımsız'
+  if (program === 'platform') return 'Platform'
+  if (program === 'student_cinema') return 'Genç Sinema'
+  return 'Bağımsız yapımcı'
 }
 
 export function AdminWatchAccountingPage() {
@@ -130,22 +133,32 @@ export function AdminWatchAccountingPage() {
       </div>
 
       {report && (
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
-            <p className="text-xs text-sineoda-muted">Toplam nitelikli izlenme</p>
-            <p className="mt-1 text-2xl font-bold text-sineoda-gold">{report.totalQualifiedMinutes} dk</p>
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
+              <p className="text-xs text-sineoda-muted">Toplam nitelikli izlenme</p>
+              <p className="mt-1 text-2xl font-bold text-sineoda-gold">{report.totalQualifiedMinutes} dk</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
+              <p className="text-xs text-sineoda-muted">Toplam izlenme</p>
+              <p className="mt-1 text-2xl font-bold text-white">{report.totalWatchMinutes} dk</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
+              <p className="text-xs text-sineoda-muted">Bu ay yeni üye</p>
+              <p className="mt-1 text-2xl font-bold text-emerald-300">{report.memberStats?.newMembersThisMonth ?? 0}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
+              <p className="text-xs text-sineoda-muted">Mevcut üye sayısı</p>
+              <p className="mt-1 text-2xl font-bold text-white">{report.memberStats?.totalMembers ?? 0}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
+              <p className="text-xs text-sineoda-muted">Durum</p>
+              <p className="mt-1 text-lg font-semibold text-white">
+                {report.status === 'open' ? 'Ay devam ediyor' : 'Arşivlendi'}
+              </p>
+            </div>
           </div>
-          <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
-            <p className="text-xs text-sineoda-muted">Toplam izlenme</p>
-            <p className="mt-1 text-2xl font-bold text-white">{report.totalWatchMinutes} dk</p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
-            <p className="text-xs text-sineoda-muted">Durum</p>
-            <p className="mt-1 text-lg font-semibold text-white">
-              {report.status === 'open' ? 'Ay devam ediyor' : 'Arşivlendi'}
-            </p>
-          </div>
-        </div>
+        </>
       )}
 
       <AdminSearchBar
@@ -181,8 +194,12 @@ export function AdminWatchAccountingPage() {
                   <tr key={item.contentId} className="border-t border-white/5 hover:bg-white/[0.02]">
                     <td className="px-4 py-3 font-medium text-white">{item.title}</td>
                     <td className="px-4 py-3 text-sineoda-muted">
-                      <p>{item.creatorName ?? item.studioName ?? '—'}</p>
-                      {item.studioName && item.creatorName ? (
+                      <p>
+                        {item.program === 'platform'
+                          ? 'Sineoda'
+                          : item.creatorName ?? item.studioName ?? '—'}
+                      </p>
+                      {item.studioName && item.creatorName && item.program !== 'platform' ? (
                         <p className="text-xs">{item.studioName}</p>
                       ) : null}
                     </td>

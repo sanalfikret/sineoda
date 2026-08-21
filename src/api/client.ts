@@ -673,7 +673,7 @@ export interface MonthlyAccountingItem {
   contentId: string
   title: string
   type: string
-  program: 'standard' | 'student_cinema'
+  program: 'platform' | 'standard' | 'student_cinema'
   creatorId: string | null
   creatorName: string | null
   studioName: string | null
@@ -689,13 +689,20 @@ export interface MonthlyAccountingReport {
   totalQualifiedMinutes: number
   totalWatchMinutes: number
   items: MonthlyAccountingItem[]
+  memberStats: {
+    totalMembers: number
+    newMembersThisMonth: number
+  }
 }
 
 export async function fetchAdminMonthlyPeriods() {
   return api<{ periods: MonthlyAccountingPeriod[] }>('/api/admin/analytics/monthly-periods')
 }
 
-export async function fetchAdminMonthlyReport(month: string, program: 'all' | 'standard' | 'student_cinema' = 'all') {
+export async function fetchAdminMonthlyReport(
+  month: string,
+  program: 'all' | 'platform' | 'standard' | 'student_cinema' = 'all',
+) {
   const query = new URLSearchParams({ month })
   if (program !== 'all') query.set('program', program)
   return api<{ report: MonthlyAccountingReport }>(`/api/admin/analytics/monthly-report?${query.toString()}`)
