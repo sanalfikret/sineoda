@@ -1,5 +1,10 @@
 import { Router } from 'express'
 import { ONLINE_WINDOW_MS } from './analyticsPublic.js'
+import {
+  getMonthlyReport,
+  listAccountingMonths,
+  monthKey,
+} from '../services/watchAccounting.js'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 
@@ -101,6 +106,21 @@ router.get('/watch-stats', requireAdmin, (_req: AuthRequest, res) => {
       avgProgressPercent: Math.round(row.avg_position ?? 0),
     })),
   })
+})
+
+router.get('/monthly-periods', requireAdmin, (_req: AuthRequest, res) => {
+  res.json({ periods: listAccountingMonths() })
+})
+
+router.get('/monthly-report', requireAdmin, (req: AuthRequest, res) => {
+  try {
+    const month = String(req.query.month ?? monthKey()).trim()
+    const program = String(req.query.program ?? 'all').trim()
+    const report = getMonthlyReport(month, { program: program === 'all' ? undefined : program })
+    res.json({ report })
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'Rapor oluşturulamadı.' })
+  }
 })
 
 export default router

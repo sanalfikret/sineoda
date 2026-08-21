@@ -662,6 +662,71 @@ export async function fetchAnalyticsOverview() {
   return api<AnalyticsOverview>('/api/admin/analytics/overview')
 }
 
+export interface MonthlyAccountingPeriod {
+  month: string
+  status: 'open' | 'closed'
+  totalQualifiedMinutes: number
+  closedAt?: string | null
+}
+
+export interface MonthlyAccountingItem {
+  contentId: string
+  title: string
+  type: string
+  program: 'standard' | 'student_cinema'
+  creatorId: string | null
+  creatorName: string | null
+  studioName: string | null
+  qualifiedMinutes: number
+  watchMinutes: number
+  viewerCount: number
+  sharePercent: number
+}
+
+export interface MonthlyAccountingReport {
+  month: string
+  status: 'open' | 'closed'
+  totalQualifiedMinutes: number
+  totalWatchMinutes: number
+  items: MonthlyAccountingItem[]
+}
+
+export async function fetchAdminMonthlyPeriods() {
+  return api<{ periods: MonthlyAccountingPeriod[] }>('/api/admin/analytics/monthly-periods')
+}
+
+export async function fetchAdminMonthlyReport(month: string, program: 'all' | 'standard' | 'student_cinema' = 'all') {
+  const query = new URLSearchParams({ month })
+  if (program !== 'all') query.set('program', program)
+  return api<{ report: MonthlyAccountingReport }>(`/api/admin/analytics/monthly-report?${query.toString()}`)
+}
+
+export interface CreatorAccountingItem {
+  contentId: string
+  title: string
+  type: string
+  program: 'standard' | 'student_cinema'
+  qualifiedMinutes: number
+  watchMinutes: number
+  viewerCount: number
+}
+
+export interface CreatorAccountingReport {
+  month: string
+  status: 'open' | 'closed'
+  totalQualifiedMinutes: number
+  totalWatchMinutes: number
+  items: CreatorAccountingItem[]
+}
+
+export async function fetchCreatorAccountingMonths() {
+  return api<{ months: Array<{ month: string; status: 'open' | 'closed' }> }>('/api/creator/accounting/months')
+}
+
+export async function fetchCreatorAccounting(month: string) {
+  return api<CreatorAccountingReport>(`/api/creator/accounting?month=${encodeURIComponent(month)}`)
+}
+
 export async function recordSiteVisit(sessionId: string) {
   return api('/api/analytics/visit', {
     method: 'POST',
