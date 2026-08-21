@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type DragEvent } from 'react'
 import {
   resolveMediaUrl,
   fetchBootstrap,
@@ -111,6 +111,7 @@ export function AdminLandingPage() {
     normalizeLandingLayout({ order: DEFAULT_LANDING_BLOCK_ORDER, hidden: [] }),
   )
   const [expandedBlocks, setExpandedBlocks] = useState<Set<LandingBlockId>>(new Set(['hero']))
+  const [draggingBlockId, setDraggingBlockId] = useState<LandingBlockId | null>(null)
   const [sliderIds, setSliderIds] = useState<string[]>([])
   const [showcases, setShowcases] = useState<ShowcaseDraft[]>([])
   const [loading, setLoading] = useState(true)
@@ -283,9 +284,45 @@ export function AdminLandingPage() {
     })
   }
 
+  const moveBlockById = (sourceId: LandingBlockId, targetId: LandingBlockId) => {
+    if (sourceId === targetId) return
+    setLayout((current) => {
+      const normalized = normalizeLandingLayout(current)
+      const nextOrder = [...normalized.order]
+      const sourceIndex = nextOrder.indexOf(sourceId)
+      const targetIndex = nextOrder.indexOf(targetId)
+      if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return normalized
+      const [moved] = nextOrder.splice(sourceIndex, 1)
+      nextOrder.splice(targetIndex, 0, moved)
+      return { ...normalized, order: nextOrder }
+    })
+  }
+
+  const handleBlockDragStart = (event: DragEvent<HTMLElement>, id: LandingBlockId) => {
+    setDraggingBlockId(id)
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', id)
+  }
+
+  const handleBlockDragOver = (event: DragEvent<HTMLElement>, targetId: LandingBlockId) => {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+    if (!draggingBlockId || draggingBlockId === targetId) return
+    moveBlockById(draggingBlockId, targetId)
+  }
+
+  const handleBlockDrop = (event: DragEvent<HTMLElement>) => {
+    event.preventDefault()
+  }
+
+  const handleBlockDragEnd = () => {
+    setDraggingBlockId(null)
+  }
+
   const blockSubtitle = (id: LandingBlockId): string => {
     if (id === 'slider') return `${sliderIds.length} içerik seçili`
     if (id === 'showcases') return `${showcases.length} kategori şeridi`
+    if (id === 'faq') return `${sections.faq.items.length} soru`
     if (layout.hidden.includes(id)) return 'Misafir sayfasında gizli'
     return LANDING_BLOCK_HINTS[id] ?? ''
   }
@@ -678,7 +715,7 @@ export function AdminLandingPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Ana Sayfa</h1>
           <p className="mt-1 text-sm text-sineoda-muted">
-            Misafir tanıtım sayfası bölümleri. Ok ile sırala — sıra{' '}
+            Misafir tanıtım sayfası bölümleri. Sürükleyerek veya oklarla sırala — sıra{' '}
             <code className="text-white/70">/tanitim</code> sayfasına yansır.
           </p>
         </div>
@@ -722,6 +759,12 @@ export function AdminLandingPage() {
             canMoveDown={index < layout.order.length - 1}
             hidden={layout.hidden.includes(blockId)}
             onToggleHidden={() => toggleBlockHidden(blockId)}
+            draggable={!saving}
+            isDragging={draggingBlockId === blockId}
+            onDragStart={(event) => handleBlockDragStart(event, blockId)}
+            onDragOver={(event) => handleBlockDragOver(event, blockId)}
+            onDrop={handleBlockDrop}
+            onDragEnd={handleBlockDragEnd}
           >
             {renderBlockEditor(blockId)}
           </CollapsibleAdminPanel>
