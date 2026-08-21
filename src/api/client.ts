@@ -205,12 +205,18 @@ export interface LandingHeroConfig {
   showFeaturedCard: boolean
 }
 
+export interface LandingLayoutConfig {
+  order: string[]
+  hidden: string[]
+}
+
 export interface LandingConfigResponse {
   slider: ContentItem[]
   sliderContentIds?: string[]
   showcases: LandingShowcaseResponse[]
   hero?: LandingHeroConfig
   sections?: LandingSectionsConfig
+  layout?: LandingLayoutConfig
 }
 
 export async function loginRequest(
@@ -343,6 +349,15 @@ export async function updateLandingSectionsConfig(
   return api('/api/admin/landing/sections', {
     method: 'PATCH',
     body: JSON.stringify(sections),
+  })
+}
+
+export async function updateLandingLayoutConfig(
+  layout: LandingLayoutConfig,
+): Promise<{ layout: LandingLayoutConfig }> {
+  return api<{ layout: LandingLayoutConfig }>('/api/admin/landing/layout', {
+    method: 'PATCH',
+    body: JSON.stringify(layout),
   })
 }
 

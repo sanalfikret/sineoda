@@ -1,18 +1,10 @@
 import type { ReactNode } from 'react'
 import { ImageUpload } from './ImageUpload'
+import type { LandingContentBlockId } from '../../constants/landingLayout'
 import type { LandingFaqItem, LandingSectionsConfig, LandingTextItem } from '../../constants/landingDefaults'
 
 const inputClass =
   'w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold'
-
-function SectionCard({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
-      <h2 className="text-lg font-semibold text-white">{title}</h2>
-      <div className="mt-4 space-y-4">{children}</div>
-    </section>
-  )
-}
 
 function Field({
   label,
@@ -51,40 +43,40 @@ function TextItemsEditor({
   items: LandingTextItem[]
   onChange: (items: LandingTextItem[]) => void
 }) {
+  const updateItem = (index: number, patch: Partial<LandingTextItem>) => {
+    onChange(items.map((item, i) => (i === index ? { ...item, ...patch } : item)))
+  }
+
+  const addItem = () => onChange([...items, { title: '', text: '' }])
+  const removeItem = (index: number) => onChange(items.filter((_, i) => i !== index))
+
   return (
     <div className="space-y-3">
       <p className="text-sm font-medium text-white/85">{label}</p>
       {items.map((item, index) => (
-        <div key={index} className="rounded-lg border border-white/10 p-3 space-y-2">
-          <input
-            value={item.title}
-            onChange={(event) => {
-              const next = [...items]
-              next[index] = { ...item, title: event.target.value }
-              onChange(next)
-            }}
-            placeholder="Başlık"
-            className={inputClass}
-          />
-          <textarea
+        <div key={index} className="space-y-2 rounded-lg border border-white/10 bg-[#0d0f14] p-3">
+          <Field label="Başlık" value={item.title} onChange={(title) => updateItem(index, { title })} />
+          <Field
+            label="Metin"
             value={item.text}
-            onChange={(event) => {
-              const next = [...items]
-              next[index] = { ...item, text: event.target.value }
-              onChange(next)
-            }}
-            placeholder="Metin"
-            rows={2}
-            className={inputClass}
+            onChange={(text) => updateItem(index, { text })}
+            multiline
           />
+          <button
+            type="button"
+            onClick={() => removeItem(index)}
+            className="text-xs text-red-300 hover:text-red-200"
+          >
+            Kaldır
+          </button>
         </div>
       ))}
       <button
         type="button"
-        onClick={() => onChange([...items, { title: '', text: '' }])}
-        className="text-xs text-sineoda-gold hover:underline"
+        onClick={addItem}
+        className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-white/80 hover:bg-white/5"
       >
-        + Madde ekle
+        + Ekle
       </button>
     </div>
   )
@@ -97,44 +89,41 @@ function FaqEditor({
   items: LandingFaqItem[]
   onChange: (items: LandingFaqItem[]) => void
 }) {
+  const updateItem = (index: number, patch: Partial<LandingFaqItem>) => {
+    onChange(items.map((item, i) => (i === index ? { ...item, ...patch } : item)))
+  }
+
+  const addItem = () => onChange([...items, { question: '', answer: '' }])
+  const removeItem = (index: number) => onChange(items.filter((_, i) => i !== index))
+
   return (
     <div className="space-y-3">
       {items.map((item, index) => (
-        <div key={index} className="rounded-lg border border-white/10 p-3 space-y-2">
-          <input
+        <div key={index} className="space-y-2 rounded-lg border border-white/10 bg-[#0d0f14] p-3">
+          <Field
+            label="Soru"
             value={item.question}
-            onChange={(event) => {
-              const next = [...items]
-              next[index] = { ...item, question: event.target.value }
-              onChange(next)
-            }}
-            placeholder="Soru"
-            className={inputClass}
+            onChange={(question) => updateItem(index, { question })}
           />
-          <textarea
+          <Field
+            label="Cevap"
             value={item.answer}
-            onChange={(event) => {
-              const next = [...items]
-              next[index] = { ...item, answer: event.target.value }
-              onChange(next)
-            }}
-            placeholder="Cevap"
-            rows={3}
-            className={inputClass}
+            onChange={(answer) => updateItem(index, { answer })}
+            multiline
           />
           <button
             type="button"
-            onClick={() => onChange(items.filter((_, i) => i !== index))}
-            className="text-xs text-red-300 hover:underline"
+            onClick={() => removeItem(index)}
+            className="text-xs text-red-300 hover:text-red-200"
           >
-            Sil
+            Kaldır
           </button>
         </div>
       ))}
       <button
         type="button"
-        onClick={() => onChange([...items, { question: '', answer: '' }])}
-        className="text-xs text-sineoda-gold hover:underline"
+        onClick={addItem}
+        className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-white/80 hover:bg-white/5"
       >
         + Soru ekle
       </button>
@@ -142,10 +131,12 @@ function FaqEditor({
   )
 }
 
-export function AdminLandingSectionsEditor({
+export function AdminLandingSectionBlock({
+  blockId,
   sections,
   onChange,
 }: {
+  blockId: LandingContentBlockId
   sections: LandingSectionsConfig
   onChange: (sections: LandingSectionsConfig) => void
 }) {
@@ -153,9 +144,9 @@ export function AdminLandingSectionsEditor({
     onChange({ ...sections, [key]: value })
   }
 
-  return (
-    <div className="space-y-6">
-      <SectionCard title="Manifesto (üst metin bloğu)">
+  const editors: Record<LandingContentBlockId, ReactNode> = {
+    manifesto: (
+      <>
         <TextItemsEditor
           label="İki sütunlu kısa metinler"
           items={sections.manifesto.pillars}
@@ -182,9 +173,10 @@ export function AdminLandingSectionsEditor({
           value={sections.manifesto.ctaLabel}
           onChange={(ctaLabel) => patch('manifesto', { ...sections.manifesto, ctaLabel })}
         />
-      </SectionCard>
-
-      <SectionCard title="Kampanya / Abonelik (fiyat kartı)">
+      </>
+    ),
+    campaign: (
+      <>
         <p className="text-xs text-sineoda-muted">
           Kampanya dönemlerinde etiketi &quot;Kampanya&quot;, fiyatı ve görseli buradan değiştirin.
         </p>
@@ -238,9 +230,10 @@ export function AdminLandingSectionsEditor({
             onChange={(ctaSecondary) => patch('campaign', { ...sections.campaign, ctaSecondary })}
           />
         </div>
-      </SectionCard>
-
-      <SectionCard title="Neden Sineoda">
+      </>
+    ),
+    features: (
+      <>
         <Field
           label="Etiket"
           value={sections.features.eyebrow}
@@ -257,9 +250,10 @@ export function AdminLandingSectionsEditor({
           items={sections.features.items}
           onChange={(items) => patch('features', { ...sections.features, items })}
         />
-      </SectionCard>
-
-      <SectionCard title="Genç Sinema">
+      </>
+    ),
+    studentCinema: (
+      <>
         <Field
           label="Etiket"
           value={sections.studentCinema.eyebrow}
@@ -281,9 +275,10 @@ export function AdminLandingSectionsEditor({
           items={sections.studentCinema.steps}
           onChange={(steps) => patch('studentCinema', { ...sections.studentCinema, steps })}
         />
-      </SectionCard>
-
-      <SectionCard title="Yapımcılar">
+      </>
+    ),
+    creator: (
+      <>
         <Field
           label="Etiket"
           value={sections.creator.eyebrow}
@@ -305,9 +300,10 @@ export function AdminLandingSectionsEditor({
           items={sections.creator.perks}
           onChange={(perks) => patch('creator', { ...sections.creator, perks })}
         />
-      </SectionCard>
-
-      <SectionCard title="SSS">
+      </>
+    ),
+    faq: (
+      <>
         <Field
           label="Bölüm başlığı"
           value={sections.faq.title}
@@ -317,9 +313,10 @@ export function AdminLandingSectionsEditor({
           items={sections.faq.items}
           onChange={(items) => patch('faq', { ...sections.faq, items })}
         />
-      </SectionCard>
-
-      <SectionCard title="E-posta kayıt + Dergi başlığı">
+      </>
+    ),
+    emailSignup: (
+      <>
         <Field
           label="E-posta bölümü başlığı"
           value={sections.emailSignup.title}
@@ -331,6 +328,10 @@ export function AdminLandingSectionsEditor({
           onChange={(description) => patch('emailSignup', { ...sections.emailSignup, description })}
           multiline
         />
+      </>
+    ),
+    journal: (
+      <>
         <Field
           label="Dergi etiketi"
           value={sections.journal.eyebrow}
@@ -341,7 +342,22 @@ export function AdminLandingSectionsEditor({
           value={sections.journal.title}
           onChange={(title) => patch('journal', { ...sections.journal, title })}
         />
-      </SectionCard>
-    </div>
+      </>
+    ),
+  }
+
+  return <div className="space-y-4">{editors[blockId]}</div>
+}
+
+export function isLandingContentBlock(id: string): id is LandingContentBlockId {
+  return (
+    id === 'manifesto' ||
+    id === 'journal' ||
+    id === 'features' ||
+    id === 'campaign' ||
+    id === 'studentCinema' ||
+    id === 'faq' ||
+    id === 'emailSignup' ||
+    id === 'creator'
   )
 }
