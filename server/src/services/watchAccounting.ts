@@ -4,7 +4,7 @@ export interface MonthlyContentStat {
   contentId: string
   title: string
   type: string
-  program: 'standard' | 'student_cinema'
+  program: 'platform' | 'standard' | 'student_cinema'
   creatorId: string | null
   creatorName: string | null
   studioName: string | null
@@ -22,6 +22,19 @@ export interface MonthlyReport {
   totalQualifiedMinutes: number
   totalWatchMinutes: number
   items: MonthlyContentStat[]
+  memberStats: {
+    totalMembers: number
+    newMembersThisMonth: number
+  }
+}
+
+export type AccountingSegment = 'platform' | 'standard' | 'student_cinema'
+
+export function resolveSegment(program: string, creatorId: string | null): AccountingSegment {
+  if (program === 'platform') return 'platform'
+  if (program === 'student_cinema') return 'student_cinema'
+  if (creatorId) return 'standard'
+  return 'platform'
 }
 
 export function monthKey(date = new Date()) {
@@ -64,6 +77,51 @@ function aggregateQualifiedByContent(month: string) {
     GROUP BY cqa.content_id, c.creator_id`,
     [start, endExclusive],
   )
+}
+
+function aggregatePlatformWatchByContent(month: string) {
+  const { start, endExclusive } = monthDateRange(month)
+  return dbAll<{
+    content_id: string
+    watch_seconds: number
+    viewer_count: number
+    title: string
+    type: string
+  }>(
+    `SELECT
+      wa.content_id,
+      COALESCE(SUM(wa.seconds_watched), 0) AS watch_seconds,
+      COUNT(DISTINCT wa.profile_id) AS viewer_count,
+      c.title,
+      c.type
+    FROM watch_activity wa
+    JOIN content c ON c.id = wa.content_id
+    WHERE wa.activity_date >= ? AND wa.activity_date < ?
+      AND (c.creator_id IS NULL OR c.creator_id = '')
+      AND c.program != 'student_cinema'
+    GROUP BY wa.content_id, c.title, c.type`,
+    [start, endExclusive],
+  )
+}
+
+function getMemberStats(month: string) {
+  const { start, endExclusive } = monthDateRange(month)
+  const totalMembers = dbGet<{ count: number }>(
+    "SELECT COUNT(*) AS count FROM users WHERE role = 'user'",
+  )
+  const newMembersThisMonth = dbGet<{ count: number }>(
+    "SELECT COUNT(*) AS count FROM users WHERE role = 'user' AND created_at >= ? AND created_at < ?",
+    [start, endExclusive],
+  )
+  return {
+    totalMembers: totalMembers?.count ?? 0,
+    newMembersThisMonth: newMembersThisMonth?.count ?? 0,
+  }
+}
+
+function matchesSegmentFilter(segment: AccountingSegment, filter?: string) {
+  if (!filter || filter === 'all') return true
+  return segment === filter
 }
 
 function aggregateWatchByContent(month: string) {
@@ -140,7 +198,7 @@ function buildReportItems(
         contentId: row.content_id,
         title: row.title ?? row.content_id,
         type: row.type ?? 'film',
-        program: (row.program ?? 'standard') as 'standard' | 'student_cinema',
+        program: (row.program ?? 'standard') as AccountingSegment,
         creatorId: row.creator_id,
         creatorName: row.creator_name ?? null,
         studioName: row.studio_name ?? null,
@@ -173,6 +231,7 @@ export function finalizeMonth(month: string) {
   for (const row of qualifiedRows) {
     const watchSeconds = watchByContent.get(row.content_id) ?? 0
     const content = dbGet<{ program?: string }>('SELECT program FROM content WHERE id = ?', [row.content_id])
+    const segment = resolveSegment(content?.program ?? 'standard', row.creator_id)
     totalQualified += row.qualified_seconds
     totalWatch += watchSeconds
 
@@ -190,9 +249,34 @@ export function finalizeMonth(month: string) {
         row.content_id,
         month,
         row.creator_id,
-        content?.program ?? 'standard',
+        segment,
         row.qualified_seconds,
         watchSeconds,
+        row.viewer_count,
+        new Date().toISOString(),
+      ],
+    )
+  }
+
+  const platformRows = aggregatePlatformWatchByContent(month)
+  for (const row of platformRows) {
+    totalQualified += row.watch_seconds
+    totalWatch += row.watch_seconds
+    dbRun(
+      `INSERT INTO content_watch_monthly (content_id, month, creator_id, program, qualified_seconds, watch_seconds, viewer_count, archived_at)
+       VALUES (?, ?, NULL, 'platform', ?, ?, ?, ?)
+       ON CONFLICT(content_id, month) DO UPDATE SET
+         creator_id = NULL,
+         program = 'platform',
+         qualified_seconds = excluded.qualified_seconds,
+         watch_seconds = excluded.watch_seconds,
+         viewer_count = excluded.viewer_count,
+         archived_at = excluded.archived_at`,
+      [
+        row.content_id,
+        month,
+        row.watch_seconds,
+        row.watch_seconds,
         row.viewer_count,
         new Date().toISOString(),
       ],
@@ -266,6 +350,7 @@ export function getMonthlyReport(month: string, options?: { creatorId?: string; 
     throw new Error('Geçersiz ay formatı.')
   }
 
+  const memberStats = getMemberStats(month)
   const current = monthKey()
   const period = dbGet<{ status: string; total_qualified_seconds: number; total_watch_seconds: number }>(
     'SELECT status, total_qualified_seconds, total_watch_seconds FROM watch_accounting_periods WHERE month = ?',
@@ -273,20 +358,26 @@ export function getMonthlyReport(month: string, options?: { creatorId?: string; 
   )
 
   const isLive = month === current || period?.status === 'open'
+  const programFilter = options?.program && options.program !== 'all' ? options.program : undefined
 
   if (!isLive && period?.status === 'closed') {
-    let rows = readArchivedMonth(month)
+    let rows = readArchivedMonth(month).map((row) => ({
+      ...row,
+      segment: resolveSegment(row.program, row.creator_id),
+    }))
+
     if (options?.creatorId) {
       rows = rows.filter((row) => row.creator_id === options.creatorId)
     }
-    if (options?.program && options.program !== 'all') {
-      rows = rows.filter((row) => row.program === options.program)
+    if (programFilter) {
+      rows = rows.filter((row) => matchesSegmentFilter(row.segment, programFilter))
     }
 
-    const filteredTotal = rows.reduce((sum, row) => sum + row.qualified_seconds, 0)
-    const totalQualified = options?.creatorId || (options?.program && options.program !== 'all')
-      ? filteredTotal
-      : period.total_qualified_seconds
+    const filteredQualified = rows.reduce((sum, row) => sum + row.qualified_seconds, 0)
+    const filteredWatch = rows.reduce((sum, row) => sum + row.watch_seconds, 0)
+    const totalQualified =
+      options?.creatorId || programFilter ? filteredQualified : period.total_qualified_seconds
+    const totalWatch = options?.creatorId || programFilter ? filteredWatch : period.total_watch_seconds
 
     const items = buildReportItems(
       rows.map((row) => ({
@@ -294,7 +385,7 @@ export function getMonthlyReport(month: string, options?: { creatorId?: string; 
         creator_id: row.creator_id,
         qualified_seconds: row.qualified_seconds,
         viewer_count: row.viewer_count,
-        program: row.program,
+        program: row.segment,
         title: row.title,
         type: row.type,
         creator_name: row.creator_name,
@@ -309,63 +400,77 @@ export function getMonthlyReport(month: string, options?: { creatorId?: string; 
       month,
       status: 'closed' as const,
       totalQualifiedMinutes: Math.round(totalQualified / 60),
-      totalWatchMinutes: Math.round((period.total_watch_seconds ?? 0) / 60),
+      totalWatchMinutes: Math.round(totalWatch / 60),
       items,
+      memberStats,
     }
   }
 
-  let qualifiedRows = aggregateQualifiedByContent(month)
   const watchRows = aggregateWatchByContent(month)
   const watchByContent = new Map(watchRows.map((row) => [row.content_id, row.watch_seconds]))
+  const creatorIdsWithQualified = new Set<string>()
 
-  if (options?.creatorId) {
-    qualifiedRows = qualifiedRows.filter((row) => row.creator_id === options.creatorId)
-  }
+  const creatorRows = aggregateQualifiedByContent(month)
+    .filter((row) => !options?.creatorId || row.creator_id === options.creatorId)
+    .map((row) => {
+      creatorIdsWithQualified.add(row.content_id)
+      const meta = dbGet<{
+        title: string
+        type: string
+        program: string
+        creator_name: string | null
+        studio_name: string | null
+      }>(
+        `SELECT c.title, c.type, c.program, u.name AS creator_name, cr.studio_name
+         FROM content c
+         LEFT JOIN creators cr ON cr.id = c.creator_id
+         LEFT JOIN users u ON u.id = cr.user_id
+         WHERE c.id = ?`,
+        [row.content_id],
+      )
+      const segment = resolveSegment(meta?.program ?? 'standard', row.creator_id)
+      return {
+        content_id: row.content_id,
+        creator_id: row.creator_id,
+        qualified_seconds: row.qualified_seconds,
+        viewer_count: row.viewer_count,
+        program: segment,
+        title: meta?.title ?? row.content_id,
+        type: meta?.type ?? 'film',
+        creator_name: meta?.creator_name ?? null,
+        studio_name: meta?.studio_name ?? null,
+        watch_seconds: watchByContent.get(row.content_id) ?? 0,
+      }
+    })
+    .filter((row) => matchesSegmentFilter(row.program, programFilter))
 
-  const enriched = qualifiedRows.map((row) => {
-    const meta = dbGet<{
-      title: string
-      type: string
-      program: string
-      creator_name: string | null
-      studio_name: string | null
-    }>(
-      `SELECT c.title, c.type, c.program, u.name AS creator_name, cr.studio_name
-       FROM content c
-       LEFT JOIN creators cr ON cr.id = c.creator_id
-       LEFT JOIN users u ON u.id = cr.user_id
-       WHERE c.id = ?`,
-      [row.content_id],
-    )
-    return {
-      ...row,
-      program: meta?.program ?? 'standard',
-      title: meta?.title ?? row.content_id,
-      type: meta?.type ?? 'film',
-      creator_name: meta?.creator_name ?? null,
-      studio_name: meta?.studio_name ?? null,
-      watch_seconds: watchByContent.get(row.content_id) ?? 0,
-    }
-  }).filter((row) => {
-    if (options?.program && options.program !== 'all') {
-      return row.program === options.program
-    }
-    return true
-  })
+  const platformRows = aggregatePlatformWatchByContent(month)
+    .filter((row) => !creatorIdsWithQualified.has(row.content_id))
+    .map((row) => ({
+      content_id: row.content_id,
+      creator_id: null,
+      qualified_seconds: row.watch_seconds,
+      viewer_count: row.viewer_count,
+      program: 'platform' as const,
+      title: row.title,
+      type: row.type,
+      creator_name: null,
+      studio_name: 'Sineoda',
+      watch_seconds: row.watch_seconds,
+    }))
+    .filter((row) => matchesSegmentFilter(row.program, programFilter))
 
-  const platformTotal = aggregateQualifiedByContent(month).reduce((sum, row) => sum + row.qualified_seconds, 0)
-  const scopedTotal = options?.creatorId
-    ? enriched.reduce((sum, row) => sum + row.qualified_seconds, 0)
-    : options?.program && options.program !== 'all'
-      ? enriched.reduce((sum, row) => sum + row.qualified_seconds, 0)
-      : platformTotal
+  const combined =
+    programFilter === 'platform'
+      ? platformRows
+      : programFilter === 'standard' || programFilter === 'student_cinema'
+        ? creatorRows
+        : [...creatorRows, ...platformRows]
 
-  const shareTotal =
-    options?.creatorId || (options?.program && options.program !== 'all') ? scopedTotal : platformTotal
+  const totalQualifiedSeconds = combined.reduce((sum, row) => sum + row.qualified_seconds, 0)
+  const totalWatchSeconds = combined.reduce((sum, row) => sum + (row.watch_seconds ?? 0), 0)
 
-  const items = buildReportItems(enriched, watchByContent, shareTotal)
-  const totalQualifiedSeconds = enriched.reduce((sum, row) => sum + row.qualified_seconds, 0)
-  const totalWatchSeconds = enriched.reduce((sum, row) => sum + (row.watch_seconds ?? 0), 0)
+  const items = buildReportItems(combined, watchByContent, totalQualifiedSeconds)
 
   ensurePeriodRow(month)
 
@@ -375,6 +480,7 @@ export function getMonthlyReport(month: string, options?: { creatorId?: string; 
     totalQualifiedMinutes: Math.round(totalQualifiedSeconds / 60),
     totalWatchMinutes: Math.round(totalWatchSeconds / 60),
     items,
+    memberStats,
   }
 }
 
@@ -396,6 +502,7 @@ export function seedDemoMonthlyIfEmpty() {
     const watch = qualified + 600
     totalQ += qualified
     totalW += watch
+    const segment = resolveSegment(row.program, row.creator_id)
     dbRun(
       `INSERT INTO content_watch_monthly (content_id, month, creator_id, program, qualified_seconds, watch_seconds, viewer_count, archived_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -406,7 +513,7 @@ export function seedDemoMonthlyIfEmpty() {
          watch_seconds = excluded.watch_seconds,
          viewer_count = excluded.viewer_count,
          archived_at = excluded.archived_at`,
-      [row.content_id, prevMonth, row.creator_id, row.program, qualified, watch, index + 3, new Date().toISOString()],
+      [row.content_id, prevMonth, row.creator_id, segment, qualified, watch, index + 3, new Date().toISOString()],
     )
   })
 
