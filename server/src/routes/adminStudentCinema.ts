@@ -2,9 +2,10 @@ import { Router } from 'express'
 import { v4 as uuid } from 'uuid'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
-import { mapContent } from '../mappers.js'
+import { mapContent, mapContentLicense } from '../mappers.js'
 import { normalizeContentType } from '../constants/contentTypes.js'
 import { parseCredits, serializeCredits } from '../services/credits.js'
+import { parseContentAddedAt, parseLicenseDate } from '../services/license.js'
 import { parsePublishedAt } from '../services/publish.js'
 import {
   addToGencSinemaCategory,
@@ -37,12 +38,19 @@ function mapSchool(row: FilmSchoolRow) {
 }
 
 function mapQueueItem(
-  row: ContentRow & { studio_name: string | null; school_name: string | null; creator_name?: string | null },
+  row: ContentRow & {
+    studio_name: string | null
+    school_name: string | null
+    creator_name?: string | null
+    creator_email?: string | null
+    creator_phone?: string | null
+  },
   stats?: ContentEngagementStats,
 ) {
   const credits = parseCredits(row.credits_json)
   return {
     ...mapContent(row),
+    ...mapContentLicense(row),
     reviewStatus: row.review_status ?? 'pending',
     program: row.program ?? 'standard',
     contentFormat: row.content_format ?? 'main',
@@ -53,6 +61,8 @@ function mapQueueItem(
     studioName: row.studio_name,
     creatorId: row.creator_id ?? null,
     creatorName: row.creator_name ?? null,
+    creatorEmail: row.creator_email ?? null,
+    creatorPhone: row.creator_phone ?? null,
     displayName: row.creator_name ?? credits.directors?.[0] ?? credits.cast?.[0] ?? null,
     qualifiedMinutes: stats?.qualifiedMinutes ?? 0,
     watchMinutes: stats?.watchMinutes ?? 0,
@@ -68,6 +78,7 @@ type StudentContentRow = ContentRow & {
   school_name: string | null
   creator_name?: string | null
   creator_email?: string | null
+  creator_phone?: string | null
   project_crew?: string | null
   parent_title?: string | null
 }
@@ -79,6 +90,7 @@ function fetchStudentContentRow(contentId: string) {
       cr.project_crew,
       u.name AS creator_name,
       u.email AS creator_email,
+      u.phone AS creator_phone,
       fs.name AS school_name,
       parent.title AS parent_title
      FROM content c
@@ -206,10 +218,19 @@ router.patch('/schools/:id', requireAdmin, (req: AuthRequest, res) => {
 })
 
 router.get('/queue', requireAdmin, (_req: AuthRequest, res) => {
-  const rows = dbAll<ContentRow & { studio_name: string | null; school_name: string | null }>(
-    `SELECT c.*, cr.studio_name, fs.name AS school_name
+  const rows = dbAll<
+    ContentRow & {
+      studio_name: string | null
+      school_name: string | null
+      creator_name: string | null
+      creator_email: string | null
+      creator_phone: string | null
+    }
+  >(
+    `SELECT c.*, cr.studio_name, fs.name AS school_name, u.name AS creator_name, u.email AS creator_email, u.phone AS creator_phone
      FROM content c
      LEFT JOIN creators cr ON cr.id = c.creator_id
+     LEFT JOIN users u ON u.id = cr.user_id
      LEFT JOIN film_schools fs ON fs.id = c.school_id
      WHERE c.program = 'student_cinema'
        AND (
@@ -228,9 +249,11 @@ router.get('/content', requireAdmin, (_req: AuthRequest, res) => {
       studio_name: string | null
       school_name: string | null
       creator_name: string | null
+      creator_email: string | null
+      creator_phone: string | null
     }
   >(
-    `SELECT c.*, cr.studio_name, fs.name AS school_name, u.name AS creator_name
+    `SELECT c.*, cr.studio_name, fs.name AS school_name, u.name AS creator_name, u.email AS creator_email, u.phone AS creator_phone
      FROM content c
      LEFT JOIN creators cr ON cr.id = c.creator_id
      LEFT JOIN users u ON u.id = cr.user_id
@@ -338,10 +361,9 @@ router.get('/content/:id', requireAdmin, (req: AuthRequest, res) => {
     item: {
       ...mapQueueItem(row, stats),
       creatorEmail: row.creator_email,
+      creatorPhone: row.creator_phone,
       projectCrew: row.project_crew,
       parentTitle: row.parent_title,
-      contentAddedAt: row.content_added_at ?? null,
-      publishedAt: row.published_at ?? null,
     },
     documents: documents.map((doc) => ({
       id: doc.id,
@@ -422,6 +444,18 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
     }
   }
 
+  const licenseExpiresAt =
+    body.licenseUnlimited === true || body.license_unlimited === true
+      ? null
+      : body.licenseExpiresAt !== undefined || body.license_expires_at !== undefined
+        ? parseLicenseDate(body.licenseExpiresAt ?? body.license_expires_at)
+        : existing.license_expires_at ?? null
+
+  const contentAddedAt =
+    body.contentAddedAt !== undefined || body.content_added_at !== undefined
+      ? parseContentAddedAt(body.contentAddedAt ?? body.content_added_at)
+      : existing.content_added_at ?? parseContentAddedAt(null)
+
   dbRun(
     `UPDATE content SET
       title = ?,
@@ -438,7 +472,9 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
       stream_provider = ?,
       credits_json = ?,
       school_id = ?,
-      featured = ?
+      featured = ?,
+      license_expires_at = ?,
+      content_added_at = ?
     WHERE id = ?`,
     [
       body.title !== undefined ? String(body.title).trim() : existing.title,
@@ -468,6 +504,8 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
         : existing.credits_json ?? '{}',
       schoolId,
       body.featured !== undefined ? (body.featured ? 1 : 0) : existing.featured ?? 0,
+      licenseExpiresAt,
+      contentAddedAt,
       existing.id,
     ],
   )

@@ -934,7 +934,7 @@ export interface AdminFilmSchool extends FilmSchool {
   createdAt: string
 }
 
-export interface AdminStudentCinemaItem extends ContentItem {
+export interface AdminStudentCinemaItem extends ContentItem, AdminContentMeta {
   reviewStatus: string
   program: 'standard' | 'student_cinema'
   contentFormat: 'main' | 'bts' | 'teacher_note'
@@ -947,10 +947,9 @@ export interface AdminStudentCinemaItem extends ContentItem {
   creatorName?: string | null
   displayName?: string | null
   creatorEmail?: string | null
+  creatorPhone?: string | null
   projectCrew?: string | null
   parentTitle?: string | null
-  contentAddedAt?: string | null
-  publishedAt?: string | null
   qualifiedMinutes?: number
   watchMinutes?: number
   watchCount?: number
