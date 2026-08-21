@@ -5,7 +5,7 @@ export interface Profile {
   isKids?: boolean
 }
 
-export type UserRole = 'user' | 'admin' | 'creator'
+export type UserRole = 'user' | 'admin' | 'manager' | 'creator'
 
 export type CreatorStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
 
@@ -33,6 +33,10 @@ export interface User {
   name: string
   role: UserRole
   profiles: Profile[]
+  phone?: string | null
+  phoneVerified?: boolean
+  emailVerified?: boolean
+  createdAt?: string
   subscription?: Subscription
   creator?: CreatorProfile | null
 }

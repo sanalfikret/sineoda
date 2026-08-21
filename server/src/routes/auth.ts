@@ -36,7 +36,7 @@ function getUserWithProfiles(userId: string) {
 }
 
 function isEmailVerified(user: UserRow) {
-  return user.role === 'admin' || Boolean(user.email_verified)
+  return user.role === 'admin' || user.role === 'manager' || Boolean(user.email_verified)
 }
 
 async function createEmailVerificationToken(userId: string, email: string) {
@@ -193,7 +193,7 @@ router.post('/login', (req, res) => {
     return
   }
 
-  if (requireAdmin && user.role !== 'admin') {
+  if (requireAdmin && user.role !== 'admin' && user.role !== 'manager') {
     res.status(403).json({ error: 'Bu hesap admin yetkisine sahip değil.' })
     return
   }

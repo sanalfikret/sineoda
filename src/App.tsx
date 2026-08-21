@@ -23,7 +23,7 @@ import { AccountPage } from './pages/AccountPage'
 import { BrowsePage } from './pages/BrowsePage'
 import { LandingPage } from './pages/LandingPage'
 import { LoginPage } from './pages/LoginPage'
-import { MyListPage } from './pages/MyListPage'
+import { MessagesPage } from './pages/MessagesPage'
 import { PricingPage } from './pages/PricingPage'
 import { PaytrCheckoutPage } from './pages/PaytrCheckoutPage'
 import { PaymentSuccessPage } from './pages/PaymentSuccessPage'
@@ -134,6 +134,14 @@ function App() {
         element={
           <ProtectedRoute>
             <ProfilesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/mesajlar"
+        element={
+          <ProtectedRoute>
+            <MessagesPage />
           </ProtectedRoute>
         }
       />

@@ -384,6 +384,18 @@ function runMigrations() {
   ensureColumn('content', 'parent_content_id', 'TEXT')
   ensureColumn('content', 'school_id', 'TEXT')
   ensureColumn('content', 'school_review_status', "TEXT NOT NULL DEFAULT 'none'")
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS user_messages (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      subject TEXT NOT NULL DEFAULT '',
+      body TEXT NOT NULL,
+      sent_by_admin_id TEXT,
+      read_at TEXT,
+      created_at TEXT NOT NULL
+    );
+  `)
 }
 
 function ensureColumn(table: string, column: string, definition: string) {

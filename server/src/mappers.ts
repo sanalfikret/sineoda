@@ -46,6 +46,9 @@ export function mapUser(row: UserRow, profiles: ProfileRow[] = []) {
     role: row.role,
     profiles: profiles.map(mapProfile),
     createdAt: row.created_at,
+    phone: row.phone ?? null,
+    phoneVerified: row.phone_verified === 1,
+    emailVerified: row.email_verified === 1,
     subscription: {
       status: row.subscription_status ?? 'free',
       plan: row.subscription_plan ?? null,
