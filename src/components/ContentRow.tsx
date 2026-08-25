@@ -12,6 +12,7 @@ interface ContentRowProps {
   prominent?: boolean
   layout?: 'landscape' | 'portrait'
   variant?: 'carousel' | 'grid'
+  gridFixedWidth?: boolean
   guestMode?: boolean
 }
 
@@ -24,6 +25,7 @@ export function ContentRow({
   prominent,
   layout = 'landscape',
   variant = 'carousel',
+  gridFixedWidth = false,
   guestMode = false,
 }: ContentRowProps) {
   const rowRef = useRef<HTMLDivElement>(null)
@@ -56,25 +58,48 @@ export function ContentRow({
       </div>
 
       {isGrid ? (
-        <div className="grid grid-cols-2 gap-3 px-4 sm:grid-cols-3 sm:gap-4 sm:px-6 md:grid-cols-4 lg:grid-cols-5 lg:px-8">
-          {items.map((item) => (
-            <ContentCard
-              key={item.id}
-              item={item}
-              onSelect={onSelect}
-              progressPercent={progressMap?.[item.id]}
-              size={prominent ? 'large' : 'default'}
-              layout={layout}
-              variant={variant}
-              guestHref={guestMode ? '/giris' : undefined}
-            />
-          ))}
-        </div>
+        gridFixedWidth ? (
+          <div className="overflow-visible px-4 pt-10 pb-36 sm:px-6 lg:px-8">
+            <div className="flex flex-wrap items-start gap-x-2.5 gap-y-16 overflow-visible sm:gap-x-3 sm:gap-y-20">
+              {items.map((item) => (
+                <ContentCard
+                  key={item.id}
+                  item={item}
+                  onSelect={onSelect}
+                  progressPercent={progressMap?.[item.id]}
+                  size={prominent ? 'large' : 'default'}
+                  layout={layout}
+                  variant={variant}
+                  gridFixedWidth
+                  guestHref={guestMode ? '/giris' : undefined}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 px-4 sm:grid-cols-3 sm:gap-4 sm:px-6 md:grid-cols-4 lg:grid-cols-5 lg:px-8">
+            {items.map((item) => (
+              <ContentCard
+                key={item.id}
+                item={item}
+                onSelect={onSelect}
+                progressPercent={progressMap?.[item.id]}
+                size={prominent ? 'large' : 'default'}
+                layout={layout}
+                variant={variant}
+                guestHref={guestMode ? '/giris' : undefined}
+              />
+            ))}
+          </div>
+        )
       ) : (
-        <div ref={rowRef} className="hide-scrollbar overflow-x-auto px-4 sm:px-6 lg:px-8">
+        <div
+          ref={rowRef}
+          className="hide-scrollbar overflow-x-auto overflow-y-hidden px-4 pt-10 pb-36 sm:px-6 lg:px-8"
+        >
           <div
-            className={`flex snap-x snap-mandatory items-start overflow-visible py-12 ${
-              prominent ? 'gap-3 sm:gap-4' : 'gap-2.5 sm:gap-3'
+            className={`flex snap-x snap-mandatory items-start gap-2.5 overflow-visible sm:gap-3 ${
+              prominent ? 'sm:gap-4' : ''
             }`}
           >
             {items.map((item) => (
