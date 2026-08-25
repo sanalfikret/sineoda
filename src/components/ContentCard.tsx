@@ -75,8 +75,9 @@ export function ContentCard({
   const shellClass = [
     'group relative flex flex-col text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold',
     widthClass,
+    enableNetflixHover ? 'overflow-visible' : '',
     isGrid ? 'overflow-hidden rounded-md bg-sineoda-surface hover:ring-2 hover:ring-white/20' : 'shrink-0 snap-start',
-    enableNetflixHover ? (hovered ? 'z-30' : 'z-0') : '',
+    enableNetflixHover ? (hovered ? 'z-40' : 'z-0') : '',
     !enableNetflixHover && !isGrid ? 'overflow-hidden rounded-md bg-sineoda-surface hover:z-10 hover:ring-2 hover:ring-white/20' : '',
   ]
     .filter(Boolean)
@@ -121,11 +122,19 @@ export function ContentCard({
 
   const titleBlock = (
     <div className="mt-2 min-h-[2.75rem] px-0.5">
-      <p className={`line-clamp-2 text-sm font-medium leading-snug text-white/90 transition-opacity duration-200 ${hovered && enableNetflixHover ? 'opacity-0' : 'opacity-100'}`}>
+      <p
+        className={`line-clamp-2 text-sm font-medium leading-snug text-white/90 transition-opacity duration-200 ${
+          hovered && enableNetflixHover ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
         {item.title}
       </p>
       {item.monthlyAward?.enabled && item.monthlyAward.prize && (
-        <p className={`mt-0.5 line-clamp-1 text-xs font-medium text-emerald-300 transition-opacity duration-200 ${hovered && enableNetflixHover ? 'opacity-0' : 'opacity-100'}`}>
+        <p
+          className={`mt-0.5 line-clamp-1 text-xs font-medium text-emerald-300 transition-opacity duration-200 ${
+            hovered && enableNetflixHover ? 'opacity-0' : 'opacity-100'
+          }`}
+        >
           {item.monthlyAward.prize}
         </p>
       )}
@@ -133,24 +142,35 @@ export function ContentCard({
   )
 
   const hoverDetails = (
-    <div className="border border-t-0 border-white/10 bg-[#181818] p-3">
+    <div className="rounded-b-md border border-t-0 border-white/10 bg-[#181818] p-3 shadow-2xl">
       <div className="flex items-center gap-2">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-black shadow" aria-hidden="true">
+        <span
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-black shadow"
+          aria-hidden="true"
+        >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M8 5v14l11-7z" />
           </svg>
         </span>
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 text-white/80" aria-hidden="true">
+        <span
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 text-white/80"
+          aria-hidden="true"
+        >
           +
         </span>
-        <span className="ml-auto flex h-7 w-7 items-center justify-center rounded-full border border-white/20 text-xs text-white/70" aria-hidden="true">
+        <span
+          className="ml-auto flex h-7 w-7 items-center justify-center rounded-full border border-white/20 text-xs text-white/70"
+          aria-hidden="true"
+        >
           ▾
         </span>
       </div>
       <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px] font-medium text-[#bcbcbc]">
         <span className="rounded border border-white/25 px-1.5 py-0.5 text-white">{item.rating}</span>
         <span>{item.duration}</span>
-        <span className="rounded border border-white/20 px-1 text-[10px] uppercase tracking-wide text-white/60">HD</span>
+        <span className="rounded border border-white/20 px-1 text-[10px] uppercase tracking-wide text-white/60">
+          HD
+        </span>
       </div>
       {genreLine && (
         <p className="mt-2 text-[11px] leading-relaxed text-[#d2d2d2]">
@@ -200,19 +220,35 @@ export function ContentCard({
     <>
       <div className={`relative w-full overflow-visible ${aspectClass}`}>
         <div
-          className={`absolute bottom-0 left-0 w-full transition-[transform,box-shadow] duration-300 ease-out will-change-transform ${
-            hovered ? 'shadow-[0_12px_40px_rgba(0,0,0,0.65)]' : ''
+          className={`absolute inset-0 overflow-hidden rounded-md bg-sineoda-surface ring-1 transition-[transform,box-shadow] duration-300 ease-out will-change-transform ${
+            hovered ? 'shadow-[0_16px_48px_rgba(0,0,0,0.75)] ring-white/25' : 'ring-white/10'
           }`}
           style={{
-            transformOrigin: '50% 100%',
             transform: hovered ? `scale(${HOVER_SCALE})` : 'scale(1)',
+            transformOrigin: '50% 50%',
           }}
         >
-          <div className={`overflow-hidden rounded-md ring-1 ring-white/10 ${hovered ? 'rounded-b-none ring-white/20' : ''}`}>
-            {imageBlock}
-          </div>
-          {hovered && hoverDetails}
+          <img
+            src={imageSrc}
+            alt={item.title}
+            loading="lazy"
+            onError={() => setImageSrc(fallbackUrl)}
+            className="h-full w-full object-cover"
+          />
+          {badges}
         </div>
+
+        {hovered && (
+          <div
+            className="absolute left-1/2 z-50 -translate-x-1/2"
+            style={{
+              top: `calc(100% + ${((HOVER_SCALE - 1) / 2) * 100}%)`,
+              width: `${HOVER_SCALE * 100}%`,
+            }}
+          >
+            {hoverDetails}
+          </div>
+        )}
       </div>
       {titleBlock}
     </>
