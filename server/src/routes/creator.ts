@@ -14,6 +14,12 @@ import { parseContentAddedAt } from '../services/license.js'
 import { serializeCredits } from '../services/credits.js'
 import { parseFestivalsBody, serializeFestivals } from '../services/festivals.js'
 import { resolveDurationFields } from '../services/duration.js'
+import {
+  creatorHasBaseDocuments,
+  linkApplicationDocuments,
+  saveApplicationDeclaration,
+  validateFilmApplication,
+} from '../services/filmApplication.js'
 import { getContentEngagementStats } from '../services/studentCinema.js'
 import { getMonthlyReport, monthKey } from '../services/watchAccounting.js'
 import type { ContentRow, CreatorRow } from '../types.js'
@@ -183,13 +189,20 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
   const creator = req.creator!
   const body = req.body as Record<string, unknown>
 
-  const docCount = dbGet<{ count: number }>(
-    'SELECT COUNT(*) AS count FROM creator_documents WHERE creator_id = ?',
-    [creator.id],
-  )
-  if (!docCount || docCount.count < 1) {
+  const contentFormat = String(body.contentFormat ?? body.content_format ?? 'main').trim()
+  const isMainApplication = contentFormat === 'main'
+  let application: ReturnType<typeof validateFilmApplication> | null = null
+
+  if (isMainApplication) {
+    try {
+      application = validateFilmApplication(body, creator.id)
+    } catch (err) {
+      res.status(400).json({ error: err instanceof Error ? err.message : 'Başvuru doğrulanamadı.' })
+      return
+    }
+  } else if (!creatorHasBaseDocuments(creator.id)) {
     res.status(400).json({
-      error: 'İçerik göndermeden önce en az bir telif / mülkiyet belgesi yüklemelisiniz.',
+      error: 'Ek içerik göndermeden önce hesabınıza en az bir telif / mülkiyet belgesi eklemelisiniz.',
     })
     return
   }
@@ -215,7 +228,6 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
   const type = normalizeContentType(body.type, 'film')
   const now = new Date().toISOString()
   const isStudentProgram = (creator.program ?? 'standard') === 'student_cinema'
-  const contentFormat = String(body.contentFormat ?? body.content_format ?? 'main').trim()
   const parentContentId = String(body.parentContentId ?? body.parent_content_id ?? '').trim() || null
 
   if (!['main', 'bts', 'teacher_note'].includes(contentFormat)) {
@@ -297,6 +309,12 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
   )
 
   const row = dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [id])!
+
+  if (application) {
+    linkApplicationDocuments(id, creator.id, application.documentIds)
+    saveApplicationDeclaration(id, application.declaration)
+  }
+
   res.status(201).json({
     item: mapContent(row),
     reviewStatus: 'pending',
@@ -304,8 +322,8 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
     contentFormat,
     schoolReviewStatus,
     message: isStudentProgram
-      ? 'Projeniz okul onayına gönderildi. Okul onayından sonra Sineoda incelemesine alınır.'
-      : 'İçeriğiniz incelemeye gönderildi. Onaylandıktan sonra yayınlanacaktır.',
+      ? 'Film başvurunuz okul onayına gönderildi. Okul onayından sonra Sineoda incelemesine alınır.'
+      : 'Film başvurunuz incelemeye gönderildi. Onaylandıktan sonra yayınlanacaktır.',
   })
 })
 

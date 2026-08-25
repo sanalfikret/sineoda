@@ -16,6 +16,13 @@ import {
 import { ShareButton } from '../../components/ShareButton'
 import { useAuth } from '../../context/AuthContext'
 import { CREATOR_DOC_TYPES } from '../../constants/creatorLegal'
+import {
+  FilmApplicationRightsPanel,
+  isFilmApplicationReady,
+  missingApplicationMessage,
+  type ApplicationDocument,
+} from '../../components/creator/FilmApplicationRightsPanel'
+import type { FilmLegalDeclarationId, FilmRightsCategoryId } from '../../constants/filmApplication'
 import type { ContentItem } from '../../types/content'
 import type { CreatorStatus } from '../../types/auth'
 import { buildCredits } from '../../utils/credits'
@@ -98,6 +105,9 @@ export function CreatorDashboardPage() {
 
   const [showForm, setShowForm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [rightsDeclaration, setRightsDeclaration] = useState<Record<string, boolean>>({})
+  const [applicationDocs, setApplicationDocs] = useState<ApplicationDocument[]>([])
+  const [uploadingDocType, setUploadingDocType] = useState<string | null>(null)
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -202,8 +212,77 @@ export function CreatorDashboardPage() {
     }
   }
 
+  const resetApplicationForm = () => {
+    setRightsDeclaration({})
+    setApplicationDocs([])
+    setForm({
+      title: '',
+      description: '',
+      year: new Date().getFullYear(),
+      duration: '',
+      durationMinutes: '',
+      rating: '13+',
+      type: 'film',
+      genres: '',
+      videoUrl: '',
+      poster: '',
+      contentFormat: 'main',
+      parentContentId: '',
+      directors: '',
+      producers: '',
+      cast: '',
+      studio: '',
+      festivals: [],
+    })
+  }
+
+  const openApplicationForm = () => {
+    resetApplicationForm()
+    setShowForm(true)
+  }
+
+  const handleRightsChange = (id: FilmRightsCategoryId | FilmLegalDeclarationId, checked: boolean) => {
+    setRightsDeclaration((current) => ({ ...current, [id]: checked }))
+  }
+
+  const handleApplicationDocumentUpload = async (docType: string, file: File) => {
+    setUploadingDocType(docType)
+    setError('')
+    try {
+      const url = await creatorUploadDocument(file)
+      const result = await creatorAddDocument(docType, url)
+      const document = result.document
+      setApplicationDocs((current) => [
+        ...current.filter((entry) => entry.docType !== docType),
+        { id: document.id, docType: document.docType, fileUrl: document.fileUrl },
+      ])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Belge yüklenemedi.')
+    } finally {
+      setUploadingDocType(null)
+    }
+  }
+
+  const handleRemoveApplicationDocument = async (id: string) => {
+    try {
+      await creatorDeleteDocument(id)
+      setApplicationDocs((current) => current.filter((entry) => entry.id !== id))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Belge silinemedi.')
+    }
+  }
+
   const handleSubmitContent = async (event: FormEvent) => {
     event.preventDefault()
+    const isMainApplication = program !== 'student_cinema' || form.contentFormat === 'main'
+    if (isMainApplication) {
+      const missing = missingApplicationMessage(rightsDeclaration, applicationDocs)
+      if (missing) {
+        setError(missing)
+        return
+      }
+    }
+
     setSubmitting(true)
     setError('')
     try {
@@ -228,30 +307,14 @@ export function CreatorDashboardPage() {
         contentFormat: program === 'student_cinema' ? form.contentFormat : 'main',
         parentContentId:
           program === 'student_cinema' && form.contentFormat !== 'main' ? form.parentContentId : undefined,
+        rightsDeclaration: isMainApplication ? rightsDeclaration : undefined,
+        documentIds: isMainApplication ? applicationDocs.map((doc) => doc.id) : undefined,
       })
       setShowForm(false)
-      setForm({
-        title: '',
-        description: '',
-        year: new Date().getFullYear(),
-        duration: '',
-        durationMinutes: '',
-        rating: '13+',
-        type: 'film',
-        genres: '',
-        videoUrl: '',
-        poster: '',
-        contentFormat: 'main',
-        parentContentId: '',
-        directors: '',
-        producers: '',
-        cast: '',
-        studio: '',
-        festivals: [],
-      })
+      resetApplicationForm()
       await load()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'İçerik gönderilemedi.')
+      setError(err instanceof Error ? err.message : 'Film başvurusu gönderilemedi.')
     } finally {
       setSubmitting(false)
     }
@@ -302,8 +365,7 @@ export function CreatorDashboardPage() {
 
         {status === 'pending' && (
           <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-4 text-sm text-amber-100">
-            Hesabınız inceleniyor. Telif belgelerinizi yükleyebilirsiniz; onaylandıktan sonra içerik
-            gönderebilirsiniz.
+            Hesabınız inceleniyor. Onaylandıktan sonra film başvurusu yapabilirsiniz.
           </div>
         )}
 
@@ -485,14 +547,21 @@ export function CreatorDashboardPage() {
 
         <section className="mb-8">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">İçeriklerim</h2>
-            {status === 'approved' && documentCount > 0 && (
+            <h2 className="text-lg font-semibold">Film başvurularım</h2>
+            {status === 'approved' && (
               <button
                 type="button"
-                onClick={() => setShowForm((value) => !value)}
+                onClick={() => {
+                  if (showForm) {
+                    setShowForm(false)
+                    resetApplicationForm()
+                  } else {
+                    openApplicationForm()
+                  }
+                }}
                 className="rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg"
               >
-                {showForm ? 'Formu kapat' : program === 'student_cinema' ? '+ Proje gönder' : '+ Yeni içerik gönder'}
+                {showForm ? 'Başvuruyu kapat' : 'Film Başvurusu Yap'}
               </button>
             )}
           </div>
@@ -502,6 +571,12 @@ export function CreatorDashboardPage() {
               onSubmit={handleSubmitContent}
               className="mb-6 space-y-4 rounded-xl border border-sineoda-gold/20 bg-[#11141c] p-6"
             >
+              <div>
+                <h3 className="text-lg font-semibold text-white">Film Başvurusu</h3>
+                <p className="mt-1 text-sm text-sineoda-muted">
+                  Filminizi ve hak belgelerinizi gönderin. İnceleme sonrası yayına alınır.
+                </p>
+              </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 {program === 'student_cinema' && (
                   <>
@@ -712,12 +787,28 @@ export function CreatorDashboardPage() {
                   />
                 </label>
               </div>
+
+              {(program !== 'student_cinema' || form.contentFormat === 'main') && (
+                <FilmApplicationRightsPanel
+                  rightsDeclaration={rightsDeclaration}
+                  onRightsChange={handleRightsChange}
+                  applicationDocs={applicationDocs}
+                  uploadingDocType={uploadingDocType}
+                  onUploadDocument={handleApplicationDocumentUpload}
+                  onRemoveDocument={(id) => void handleRemoveApplicationDocument(id)}
+                />
+              )}
+
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={
+                  submitting ||
+                  ((program !== 'student_cinema' || form.contentFormat === 'main') &&
+                    !isFilmApplicationReady(rightsDeclaration, applicationDocs))
+                }
                 className="rounded-lg bg-sineoda-gold px-5 py-2.5 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
               >
-                {submitting ? 'Gönderiliyor...' : 'İncelemeye gönder'}
+                {submitting ? 'Gönderiliyor...' : 'Film Başvurusu Yap'}
               </button>
             </form>
           )}
@@ -726,7 +817,7 @@ export function CreatorDashboardPage() {
             <p className="text-sm text-sineoda-muted">Yükleniyor...</p>
           ) : content.length === 0 ? (
             <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-sineoda-muted">
-              Henüz içerik yok. Onaylı hesabınız ve en az bir belgeniz varsa yeni içerik gönderebilirsiniz.
+              Henüz film başvurunuz yok. Onaylı hesabınız varsa yukarıdaki düğmeden başvuru yapabilirsiniz.
             </p>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-white/10">
