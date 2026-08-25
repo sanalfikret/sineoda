@@ -10,6 +10,12 @@ const BROWSE_TRACK_BOTTOM = 'pb-20'
 const BROWSE_CARD_GAP_X = 'gap-x-3'
 const BROWSE_CARD_GAP_Y = 'gap-y-20'
 
+/** Hover paneli carousel satırında kesilmesin (poster + detay yüksekliği) */
+const CAROUSEL_TRACK_MIN_H = {
+  landscape: 'min-h-[19rem]',
+  portrait: 'min-h-[26rem]',
+} as const
+
 interface ContentRowProps {
   title: string
   items: ContentItem[]
@@ -104,7 +110,9 @@ export function ContentRow({
           ref={rowRef}
           className={`hide-scrollbar overflow-x-auto overflow-y-hidden ${BROWSE_TRACK_PX} ${BROWSE_TRACK_BOTTOM}`}
         >
-          <div className={`flex snap-x snap-mandatory items-start overflow-visible ${BROWSE_CARD_GAP_X}`}>
+          <div
+            className={`flex snap-x snap-mandatory items-start overflow-visible ${BROWSE_CARD_GAP_X} ${CAROUSEL_TRACK_MIN_H[layout]}`}
+          >
             {items.map((item) => (
               <ContentCard
                 key={item.id}
