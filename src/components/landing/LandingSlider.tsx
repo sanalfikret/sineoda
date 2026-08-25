@@ -38,32 +38,32 @@ export function LandingSlider({ items }: LandingSliderProps) {
   }
 
   return (
-    <section className="relative bg-black px-4 py-12 sm:px-6 sm:py-16 lg:py-20">
-      <div className="mx-auto max-w-[1400px]">
-        <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-black sm:aspect-[21/9] lg:rounded-3xl">
-          {trailerUrl ? (
-            <video
-              ref={videoRef}
-              key={activeItem.id}
-              src={trailerUrl}
-              poster={backdropUrl}
-              muted
-              playsInline
-              loop
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          ) : (
-            <img
-              src={backdropUrl}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          )}
+    <section className="relative bg-black py-12 sm:py-16 lg:py-20">
+      <div className="relative aspect-[16/10] w-full overflow-hidden bg-black sm:aspect-[21/9]">
+        {trailerUrl ? (
+          <video
+            ref={videoRef}
+            key={activeItem.id}
+            src={trailerUrl}
+            poster={backdropUrl}
+            muted
+            playsInline
+            loop
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <img
+            src={backdropUrl}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-transparent" />
 
-          <div className="absolute inset-x-0 bottom-0 flex flex-col gap-4 p-5 sm:flex-row sm:items-end sm:justify-between sm:p-8 lg:p-10">
+        <div className="absolute inset-x-0 bottom-0">
+          <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 px-5 pb-5 sm:flex-row sm:items-end sm:justify-between sm:px-8 sm:pb-8 lg:pb-10">
             <div className="max-w-xl">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sineoda-gold">
                 Öne Çıkan
@@ -95,7 +95,7 @@ export function LandingSlider({ items }: LandingSliderProps) {
                   onClick={() => goTo(index)}
                   className={`shrink-0 overflow-hidden rounded-lg border-2 transition ${
                     index === activeIndex
-                      ? 'border-sineoda-gold scale-105'
+                      ? 'scale-105 border-sineoda-gold'
                       : 'border-transparent opacity-60 hover:opacity-100'
                   }`}
                   aria-label={item.title}
@@ -109,45 +109,45 @@ export function LandingSlider({ items }: LandingSliderProps) {
               ))}
             </div>
           </div>
+        </div>
 
-          {items.length > 1 && (
-            <>
-              <button
-                type="button"
-                onClick={() => goTo(activeIndex - 1)}
-                className="absolute left-3 top-1/2 hidden -translate-y-1/2 rounded-full bg-black/50 p-2 text-white backdrop-blur-sm transition hover:bg-black/70 sm:block"
-                aria-label="Önceki"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                onClick={() => goTo(activeIndex + 1)}
-                className="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-full bg-black/50 p-2 text-white backdrop-blur-sm transition hover:bg-black/70 sm:block"
-                aria-label="Sonraki"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </button>
-            </>
-          )}
+        {items.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={() => goTo(activeIndex - 1)}
+              className="absolute left-3 top-1/2 hidden -translate-y-1/2 rounded-full bg-black/50 p-2 text-white backdrop-blur-sm transition hover:bg-black/70 sm:block lg:left-6"
+              aria-label="Önceki"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => goTo(activeIndex + 1)}
+              className="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-full bg-black/50 p-2 text-white backdrop-blur-sm transition hover:bg-black/70 sm:block lg:right-6"
+              aria-label="Sonraki"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+          </>
+        )}
 
-          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2 sm:bottom-5">
-            {items.map((item, index) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => goTo(index)}
-                className={`h-2 rounded-full transition-all ${
-                  index === activeIndex ? 'w-6 bg-sineoda-gold' : 'w-2 bg-white/40'
-                }`}
-                aria-label={`Slayt ${index + 1}`}
-              />
-            ))}
-          </div>
+        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2 sm:bottom-5">
+          {items.map((item, index) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => goTo(index)}
+              className={`h-2 rounded-full transition-all ${
+                index === activeIndex ? 'w-6 bg-sineoda-gold' : 'w-2 bg-white/40'
+              }`}
+              aria-label={`Slayt ${index + 1}`}
+            />
+          ))}
         </div>
       </div>
     </section>
