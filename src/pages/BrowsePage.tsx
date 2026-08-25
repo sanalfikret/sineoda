@@ -299,7 +299,7 @@ function BrowseContent({
               }
               prominent={false}
               layout={rowLayout(row.title, row.items)}
-              variant={activeGenre || contentType || verticalOnly || studentCinemaOnly ? 'grid' : 'carousel'}
+              variant="carousel"
             />
           ))
         )}

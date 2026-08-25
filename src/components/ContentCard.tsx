@@ -17,6 +17,18 @@ interface ContentCardProps {
 
 const HOVER_SCALE = 1.15
 
+/** Ana sayfa ve kategori satırlarında ortak kart genişliği */
+export const CARD_WIDTH = {
+  landscape: {
+    default: 'w-[220px] sm:w-[260px] lg:w-[280px]',
+    large: 'w-[260px] sm:w-[300px] lg:w-[320px]',
+  },
+  portrait: {
+    default: 'w-[120px] sm:w-[140px]',
+    large: 'w-[140px] sm:w-[160px]',
+  },
+} as const
+
 export function ContentCard({
   item,
   onSelect,
@@ -27,7 +39,7 @@ export function ContentCard({
   guestHref,
 }: ContentCardProps) {
   const isGrid = variant === 'grid'
-  const isPortrait = !isGrid && (layout === 'portrait' || item.videoFormat === 'vertical')
+  const isPortrait = layout === 'portrait' || item.videoFormat === 'vertical'
   const enriched = enrichContentImages(item)
   const imageUrl = resolveMediaUrl(
     isPortrait ? enriched.poster : enriched.backdrop || enriched.poster,
@@ -40,12 +52,8 @@ export function ContentCard({
   const widthClass = isGrid
     ? 'w-full'
     : isPortrait
-      ? size === 'large'
-        ? 'w-[140px] sm:w-[160px]'
-        : 'w-[120px] sm:w-[140px]'
-      : size === 'large'
-        ? 'w-[260px] sm:w-[300px] lg:w-[320px]'
-        : 'w-[220px] sm:w-[260px] lg:w-[280px]'
+      ? CARD_WIDTH.portrait[size]
+      : CARD_WIDTH.landscape[size]
 
   const aspectClass = isPortrait ? 'aspect-[9/16]' : 'aspect-video'
   const genreLine = item.genres.slice(0, 3).join(' · ')
@@ -120,23 +128,15 @@ export function ContentCard({
     </>
   )
 
-  const titleBlock = (
-    <div className="mt-2 min-h-[2.75rem] px-0.5">
-      <p
-        className={`line-clamp-2 text-sm font-medium leading-snug text-white/90 transition-opacity duration-200 ${
-          hovered && enableNetflixHover ? 'opacity-0' : 'opacity-100'
-        }`}
-      >
-        {item.title}
-      </p>
+  const posterTitleOverlay = (fadeOnHover: boolean) => (
+    <div
+      className={`pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black via-black/75 to-transparent px-2.5 pb-2.5 pt-10 ${
+        fadeOnHover && hovered ? 'opacity-0' : 'opacity-100'
+      } transition-opacity duration-200`}
+    >
+      <p className="line-clamp-2 text-lg font-semibold leading-snug text-white">{item.title}</p>
       {item.monthlyAward?.enabled && item.monthlyAward.prize && (
-        <p
-          className={`mt-0.5 line-clamp-1 text-xs font-medium text-emerald-300 transition-opacity duration-200 ${
-            hovered && enableNetflixHover ? 'opacity-0' : 'opacity-100'
-          }`}
-        >
-          {item.monthlyAward.prize}
-        </p>
+        <p className="mt-0.5 line-clamp-1 text-sm font-medium text-emerald-300">{item.monthlyAward.prize}</p>
       )}
     </div>
   )
@@ -165,15 +165,14 @@ export function ContentCard({
           ▾
         </span>
       </div>
-      <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px] font-medium text-[#bcbcbc]">
+      <p className="mt-2 line-clamp-1 text-lg font-semibold text-white">{item.title}</p>
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-[#bcbcbc]">
         <span className="rounded border border-white/25 px-1.5 py-0.5 text-white">{item.rating}</span>
         <span>{item.duration}</span>
-        <span className="rounded border border-white/20 px-1 text-[10px] uppercase tracking-wide text-white/60">
-          HD
-        </span>
+        <span className="rounded border border-white/20 px-1 text-xs uppercase tracking-wide text-white/60">HD</span>
       </div>
       {genreLine && (
-        <p className="mt-2 text-[11px] leading-relaxed text-[#d2d2d2]">
+        <p className="mt-2 text-sm leading-relaxed text-[#d2d2d2]">
           {genreLine}
           {item.type ? ` · ${getContentTypeLabel(item.type)}` : ''}
         </p>
@@ -185,81 +184,73 @@ export function ContentCard({
     <>
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/95 via-black/55 to-black/10 opacity-100 transition duration-200 md:opacity-0 md:group-hover:opacity-100 md:group-focus-visible:opacity-100" />
       <div className="absolute inset-x-0 bottom-0 z-20 p-3">
-        <p className="truncate text-sm font-semibold text-white">{item.title}</p>
+        <p className="truncate text-lg font-semibold text-white">{item.title}</p>
         {item.monthlyAward?.enabled && item.monthlyAward.prize ? (
-          <p className="mt-0.5 truncate text-xs font-medium text-emerald-300">{item.monthlyAward.prize}</p>
+          <p className="mt-0.5 truncate text-sm font-medium text-emerald-300">{item.monthlyAward.prize}</p>
         ) : null}
         <div className="mt-2 hidden space-y-1.5 md:block md:opacity-0 md:transition md:duration-200 md:group-hover:opacity-100 md:group-focus-visible:opacity-100">
-          <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-white/80">
+          <div className="flex flex-wrap items-center gap-1.5 text-sm text-white/80">
             <span className="rounded border border-white/25 px-1.5 py-0.5">{item.rating}</span>
             <span>{getContentTypeLabel(item.type)}</span>
             <span>{item.duration}</span>
             <span>{item.year}</span>
           </div>
-          {genreLine && <p className="text-xs text-white/65">{genreLine}</p>}
-          <p className="line-clamp-2 text-xs leading-relaxed text-white/55">{item.description}</p>
+          {genreLine && <p className="text-sm text-white/65">{genreLine}</p>}
+          <p className="line-clamp-2 text-sm leading-relaxed text-white/55">{item.description}</p>
         </div>
       </div>
     </>
-  )
-
-  const imageBlock = (
-    <div className={`relative overflow-hidden rounded-md bg-sineoda-surface ${aspectClass}`}>
-      <img
-        src={imageSrc}
-        alt={item.title}
-        loading="lazy"
-        onError={() => setImageSrc(fallbackUrl)}
-        className={`h-full w-full object-cover ${!enableNetflixHover ? 'transition duration-300 group-hover:scale-105' : ''}`}
-      />
-      {badges}
-    </div>
   )
 
   const cardInner = enableNetflixHover ? (
-    <>
-      <div className={`relative w-full overflow-visible ${aspectClass}`}>
+    <div className={`relative w-full overflow-visible ${aspectClass}`}>
+      <div
+        className={`absolute inset-0 overflow-hidden rounded-md bg-sineoda-surface ring-1 transition-[transform,box-shadow] duration-300 ease-out will-change-transform ${
+          hovered ? 'shadow-[0_16px_48px_rgba(0,0,0,0.75)] ring-white/25' : 'ring-white/10'
+        }`}
+        style={{
+          transform: hovered ? `scale(${HOVER_SCALE})` : 'scale(1)',
+          transformOrigin: '50% 50%',
+        }}
+      >
+        <img
+          src={imageSrc}
+          alt={item.title}
+          loading="lazy"
+          onError={() => setImageSrc(fallbackUrl)}
+          className="h-full w-full object-cover"
+        />
+        {badges}
+        {posterTitleOverlay(true)}
+      </div>
+
+      {hovered && (
         <div
-          className={`absolute inset-0 overflow-hidden rounded-md bg-sineoda-surface ring-1 transition-[transform,box-shadow] duration-300 ease-out will-change-transform ${
-            hovered ? 'shadow-[0_16px_48px_rgba(0,0,0,0.75)] ring-white/25' : 'ring-white/10'
-          }`}
+          className="absolute left-1/2 z-50 -translate-x-1/2"
           style={{
-            transform: hovered ? `scale(${HOVER_SCALE})` : 'scale(1)',
-            transformOrigin: '50% 50%',
+            top: `calc(100% + ${((HOVER_SCALE - 1) / 2) * 100}%)`,
+            width: `${HOVER_SCALE * 100}%`,
           }}
         >
-          <img
-            src={imageSrc}
-            alt={item.title}
-            loading="lazy"
-            onError={() => setImageSrc(fallbackUrl)}
-            className="h-full w-full object-cover"
-          />
-          {badges}
+          {hoverDetails}
         </div>
-
-        {hovered && (
-          <div
-            className="absolute left-1/2 z-50 -translate-x-1/2"
-            style={{
-              top: `calc(100% + ${((HOVER_SCALE - 1) / 2) * 100}%)`,
-              width: `${HOVER_SCALE * 100}%`,
-            }}
-          >
-            {hoverDetails}
-          </div>
-        )}
-      </div>
-      {titleBlock}
-    </>
+      )}
+    </div>
   ) : (
-    <>
-      <div className="relative w-full">
-        {imageBlock}
+    <div className="relative w-full">
+      <div className={`relative overflow-hidden rounded-md bg-sineoda-surface ${aspectClass}`}>
+        <img
+          src={imageSrc}
+          alt={item.title}
+          loading="lazy"
+          onError={() => setImageSrc(fallbackUrl)}
+          className={`h-full w-full object-cover ${!guestHref ? 'transition duration-300 group-hover:scale-105' : ''}`}
+        />
+        {badges}
+        {isGrid ? posterTitleOverlay(false) : null}
         {guestHref && legacyOverlay}
       </div>
-      {isGrid && titleBlock}
-    </>
+    </div>
   )
 
   if (guestHref) {
