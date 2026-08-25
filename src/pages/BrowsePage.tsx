@@ -260,7 +260,7 @@ function BrowseContent({
         </p>
       )}
 
-      <div className="pb-24 pt-2">
+      <div className="pb-24 pt-7">
         {!activeGenre && !contentType && !verticalOnly && !studentCinemaOnly && studentCinemaMonthlyWinners.length > 0 && (
           <StudentCinemaMonthlyWinnersRow items={studentCinemaMonthlyWinners} onSelect={openDetail} />
         )}
