@@ -240,7 +240,7 @@ export function ContentCard({
         }}
       >
         <div
-          className={`overflow-hidden bg-sineoda-surface ring-1 ${hovered ? 'rounded-md ring-white/25' : 'rounded-md ring-white/10'}`}
+          className={`bg-sineoda-surface ring-1 ${hovered ? 'overflow-visible rounded-md ring-white/25' : 'overflow-hidden rounded-md ring-white/10'}`}
         >
           <div className={`relative ${aspectClass} overflow-hidden`}>
             <img
