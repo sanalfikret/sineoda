@@ -37,11 +37,9 @@ export function ContentRow({
   }
 
   return (
-    <section className="mb-5">
+    <section className="relative mb-8 overflow-visible">
       <div className="mb-2 flex items-center justify-between px-4 sm:px-6 lg:px-8">
-        <h2 className="text-lg font-semibold text-white sm:text-xl">
-          {title}
-        </h2>
+        <h2 className="text-lg font-semibold text-white sm:text-xl">{title}</h2>
         <div className="flex items-center gap-2">
           {viewAllHref && (
             <Link to={viewAllHref} className="text-sm font-medium text-sineoda-gold hover:underline">
@@ -57,29 +55,43 @@ export function ContentRow({
         </div>
       </div>
 
-      <div
-        ref={rowRef}
-        className={
-          isGrid
-            ? 'grid grid-cols-2 gap-3 px-4 sm:grid-cols-3 sm:gap-4 sm:px-6 md:grid-cols-4 lg:grid-cols-5 lg:px-8'
-            : `hide-scrollbar flex snap-x snap-mandatory items-end overflow-x-auto overflow-y-visible px-4 pb-2 pt-8 sm:px-6 lg:px-8 ${
-                prominent ? 'gap-3 sm:gap-4' : 'gap-2.5 sm:gap-3'
-              }`
-        }
-      >
-        {items.map((item) => (
-          <ContentCard
-            key={item.id}
-            item={item}
-            onSelect={onSelect}
-            progressPercent={progressMap?.[item.id]}
-            size={prominent ? 'large' : 'default'}
-            layout={layout}
-            variant={variant}
-            guestHref={guestMode ? '/giris' : undefined}
-          />
-        ))}
-      </div>
+      {isGrid ? (
+        <div className="grid grid-cols-2 gap-3 px-4 sm:grid-cols-3 sm:gap-4 sm:px-6 md:grid-cols-4 lg:grid-cols-5 lg:px-8">
+          {items.map((item) => (
+            <ContentCard
+              key={item.id}
+              item={item}
+              onSelect={onSelect}
+              progressPercent={progressMap?.[item.id]}
+              size={prominent ? 'large' : 'default'}
+              layout={layout}
+              variant={variant}
+              guestHref={guestMode ? '/giris' : undefined}
+            />
+          ))}
+        </div>
+      ) : (
+        <div ref={rowRef} className="hide-scrollbar overflow-x-auto px-4 sm:px-6 lg:px-8">
+          <div
+            className={`flex snap-x snap-mandatory items-start overflow-visible py-12 ${
+              prominent ? 'gap-3 sm:gap-4' : 'gap-2.5 sm:gap-3'
+            }`}
+          >
+            {items.map((item) => (
+              <ContentCard
+                key={item.id}
+                item={item}
+                onSelect={onSelect}
+                progressPercent={progressMap?.[item.id]}
+                size={prominent ? 'large' : 'default'}
+                layout={layout}
+                variant={variant}
+                guestHref={guestMode ? '/giris' : undefined}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   )
 }
