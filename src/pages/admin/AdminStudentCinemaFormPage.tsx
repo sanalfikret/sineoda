@@ -11,10 +11,15 @@ import {
 } from '../../api/client'
 import { ImageUpload } from '../../components/admin/ImageUpload'
 import { VideoUpload } from '../../components/admin/VideoUpload'
+import { AdminStudentCinemaAwardPanel } from '../../components/admin/AdminStudentCinemaAwardPanel'
+import { FestivalCreditsEditor } from '../../components/admin/FestivalCreditsEditor'
 import { CREATOR_DOC_TYPES } from '../../constants/creatorLegal'
 import { buildCredits, creditsToForm } from '../../utils/credits'
+import { buildFestivals, festivalsToForm } from '../../utils/duration'
+import type { FestivalEntry } from '../../constants/festivals'
 import { getStudentDisplayName } from '../../utils/studentDisplayName'
 import { formatLicenseDate, getLicenseDaysRemaining, toDateInputValue } from '../../utils/license'
+import type { MonthlyAward } from '../../types/content'
 
 const todayInput = () => new Date().toISOString().slice(0, 10)
 
@@ -47,6 +52,7 @@ interface DetailForm {
   description: string
   year: number
   duration: string
+  durationMinutes: string
   rating: string
   type: AdminStudentCinemaItem['type']
   genres: string
@@ -59,6 +65,7 @@ interface DetailForm {
   producers: string
   cast: string
   studio: string
+  festivals: FestivalEntry[]
   contentAddedAt: string
   licenseUnlimited: boolean
   licenseExpiresAt: string
@@ -78,6 +85,7 @@ function itemToForm(item: AdminStudentCinemaItem): DetailForm {
     description: item.description,
     year: item.year,
     duration: item.duration,
+    durationMinutes: item.durationMinutes ? String(item.durationMinutes) : '',
     rating: item.rating,
     type: item.type,
     genres: item.genres.join(', '),
@@ -87,6 +95,7 @@ function itemToForm(item: AdminStudentCinemaItem): DetailForm {
     trailerUrl: item.trailerUrl ?? '',
     schoolId: item.schoolId ?? '',
     ...credits,
+    festivals: festivalsToForm(item.festivals),
     contentAddedAt: toDateInputValue(item.contentAddedAt) || todayInput(),
     licenseUnlimited: item.licenseUnlimited,
     licenseExpiresAt: toDateInputValue(item.licenseExpiresAt),
@@ -105,6 +114,12 @@ export function AdminStudentCinemaFormPage() {
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [monthlyAward, setMonthlyAward] = useState<MonthlyAward>({
+    enabled: false,
+    period: null,
+    badge: null,
+    prize: null,
+  })
 
   useEffect(() => {
     let cancelled = false
@@ -119,6 +134,14 @@ export function AdminStudentCinemaFormPage() {
         setItem(detailResult.item)
         setDocuments(detailResult.documents)
         setForm(itemToForm(detailResult.item))
+        setMonthlyAward(
+          detailResult.item.monthlyAward ?? {
+            enabled: false,
+            period: null,
+            badge: null,
+            prize: null,
+          },
+        )
       })
       .catch((err) => {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Detay yüklenemedi.')
@@ -147,7 +170,12 @@ export function AdminStudentCinemaFormPage() {
         title: form.title.trim(),
         description: form.description.trim(),
         year: form.year,
-        duration: form.duration.trim(),
+        duration:
+          form.type === 'dizi'
+            ? form.duration.trim()
+            : form.duration.trim() || (Number(form.durationMinutes) > 0 ? `${form.durationMinutes} dk` : ''),
+        durationMinutes:
+          form.type === 'dizi' ? null : Number(form.durationMinutes) > 0 ? Number(form.durationMinutes) : null,
         rating: form.rating,
         type: form.type,
         genres,
@@ -157,12 +185,22 @@ export function AdminStudentCinemaFormPage() {
         trailerUrl: form.trailerUrl.trim(),
         schoolId: form.schoolId || null,
         credits: buildCredits(form),
+        festivals: buildFestivals(form.festivals),
         contentAddedAt: form.contentAddedAt,
         licenseUnlimited: form.licenseUnlimited,
         licenseExpiresAt: form.licenseUnlimited ? null : form.licenseExpiresAt || null,
+        monthlyAward,
       })
       setItem(result.item)
       setForm(itemToForm(result.item))
+      setMonthlyAward(
+        result.item.monthlyAward ?? {
+          enabled: false,
+          period: null,
+          badge: null,
+          prize: null,
+        },
+      )
       setMessage('Kaydedildi.')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kaydedilemedi.')
@@ -364,6 +402,14 @@ export function AdminStudentCinemaFormPage() {
             </div>
           </section>
 
+          {item.contentFormat === 'main' ? (
+            <AdminStudentCinemaAwardPanel
+              award={monthlyAward}
+              disabled={saving || actionLoading}
+              onChange={setMonthlyAward}
+            />
+          ) : null}
+
           <section className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
             <h2 className="font-medium text-amber-200">Telif hakkı süresi</h2>
             <p className="mt-1 text-xs text-sineoda-muted">
@@ -475,14 +521,22 @@ export function AdminStudentCinemaFormPage() {
                 />
               </label>
               <label className="block">
-                <span className="mb-1 block text-xs text-sineoda-muted">Süre</span>
+                <span className="mb-1 block text-xs text-sineoda-muted">Süre (dakika)</span>
                 <input
-                  value={form.duration}
-                  onChange={(event) => setForm({ ...form, duration: event.target.value })}
+                  type="number"
+                  min={1}
+                  value={form.durationMinutes}
+                  onChange={(event) => setForm({ ...form, durationMinutes: event.target.value })}
+                  placeholder="18"
                   className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
                 />
               </label>
             </div>
+
+            <FestivalCreditsEditor
+              entries={form.festivals}
+              onChange={(festivals) => setForm({ ...form, festivals })}
+            />
 
             <label className="block">
               <span className="mb-1 block text-xs text-sineoda-muted">Türler (virgülle)</span>

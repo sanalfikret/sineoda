@@ -2,7 +2,7 @@ export const BILLING_PLANS = [
   {
     id: 'monthly',
     name: 'Aylık Plan',
-    price: 149,
+    price: 49,
     currency: 'TRY',
     interval: 'month' as const,
     features: ['Tüm içerikler', '4 profil', 'HD yayın', 'Android TV desteği'],
@@ -10,7 +10,7 @@ export const BILLING_PLANS = [
   {
     id: 'yearly',
     name: 'Yıllık Plan',
-    price: 1290,
+    price: 490,
     currency: 'TRY',
     interval: 'year' as const,
     popular: true,

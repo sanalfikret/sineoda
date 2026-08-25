@@ -19,6 +19,9 @@ import { CREATOR_DOC_TYPES } from '../../constants/creatorLegal'
 import type { ContentItem } from '../../types/content'
 import type { CreatorStatus } from '../../types/auth'
 import { buildCredits } from '../../utils/credits'
+import { buildFestivals } from '../../utils/duration'
+import { FestivalCreditsEditor } from '../../components/admin/FestivalCreditsEditor'
+import type { FestivalEntry } from '../../constants/festivals'
 
 interface CreatorDocument {
   id: string
@@ -100,6 +103,7 @@ export function CreatorDashboardPage() {
     description: '',
     year: new Date().getFullYear(),
     duration: '',
+    durationMinutes: '',
     rating: '13+',
     type: 'film' as ContentItem['type'],
     genres: '',
@@ -111,6 +115,7 @@ export function CreatorDashboardPage() {
     producers: '',
     cast: '',
     studio: '',
+    festivals: [] as FestivalEntry[],
   })
 
   const load = useCallback(async () => {
@@ -210,7 +215,8 @@ export function CreatorDashboardPage() {
         title: form.title,
         description: form.description,
         year: form.year,
-        duration: form.duration,
+        durationMinutes: form.type === 'dizi' ? null : Number(form.durationMinutes) || null,
+        duration: form.type === 'dizi' ? form.duration : undefined,
         rating: form.rating,
         type: form.type,
         genres,
@@ -218,6 +224,7 @@ export function CreatorDashboardPage() {
         backdrop: form.poster,
         videoUrl: form.videoUrl,
         credits: buildCredits(form),
+        festivals: buildFestivals(form.festivals),
         contentFormat: program === 'student_cinema' ? form.contentFormat : 'main',
         parentContentId:
           program === 'student_cinema' && form.contentFormat !== 'main' ? form.parentContentId : undefined,
@@ -228,6 +235,7 @@ export function CreatorDashboardPage() {
         description: '',
         year: new Date().getFullYear(),
         duration: '',
+        durationMinutes: '',
         rating: '13+',
         type: 'film',
         genres: '',
@@ -239,6 +247,7 @@ export function CreatorDashboardPage() {
         producers: '',
         cast: '',
         studio: '',
+        festivals: [],
       })
       await load()
     } catch (err) {
@@ -589,12 +598,26 @@ export function CreatorDashboardPage() {
                   />
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-sm">Süre (ör. 1s 42dk)</span>
-                  <input
-                    value={form.duration}
-                    onChange={(e) => setForm({ ...form, duration: e.target.value })}
-                    className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
-                  />
+                  <span className="mb-1 block text-sm">
+                    {form.type === 'dizi' ? 'Süre (ör. 8 bölüm)' : 'Süre (dakika) *'}
+                  </span>
+                  {form.type === 'dizi' ? (
+                    <input
+                      value={form.duration}
+                      onChange={(e) => setForm({ ...form, duration: e.target.value })}
+                      className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
+                    />
+                  ) : (
+                    <input
+                      required
+                      type="number"
+                      min={1}
+                      value={form.durationMinutes}
+                      onChange={(e) => setForm({ ...form, durationMinutes: e.target.value })}
+                      placeholder="92"
+                      className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
+                    />
+                  )}
                 </label>
                 <label className="block sm:col-span-2">
                   <span className="mb-1 block text-sm">Türler (virgülle)</span>
@@ -605,18 +628,18 @@ export function CreatorDashboardPage() {
                     className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
                   />
                 </label>
+                <label className="block sm:col-span-2">
+                  <span className="mb-1 block text-sm">Yönetmen(ler)</span>
+                  <textarea
+                    rows={2}
+                    value={form.directors}
+                    onChange={(e) => setForm({ ...form, directors: e.target.value })}
+                    placeholder="Her satıra bir isim veya virgülle ayırın"
+                    className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
+                  />
+                </label>
                 {program === 'student_cinema' && (
                   <>
-                    <label className="block sm:col-span-2">
-                      <span className="mb-1 block text-sm">Yönetmen(ler)</span>
-                      <textarea
-                        rows={2}
-                        value={form.directors}
-                        onChange={(e) => setForm({ ...form, directors: e.target.value })}
-                        placeholder="Her satıra bir isim veya virgülle ayırın"
-                        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
-                      />
-                    </label>
                     <label className="block">
                       <span className="mb-1 block text-sm">Yapımcı(lar)</span>
                       <textarea
@@ -646,6 +669,15 @@ export function CreatorDashboardPage() {
                     </label>
                   </>
                 )}
+              </div>
+
+              <FestivalCreditsEditor
+                entries={form.festivals}
+                onChange={(festivals) => setForm({ ...form, festivals })}
+                allowLaurelUpload={false}
+              />
+
+              <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block">
                   <span className="mb-1 block text-sm">Poster</span>
                   <input

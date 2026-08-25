@@ -1,12 +1,13 @@
-import { Router } from 'express'
+import { Router, type Response } from 'express'
 import { v4 as uuid } from 'uuid'
 import { dbGet, dbRun } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import { slugify } from '../mappers.js'
 import { resetContent } from '../seed.js'
+import { dedupeAllCategories } from '../services/categoryDedup.js'
 import { fillCategoriesToTarget } from '../services/categoryFill.js'
 import { mapCategoriesResponse, removeCategoryFromOrder, saveCategoryOrder, appendCategoryToOrder } from '../services/categoryOrder.js'
-import { dedupeAllCategories } from '../services/categoryDedup.js'
+import { syncLinkedNavForCategory } from '../services/siteNav.js'
 
 const router = Router()
 
@@ -28,20 +29,22 @@ router.post('/', requireAdmin, (req: AuthRequest, res) => {
     id, title, (maxOrder?.max ?? -1) + 1,
   ])
   appendCategoryToOrder(id)
-  res.status(201).json({ category: { id, title, itemIds: [] } })
+  res.status(201).json({ category: { id, title, itemIds: [], hidden: false } })
 })
 
-router.put('/reorder', requireAdmin, (req: AuthRequest, res) => {
+function reorderCategories(req: AuthRequest, res: Response) {
   const orderedIds = req.body.orderedIds
   if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
     res.status(400).json({ error: 'orderedIds dizisi zorunlu.' })
     return
   }
 
-  dedupeAllCategories()
   saveCategoryOrder(orderedIds.map(String))
   res.json({ ok: true, categories: mapCategoriesResponse() })
-})
+}
+
+router.put('/reorder', requireAdmin, reorderCategories)
+router.patch('/reorder', requireAdmin, reorderCategories)
 
 router.post('/dedupe', requireAdmin, (_req: AuthRequest, res) => {
   dedupeAllCategories()
@@ -61,7 +64,12 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
   }
 
   if (req.body.title !== undefined) {
-    dbRun('UPDATE categories SET title = ? WHERE id = ?', [String(req.body.title), req.params.id])
+    const title = String(req.body.title).trim()
+    if (!title) {
+      res.status(400).json({ error: 'Kategori adı boş olamaz.' })
+      return
+    }
+    dbRun('UPDATE categories SET title = ? WHERE id = ?', [title, req.params.id])
   }
 
   if (Array.isArray(req.body.itemIds)) {
@@ -73,13 +81,20 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
     })
   }
 
-  const category = mapCategoriesResponse().find((entry) => entry.id === req.params.id)
+  if (req.body.hidden !== undefined) {
+    const hidden = req.body.hidden === true || req.body.hidden === 1 ? 1 : 0
+    dbRun('UPDATE categories SET hidden = ? WHERE id = ?', [hidden, req.params.id])
+    syncLinkedNavForCategory(req.params.id, hidden === 1)
+  }
+
+  const categories = mapCategoriesResponse()
+  const category = categories.find((entry) => entry.id === req.params.id)
   if (!category) {
     res.status(404).json({ error: 'Kategori bulunamadı.' })
     return
   }
 
-  res.json({ category })
+  res.json(req.body.hidden !== undefined ? { category, categories } : { category })
 })
 
 router.delete('/:id', requireAdmin, (req: AuthRequest, res) => {

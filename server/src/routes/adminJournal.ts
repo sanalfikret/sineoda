@@ -4,6 +4,7 @@ import { dbAll, dbGet, dbRun } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import { mapJournalPost } from '../mappers.js'
 import { uniqueJournalSlug } from '../journalSeed.js'
+import { loadJournalPinIds, saveJournalPinIds, MAX_JOURNAL_PINS } from '../services/journalPins.js'
 import type { JournalPostRow } from '../types.js'
 
 const router = Router()
@@ -14,11 +15,39 @@ function parseStatus(value: unknown): 'draft' | 'published' {
   return value === 'published' ? 'published' : 'draft'
 }
 
+function withPinMeta(posts: ReturnType<typeof mapJournalPost>[]) {
+  const pinOrder = new Map(loadJournalPinIds().map((id, index) => [id, index]))
+  return posts.map((post) => ({
+    ...post,
+    pinnedOrder: pinOrder.has(post.id) ? pinOrder.get(post.id)! + 1 : null,
+  }))
+}
+
+router.get('/pins', (_req: AuthRequest, res) => {
+  res.json({ pinnedIds: loadJournalPinIds(), maxPins: MAX_JOURNAL_PINS })
+})
+
+router.put('/pins', (req: AuthRequest, res) => {
+  const raw = req.body.pinnedIds ?? req.body.postIds ?? req.body.ids
+  if (!Array.isArray(raw)) {
+    res.status(400).json({ error: 'pinnedIds dizisi gerekli.' })
+    return
+  }
+
+  if (raw.length > MAX_JOURNAL_PINS) {
+    res.status(400).json({ error: `En fazla ${MAX_JOURNAL_PINS} yazı sabitlenebilir.` })
+    return
+  }
+
+  const pinnedIds = saveJournalPinIds(raw.map(String))
+  res.json({ pinnedIds, maxPins: MAX_JOURNAL_PINS })
+})
+
 router.get('/', (_req: AuthRequest, res) => {
   const rows = dbAll<JournalPostRow>(
     'SELECT * FROM journal_posts ORDER BY updated_at DESC, created_at DESC',
   )
-  res.json({ posts: rows.map(mapJournalPost) })
+  res.json({ posts: withPinMeta(rows.map(mapJournalPost)), pinnedIds: loadJournalPinIds() })
 })
 
 router.get('/:id', (req: AuthRequest, res) => {
@@ -136,6 +165,7 @@ router.delete('/:id', (req: AuthRequest, res) => {
     return
   }
   dbRun('DELETE FROM journal_posts WHERE id = ?', [req.params.id])
+  saveJournalPinIds(loadJournalPinIds().filter((id) => id !== req.params.id))
   res.json({ ok: true })
 })
 

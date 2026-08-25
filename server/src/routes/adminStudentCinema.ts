@@ -5,6 +5,8 @@ import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import { mapContent, mapContentLicense } from '../mappers.js'
 import { normalizeContentType } from '../constants/contentTypes.js'
 import { parseCredits, serializeCredits } from '../services/credits.js'
+import { parseFestivalsBody, serializeFestivals } from '../services/festivals.js'
+import { resolveDurationFields } from '../services/duration.js'
 import { parseContentAddedAt, parseLicenseDate } from '../services/license.js'
 import { parsePublishedAt } from '../services/publish.js'
 import {
@@ -14,6 +16,7 @@ import {
   removeFromGencSinemaCategory,
   type ContentEngagementStats,
 } from '../services/studentCinema.js'
+import { applyMonthlyAward } from '../services/studentCinemaAwards.js'
 import type { ContentRow, CreatorDocumentRow, FilmSchoolRow } from '../types.js'
 
 const router = Router()
@@ -456,12 +459,16 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
       ? parseContentAddedAt(body.contentAddedAt ?? body.content_added_at)
       : existing.content_added_at ?? parseContentAddedAt(null)
 
+  const durationFields = resolveDurationFields(body, existing)
+  const festivalsParsed = parseFestivalsBody(body)
+
   dbRun(
     `UPDATE content SET
       title = ?,
       description = ?,
       year = ?,
       duration = ?,
+      duration_minutes = ?,
       rating = ?,
       type = ?,
       genres = ?,
@@ -471,6 +478,7 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
       trailer_url = ?,
       stream_provider = ?,
       credits_json = ?,
+      festivals_json = ?,
       school_id = ?,
       featured = ?,
       license_expires_at = ?,
@@ -480,7 +488,8 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
       body.title !== undefined ? String(body.title).trim() : existing.title,
       body.description !== undefined ? String(body.description).trim() : existing.description,
       body.year !== undefined ? Number(body.year) : existing.year,
-      body.duration !== undefined ? String(body.duration).trim() : existing.duration,
+      durationFields.duration,
+      durationFields.durationMinutes,
       body.rating !== undefined ? String(body.rating).trim() : existing.rating,
       body.type !== undefined ? normalizeContentType(body.type, existing.type) : existing.type,
       body.genres !== undefined ? JSON.stringify(body.genres) : existing.genres,
@@ -502,6 +511,9 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
       body.credits !== undefined
         ? serializeCredits(body.credits)
         : existing.credits_json ?? '{}',
+      festivalsParsed !== undefined
+        ? serializeFestivals(festivalsParsed)
+        : existing.festivals_json ?? '[]',
       schoolId,
       body.featured !== undefined ? (body.featured ? 1 : 0) : existing.featured ?? 0,
       licenseExpiresAt,
@@ -509,6 +521,26 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
       existing.id,
     ],
   )
+
+  if (body.monthlyAward !== undefined) {
+    try {
+      const award = body.monthlyAward as {
+        enabled?: boolean
+        period?: string | null
+        badge?: string | null
+        prize?: string | null
+      }
+      applyMonthlyAward(existing.id, {
+        enabled: award.enabled === true,
+        period: award.period,
+        badge: award.badge,
+        prize: award.prize,
+      })
+    } catch (err) {
+      res.status(400).json({ error: err instanceof Error ? err.message : 'Ayın birincisi güncellenemedi.' })
+      return
+    }
+  }
 
   const row = fetchStudentContentRow(existing.id)!
   const stats = getContentEngagementStats([row.id]).get(row.id)

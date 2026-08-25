@@ -3,6 +3,8 @@ import { dbAll, dbGet, dbRun } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import { mapContent, serializeSubtitles, slugify } from '../mappers.js'
 import { serializeCredits } from '../services/credits.js'
+import { parseFestivalsBody, serializeFestivals } from '../services/festivals.js'
+import { resolveDurationFields } from '../services/duration.js'
 import { parseContentAddedAt, parseLicenseDate } from '../services/license.js'
 import { parsePublishedAt } from '../services/publish.js'
 import { normalizeContentType } from '../constants/contentTypes.js'
@@ -12,11 +14,14 @@ const router = Router()
 
 function contentFields(body: Record<string, unknown>, existing?: ContentRow) {
   const featured = body.featured !== undefined ? Boolean(body.featured) : Boolean(existing?.featured)
+  const durationFields = resolveDurationFields(body, existing)
+  const festivalsParsed = parseFestivalsBody(body)
   return {
     title: body.title !== undefined ? String(body.title) : existing!.title,
     description: body.description !== undefined ? String(body.description) : existing!.description,
     year: body.year !== undefined ? Number(body.year) : existing!.year,
-    duration: body.duration !== undefined ? String(body.duration) : existing!.duration,
+    duration: durationFields.duration,
+    durationMinutes: durationFields.durationMinutes,
     rating: body.rating !== undefined ? String(body.rating) : existing!.rating,
     type:
       body.type !== undefined
@@ -55,6 +60,10 @@ function contentFields(body: Record<string, unknown>, existing?: ContentRow) {
         : body.creditsJson !== undefined
           ? serializeCredits(body.creditsJson)
           : existing?.credits_json ?? '{}',
+    festivalsJson:
+      festivalsParsed !== undefined
+        ? serializeFestivals(festivalsParsed)
+        : existing?.festivals_json ?? '[]',
     contentAddedAt:
       body.contentAddedAt !== undefined || body.content_added_at !== undefined
         ? parseContentAddedAt(body.contentAddedAt ?? body.content_added_at)
@@ -139,13 +148,14 @@ router.post('/', requireAdmin, (req: AuthRequest, res) => {
   if (fields.featured) dbRun('UPDATE content SET featured = 0')
 
   dbRun(
-    `INSERT INTO content (id, title, description, year, duration, rating, type, genres, poster, backdrop, video_url, stream_provider, trailer_url, video_format, is_new, new_until, featured, subtitles_json, credits_json, content_added_at, license_expires_at, published_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO content (id, title, description, year, duration, duration_minutes, rating, type, genres, poster, backdrop, video_url, stream_provider, trailer_url, video_format, is_new, new_until, featured, subtitles_json, credits_json, festivals_json, content_added_at, license_expires_at, published_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
-      id, fields.title, fields.description, fields.year, fields.duration, fields.rating, fields.type,
+      id, fields.title, fields.description, fields.year, fields.duration, fields.durationMinutes,
+      fields.rating, fields.type,
       fields.genres, fields.poster, fields.backdrop || fields.poster, fields.videoUrl, fields.streamProvider,
       fields.trailerUrl, fields.videoFormat, fields.isNew, fields.newUntil, fields.featured ? 1 : 0,
-      fields.subtitlesJson, fields.creditsJson, fields.contentAddedAt, fields.licenseExpiresAt,
+      fields.subtitlesJson, fields.creditsJson, fields.festivalsJson, fields.contentAddedAt, fields.licenseExpiresAt,
       fields.publishedAt,
     ],
   )
@@ -170,12 +180,12 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
   if (fields.featured) dbRun('UPDATE content SET featured = 0')
 
   dbRun(
-    `UPDATE content SET title=?, description=?, year=?, duration=?, rating=?, type=?, genres=?, poster=?, backdrop=?, video_url=?, stream_provider=?, trailer_url=?, video_format=?, is_new=?, new_until=?, featured=?, subtitles_json=?, credits_json=?, content_added_at=?, license_expires_at=?, published_at=? WHERE id=?`,
+    `UPDATE content SET title=?, description=?, year=?, duration=?, duration_minutes=?, rating=?, type=?, genres=?, poster=?, backdrop=?, video_url=?, stream_provider=?, trailer_url=?, video_format=?, is_new=?, new_until=?, featured=?, subtitles_json=?, credits_json=?, festivals_json=?, content_added_at=?, license_expires_at=?, published_at=? WHERE id=?`,
     [
-      fields.title, fields.description, fields.year, fields.duration, fields.rating, fields.type,
+      fields.title, fields.description, fields.year, fields.duration, fields.durationMinutes, fields.rating, fields.type,
       fields.genres, fields.poster, fields.backdrop, fields.videoUrl, fields.streamProvider,
       fields.trailerUrl, fields.videoFormat, fields.isNew, fields.newUntil, fields.featured ? 1 : 0,
-      fields.subtitlesJson, fields.creditsJson, fields.contentAddedAt, fields.licenseExpiresAt,
+      fields.subtitlesJson, fields.creditsJson, fields.festivalsJson, fields.contentAddedAt, fields.licenseExpiresAt,
       fields.publishedAt, existing.id,
     ],
   )

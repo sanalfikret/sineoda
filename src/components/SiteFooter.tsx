@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { InstallAppButton } from './InstallAppButton'
 import { LEGAL_LINKS } from '../constants/legal'
 
 export function SiteFooter() {
@@ -19,6 +20,7 @@ export function SiteFooter() {
           <Link to="/creator/kayit" className="text-sineoda-muted transition hover:text-white">
             Filmini Yükle
           </Link>
+          <InstallAppButton variant="link" label="Uygulamayı indir" />
           {LEGAL_LINKS.map((link) => (
             <Link
               key={link.slug}

@@ -39,6 +39,7 @@ export interface ContentRow {
   description: string
   year: number
   duration: string
+  duration_minutes?: number | null
   rating: string
   type: ContentType
   genres: string
@@ -53,6 +54,7 @@ export interface ContentRow {
   new_until?: string | null
   subtitles_json?: string
   credits_json?: string
+  festivals_json?: string
   content_added_at?: string | null
   license_expires_at?: string | null
   published_at?: string | null
@@ -64,6 +66,10 @@ export interface ContentRow {
   parent_content_id?: string | null
   school_id?: string | null
   school_review_status?: SchoolReviewStatus
+  monthly_award_enabled?: number | null
+  monthly_award_period?: string | null
+  monthly_award_badge?: string | null
+  monthly_award_prize?: string | null
 }
 
 export interface CreatorRow {

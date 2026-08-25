@@ -163,8 +163,6 @@ export function dedupeEditorialGenreOverlaps() {
       mergeCategoryItems(keeper.id, dropId)
       removeIdFromSavedOrder(dropId)
     }
-
-    dbRun('UPDATE categories SET title = ? WHERE id = ?', [rule.canonicalTitle, keeper.id])
   }
 }
 

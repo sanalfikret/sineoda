@@ -90,6 +90,7 @@ export function buildCategoryBrowseRows(
   const rows: BrowseRow[] = []
 
   for (const category of categories) {
+    if (category.hidden) continue
     if (BROWSE_EXCLUSIVE_ROW_TITLES.has(category.title)) continue
 
     const titleKey = category.title.trim().toLocaleLowerCase('tr')

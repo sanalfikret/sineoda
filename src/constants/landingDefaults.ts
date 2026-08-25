@@ -1,10 +1,28 @@
+import type { LandingHeroConfig } from '../api/client'
 import {
   BRAND_CREATOR,
   BRAND_FEATURES,
+  BRAND_HERO,
   BRAND_MANIFESTO,
   BRAND_PILLARS,
   BRAND_STUDENT_CINEMA,
 } from './brand'
+
+export const DEFAULT_LANDING_HERO: LandingHeroConfig = {
+  line1: BRAND_HERO.line1,
+  line2: BRAND_HERO.line2,
+  description: BRAND_HERO.description,
+  ctaPrimary: BRAND_HERO.ctaPrimary,
+  ctaPrimaryLink: '/kayit',
+  ctaSecondary: BRAND_HERO.ctaSecondary,
+  ctaSecondaryLink: '/giris',
+  legalNote: BRAND_HERO.legalNote,
+  backgroundImage: '',
+  backgroundVideo: '',
+  backgroundContentId: null,
+  featuredContentId: null,
+  showFeaturedCard: true,
+}
 
 export interface LandingTextItem {
   title: string
@@ -52,6 +70,7 @@ export interface LandingSectionsConfig {
     stepsHeading: string
     steps: LandingTextItem[]
     ctaPrimary: string
+    ctaPrimaryLink: string
     ctaSecondary: string
     footnote: string
   }
@@ -61,7 +80,9 @@ export interface LandingSectionsConfig {
     subtitle: string
     perks: LandingTextItem[]
     ctaPrimary: string
+    ctaPrimaryLink: string
     ctaSecondary: string
+    ctaSecondaryLink: string
     footnote: string
   }
   faq: {
@@ -101,9 +122,9 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
     eyebrow: 'Abonelik',
     title: 'İzlemeye bugün başla',
     description: 'Aylık veya yıllık plan. İstediğin zaman iptal et.',
-    price: '₺149',
+    price: '₺49',
     priceSuffix: '/ay',
-    priceNote: 'veya yıllık ₺1.290 — 2 ay bedava',
+    priceNote: 'veya yıllık ₺490 — 2 ay bedava',
     image: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1200&h=800&fit=crop&q=80',
     ctaPrimary: 'Ücretsiz Dene',
     ctaPrimaryLink: '/kayit',
@@ -117,6 +138,7 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
     stepsHeading: 'Nasıl çalışır?',
     steps: BRAND_STUDENT_CINEMA.steps.map((item) => ({ title: item.title, text: item.text })),
     ctaPrimary: BRAND_STUDENT_CINEMA.ctaPrimary,
+    ctaPrimaryLink: '/creator/kayit?program=genc-sinema',
     ctaSecondary: BRAND_STUDENT_CINEMA.ctaSecondary,
     footnote: 'Okulunuz seçer · Sineoda son onayı verir · Film + kamera arkası birlikte yayınlanır',
   },
@@ -126,7 +148,9 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
     subtitle: BRAND_CREATOR.subtitle,
     perks: BRAND_CREATOR.perks.map((item) => ({ title: item.title, text: item.text })),
     ctaPrimary: BRAND_CREATOR.ctaPrimary,
+    ctaPrimaryLink: '/creator/kayit',
     ctaSecondary: BRAND_CREATOR.ctaSecondary,
+    ctaSecondaryLink: '/creator/giris',
     footnote: 'Bağımsız sinemanın buluşma noktası — izleyici tarafında keşfet, yapımcı tarafında yayınla.',
   },
   faq: {
@@ -140,7 +164,7 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
       {
         question: "Sineoda'nın maliyeti nedir?",
         answer:
-          'Aylık ₺149 veya yıllık ₺1.290 planlarımız mevcuttur. Yıllık planda 2 ay bedava avantajı sunulur.',
+          'Aylık ₺49 veya yıllık ₺490 planlarımız mevcuttur. Yıllık planda 2 ay bedava avantajı sunulur.',
       },
       {
         question: 'Nerede izleyebilirim?',
@@ -181,13 +205,14 @@ export function mergeLandingSections(
 ): LandingSectionsConfig {
   if (!input) return DEFAULT_LANDING_SECTIONS
 
-  const mergeFaqItems = (saved: LandingFaqItem[] | undefined, defaults: LandingFaqItem[]) => {
-    if (!saved?.length) return defaults
-    const seen = new Set(saved.map((item) => item.question.trim().toLocaleLowerCase('tr')))
-    const missing = defaults.filter(
-      (item) => !seen.has(item.question.trim().toLocaleLowerCase('tr')),
-    )
-    return missing.length > 0 ? [...saved, ...missing] : saved
+  const parseFaqItems = (saved: LandingFaqItem[] | undefined, defaults: LandingFaqItem[]) => {
+    if (!Array.isArray(saved)) return defaults
+    return saved
+      .map((item) => ({
+        question: item.question.trim(),
+        answer: item.answer.trim(),
+      }))
+      .filter((item) => item.question && item.answer)
   }
 
   return {
@@ -199,7 +224,7 @@ export function mergeLandingSections(
     faq: {
       ...DEFAULT_LANDING_SECTIONS.faq,
       ...input.faq,
-      items: mergeFaqItems(input.faq?.items, DEFAULT_LANDING_SECTIONS.faq.items),
+      items: parseFaqItems(input.faq?.items, DEFAULT_LANDING_SECTIONS.faq.items),
     },
     emailSignup: { ...DEFAULT_LANDING_SECTIONS.emailSignup, ...input.emailSignup },
     journal: { ...DEFAULT_LANDING_SECTIONS.journal, ...input.journal },

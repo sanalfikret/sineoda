@@ -6,8 +6,9 @@ import { useAuth } from '../../context/AuthContext'
 const navItems = [
   { to: '/admin', label: 'Dashboard', end: true },
   { to: '/admin/ana-sayfa', label: 'Ana Sayfa', end: false },
-  { to: '/admin/kategoriler', label: 'Kategoriler', end: false },
+  { to: '/admin/kategoriler', label: 'Kategoriler & Menü', end: false },
   { to: '/admin/icerikler', label: 'İçerikler', end: false },
+  { to: '/admin/reklamlar', label: 'Reklamlar', end: false },
   { to: '/admin/yapimcilar', label: 'Yapımcılar', end: false },
   { to: '/admin/genc-sinema', label: 'Genç Sinema', end: false },
   { to: '/admin/kullanicilar', label: 'İzleyiciler', end: false },

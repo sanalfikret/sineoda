@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { InstallAppButton } from '../InstallAppButton'
 
 interface LandingHeaderProps {
   scrolled: boolean
@@ -34,6 +35,11 @@ export function LandingHeader({ scrolled }: LandingHeaderProps) {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <InstallAppButton
+            variant="ghost"
+            className="hidden sm:inline-flex"
+            label="Uygulamayı indir"
+          />
           <Link
             to="/giris"
             className="rounded-md px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/10 md:hidden"

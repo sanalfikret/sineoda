@@ -1,0 +1,28 @@
+services:
+  sineoda:
+    build:
+      context: .
+      args:
+        # API ayrı subdomain'deyse: https://api.ornek.com
+        VITE_API_URL: ${VITE_API_URL:-}
+    ports:
+      - "${HOST_PORT:-3001}:3001"
+    env_file:
+      - .env
+    environment:
+      WEB_DIST_DIR: /app/web-dist
+      DATA_DIR: /app/server/data
+      UPLOADS_DIR: /app/server/uploads
+    volumes:
+      - sineoda-data:/app/server/data
+      - sineoda-uploads:/app/server/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  sineoda-data:
+  sineoda-uploads:

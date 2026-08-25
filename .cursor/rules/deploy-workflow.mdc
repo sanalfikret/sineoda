@@ -1,0 +1,18 @@
+---
+description: Merge, push, and verify deploy after completing feature work
+alwaysApply: true
+---
+
+# Deploy workflow (Sineoda)
+
+After completing user-requested feature fixes on a branch:
+
+1. Commit all related changes on the feature branch.
+2. Merge into `main` and push `origin main` (user expects this by default for this project).
+3. Push the feature branch if it was used.
+4. Verify deploy:
+   - **Frontend**: Vercel auto-deploys from `main` (`sineoda.vercel.app`).
+   - **API**: Render service `sineoda-api` — confirm `/api/bootstrap` returns new fields after deploy; trigger redeploy if Git auto-deploy did not run.
+5. Tell the user when live, and remind them to hard-refresh (`Ctrl+Shift+R`) if UI looks stale.
+
+Do not leave fixes only on a feature branch when the user expects them live.

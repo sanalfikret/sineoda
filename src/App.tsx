@@ -1,11 +1,13 @@
 import { type ReactNode, useEffect } from 'react'
 import { Navigate, Route, Routes, useNavigate, useSearchParams } from 'react-router-dom'
+import { NavRouteGuard } from './components/NavRouteGuard'
 import { AdminLayout } from './components/admin/AdminLayout'
 import { AdminRoute } from './components/admin/AdminRoute'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { SearchProvider } from './context/SearchContext'
 import { WatchlistProvider } from './context/WatchlistContext'
 import { useAuth } from './context/AuthContext'
+import { AdminAdsPage } from './pages/admin/AdminAdsPage'
 import { AdminCategoriesPage } from './pages/admin/AdminCategoriesPage'
 import { AdminContentFormPage } from './pages/admin/AdminContentFormPage'
 import { AdminContentListPage } from './pages/admin/AdminContentListPage'
@@ -115,7 +117,7 @@ function App() {
       <Route path="/planlar" element={<PricingPage />} />
       <Route path="/yasal/:slug" element={<LegalPage />} />
       <Route path="/iletisim" element={<ContactPage />} />
-      <Route path="/dergi" element={<JournalLayout />}>
+      <Route path="/dergi" element={<NavRouteGuard><JournalLayout /></NavRouteGuard>}>
         <Route index element={<JournalListPage />} />
         <Route path=":slug" element={<JournalPostPage />} />
       </Route>
@@ -142,7 +144,9 @@ function App() {
         path="/mesajlar"
         element={
           <ProtectedRoute>
-            <MessagesPage />
+            <AuthenticatedProviders>
+              <MessagesPage />
+            </AuthenticatedProviders>
           </ProtectedRoute>
         }
       />
@@ -151,7 +155,9 @@ function App() {
         element={
           <ProtectedRoute requireProfile>
             <AuthenticatedProviders>
-              <MyListPage />
+              <NavRouteGuard>
+                <MyListPage />
+              </NavRouteGuard>
             </AuthenticatedProviders>
           </ProtectedRoute>
         }
@@ -171,7 +177,9 @@ function App() {
         element={
           <ProtectedRoute requireProfile>
             <AuthenticatedProviders>
-              <BrowsePage contentType="dizi" pageTitle="Diziler" />
+              <NavRouteGuard contentType="dizi">
+                <BrowsePage contentType="dizi" pageTitle="Diziler" />
+              </NavRouteGuard>
             </AuthenticatedProviders>
           </ProtectedRoute>
         }
@@ -181,7 +189,9 @@ function App() {
         element={
           <ProtectedRoute requireProfile>
             <AuthenticatedProviders>
-              <BrowsePage contentType="film" pageTitle="Filmler" />
+              <NavRouteGuard contentType="film">
+                <BrowsePage contentType="film" pageTitle="Filmler" />
+              </NavRouteGuard>
             </AuthenticatedProviders>
           </ProtectedRoute>
         }
@@ -191,7 +201,9 @@ function App() {
         element={
           <ProtectedRoute requireProfile>
             <AuthenticatedProviders>
-              <BrowsePage contentType="belgesel" pageTitle="Belgeseller" />
+              <NavRouteGuard contentType="belgesel">
+                <BrowsePage contentType="belgesel" pageTitle="Belgeseller" />
+              </NavRouteGuard>
             </AuthenticatedProviders>
           </ProtectedRoute>
         }
@@ -201,7 +213,9 @@ function App() {
         element={
           <ProtectedRoute requireProfile>
             <AuthenticatedProviders>
-              <BrowsePage verticalOnly pageTitle="Dikey Diziler" />
+              <NavRouteGuard verticalOnly>
+                <BrowsePage verticalOnly pageTitle="Dikey Diziler" />
+              </NavRouteGuard>
             </AuthenticatedProviders>
           </ProtectedRoute>
         }
@@ -211,7 +225,9 @@ function App() {
         element={
           <ProtectedRoute requireProfile>
             <AuthenticatedProviders>
-              <BrowsePage studentCinemaOnly pageTitle="Genç Sinema" />
+              <NavRouteGuard studentCinemaOnly>
+                <BrowsePage studentCinemaOnly pageTitle="Genç Sinema" />
+              </NavRouteGuard>
             </AuthenticatedProviders>
           </ProtectedRoute>
         }
@@ -251,6 +267,7 @@ function App() {
         <Route path="icerikler/yeni" element={<AdminContentFormPage />} />
         <Route path="icerikler/:id" element={<AdminContentFormPage />} />
         <Route path="kategoriler" element={<AdminCategoriesPage />} />
+        <Route path="reklamlar" element={<AdminAdsPage />} />
         <Route path="ana-sayfa" element={<AdminLandingPage />} />
         <Route path="dergi" element={<AdminJournalListPage />} />
         <Route path="dergi/yeni" element={<AdminJournalFormPage />} />

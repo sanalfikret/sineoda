@@ -512,6 +512,7 @@ export function AdminStudentCinemaPage() {
                       <th className="px-4 py-3 font-medium">Okul</th>
                       <th className="px-4 py-3 font-medium">Tür</th>
                       <th className="px-4 py-3 font-medium">Durum</th>
+                      <th className="px-4 py-3 font-medium">Ödül</th>
                       <th className="px-4 py-3 font-medium">Yayın</th>
                       <th className="px-4 py-3 font-medium">Telif</th>
                       <th className="px-4 py-3 font-medium">İzlenme</th>
@@ -555,6 +556,18 @@ export function AdminStudentCinemaPage() {
                           <span className={`rounded-full px-2.5 py-1 text-xs ${studentFilmStatusClass(item)}`}>
                             {studentFilmStatusLabel(item)}
                           </span>
+                        </td>
+                        <td className="px-4 py-3 text-xs">
+                          {item.monthlyAward?.enabled ? (
+                            <div>
+                              <p className="font-medium text-emerald-300">{item.monthlyAward.badge}</p>
+                              {item.monthlyAward.prize ? (
+                                <p className="mt-0.5 text-sineoda-muted">{item.monthlyAward.prize}</p>
+                              ) : null}
+                            </div>
+                          ) : (
+                            <span className="text-sineoda-muted">—</span>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-xs text-sineoda-muted">
                           {formatPublishDate(item.publishedAt)}

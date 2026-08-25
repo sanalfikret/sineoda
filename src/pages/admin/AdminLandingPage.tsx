@@ -6,6 +6,7 @@ import {
   saveLandingPageConfig,
   type LandingHeroConfig,
 } from '../../api/client'
+import { AdminLandingCustomBlockEditor } from '../../components/admin/AdminLandingCustomBlockEditor'
 import {
   AdminLandingSectionBlock,
   isLandingContentBlock,
@@ -18,11 +19,19 @@ import { DEFAULT_LANDING_SECTIONS, mergeLandingSections } from '../../constants/
 import {
   DEFAULT_LANDING_BLOCK_ORDER,
   LANDING_BLOCK_HINTS,
-  LANDING_BLOCK_LABELS,
+  getLayoutBlockLabel,
+  isCustomLandingBlockId,
   normalizeLandingLayout,
-  type LandingBlockId,
+  type BuiltInLandingBlockId,
+  type LandingLayoutBlockId,
   type LandingLayoutConfig,
 } from '../../constants/landingLayout'
+import {
+  createEmptyCustomBlock,
+  customBlockLayoutId,
+  CUSTOM_BLOCK_TYPE_LABELS,
+  type LandingCustomBlock,
+} from '../../constants/landingCustomBlocks'
 import { getContentDisplayLabel, getContentTypeLabel } from '../../constants/contentTypes'
 import type { ContentItem, ContentType } from '../../types/content'
 import { fuzzySearchMatch } from '../../utils/search'
@@ -40,7 +49,9 @@ const DEFAULT_HERO: LandingHeroConfig = {
   line2: BRAND_HERO.line2,
   description: BRAND_HERO.description,
   ctaPrimary: BRAND_HERO.ctaPrimary,
+  ctaPrimaryLink: '/kayit',
   ctaSecondary: BRAND_HERO.ctaSecondary,
+  ctaSecondaryLink: '/giris',
   legalNote: BRAND_HERO.legalNote,
   backgroundImage: '',
   backgroundVideo: '',
@@ -104,11 +115,12 @@ export function AdminLandingPage() {
   const [pickerCatalog, setPickerCatalog] = useState<ContentItem[]>([])
   const [hero, setHero] = useState<LandingHeroConfig>(DEFAULT_HERO)
   const [sections, setSections] = useState(DEFAULT_LANDING_SECTIONS)
+  const [customBlocks, setCustomBlocks] = useState<LandingCustomBlock[]>([])
   const [layout, setLayout] = useState<LandingLayoutConfig>(() =>
     normalizeLandingLayout({ order: DEFAULT_LANDING_BLOCK_ORDER, hidden: [] }),
   )
-  const [expandedBlocks, setExpandedBlocks] = useState<Set<LandingBlockId>>(new Set(['hero']))
-  const [draggingBlockId, setDraggingBlockId] = useState<LandingBlockId | null>(null)
+  const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set(['hero']))
+  const [draggingBlockId, setDraggingBlockId] = useState<LandingLayoutBlockId | null>(null)
   const [sliderIds, setSliderIds] = useState<string[]>([])
   const [showcases, setShowcases] = useState<ShowcaseDraft[]>([])
   const [loading, setLoading] = useState(true)
@@ -121,7 +133,14 @@ export function AdminLandingPage() {
         setPickerCatalog(bootstrap.catalog)
         setHero(data.hero ?? DEFAULT_HERO)
         setSections(mergeLandingSections(data.sections))
-        setLayout(normalizeLandingLayout(data.layout))
+        const loadedCustomBlocks = data.customBlocks ?? []
+        setCustomBlocks(loadedCustomBlocks)
+        setLayout(
+          normalizeLandingLayout(
+            data.layout,
+            loadedCustomBlocks.map((block) => block.id),
+          ),
+        )
         setSliderIds(
           data.sliderContentIds?.length
             ? data.sliderContentIds
@@ -251,7 +270,7 @@ export function AdminLandingPage() {
     setHero((current) => ({ ...current, ...patch }))
   }
 
-  const toggleExpanded = (id: LandingBlockId) => {
+  const toggleExpanded = (id: string) => {
     setExpandedBlocks((current) => {
       const next = new Set(current)
       if (next.has(id)) next.delete(id)
@@ -260,9 +279,12 @@ export function AdminLandingPage() {
     })
   }
 
-  const toggleBlockHidden = (id: LandingBlockId) => {
+  const toggleBlockHidden = (id: LandingLayoutBlockId) => {
     setLayout((current) => {
-      const normalized = normalizeLandingLayout(current)
+      const normalized = normalizeLandingLayout(
+        current,
+        customBlocks.map((block) => block.id),
+      )
       const hidden = normalized.hidden.includes(id)
         ? normalized.hidden.filter((entry) => entry !== id)
         : [...normalized.hidden, id]
@@ -272,7 +294,10 @@ export function AdminLandingPage() {
 
   const moveBlock = (index: number, direction: -1 | 1) => {
     setLayout((current) => {
-      const normalized = normalizeLandingLayout(current)
+      const normalized = normalizeLandingLayout(
+        current,
+        customBlocks.map((block) => block.id),
+      )
       const nextOrder = [...normalized.order]
       const target = index + direction
       if (target < 0 || target >= nextOrder.length) return normalized
@@ -281,10 +306,13 @@ export function AdminLandingPage() {
     })
   }
 
-  const moveBlockById = (sourceId: LandingBlockId, targetId: LandingBlockId) => {
+  const moveBlockById = (sourceId: LandingLayoutBlockId, targetId: LandingLayoutBlockId) => {
     if (sourceId === targetId) return
     setLayout((current) => {
-      const normalized = normalizeLandingLayout(current)
+      const normalized = normalizeLandingLayout(
+        current,
+        customBlocks.map((block) => block.id),
+      )
       const nextOrder = [...normalized.order]
       const sourceIndex = nextOrder.indexOf(sourceId)
       const targetIndex = nextOrder.indexOf(targetId)
@@ -295,13 +323,13 @@ export function AdminLandingPage() {
     })
   }
 
-  const handleBlockDragStart = (event: DragEvent<HTMLElement>, id: LandingBlockId) => {
+  const handleBlockDragStart = (event: DragEvent<HTMLElement>, id: LandingLayoutBlockId) => {
     setDraggingBlockId(id)
     event.dataTransfer.effectAllowed = 'move'
     event.dataTransfer.setData('text/plain', id)
   }
 
-  const handleBlockDragOver = (event: DragEvent<HTMLElement>, targetId: LandingBlockId) => {
+  const handleBlockDragOver = (event: DragEvent<HTMLElement>, targetId: LandingLayoutBlockId) => {
     event.preventDefault()
     event.dataTransfer.dropEffect = 'move'
     if (!draggingBlockId || draggingBlockId === targetId) return
@@ -316,12 +344,68 @@ export function AdminLandingPage() {
     setDraggingBlockId(null)
   }
 
-  const blockSubtitle = (id: LandingBlockId): string => {
-    if (id === 'slider') return `${sliderIds.length} içerik seçili`
-    if (id === 'showcases') return `${showcases.length} kategori şeridi`
-    if (id === 'faq') return `${sections.faq.items.length} soru`
+  const blockSubtitle = (id: LandingLayoutBlockId): string => {
+    if (isCustomLandingBlockId(id)) {
+      const block = customBlocks.find((entry) => customBlockLayoutId(entry.id) === id)
+      return block ? CUSTOM_BLOCK_TYPE_LABELS[block.type] : 'Özel bölüm'
+    }
+    const builtInId = id as BuiltInLandingBlockId
+    if (builtInId === 'slider') return `${sliderIds.length} içerik seçili`
+    if (builtInId === 'showcases') return `${showcases.length} kategori şeridi`
+    if (builtInId === 'faq') return `${sections.faq.items.length} soru`
     if (layout.hidden.includes(id)) return 'Misafir sayfasında gizli'
-    return LANDING_BLOCK_HINTS[id] ?? ''
+    return LANDING_BLOCK_HINTS[builtInId] ?? ''
+  }
+
+  const addCustomBlock = () => {
+    try {
+      const block = createEmptyCustomBlock('richText')
+      const layoutId = customBlockLayoutId(block.id) as LandingLayoutBlockId
+
+      setCustomBlocks((current) => {
+        const nextBlocks = [...current, block]
+        setLayout((layoutCurrent) => {
+          const normalized = normalizeLandingLayout(
+            layoutCurrent,
+            nextBlocks.map((entry) => entry.id),
+          )
+          const order = normalized.order.includes(layoutId)
+            ? normalized.order
+            : [...normalized.order, layoutId]
+          return { ...normalized, order }
+        })
+        return nextBlocks
+      })
+
+      setExpandedBlocks((current) => new Set([...current, layoutId]))
+      setMessage('Özel bölüm eklendi. Yayına almak için Kaydet\'e basın.')
+
+      requestAnimationFrame(() => {
+        document.getElementById(`landing-block-${layoutId}`)?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+        })
+      })
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Özel bölüm eklenemedi.')
+    }
+  }
+
+  const removeCustomBlock = (blockId: string) => {
+    const layoutId = customBlockLayoutId(blockId)
+    setCustomBlocks((current) => current.filter((block) => block.id !== blockId))
+    setLayout((current) => {
+      const nextCustomIds = customBlocks.filter((block) => block.id !== blockId).map((block) => block.id)
+      const normalized = normalizeLandingLayout(current, nextCustomIds)
+      return {
+        order: normalized.order.filter((id) => id !== layoutId),
+        hidden: normalized.hidden.filter((id) => id !== layoutId),
+      }
+    })
+  }
+
+  const updateCustomBlock = (blockId: string, nextBlock: LandingCustomBlock) => {
+    setCustomBlocks((current) => current.map((block) => (block.id === blockId ? nextBlock : block)))
   }
 
   const handleSave = async () => {
@@ -330,6 +414,10 @@ export function AdminLandingPage() {
     try {
       const validIds = new Set(pickerCatalog.map((item) => item.id))
       const persistedSliderIds = sliderIds.filter((id) => validIds.has(id))
+      const persistedShowcases = showcases.map((showcase) => ({
+        ...showcase,
+        itemIds: showcase.itemIds.filter((id) => validIds.has(id)),
+      }))
       const skipped = sliderIds.length - persistedSliderIds.length
 
       const data = await saveLandingPageConfig({
@@ -337,12 +425,20 @@ export function AdminLandingPage() {
         sections,
         layout,
         sliderIds: persistedSliderIds,
-        showcases,
+        showcases: persistedShowcases,
+        customBlocks,
       })
 
       setHero(data.hero ?? hero)
       setSections(mergeLandingSections(data.sections))
-      setLayout(normalizeLandingLayout(data.layout))
+      const savedCustomBlocks = data.customBlocks ?? customBlocks
+      setCustomBlocks(savedCustomBlocks)
+      setLayout(
+        normalizeLandingLayout(
+          data.layout,
+          savedCustomBlocks.map((block) => block.id),
+        ),
+      )
       setSliderIds(
         data.sliderContentIds?.length
           ? data.sliderContentIds
@@ -360,7 +456,9 @@ export function AdminLandingPage() {
       setMessage(
         skipped > 0
           ? `Kaydedildi. ${skipped} demo içerik slider'a eklenemedi — yalnızca veritabanındaki içerikler kullanılır.`
-          : 'Ana sayfa ayarları kaydedildi.',
+          : customBlocks.length > 0 && !data.customBlocks
+            ? 'Kaydedildi. Özel bölümler sunucuda henüz desteklenmiyor — sineoda-api.zip güncellemesini yükleyin.'
+            : 'Ana sayfa ayarları kaydedildi.',
       )
     } catch (err) {
       const status = (err as Error & { status?: number }).status
@@ -374,8 +472,23 @@ export function AdminLandingPage() {
     }
   }
 
-  const renderBlockEditor = (blockId: LandingBlockId) => {
-    switch (blockId) {
+  const renderBlockEditor = (blockId: LandingLayoutBlockId) => {
+    if (isCustomLandingBlockId(blockId)) {
+      const id = blockId.slice('custom:'.length)
+      const block = customBlocks.find((entry) => entry.id === id)
+      if (!block) {
+        return <p className="text-sm text-red-300">Özel bölüm bulunamadı.</p>
+      }
+      return (
+        <AdminLandingCustomBlockEditor
+          block={block}
+          onChange={(next) => updateCustomBlock(id, next)}
+          onRemove={() => removeCustomBlock(id)}
+        />
+      )
+    }
+
+    switch (blockId as BuiltInLandingBlockId) {
       case 'hero':
         return (
           <>
@@ -420,10 +533,26 @@ export function AdminLandingPage() {
                 />
               </label>
               <label className="block space-y-2">
+                <span className="text-sm text-white/85">Birincil link</span>
+                <input
+                  value={hero.ctaPrimaryLink ?? '/kayit'}
+                  onChange={(event) => updateHero({ ctaPrimaryLink: event.target.value })}
+                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-sineoda-gold"
+                />
+              </label>
+              <label className="block space-y-2">
                 <span className="text-sm text-white/85">İkincil buton</span>
                 <input
                   value={hero.ctaSecondary}
                   onChange={(event) => updateHero({ ctaSecondary: event.target.value })}
+                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-sineoda-gold"
+                />
+              </label>
+              <label className="block space-y-2">
+                <span className="text-sm text-white/85">İkincil link</span>
+                <input
+                  value={hero.ctaSecondaryLink ?? '/giris'}
+                  onChange={(event) => updateHero({ ctaSecondaryLink: event.target.value })}
                   className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-sineoda-gold"
                 />
               </label>
@@ -757,11 +886,25 @@ export function AdminLandingPage() {
         </p>
       )}
 
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed border-white/15 bg-[#11141c]/60 px-4 py-3">
+        <p className="text-sm text-sineoda-muted">
+          Sponsor, duyuru veya özel metin bloğu ekleyebilirsiniz.
+        </p>
+        <button
+          type="button"
+          onClick={addCustomBlock}
+          className="rounded-lg border border-sineoda-gold/40 px-4 py-2 text-sm font-medium text-sineoda-gold hover:bg-sineoda-gold/10"
+        >
+          + Özel bölüm ekle
+        </button>
+      </div>
+
       <div className="space-y-3">
         {layout.order.map((blockId, index) => (
           <CollapsibleAdminPanel
             key={blockId}
-            title={LANDING_BLOCK_LABELS[blockId]}
+            panelId={`landing-block-${blockId}`}
+            title={getLayoutBlockLabel(blockId, customBlocks)}
             subtitle={blockSubtitle(blockId)}
             expanded={expandedBlocks.has(blockId)}
             onToggle={() => toggleExpanded(blockId)}

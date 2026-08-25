@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react'
 import type { LandingHeroConfig } from '../../api/client'
 import type { LandingSectionsConfig } from '../../constants/landingDefaults'
-import type { LandingBlockId, LandingLayoutConfig } from '../../constants/landingLayout'
-import { normalizeLandingLayout } from '../../constants/landingLayout'
+import type { LandingCustomBlock } from '../../constants/landingCustomBlocks'
+import type { LandingLayoutConfig } from '../../constants/landingLayout'
+import { isCustomLandingBlockId, normalizeLandingLayout } from '../../constants/landingLayout'
+import { LandingCustomBlockSection } from './LandingCustomBlockSection'
 import { LandingFeatures } from './LandingFeatures'
 import { LandingManifesto } from './LandingManifesto'
 import { LandingCategoryShowcase } from './LandingCategoryShowcase'
@@ -15,6 +17,7 @@ import { LandingCreatorSection } from './LandingCreatorSection'
 import { LandingStudentCinemaSection } from './LandingStudentCinemaSection'
 import { LandingHero } from './LandingHero'
 import { StudentCinemaPicksRow } from '../StudentCinemaPicksRow'
+import { StudentCinemaMonthlyWinnersRow } from '../StudentCinemaMonthlyWinnersRow'
 import type { ContentItem } from '../../types/content'
 import type { LandingShowcaseResponse } from '../../api/client'
 
@@ -26,11 +29,20 @@ export interface LandingPageBlockContext {
   sections: LandingSectionsConfig
   sliderItems: ContentItem[]
   studentPicks: ContentItem[]
+  studentMonthlyWinners: ContentItem[]
   showcases: LandingShowcaseResponse[]
   layout?: LandingLayoutConfig | null
+  customBlocks?: LandingCustomBlock[]
 }
 
-function renderLandingBlock(id: LandingBlockId, ctx: LandingPageBlockContext): ReactNode {
+function renderLandingBlock(id: string, ctx: LandingPageBlockContext): ReactNode {
+  if (isCustomLandingBlockId(id)) {
+    const blockId = id.slice('custom:'.length)
+    const block = ctx.customBlocks?.find((entry) => entry.id === blockId)
+    if (!block) return null
+    return <LandingCustomBlockSection block={block} />
+  }
+
   switch (id) {
     case 'hero':
       return (
@@ -45,6 +57,10 @@ function renderLandingBlock(id: LandingBlockId, ctx: LandingPageBlockContext): R
       return <LandingManifesto section={ctx.sections.manifesto} />
     case 'slider':
       return <LandingSlider items={ctx.sliderItems} />
+    case 'studentMonthlyWinners':
+      return (
+        <StudentCinemaMonthlyWinnersRow items={ctx.studentMonthlyWinners} guestMode className="pt-4" />
+      )
     case 'studentPicks':
       return <StudentCinemaPicksRow items={ctx.studentPicks} guestMode className="pt-4" />
     case 'showcases':
@@ -69,7 +85,8 @@ function renderLandingBlock(id: LandingBlockId, ctx: LandingPageBlockContext): R
 }
 
 export function LandingPageBlocks({ ctx }: { ctx: LandingPageBlockContext }) {
-  const layout = normalizeLandingLayout(ctx.layout)
+  const customBlockIds = ctx.customBlocks?.map((block) => block.id) ?? []
+  const layout = normalizeLandingLayout(ctx.layout, customBlockIds)
   const visibleOrder = layout.order.filter((id) => !layout.hidden.includes(id))
 
   return (

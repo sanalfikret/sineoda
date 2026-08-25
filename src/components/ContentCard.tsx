@@ -62,8 +62,20 @@ export function ContentCard({
         />
       </div>
 
-      {item.isNew && (
+      {item.isNew && !item.monthlyAward?.enabled && (
         <span className="absolute left-2 top-2 z-10 rounded bg-sineoda-gold px-2 py-0.5 text-[10px] font-bold text-sineoda-bg">
+          YENİ
+        </span>
+      )}
+
+      {item.monthlyAward?.enabled && item.monthlyAward.badge && (
+        <span className="absolute left-2 top-2 z-10 max-w-[calc(100%-1rem)] truncate rounded bg-emerald-400 px-2 py-0.5 text-[10px] font-bold text-[#07110d]">
+          {item.monthlyAward.badge}
+        </span>
+      )}
+
+      {item.isNew && item.monthlyAward?.enabled && (
+        <span className="absolute left-2 top-8 z-10 rounded bg-sineoda-gold px-2 py-0.5 text-[10px] font-bold text-sineoda-bg">
           YENİ
         </span>
       )}
@@ -87,6 +99,9 @@ export function ContentCard({
 
       <div className="absolute inset-x-0 bottom-0 z-20 p-3">
         <p className="truncate text-sm font-semibold text-white">{item.title}</p>
+        {item.monthlyAward?.enabled && item.monthlyAward.prize ? (
+          <p className="mt-0.5 truncate text-xs font-medium text-emerald-300">{item.monthlyAward.prize}</p>
+        ) : null}
         <p className="mt-0.5 truncate text-xs text-white/75 md:hidden">{metaLine}</p>
         <div className="mt-2 hidden space-y-1.5 md:block md:opacity-0 md:transition md:duration-200 md:group-hover:opacity-100 md:group-focus-visible:opacity-100">
           <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-white/80">

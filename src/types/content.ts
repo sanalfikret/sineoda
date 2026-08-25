@@ -1,5 +1,7 @@
+import type { FestivalEntry } from '../constants/festivals'
 import type { ContentType } from '../constants/contentTypes'
 
+export type { FestivalEntry, FestivalEntryKind, FestivalFormat } from '../constants/festivals'
 export type { ContentType }
 
 export type ContentFormat = 'standard' | 'vertical'
@@ -19,12 +21,20 @@ export interface ContentCredits {
   subtitleLanguages?: string[]
 }
 
+export interface MonthlyAward {
+  enabled: boolean
+  period: string | null
+  badge: string | null
+  prize: string | null
+}
+
 export interface ContentItem {
   id: string
   title: string
   description: string
   year: number
   duration: string
+  durationMinutes?: number | null
   rating: string
   genres: string[]
   type: ContentType
@@ -39,10 +49,12 @@ export interface ContentItem {
   featured?: boolean
   subtitles?: SubtitleTrack[]
   credits?: ContentCredits
+  festivals?: FestivalEntry[]
   program?: 'standard' | 'student_cinema'
   contentFormat?: 'main' | 'bts' | 'teacher_note'
   schoolName?: string | null
   creatorName?: string | null
+  monthlyAward?: MonthlyAward | null
 }
 
 export interface Episode {
@@ -71,6 +83,7 @@ export interface ContentCategory {
   id: string
   title: string
   itemIds: string[]
+  hidden?: boolean
 }
 
 /** Yalnızca admin panelinde görünür — kullanıcıya gösterilmez */

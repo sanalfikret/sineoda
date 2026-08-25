@@ -13,7 +13,7 @@ const router = Router()
 router.get('/', requireAuth, (req: AuthRequest, res) => {
   const user = dbGet<UserRow>('SELECT role FROM users WHERE id = ?', [req.auth!.userId])
   if (!user || user.role !== 'user') {
-    res.status(403).json({ error: 'Mesajlar yalnızca izleyici hesapları için.' })
+    res.status(403).json({ error: 'Mesajlar yalnızca izleyici (üye) hesapları için.' })
     return
   }
 

@@ -14,9 +14,9 @@ export function LandingJournalTeaser({
   const [posts, setPosts] = useState<JournalPost[]>(DEMO_JOURNAL_POSTS.slice(0, 3))
 
   useEffect(() => {
-    void fetchJournalPosts()
+    void fetchJournalPosts({ limit: 3 })
       .then((data) => {
-        if (data.posts.length > 0) setPosts(data.posts.slice(0, 3))
+        if (data.posts.length > 0) setPosts(data.posts)
       })
       .catch(() => undefined)
   }, [])

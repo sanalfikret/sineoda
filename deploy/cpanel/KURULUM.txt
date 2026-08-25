@@ -1,0 +1,81 @@
+SINEODA — cPanel paylaşımlı hosting (geçici test)
+================================================
+
+cPanel'de iki senaryo var. Önce hangisi olduğunu kontrol et:
+
+  cPanel → "Setup Node.js App" veya "Node.js Selector" var mı?
+
+  YOK  → Senaryo A (en kolay, önerilen test)
+  VAR  → Senaryo B (API de kendi hostinginde)
+
+
+═══════════════════════════════════════════════════════════
+SENARYO A — Sadece site cPanel'de, API Render'da (ÖNERİLEN)
+═══════════════════════════════════════════════════════════
+
+Neden: Paylaşımlı paketlerin çoğunda Node.js yok veya kısıtlı.
+       Site statik dosya olarak cPanel'de çalışır, API zaten Render'da.
+
+ADIM 1 — Bilgisayarında build
+  copy deploy\cpanel\env.static.example .env.cpanel
+  (.env.cpanel içinde VITE_API_URL = API adresin)
+  deploy\cpanel\build-static.bat
+
+ADIM 2 — Render API'de domain izni
+  Render → sineoda-api → Environment
+  FRONTEND_URL = https://senindomain.com  (cPanel domain'in)
+
+ADIM 3 — FTP / Dosya Yöneticisi ile yükle
+  dist\ klasörünün İÇİNDEKİLER  →  public_html\
+  deploy\cpanel\public_html.htaccess  →  public_html\.htaccess
+
+ADIM 4 — Test
+  https://senindomain.com
+  Admin: https://senindomain.com/admin/giris
+
+Not: Render free tier uyuyunca ilk istek 30-60 sn gecikebilir.
+
+ÖNEMLİ — Üyeler ve veritabanı (Render):
+  Render ücretsiz planda sunucu yeniden başlayınca veya deploy olunca
+  veritabanı SIFIRLANABİLİR (üyeler kaybolur). Zip yüklemek bunu etkilemez.
+  Kalıcı veri için: Render → sineoda-api → Disk ekle (/var/data),
+  DATA_DIR=/var/data ve UPLOADS_DIR=/var/data/uploads env ayarla.
+  (Starter plan veya üzeri gerekir.)
+
+
+═══════════════════════════════════════════════════════════
+SENARYO B — cPanel'de Node.js var (API alt domain) — ÖNERİLEN
+═══════════════════════════════════════════════════════════
+
+Render'a para vermeden API'yi kendi hostinginde çalıştır.
+Ayrıntılı rehber: deploy\cpanel\KURULUM-API.txt
+
+Özet:
+  1) deploy\cpanel\build-api.bat  →  sineoda-api.zip
+  2) Alt domain: api.senindomain.com + SSL
+  3) Zip'i /home/kullanici/sineoda-api'ye aç (public_html DIŞI)
+  4) Setup Node.js App → npm start → Run NPM Install → env değişkenleri
+  5) .env.cpanel: VITE_API_URL=https://api.senindomain.com → build-static.bat
+  6) dist → public_html
+
+
+═══════════════════════════════════════════════════════════
+Sık sorunlar
+═══════════════════════════════════════════════════════════
+
+• Siyah ekran / site açılmıyor:
+  1) cPanel → SSL/TLS → Let's Encrypt / AutoSSL ile HTTPS aç
+     (http:// adresinde bazı tarayıcı özellikleri çalışmaz)
+  2) Eski dosyaları sil, yeni sineoda-site.zip yükle
+  3) Ctrl+Shift+R ile hard refresh
+  4) Render → FRONTEND_URL = https://birtakimislerdizi.com
+
+• Beyaz sayfa / 404: .htaccess eksik veya public_html yanlış
+• API bağlanmıyor: VITE_API_URL build'de yanlış; yeniden build + yükle
+• CORS hatası: Render'da FRONTEND_URL domain'inle eşleşmeli
+• Admin açılmıyor: Hard refresh Ctrl+Shift+R
+
+• SQLite / upload: public_html İÇİNE koyma — data ve uploads ayrı klasör
+
+Demo admin (canlıda şifreyi değiştir):
+  admin@sineoda.com / admin123

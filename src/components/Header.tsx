@@ -1,25 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { fetchUnreadMessageCount } from '../api/client'
+import { SITE_NAV_ITEMS } from '../constants/siteNav'
 import { useAuth } from '../context/AuthContext'
+import { useContent } from '../context/ContentContext'
 import { useSearchUI } from '../context/SearchContext'
 import { ProfileAvatar } from './ProfileAvatar'
+import { InstallAppMenuItem } from './InstallAppButton'
 import { PROFILE_AVATARS } from '../types/auth'
-
-const viewerNavItems = [
-  { label: 'Ana Sayfa', to: '/', match: (path: string) => path === '/' },
-  { label: 'Diziler', to: '/diziler', match: (path: string) => path === '/diziler' },
-  { label: 'Filmler', to: '/filmler', match: (path: string) => path === '/filmler' },
-  { label: 'Belgeseller', to: '/belgeseller', match: (path: string) => path === '/belgeseller' },
-  { label: 'Dikey Diziler', to: '/dikey-diziler', match: (path: string) => path === '/dikey-diziler' },
-  {
-    label: 'Genç Sinema',
-    to: '/genc-sinema',
-    match: (path: string) => path === '/genc-sinema',
-  },
-  { label: 'Listem', to: '/listem', match: (path: string) => path === '/listem' },
-  { label: 'Dergi', to: '/dergi', match: (path: string) => path === '/dergi' || path.startsWith('/dergi/') },
-]
 
 const creatorNavItems = [
   { label: 'Yapımcı Paneli', to: '/creator', match: (path: string) => path.startsWith('/creator') },
@@ -28,6 +16,7 @@ const creatorNavItems = [
 
 export function Header() {
   const { user, activeProfile, logout, isCreator, clearActiveProfile } = useAuth()
+  const { hiddenNavIds } = useContent()
   const { openSearch } = useSearchUI()
   const navigate = useNavigate()
   const location = useLocation()
@@ -53,10 +42,18 @@ export function Header() {
   }, [])
 
   const navItems = useMemo(() => {
-    if (isCreator) return creatorNavItems
-    return viewerNavItems
-  }, [isCreator])
+    if (isCreator) {
+      return creatorNavItems.map((item) => ({ ...item, isStudentCinema: false }))
+    }
+    return SITE_NAV_ITEMS.filter((item) => !hiddenNavIds.includes(item.id)).map((item) => ({
+      label: item.label,
+      to: item.path,
+      match: item.match,
+      isStudentCinema: item.id === 'gencSinema',
+    }))
+  }, [isCreator, hiddenNavIds])
 
+  const showListemInUserMenu = !hiddenNavIds.includes('listem')
   const isActive = (match: (path: string) => boolean) => match(location.pathname)
 
   return (
@@ -69,7 +66,10 @@ export function Header() {
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8 tv:py-5">
         <div className="flex items-center gap-4 lg:gap-8">
-          <Link to={isCreator ? '/creator' : '/'} className="flex items-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sineoda-gold">
+          <Link
+            to={isCreator ? '/creator' : '/'}
+            className="flex items-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sineoda-gold"
+          >
             <img src="/icon.svg" alt="" className="h-8 w-8 rounded-lg sm:h-9 sm:w-9 tv:h-11 tv:w-11" />
             <span className="text-xl font-bold tracking-tight text-white sm:text-2xl tv:text-3xl">
               Sine<span className="text-sineoda-gold">oda</span>
@@ -82,7 +82,7 @@ export function Header() {
                 key={item.to}
                 to={item.to}
                 className={`rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold tv:px-4 tv:py-3 tv:text-base ${
-                  item.label === 'Genç Sinema'
+                  item.isStudentCinema
                     ? isActive(item.match)
                       ? 'bg-emerald-500/15 text-emerald-300'
                       : 'text-emerald-200/80 hover:bg-emerald-500/10 hover:text-emerald-200'
@@ -159,18 +159,20 @@ export function Header() {
                     </>
                   ) : (
                     <>
-                      <Link
-                        to="/mesajlar"
-                        className="flex items-center justify-between px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        <span>Mesajlarım</span>
-                        {unreadMessages > 0 && (
-                          <span className="rounded-full bg-sineoda-gold px-2 py-0.5 text-xs font-semibold text-sineoda-bg">
-                            {unreadMessages}
-                          </span>
-                        )}
-                      </Link>
+                      {user.role === 'user' && (
+                        <Link
+                          to="/mesajlar"
+                          className="flex items-center justify-between px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          <span>Mesajlarım</span>
+                          {unreadMessages > 0 && (
+                            <span className="rounded-full bg-sineoda-gold px-2 py-0.5 text-xs font-semibold text-sineoda-bg">
+                              {unreadMessages}
+                            </span>
+                          )}
+                        </Link>
+                      )}
                       <Link
                         to="/hesap"
                         className="block px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
@@ -196,13 +198,16 @@ export function Header() {
                       >
                         Abonelik
                       </Link>
-                      <Link
-                        to="/listem"
-                        className="block px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        Listem
-                      </Link>
+                      {showListemInUserMenu ? (
+                        <Link
+                          to="/listem"
+                          className="block px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          Listem
+                        </Link>
+                      ) : null}
+                      <InstallAppMenuItem onNavigate={() => setUserMenuOpen(false)} />
                       <button
                         type="button"
                         className="block w-full px-4 py-2.5 text-left text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
@@ -266,6 +271,9 @@ export function Header() {
                 </Link>
               </li>
             )}
+            <li>
+              <InstallAppMenuItem onNavigate={() => setMenuOpen(false)} />
+            </li>
           </ul>
         </nav>
       )}

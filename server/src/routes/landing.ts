@@ -3,6 +3,11 @@ import { dbAll, dbGet, dbRun } from '../db.js'
 import { mapContent } from '../mappers.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import {
+  getLandingCustomBlocks,
+  saveLandingCustomBlocks,
+  type LandingCustomBlock,
+} from '../services/landingCustomBlocks.js'
+import {
   getLandingHeroConfig,
   parseLandingHero,
   saveLandingHeroConfig,
@@ -24,6 +29,9 @@ import type { ContentRow } from '../types.js'
 const router = Router()
 
 export function getLandingConfig() {
+  const customBlocks = getLandingCustomBlocks()
+  const customBlockIds = customBlocks.map((block) => block.id)
+
   const sliderRows = dbAll<{ content_id: string; sort_order: number }>(
     'SELECT content_id, sort_order FROM landing_slider ORDER BY sort_order',
   )
@@ -41,8 +49,11 @@ export function getLandingConfig() {
 
   const catalog = dbAll<ContentRow>('SELECT * FROM content')
   const catalogMap = new Map(catalog.map((row) => [row.id, mapContent(row)]))
+  const validContentIds = new Set(catalog.map((row) => row.id))
 
-  const sliderContentIds = sliderRows.map((row) => row.content_id)
+  const sliderContentIds = sliderRows
+    .map((row) => row.content_id)
+    .filter((contentId) => validContentIds.has(contentId))
 
   const slider = sliderContentIds
     .map((contentId) => catalogMap.get(contentId))
@@ -62,9 +73,9 @@ export function getLandingConfig() {
 
   const hero = getLandingHeroConfig()
   const sections = getLandingSectionsConfig()
-  const layout = getLandingLayoutConfig()
+  const layout = getLandingLayoutConfig(customBlockIds)
 
-  return { slider, sliderContentIds, showcases, hero, sections, layout }
+  return { slider, sliderContentIds, showcases, hero, sections, layout, customBlocks }
 }
 
 function contentExists(contentId: string | null) {
@@ -84,6 +95,30 @@ function validateHeroPayload(raw: unknown): LandingHeroConfig {
   return hero
 }
 
+function sanitizeLayout(raw: Partial<LandingLayoutConfig> | undefined, customBlockIds: string[]) {
+  if (!raw) return undefined
+  const validIds = new Set([
+    ...customBlockIds.map((id) => `custom:${id}`),
+    'hero',
+    'manifesto',
+    'slider',
+    'studentMonthlyWinners',
+    'studentPicks',
+    'showcases',
+    'journal',
+    'features',
+    'campaign',
+    'studentCinema',
+    'faq',
+    'emailSignup',
+    'creator',
+  ])
+  return {
+    order: (raw.order ?? []).filter((id) => validIds.has(id)),
+    hidden: (raw.hidden ?? []).filter((id) => validIds.has(id)),
+  }
+}
+
 router.patch('/hero', requireAdmin, (req: AuthRequest, res) => {
   const hero = saveLandingHeroConfig(validateHeroPayload(req.body))
   res.json({ hero })
@@ -95,7 +130,8 @@ router.patch('/sections', requireAdmin, (req: AuthRequest, res) => {
 })
 
 router.patch('/layout', requireAdmin, (req: AuthRequest, res) => {
-  const layout = saveLandingLayoutConfig(req.body as Partial<LandingLayoutConfig>)
+  const customBlockIds = getLandingCustomBlocks().map((block) => block.id)
+  const layout = saveLandingLayoutConfig(req.body, customBlockIds)
   res.json({ layout })
 })
 
@@ -111,7 +147,16 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
     layout?: Partial<LandingLayoutConfig>
     sliderIds?: unknown
     showcases?: unknown
+    customBlocks?: unknown
   }
+
+  let customBlocks: LandingCustomBlock[] | null = null
+  if (Array.isArray(body.customBlocks)) {
+    customBlocks = saveLandingCustomBlocks(body.customBlocks as LandingCustomBlock[])
+  } else {
+    customBlocks = getLandingCustomBlocks()
+  }
+  const customBlockIds = customBlocks.map((block) => block.id)
 
   if (body.hero) {
     saveLandingHeroConfig(validateHeroPayload(body.hero))
@@ -120,20 +165,20 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
     saveLandingSectionsConfig(body.sections)
   }
   if (body.layout) {
-    saveLandingLayoutConfig(body.layout)
+    saveLandingLayoutConfig(sanitizeLayout(body.layout, customBlockIds), customBlockIds)
   }
 
   const sliderIds = Array.isArray(body.sliderIds) ? body.sliderIds.map(String) : null
   const showcases = Array.isArray(body.showcases) ? body.showcases : null
+  const catalogIds = new Set(dbAll<{ id: string }>('SELECT id FROM content').map((row) => row.id))
 
   if (sliderIds && showcases) {
     dbRun('DELETE FROM landing_slider')
-    sliderIds.forEach((contentId: string, index: number) => {
-      dbRun('INSERT INTO landing_slider (content_id, sort_order) VALUES (?, ?)', [
-        contentId,
-        index,
-      ])
-    })
+    sliderIds
+      .filter((contentId) => catalogIds.has(contentId))
+      .forEach((contentId: string, index: number) => {
+        dbRun('INSERT INTO landing_slider (content_id, sort_order) VALUES (?, ?)', [contentId, index])
+      })
 
     dbRun('DELETE FROM landing_showcase_items')
     dbRun('DELETE FROM landing_showcases')
@@ -155,24 +200,20 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
 
         dbRun(
           'INSERT INTO landing_showcases (id, title, icon, description, sort_order) VALUES (?, ?, ?, ?, ?)',
-          [
-            id,
-            title,
-            String(showcase.icon ?? 'film'),
-            String(showcase.description ?? ''),
-            index,
-          ],
+          [id, title, String(showcase.icon ?? 'film'), String(showcase.description ?? ''), index],
         )
 
-        ;(showcase.itemIds ?? []).forEach((contentId: string, itemIndex: number) => {
-          dbRun(
-            'INSERT INTO landing_showcase_items (showcase_id, content_id, sort_order) VALUES (?, ?, ?)',
-            [id, contentId, itemIndex],
-          )
-        })
+        ;(showcase.itemIds ?? [])
+          .filter((contentId) => catalogIds.has(contentId))
+          .forEach((contentId: string, itemIndex: number) => {
+            dbRun(
+              'INSERT INTO landing_showcase_items (showcase_id, content_id, sort_order) VALUES (?, ?, ?)',
+              [id, contentId, itemIndex],
+            )
+          })
       },
     )
-  } else if (!body.hero && !body.sections && !body.layout) {
+  } else if (!body.hero && !body.sections && !body.layout && !body.customBlocks) {
     res.status(400).json({ error: 'Kaydedilecek ana sayfa verisi bulunamadı.' })
     return
   }

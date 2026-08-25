@@ -1,5 +1,7 @@
+import { mapMonthlyAwardRow } from './services/studentCinemaAwards.js'
 import { resolveContentImages } from './services/contentImages.js'
 import { parseCredits } from './services/credits.js'
+import { parseFestivals } from './services/festivals.js'
 import {
   getLicenseDaysRemaining,
   isLicenseExpired,
@@ -101,6 +103,7 @@ export function mapContent(row: ContentRow & { school_name?: string | null; crea
     description: row.description,
     year: row.year,
     duration: row.duration,
+    durationMinutes: row.duration_minutes ?? null,
     rating: row.rating,
     type: row.type,
     genres: JSON.parse(row.genres) as string[],
@@ -115,10 +118,12 @@ export function mapContent(row: ContentRow & { school_name?: string | null; crea
     featured: Boolean(row.featured),
     subtitles: parseSubtitles(row.subtitles_json),
     credits: parseCredits(row.credits_json),
+    festivals: parseFestivals(row.festivals_json),
     program: row.program ?? 'standard',
     contentFormat: row.content_format ?? 'main',
     schoolName: row.school_name ?? null,
     creatorName: row.creator_name ?? null,
+    monthlyAward: mapMonthlyAwardRow(row),
   }
 }
 

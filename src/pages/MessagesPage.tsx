@@ -6,14 +6,26 @@ import {
   type UserMessage,
 } from '../api/client'
 import { Header } from '../components/Header'
+import { useAuth } from '../context/AuthContext'
 
 export function MessagesPage() {
+  const { user, isAdmin, isCreator } = useAuth()
   const [messages, setMessages] = useState<UserMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
+  const viewerOnly =
+    isAdmin || isCreator || (user && user.role !== 'user')
+
   const load = async () => {
+    if (viewerOnly) {
+      setLoading(false)
+      setError('')
+      setMessages([])
+      return
+    }
+
     setLoading(true)
     setError('')
     try {
@@ -31,7 +43,7 @@ export function MessagesPage() {
 
   useEffect(() => {
     void load()
-  }, [])
+  }, [viewerOnly])
 
   const selected = messages.find((message) => message.id === selectedId) ?? null
 
@@ -63,13 +75,24 @@ export function MessagesPage() {
           <p className="mt-1 text-sm text-sineoda-muted">Sineoda ekibinden duyurular ve bildirimler</p>
         </div>
 
-        {error && (
-          <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        {viewerOnly ? (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-6 text-sm text-amber-100">
+            <p className="font-medium">Bu sayfa yalnızca izleyici hesapları içindir.</p>
+            <p className="mt-2 text-amber-100/80">
+              Admin veya yapımcı hesabıyla giriş yaptınız. Üyeye gönderdiğiniz mesajı görmek için o üyenin
+              e-posta ve şifresiyle giriş yapın — gizli pencerede denemeniz en kolayı.
+            </p>
+            {isAdmin && (
+              <Link to="/admin/kullanicilar" className="mt-4 inline-block text-sineoda-gold hover:underline">
+                Admin → İzleyiciler
+              </Link>
+            )}
+          </div>
+        ) : error ? (
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-sm text-red-300">
             {error}
           </div>
-        )}
-
-        {loading ? (
+        ) : loading ? (
           <p className="text-sm text-sineoda-muted">Yükleniyor...</p>
         ) : messages.length === 0 ? (
           <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-sineoda-muted">

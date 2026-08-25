@@ -384,6 +384,13 @@ function runMigrations() {
   ensureColumn('content', 'parent_content_id', 'TEXT')
   ensureColumn('content', 'school_id', 'TEXT')
   ensureColumn('content', 'school_review_status', "TEXT NOT NULL DEFAULT 'none'")
+  ensureColumn('content', 'monthly_award_enabled', 'INTEGER NOT NULL DEFAULT 0')
+  ensureColumn('content', 'monthly_award_period', 'TEXT')
+  ensureColumn('content', 'monthly_award_badge', 'TEXT')
+  ensureColumn('content', 'monthly_award_prize', 'TEXT')
+  ensureColumn('content', 'festivals_json', "TEXT NOT NULL DEFAULT '[]'")
+  ensureColumn('content', 'duration_minutes', 'INTEGER')
+  ensureColumn('categories', 'hidden', 'INTEGER NOT NULL DEFAULT 0')
 
   db.run(`
     CREATE TABLE IF NOT EXISTS user_messages (
@@ -394,6 +401,43 @@ function runMigrations() {
       sent_by_admin_id TEXT,
       read_at TEXT,
       created_at TEXT NOT NULL
+    );
+  `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS ad_campaigns (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      video_url TEXT NOT NULL,
+      kids_video_url TEXT,
+      target_all INTEGER NOT NULL DEFAULT 0,
+      frequency TEXT NOT NULL DEFAULT 'once',
+      skip_mode TEXT NOT NULL DEFAULT 'skippable',
+      skip_after_seconds INTEGER NOT NULL DEFAULT 5,
+      starts_at TEXT,
+      ends_at TEXT,
+      is_active INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+  `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS ad_campaign_content (
+      campaign_id TEXT NOT NULL,
+      content_id TEXT NOT NULL,
+      PRIMARY KEY (campaign_id, content_id)
+    );
+  `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS ad_campaign_views (
+      id TEXT PRIMARY KEY,
+      campaign_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      profile_id TEXT,
+      content_id TEXT NOT NULL,
+      viewed_at TEXT NOT NULL
     );
   `)
 }

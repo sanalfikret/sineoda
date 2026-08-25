@@ -49,7 +49,7 @@ export function LandingStudentCinemaSection({
 
         <div className="mt-14 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
-            to="/creator/kayit?program=genc-sinema"
+            to={section.ctaPrimaryLink || '/creator/kayit?program=genc-sinema'}
             className="inline-flex h-14 min-w-[240px] items-center justify-center rounded-lg bg-emerald-500 px-10 text-base font-bold text-[#07110d] shadow-lg shadow-emerald-500/20 transition hover:brightness-110"
           >
             {section.ctaPrimary}
