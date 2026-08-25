@@ -4,11 +4,14 @@ import { ImageUpload } from '../../components/admin/ImageUpload'
 import { VideoUpload } from '../../components/admin/VideoUpload'
 import { SubtitleUpload } from '../../components/admin/SubtitleUpload'
 import { AdminEpisodesPanel } from '../../components/admin/AdminEpisodesPanel'
+import { FestivalCreditsEditor } from '../../components/admin/FestivalCreditsEditor'
 import { resolveMediaUrl, fetchAdminCatalog } from '../../api/client'
 import { useContent } from '../../context/ContentContext'
 import { BROWSE_GENRES, CONTENT_GENRES, STREAM_PROVIDERS } from '../../constants/genres'
 import { buildSubtitles, subtitlesToForm } from '../../utils/subtitles'
 import { buildCredits, creditsToForm } from '../../utils/credits'
+import { buildFestivals, festivalsToForm } from '../../utils/duration'
+import type { FestivalEntry } from '../../constants/festivals'
 import { CONTENT_TYPES, isSeriesContent } from '../../constants/contentTypes'
 import type { ContentType } from '../../types/content'
 import { toDateInputValue } from '../../utils/license'
@@ -28,6 +31,7 @@ const EMPTY_FORM = {
   description: '',
   year: new Date().getFullYear(),
   duration: '',
+  durationMinutes: '',
   rating: '13+',
   type: 'film' as ContentType,
   genres: '',
@@ -45,6 +49,7 @@ const EMPTY_FORM = {
   producers: '',
   cast: '',
   studio: '',
+  festivals: [] as FestivalEntry[],
   ...LICENSE_DEFAULTS,
   publishMode: 'now' as 'now' | 'scheduled',
   publishedAt: defaultScheduledDateTime(),
@@ -99,6 +104,7 @@ export function AdminContentFormPage() {
           description: item.description,
           year: item.year,
           duration: item.duration,
+          durationMinutes: item.durationMinutes ? String(item.durationMinutes) : '',
           rating: item.rating,
           type: item.type,
           genres: item.genres.join(', '),
@@ -117,6 +123,7 @@ export function AdminContentFormPage() {
           publishedAt: toDateTimeLocalValue(item.publishedAt) || defaultScheduledDateTime(),
           ...subtitlesToForm(item.subtitles),
           ...creditsToForm(item.credits),
+          festivals: festivalsToForm(item.festivals),
         })
       })
       .catch(() => {
@@ -128,6 +135,7 @@ export function AdminContentFormPage() {
           description: item.description,
           year: item.year,
           duration: item.duration,
+          durationMinutes: item.durationMinutes ? String(item.durationMinutes) : '',
           rating: item.rating,
           type: item.type,
           genres: item.genres.join(', '),
@@ -141,6 +149,7 @@ export function AdminContentFormPage() {
           featured: item.featured ?? false,
           ...subtitlesToForm(item.subtitles),
           ...creditsToForm(item.credits),
+          festivals: festivalsToForm(item.festivals),
         }))
       })
   }, [id, getContentById])
@@ -173,7 +182,12 @@ export function AdminContentFormPage() {
       title: form.title.trim(),
       description: form.description.trim(),
       year: form.year,
-      duration: form.duration.trim(),
+      duration:
+        form.type === 'dizi'
+          ? form.duration.trim()
+          : form.duration.trim() || (Number(form.durationMinutes) > 0 ? `${form.durationMinutes} dk` : ''),
+      durationMinutes:
+        form.type === 'dizi' ? null : Number(form.durationMinutes) > 0 ? Number(form.durationMinutes) : null,
       rating: form.rating,
       type: form.type,
       genres: form.genres
@@ -198,6 +212,7 @@ export function AdminContentFormPage() {
           : undefined,
       subtitles: buildSubtitles(form.subtitleTr, form.subtitleEn),
       credits: buildCredits(form),
+      festivals: buildFestivals(form.festivals),
     }
 
     setSaving(true)
@@ -373,6 +388,11 @@ export function AdminContentFormPage() {
           </div>
         </section>
 
+        <FestivalCreditsEditor
+          entries={form.festivals}
+          onChange={(festivals) => update('festivals', festivals)}
+        />
+
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Yıl">
             <input
@@ -383,12 +403,26 @@ export function AdminContentFormPage() {
             />
           </Field>
           <Field label="Süre">
-            <input
-              value={form.duration}
-              onChange={(event) => update('duration', event.target.value)}
-              placeholder="2s 14dk veya 8 bölüm"
-              className={inputClass}
-            />
+            {form.type === 'dizi' ? (
+              <input
+                value={form.duration}
+                onChange={(event) => update('duration', event.target.value)}
+                placeholder="8 bölüm"
+                className={inputClass}
+              />
+            ) : (
+              <div className="space-y-2">
+                <input
+                  type="number"
+                  min={1}
+                  value={form.durationMinutes}
+                  onChange={(event) => update('durationMinutes', event.target.value)}
+                  placeholder="92"
+                  className={inputClass}
+                />
+                <p className="text-xs text-sineoda-muted">Film süresi (dakika). Örn: 92 → 1s 32dk</p>
+              </div>
+            )}
           </Field>
           <Field label="Yaş Sınırı">
             <select

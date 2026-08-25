@@ -1,6 +1,7 @@
 import { Router } from 'express'
-import { dbAll, dbGet } from '../db.js'
+import { dbGet } from '../db.js'
 import { mapJournalPost } from '../mappers.js'
+import { listPublishedJournalPostsPage } from '../services/journalList.js'
 import type { JournalPostRow } from '../types.js'
 
 const router = Router()
@@ -9,11 +10,10 @@ function publishedClause() {
   return `status = 'published' AND (published_at IS NULL OR published_at <= datetime('now'))`
 }
 
-router.get('/', (_req, res) => {
-  const rows = dbAll<JournalPostRow>(
-    `SELECT * FROM journal_posts WHERE ${publishedClause()} ORDER BY published_at DESC, created_at DESC`,
-  )
-  res.json({ posts: rows.map(mapJournalPost) })
+router.get('/', (req, res) => {
+  const page = Number(req.query.page ?? 1)
+  const limit = Number(req.query.limit ?? req.query.pageSize ?? undefined)
+  res.json(listPublishedJournalPostsPage(page, Number.isFinite(limit) && limit > 0 ? limit : undefined))
 })
 
 router.get('/:slug', (req, res) => {

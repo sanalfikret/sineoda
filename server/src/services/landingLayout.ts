@@ -1,9 +1,10 @@
 import { dbGet, dbRun } from '../db.js'
 
-export type LandingBlockId =
+export type BuiltInLandingBlockId =
   | 'hero'
   | 'manifesto'
   | 'slider'
+  | 'studentMonthlyWinners'
   | 'studentPicks'
   | 'showcases'
   | 'journal'
@@ -14,17 +15,21 @@ export type LandingBlockId =
   | 'emailSignup'
   | 'creator'
 
+export type LandingLayoutBlockId = BuiltInLandingBlockId | `custom:${string}`
+
 export interface LandingLayoutConfig {
-  order: LandingBlockId[]
-  hidden: LandingBlockId[]
+  order: LandingLayoutBlockId[]
+  hidden: LandingLayoutBlockId[]
 }
 
 const SETTINGS_KEY = 'landing_layout'
+const CUSTOM_PREFIX = 'custom:'
 
-const ALL_LANDING_BLOCK_IDS: LandingBlockId[] = [
+const ALL_LANDING_BLOCK_IDS: BuiltInLandingBlockId[] = [
   'hero',
   'manifesto',
   'slider',
+  'studentMonthlyWinners',
   'studentPicks',
   'showcases',
   'journal',
@@ -36,15 +41,32 @@ const ALL_LANDING_BLOCK_IDS: LandingBlockId[] = [
   'creator',
 ]
 
-const DEFAULT_LANDING_BLOCK_ORDER: LandingBlockId[] = [...ALL_LANDING_BLOCK_IDS]
+const DEFAULT_LANDING_BLOCK_ORDER: BuiltInLandingBlockId[] = [...ALL_LANDING_BLOCK_IDS]
 
-export function normalizeLandingLayout(raw?: Partial<LandingLayoutConfig> | null): LandingLayoutConfig {
+function isBuiltInBlockId(id: string): id is BuiltInLandingBlockId {
+  return ALL_LANDING_BLOCK_IDS.includes(id as BuiltInLandingBlockId)
+}
+
+function isCustomBlockId(id: string) {
+  return id.startsWith(CUSTOM_PREFIX)
+}
+
+function isKnownLayoutBlockId(id: string, customBlockIds: string[]) {
+  if (isBuiltInBlockId(id)) return true
+  if (!isCustomBlockId(id)) return false
+  return customBlockIds.includes(id.slice(CUSTOM_PREFIX.length))
+}
+
+export function normalizeLandingLayout(
+  raw?: Partial<LandingLayoutConfig> | null,
+  customBlockIds: string[] = [],
+): LandingLayoutConfig {
   const orderInput = Array.isArray(raw?.order) ? raw.order : []
-  const order: LandingBlockId[] = []
+  const order: LandingLayoutBlockId[] = []
 
   for (const id of orderInput) {
-    if (ALL_LANDING_BLOCK_IDS.includes(id as LandingBlockId) && !order.includes(id as LandingBlockId)) {
-      order.push(id as LandingBlockId)
+    if (isKnownLayoutBlockId(id, customBlockIds) && !order.includes(id as LandingLayoutBlockId)) {
+      order.push(id as LandingLayoutBlockId)
     }
   }
 
@@ -54,30 +76,30 @@ export function normalizeLandingLayout(raw?: Partial<LandingLayoutConfig> | null
 
   const hiddenInput = Array.isArray(raw?.hidden) ? raw.hidden : []
   const hidden = hiddenInput.filter(
-    (id): id is LandingBlockId =>
-      ALL_LANDING_BLOCK_IDS.includes(id as LandingBlockId) && !hidden.includes(id as LandingBlockId),
+    (id): id is LandingLayoutBlockId =>
+      isKnownLayoutBlockId(id, customBlockIds) && !hidden.includes(id as LandingLayoutBlockId),
   )
 
   return { order, hidden }
 }
 
-export function getLandingLayoutConfig(): LandingLayoutConfig {
+export function getLandingLayoutConfig(customBlockIds: string[] = []): LandingLayoutConfig {
   const row = dbGet<{ value: string }>('SELECT value FROM site_settings WHERE key = ?', [SETTINGS_KEY])
   if (!row?.value) {
-    return { order: [...DEFAULT_LANDING_BLOCK_ORDER], hidden: [] }
+    return normalizeLandingLayout(null, customBlockIds)
   }
 
   try {
-    return normalizeLandingLayout(JSON.parse(row.value) as Partial<LandingLayoutConfig>)
+    return normalizeLandingLayout(JSON.parse(row.value) as Partial<LandingLayoutConfig>, customBlockIds)
   } catch {
-    return { order: [...DEFAULT_LANDING_BLOCK_ORDER], hidden: [] }
+    return normalizeLandingLayout(null, customBlockIds)
   }
 }
 
-export function saveLandingLayoutConfig(raw: unknown): LandingLayoutConfig {
-  const layout = normalizeLandingLayout(raw as Partial<LandingLayoutConfig>)
+export function saveLandingLayoutConfig(raw: unknown, customBlockIds: string[] = []): LandingLayoutConfig {
+  const layout = normalizeLandingLayout(raw as Partial<LandingLayoutConfig>, customBlockIds)
   dbRun(
-    'INSERT INTO site_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
+    'INSERT OR REPLACE INTO site_settings (key, value) VALUES (?, ?)',
     [SETTINGS_KEY, JSON.stringify(layout)],
   )
   return layout

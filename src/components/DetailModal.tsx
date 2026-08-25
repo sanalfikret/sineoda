@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
 import { fetchEpisodes, fetchWatchProgress, resolveMediaUrl } from '../api/client'
 import type { ContentItem, Episode } from '../types/content'
 import { FEEDBACK_EMAIL } from '../constants/site'
@@ -9,6 +8,7 @@ import { ContentActionButtons } from './ContentActionButtons'
 import { SeriesEpisodeSection } from './SeriesEpisodeSection'
 import { StudentCinemaMetaDetails } from './StudentCinemaMetaDetails'
 import { getStudentDisplayName } from '../utils/studentDisplayName'
+import { TermsAcceptanceNote } from './TermsAcceptanceNote'
 
 interface DetailModalProps {
   item: ContentItem | null
@@ -313,13 +313,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
           )}
 
           <div className="mt-8 space-y-4 border-t border-white/10 pt-6">
-            <p className="text-sm text-white/70">
-              Oynat&apos;a tıklayarak{' '}
-              <Link to="/yasal/kullanim-kosullari" className="text-sineoda-gold underline underline-offset-2">
-                Kullanım Koşulları
-              </Link>
-              &apos;mızı kabul etmiş olursunuz.
-            </p>
+            <TermsAcceptanceNote />
             <div>
               <p className="text-sm font-medium text-white">Geri bildirim</p>
               <a

@@ -5,7 +5,9 @@ export interface LandingHeroConfig {
   line2: string
   description: string
   ctaPrimary: string
+  ctaPrimaryLink: string
   ctaSecondary: string
+  ctaSecondaryLink: string
   legalNote: string
   backgroundImage: string
   backgroundVideo: string
@@ -22,7 +24,9 @@ export const DEFAULT_LANDING_HERO: LandingHeroConfig = {
   description:
     'Dünyanın dört bir yanından bağımsız yapımcıların özgün hikâyeleri. Ticari blockbuster değil — küratörlü seçki, sakin arayüz, sinemaseverlere özel bir izleme deneyimi.',
   ctaPrimary: 'Ücretsiz Dene',
+  ctaPrimaryLink: '/kayit',
   ctaSecondary: 'Giriş Yap',
+  ctaSecondaryLink: '/giris',
   legalNote: "Üye olarak Kullanım Koşulları ve Gizlilik Politikası'nı kabul etmiş olursun.",
   backgroundImage: '',
   backgroundVideo: '',
@@ -80,7 +84,9 @@ export function parseLandingHero(input: Partial<LandingHeroConfig> | null | unde
     line2: trimOrEmpty(source.line2) || DEFAULT_LANDING_HERO.line2,
     description: trimOrEmpty(source.description) || DEFAULT_LANDING_HERO.description,
     ctaPrimary: trimOrEmpty(source.ctaPrimary) || DEFAULT_LANDING_HERO.ctaPrimary,
+    ctaPrimaryLink: trimOrEmpty(source.ctaPrimaryLink) || DEFAULT_LANDING_HERO.ctaPrimaryLink,
     ctaSecondary: trimOrEmpty(source.ctaSecondary) || DEFAULT_LANDING_HERO.ctaSecondary,
+    ctaSecondaryLink: trimOrEmpty(source.ctaSecondaryLink) || DEFAULT_LANDING_HERO.ctaSecondaryLink,
     legalNote: trimOrEmpty(source.legalNote) || DEFAULT_LANDING_HERO.legalNote,
     backgroundImage,
     backgroundVideo,

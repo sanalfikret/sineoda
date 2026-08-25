@@ -173,6 +173,11 @@ export function AdminLandingSectionBlock({
           value={sections.manifesto.ctaLabel}
           onChange={(ctaLabel) => patch('manifesto', { ...sections.manifesto, ctaLabel })}
         />
+        <Field
+          label="Buton linki"
+          value={sections.manifesto.ctaLink}
+          onChange={(ctaLink) => patch('manifesto', { ...sections.manifesto, ctaLink })}
+        />
       </>
     ),
     campaign: (
@@ -225,9 +230,21 @@ export function AdminLandingSectionBlock({
             onChange={(ctaPrimary) => patch('campaign', { ...sections.campaign, ctaPrimary })}
           />
           <Field
+            label="Birincil link"
+            value={sections.campaign.ctaPrimaryLink}
+            onChange={(ctaPrimaryLink) => patch('campaign', { ...sections.campaign, ctaPrimaryLink })}
+          />
+          <Field
             label="İkincil buton"
             value={sections.campaign.ctaSecondary}
             onChange={(ctaSecondary) => patch('campaign', { ...sections.campaign, ctaSecondary })}
+          />
+          <Field
+            label="İkincil link"
+            value={sections.campaign.ctaSecondaryLink}
+            onChange={(ctaSecondaryLink) =>
+              patch('campaign', { ...sections.campaign, ctaSecondaryLink })
+            }
           />
         </div>
       </>
@@ -275,6 +292,38 @@ export function AdminLandingSectionBlock({
           items={sections.studentCinema.steps}
           onChange={(steps) => patch('studentCinema', { ...sections.studentCinema, steps })}
         />
+        <Field
+          label="Adımlar başlığı"
+          value={sections.studentCinema.stepsHeading}
+          onChange={(stepsHeading) => patch('studentCinema', { ...sections.studentCinema, stepsHeading })}
+        />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field
+            label="Birincil buton"
+            value={sections.studentCinema.ctaPrimary}
+            onChange={(ctaPrimary) => patch('studentCinema', { ...sections.studentCinema, ctaPrimary })}
+          />
+          <Field
+            label="Birincil link"
+            value={sections.studentCinema.ctaPrimaryLink}
+            onChange={(ctaPrimaryLink) =>
+              patch('studentCinema', { ...sections.studentCinema, ctaPrimaryLink })
+            }
+          />
+          <Field
+            label="İkincil buton (kaydır)"
+            value={sections.studentCinema.ctaSecondary}
+            onChange={(ctaSecondary) =>
+              patch('studentCinema', { ...sections.studentCinema, ctaSecondary })
+            }
+          />
+        </div>
+        <Field
+          label="Dipnot"
+          value={sections.studentCinema.footnote}
+          onChange={(footnote) => patch('studentCinema', { ...sections.studentCinema, footnote })}
+          multiline
+        />
       </>
     ),
     creator: (
@@ -299,6 +348,36 @@ export function AdminLandingSectionBlock({
           label="Avantaj kartları"
           items={sections.creator.perks}
           onChange={(perks) => patch('creator', { ...sections.creator, perks })}
+        />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field
+            label="Birincil buton"
+            value={sections.creator.ctaPrimary}
+            onChange={(ctaPrimary) => patch('creator', { ...sections.creator, ctaPrimary })}
+          />
+          <Field
+            label="Birincil link"
+            value={sections.creator.ctaPrimaryLink}
+            onChange={(ctaPrimaryLink) => patch('creator', { ...sections.creator, ctaPrimaryLink })}
+          />
+          <Field
+            label="İkincil buton"
+            value={sections.creator.ctaSecondary}
+            onChange={(ctaSecondary) => patch('creator', { ...sections.creator, ctaSecondary })}
+          />
+          <Field
+            label="İkincil link"
+            value={sections.creator.ctaSecondaryLink}
+            onChange={(ctaSecondaryLink) =>
+              patch('creator', { ...sections.creator, ctaSecondaryLink })
+            }
+          />
+        </div>
+        <Field
+          label="Dipnot"
+          value={sections.creator.footnote}
+          onChange={(footnote) => patch('creator', { ...sections.creator, footnote })}
+          multiline
         />
       </>
     ),
@@ -343,6 +422,11 @@ export function AdminLandingSectionBlock({
           onChange={(description) => patch('emailSignup', { ...sections.emailSignup, description })}
           multiline
         />
+        <Field
+          label="Buton metni"
+          value={sections.emailSignup.buttonLabel}
+          onChange={(buttonLabel) => patch('emailSignup', { ...sections.emailSignup, buttonLabel })}
+        />
       </>
     ),
     journal: (
@@ -356,6 +440,12 @@ export function AdminLandingSectionBlock({
           label="Dergi başlığı"
           value={sections.journal.title}
           onChange={(title) => patch('journal', { ...sections.journal, title })}
+        />
+        <Field
+          label="Dergi açıklaması"
+          value={sections.journal.description}
+          onChange={(description) => patch('journal', { ...sections.journal, description })}
+          multiline
         />
       </>
     ),

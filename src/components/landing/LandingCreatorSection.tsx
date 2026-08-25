@@ -34,13 +34,13 @@ export function LandingCreatorSection({ section }: { section: LandingSectionsCon
 
         <div className="mt-16 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
-            to="/creator/kayit"
+            to={section.ctaPrimaryLink || '/creator/kayit'}
             className="inline-flex h-14 min-w-[240px] items-center justify-center rounded-lg bg-sineoda-gold px-10 text-base font-bold text-sineoda-bg shadow-lg shadow-sineoda-gold/20 transition hover:brightness-110"
           >
             {section.ctaPrimary}
           </Link>
           <Link
-            to="/creator/giris"
+            to={section.ctaSecondaryLink || '/creator/giris'}
             className="inline-flex h-14 min-w-[240px] items-center justify-center rounded-lg border border-white/20 bg-white/5 px-10 text-base font-semibold text-white backdrop-blur-sm transition hover:border-sineoda-gold/50 hover:bg-white/10"
           >
             {section.ctaSecondary}

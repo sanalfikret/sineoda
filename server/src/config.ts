@@ -10,6 +10,8 @@ export const config = {
   publicUrl: process.env.PUBLIC_URL ?? 'http://localhost:3001',
   dataDir: process.env.DATA_DIR ?? path.join(__dirname, '..', 'data'),
   uploadsDir: process.env.UPLOADS_DIR ?? path.join(__dirname, '..', 'uploads'),
+  /** Production: build edilmiş React dosyalarının yolu (tek sunucu kurulumu) */
+  webDistDir: process.env.WEB_DIST_DIR ?? '',
   paymentProvider: (process.env.PAYMENT_PROVIDER ?? 'paytr') as 'paytr' | 'iyzico',
   requireSubscription: process.env.REQUIRE_SUBSCRIPTION !== 'false',
   smtp: {

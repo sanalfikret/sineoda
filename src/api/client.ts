@@ -1,6 +1,10 @@
 import type { Profile, User } from '../types/auth'
+import type { AdCampaign, AdCampaignFormInput, AdPlayback } from '../types/ads'
+import { NAV_CATEGORY_SYNC, SITE_NAV_IDS, SITE_NAV_ITEMS, type SiteNavConfig, type SiteNavId } from '../constants/siteNav'
+import { deriveHiddenNavFromCategories } from '../utils/navVisibility'
 import type { AdminContentItem, AdminContentMeta, ContentCategory, ContentItem, Episode } from '../types/content'
 import type { LandingSectionsConfig } from '../constants/landingDefaults'
+import type { LandingCustomBlock } from '../constants/landingCustomBlocks'
 import { isTransientApiError, sleep } from '../utils/authSession'
 
 export type { LandingSectionsConfig } from '../constants/landingDefaults'
@@ -14,7 +18,12 @@ export function getApiBase() {
 
   if (import.meta.env.PROD && typeof window !== 'undefined') {
     const host = window.location.hostname
-    if (host.endsWith('.vercel.app') || host === 'sineoda.vercel.app' || host === 'sineoda.web.app') {
+    if (
+      host.endsWith('.vercel.app') ||
+      host === 'sineoda.vercel.app' ||
+      host === 'sineoda.web.app' ||
+      (host !== 'localhost' && host !== '127.0.0.1')
+    ) {
       return 'https://sineoda-api.onrender.com'
     }
   }
@@ -183,6 +192,8 @@ export interface BootstrapResponse {
   trailers: ContentItem[]
   newReleases: ContentItem[]
   studentCinemaPicks?: ContentItem[]
+  studentCinemaMonthlyWinners?: ContentItem[]
+  siteNav?: SiteNavConfig
   landing?: LandingConfigResponse
 }
 
@@ -199,7 +210,9 @@ export interface LandingHeroConfig {
   line2: string
   description: string
   ctaPrimary: string
+  ctaPrimaryLink: string
   ctaSecondary: string
+  ctaSecondaryLink: string
   legalNote: string
   backgroundImage: string
   backgroundVideo: string
@@ -220,6 +233,7 @@ export interface LandingConfigResponse {
   hero?: LandingHeroConfig
   sections?: LandingSectionsConfig
   layout?: LandingLayoutConfig
+  customBlocks?: LandingCustomBlock[]
 }
 
 export async function loginRequest(
@@ -333,6 +347,46 @@ export async function fetchBootstrap(): Promise<BootstrapResponse> {
   return api<BootstrapResponse>('/api/bootstrap')
 }
 
+export async function updateAdminSiteNav(hidden: SiteNavId[]) {
+  try {
+    return await api<{ siteNav: SiteNavConfig; categories: ContentCategory[] }>('/api/admin/site-nav', {
+      method: 'PATCH',
+      body: JSON.stringify({ hidden }),
+    })
+  } catch (error) {
+    const status = (error as Error & { status?: number }).status
+    if (status !== 404) throw error
+
+    const hiddenSet = new Set(hidden)
+    for (const navId of SITE_NAV_IDS) {
+      if (navId === 'home') continue
+      const categoryIds = NAV_CATEGORY_SYNC[navId]
+      if (categoryIds.length === 0) continue
+      const shouldHide = hiddenSet.has(navId)
+      for (const categoryId of categoryIds) {
+        await api(`/api/categories/${categoryId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ hidden: shouldHide }),
+        })
+      }
+    }
+
+    const { categories } = await api<{ categories: ContentCategory[] }>('/api/categories')
+    const derivedHidden = deriveHiddenNavFromCategories(categories)
+
+    return {
+      siteNav: {
+        hidden: derivedHidden,
+        items: SITE_NAV_ITEMS.map((item) => ({
+          ...item,
+          hidden: derivedHidden.includes(item.id),
+        })),
+      },
+      categories,
+    }
+  }
+}
+
 export async function fetchLandingConfig(): Promise<LandingConfigResponse> {
   return api<LandingConfigResponse>(`/api/landing?_=${Date.now()}`)
 }
@@ -376,6 +430,7 @@ export async function saveLandingPageConfig(payload: {
     description: string
     itemIds: string[]
   }>
+  customBlocks?: LandingCustomBlock[]
 }): Promise<LandingConfigResponse> {
   let lastError: unknown
   for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -803,8 +858,14 @@ export async function sendPresenceHeartbeat(sessionId: string, profileId?: strin
 
 export type { JournalPost } from '../types/journal'
 
-export async function fetchJournalPosts() {
-  return api<{ posts: import('../types/journal').JournalPost[] }>('/api/journal')
+export async function fetchJournalPosts(options?: { page?: number; limit?: number }) {
+  const params = new URLSearchParams()
+  if (options?.page) params.set('page', String(options.page))
+  if (options?.limit) params.set('limit', String(options.limit))
+  const query = params.toString()
+  return api<import('../types/journal').JournalListResponse>(
+    query ? `/api/journal?${query}` : '/api/journal',
+  )
 }
 
 export async function fetchJournalPost(slug: string) {
@@ -812,7 +873,21 @@ export async function fetchJournalPost(slug: string) {
 }
 
 export async function fetchAdminJournalPosts() {
-  return api<{ posts: import('../types/journal').JournalPost[] }>('/api/admin/journal')
+  return api<{
+    posts: import('../types/journal').JournalPost[]
+    pinnedIds: string[]
+  }>('/api/admin/journal')
+}
+
+export async function fetchAdminJournalPins() {
+  return api<{ pinnedIds: string[]; maxPins: number }>('/api/admin/journal/pins')
+}
+
+export async function updateAdminJournalPins(pinnedIds: string[]) {
+  return api<{ pinnedIds: string[]; maxPins: number }>('/api/admin/journal/pins', {
+    method: 'PUT',
+    body: JSON.stringify({ pinnedIds }),
+  })
 }
 
 export async function fetchAdminJournalPost(id: string) {
@@ -1198,5 +1273,62 @@ export async function bulkDeleteAdminStudentCinemaContent(ids: string[]) {
   return api<{ deleted: number; errors: string[] }>('/api/admin/student-cinema/content/bulk-delete', {
     method: 'POST',
     body: JSON.stringify({ ids }),
+  })
+}
+
+export async function fetchAdForContent(contentId: string, isKidsProfile = false) {
+  const headers = new Headers()
+  const token = getToken()
+  if (token) headers.set('Authorization', `Bearer ${token}`)
+  const profileId = getProfileId()
+  if (profileId) headers.set('X-Profile-Id', profileId)
+  if (isKidsProfile) headers.set('X-Kids-Profile', '1')
+
+  const response = await fetch(`${getApiBase()}/api/ads/for-content/${encodeURIComponent(contentId)}`, {
+    headers,
+    cache: 'no-store',
+  })
+
+  if (!response.ok) {
+    return { show: false as const }
+  }
+
+  return response.json() as Promise<{ show: false } | AdPlayback>
+}
+
+export async function recordAdView(campaignId: string, contentId: string) {
+  return api<{ ok: boolean }>(`/api/ads/${encodeURIComponent(campaignId)}/viewed`, {
+    method: 'POST',
+    body: JSON.stringify({ contentId }),
+  })
+}
+
+export async function fetchAdminAdCampaigns() {
+  return api<{ campaigns: AdCampaign[] }>('/api/admin/ads')
+}
+
+export async function createAdminAdCampaign(input: AdCampaignFormInput) {
+  return api<{ campaign: AdCampaign }>('/api/admin/ads', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export async function updateAdminAdCampaign(id: string, input: AdCampaignFormInput) {
+  return api<{ campaign: AdCampaign }>(`/api/admin/ads/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
+}
+
+export async function toggleAdminAdCampaign(id: string) {
+  return api<{ campaign: AdCampaign }>(`/api/admin/ads/${encodeURIComponent(id)}/toggle`, {
+    method: 'PATCH',
+  })
+}
+
+export async function deleteAdminAdCampaign(id: string) {
+  return api<{ ok: boolean }>(`/api/admin/ads/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
   })
 }

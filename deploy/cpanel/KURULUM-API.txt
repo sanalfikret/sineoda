@@ -1,0 +1,162 @@
+SINEODA — cPanel'de API kurulumu (birtakimislerdizi.com)
+=========================================================
+
+Hedef:
+  Site  -> https://birtakimislerdizi.com        (public_html, statik)
+  API   -> https://api.birtakimislerdizi.com    (Node.js, SQLite kalici)
+
+Render / GitHub gerekmez. Zip + cPanel arayuzu yeterli.
+
+
+ON KOSUL
+--------
+cPanel'de su menulerden biri olmali:
+  "Setup Node.js App"  veya  "Node.js Selector"
+
+Yoksa hosting destegine sor: "Node.js uygulamasi calistirabilir miyim?"
+Paylasimli paketlerde genelde vardir; yoksa Senaryo A (Render API) kalir.
+
+
+ADIM 0 — Bilgisayarda API zip olustur
+--------------------------------------
+  deploy\cpanel\build-api.bat
+
+  Cikti: deploy\cpanel\sineoda-api.zip
+
+
+ADIM 1 — Alt domain
+-------------------
+  cPanel -> Subdomains
+  Subdomain: api
+  Document root: genelde otomatik (api.birtakimislerdizi.com)
+  Olustur.
+
+  cPanel -> SSL/TLS Status (veya Let's Encrypt)
+  api.birtakimislerdizi.com icin sertifika aktif olsun (HTTPS).
+
+
+ADIM 2 — Klasor (public_html DISINDA)
+-------------------------------------
+  cPanel -> File Manager -> Home (public_html'in UST dizini)
+
+  Ornek yol: /home/KULLANICIADI/sineoda-api
+
+  sineoda-api.zip yukle -> Extract
+  Sonuc:
+    sineoda-api/
+      package.json
+      src/
+      data/        (bos, yazilabilir)
+      uploads/     (bos, yazilabilir)
+
+  ONEMLI: API dosyalarini public_html ICINE koyma.
+
+
+ADIM 3 — Node.js uygulamasi
+---------------------------
+  cPanel -> Setup Node.js App -> Create Application
+
+  Node.js version     : 18.x veya 22.x (18+ yeterli)
+  Application mode    : Production
+  Application root    : sineoda-api   (tam yol: /home/.../sineoda-api)
+  Application URL     : api.birtakimislerdizi.com
+  Application startup : npm start
+                        (veya: npx tsx src/index.ts)
+
+  "Run NPM Install" butonuna bas (package.json yuklendikten sonra).
+
+  Uygulamayi RESTART et.
+
+
+ADIM 4 — Environment variables (Node.js App ekraninda)
+------------------------------------------------------
+  deploy\cpanel\env.node.example dosyasindaki gibi; KULLANICIADI'ni degistir:
+
+  PORT=3001
+  JWT_SECRET=uzun-rastgele-bir-metin-buraya-degistir
+  FRONTEND_URL=https://birtakimislerdizi.com
+  PUBLIC_URL=https://api.birtakimislerdizi.com
+  REQUIRE_SUBSCRIPTION=false
+  REQUIRE_SMS_VERIFICATION=false
+  DATA_DIR=/home/KULLANICIADI/sineoda-api/data
+  UPLOADS_DIR=/home/KULLANICIADI/sineoda-api/uploads
+
+  Kaydet -> Restart uygulama.
+
+  KULLANICIADI: cPanel sag ustte veya File Manager yolundan gorursun
+  (/home/abc123/... -> abc123).
+
+
+ADIM 5 — API test
+-----------------
+  Tarayici veya curl:
+
+  https://api.birtakimislerdizi.com/api/health
+  veya
+  https://api.birtakimislerdizi.com/api/bootstrap
+
+  JSON donmeli. 502 / bos sayfa -> loglara bak (Node App -> stderr log).
+
+
+ADIM 6 — Frontend'i yeni API'ye bagla
+-------------------------------------
+  Bilgisayarda:
+
+  copy deploy\cpanel\env.static.example .env.cpanel
+
+  .env.cpanel icinde:
+  VITE_API_URL=https://api.birtakimislerdizi.com
+
+  deploy\cpanel\build-static.bat
+
+  dist\ icindekiler -> public_html\
+  deploy\cpanel\public_html.htaccess -> public_html\.htaccess
+
+  Siteyi Ctrl+Shift+R ile yenile.
+
+
+ADIM 7 — Ilk admin / demo
+-------------------------
+  Yeni SQLite = sifirdan seed. Demo admin:
+    admin@sineoda.com / admin123
+  Canlida sifreyi degistir.
+
+  Eski Render uyesi verisi otomatik gelmez. Render'dan export yoksa
+  uyeleri yeniden kaydetmen gerekir.
+
+
+GUNCELLEME (API kodu degisince)
+-------------------------------
+  1) build-api.bat -> yeni zip
+  2) cPanel'de src/ ve package.json ustune yaz (data/ ve uploads/ SILME)
+  3) Run NPM Install (package.json degistiyse)
+  4) Restart Node app
+
+
+SIK SORUNLAR
+------------
+• 502 Bad Gateway
+  - NPM Install calisti mi?
+  - Startup: npm start veya npx tsx src/index.ts
+  - Node surumu 18+ mi?
+  - Application root dogru klasor mu?
+
+• CORS hatasi (site aciliyor, API reddediyor)
+  - FRONTEND_URL tam olarak https://birtakimislerdizi.com (sonunda / yok)
+  - Restart
+
+• Uyeler / kategoriler kayboluyor
+  - DATA_DIR yanlis veya public_html icinde -> yazilamiyor / siliniyor
+  - Dogru: /home/.../sineoda-api/data
+
+• Eski Render API hala kullaniliyor
+  - Frontend'i VITE_API_URL ile yeniden build et, public_html'e yukle
+
+• E-posta / SMS
+  - SMTP ve NetGSM env'leri bos ise kapali kalir (demo icin REQUIRE_SMS_VERIFICATION=false yeterli)
+
+
+RENDER'I KAPATMA (istege bagli)
+-------------------------------
+  API cPanel'de stabil calistiktan sonra Render sineoda-api servisini
+  durdurabilirsin (ucret / uyku sorunu biter).

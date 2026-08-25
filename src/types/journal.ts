@@ -13,6 +13,22 @@ export interface JournalPost {
   publishedAt: string | null
   createdAt: string
   updatedAt: string
+  pinnedOrder?: number | null
+}
+
+export interface JournalListSection {
+  eyebrow: string
+  title: string
+  description: string
+}
+
+export interface JournalListResponse {
+  posts: JournalPost[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+  section: JournalListSection
 }
 
 export interface JournalPostSummary extends Pick<

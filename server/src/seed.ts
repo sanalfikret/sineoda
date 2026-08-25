@@ -56,10 +56,9 @@ function upsertCategory(id: string, title: string, sortOrder: number) {
 
   const exists = dbGet('SELECT id FROM categories WHERE id = ?', [id])
   if (exists) {
-    dbRun('UPDATE categories SET title = ? WHERE id = ?', [title, id])
-  } else {
-    dbRun('INSERT INTO categories (id, title, sort_order) VALUES (?, ?, ?)', [id, title, sortOrder])
+    return
   }
+  dbRun('INSERT INTO categories (id, title, sort_order) VALUES (?, ?, ?)', [id, title, sortOrder])
 }
 
 function ensureCategoryItems(categoryId: string, items: readonly string[]) {

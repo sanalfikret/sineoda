@@ -7,10 +7,11 @@ import {
   type ReactNode,
 } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { fetchCanPlay, fetchEpisodes, fetchWatchProgress } from '../api/client'
+import { fetchAdForContent, fetchCanPlay, fetchEpisodes, fetchWatchProgress, recordAdView } from '../api/client'
 import type { ContentItem, Episode, PlayTarget } from '../types/content'
+import type { AdPlayback } from '../types/ads'
+import { AdPlayer } from './AdPlayer'
 import { Header } from './Header'
-import { InstallPrompt } from './InstallPrompt'
 import { PaywallModal } from './PaywallModal'
 import { SearchModal } from './SearchModal'
 import { PageFooter } from './PageFooter'
@@ -39,6 +40,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [playingTarget, setPlayingTarget] = useState<PlayTarget | null>(null)
+  const [pendingPlayTarget, setPendingPlayTarget] = useState<PlayTarget | null>(null)
+  const [adSession, setAdSession] = useState<(AdPlayback & { contentId: string }) | null>(null)
   const [paywallOpen, setPaywallOpen] = useState(false)
   const [kidsBlockMessage, setKidsBlockMessage] = useState<string | null>(null)
 
@@ -112,17 +115,43 @@ export function AppShell({ children }: { children: ReactNode }) {
         // Giriş yapılmamışsa veya profil yoksa sıfırdan başla
       }
 
-      setPlayingTarget({
+      const playTarget: PlayTarget = {
         item,
         videoUrl,
         title,
         episodeId: resolvedEpisode?.id,
         startPosition,
         subtitles: resolvedEpisode?.subtitles?.length ? resolvedEpisode.subtitles : item.subtitles,
-      })
+      }
+
+      if (!isAdmin) {
+        try {
+          const ad = await fetchAdForContent(item.id, Boolean(activeProfile?.isKids))
+          if (ad.show) {
+            setPendingPlayTarget(playTarget)
+            setAdSession({ ...ad, contentId: item.id })
+            return
+          }
+        } catch {
+          // Reklam servisi yoksa doğrudan oynat
+        }
+      }
+
+      setPlayingTarget(playTarget)
     },
     [activeProfile?.isKids, isAdmin, openDetail],
   )
+
+  const completeAdAndPlay = useCallback(async () => {
+    const pending = pendingPlayTarget
+    const session = adSession
+    setAdSession(null)
+    setPendingPlayTarget(null)
+    if (session) {
+      await recordAdView(session.campaignId, session.contentId).catch(() => undefined)
+    }
+    if (pending) setPlayingTarget(pending)
+  }, [adSession, pendingPlayTarget])
 
   const playNextEpisode = useCallback(
     (episode: Episode) => {
@@ -140,6 +169,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Header />
         {children}
         <PageFooter />
+        {adSession && (
+          <AdPlayer
+            sponsorName={adSession.sponsorName}
+            videoUrl={adSession.videoUrl}
+            skipMode={adSession.skipMode}
+            skipAfterSeconds={adSession.skipAfterSeconds}
+            onComplete={() => void completeAdAndPlay()}
+          />
+        )}
         <VideoPlayer
           target={playingTarget && !isVerticalContent(playingTarget.item) ? playingTarget : null}
           onClose={() => setPlayingTarget(null)}
@@ -170,7 +208,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         )}
         <SearchModal onSelect={openDetail} kidsSafe={Boolean(activeProfile?.isKids)} />
-        <InstallPrompt />
       </div>
     </ContentUIContext.Provider>
   )

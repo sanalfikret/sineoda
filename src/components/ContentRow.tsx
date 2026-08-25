@@ -39,7 +39,7 @@ export function ContentRow({
   return (
     <section className="mb-5">
       <div className="mb-2 flex items-center justify-between px-4 sm:px-6 lg:px-8">
-        <h2 className={`font-semibold text-white ${prominent ? 'text-xl sm:text-2xl' : 'text-lg sm:text-xl'}`}>
+        <h2 className="text-lg font-semibold text-white sm:text-xl">
           {title}
         </h2>
         <div className="flex items-center gap-2">

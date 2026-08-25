@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
 import { fetchAllWatchProgress, fetchEpisodes, resolveMediaUrl } from '../api/client'
 import type { ContentItem, Episode } from '../types/content'
 import { FEEDBACK_EMAIL } from '../constants/site'
@@ -7,8 +6,11 @@ import { getContentTypeLabel, hasEpisodicContent } from '../constants/contentTyp
 import { sortEpisodes } from '../utils/episodes'
 import { ContentActionButtons } from './ContentActionButtons'
 import { SeriesEpisodeSection } from './SeriesEpisodeSection'
+import { FestivalCreditsDisplay } from './FestivalLaurelBadge'
 import { StudentCinemaMetaDetails } from './StudentCinemaMetaDetails'
+import { resolveContentDuration } from '../utils/duration'
 import { getStudentDisplayName } from '../utils/studentDisplayName'
+import { TermsAcceptanceNote } from './TermsAcceptanceNote'
 
 interface ContentDetailViewProps {
   item: ContentItem
@@ -133,6 +135,8 @@ export function ContentDetailView({
   const seriesResume = resumeEpisode && isSeries ? resumeEpisode : null
   const filmResume = resumeFilmPosition
   const credits = item.credits ?? {}
+  const festivals = item.festivals ?? []
+  const displayDuration = resolveContentDuration(item)
   const audioLanguages = credits.audioLanguages ?? ['Türkçe']
   const subtitleLanguages =
     credits.subtitleLanguages ??
@@ -201,7 +205,7 @@ export function ContentDetailView({
           ) : (
             <>
               <span>•</span>
-              <span>{item.duration}</span>
+              <span>{displayDuration}</span>
             </>
           )}
         </div>
@@ -304,6 +308,12 @@ export function ContentDetailView({
 
         {tab === 'overview' && (
           <>
+            {festivals.length > 0 && (
+              <div className="mt-5 rounded-xl border border-sineoda-gold/15 bg-sineoda-gold/5 p-4">
+                <FestivalCreditsDisplay festivals={festivals} compact />
+              </div>
+            )}
+
             <p className="mt-4 text-sm leading-relaxed text-white/85 sm:text-base">{item.description}</p>
 
             {isSeries && episodes.length > 0 && (
@@ -336,6 +346,11 @@ export function ContentDetailView({
                   <p className="mt-1 text-sm text-white/90">{credits.studio}</p>
                 </div>
               )}
+              {festivals.length > 0 && (
+                <div className="sm:col-span-2">
+                  <FestivalCreditsDisplay festivals={festivals} />
+                </div>
+              )}
             </div>
 
             <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
@@ -361,13 +376,7 @@ export function ContentDetailView({
         )}
 
         <div className="mt-8 space-y-4 border-t border-white/10 pt-6">
-          <p className="text-sm text-white/70">
-            Oynat&apos;a tıklayarak{' '}
-            <Link to="/yasal/kullanim-kosullari" className="text-sineoda-gold underline underline-offset-2">
-              Kullanım Koşulları
-            </Link>
-            &apos;mızı kabul etmiş olursunuz.
-          </p>
+          <TermsAcceptanceNote />
           <div>
             <p className="text-sm font-medium text-white">Geri bildirim</p>
             <a

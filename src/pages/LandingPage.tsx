@@ -9,9 +9,15 @@ import {
 } from '../data/demoLandingPosters'
 import { fetchBootstrap, fetchLandingConfig } from '../api/client'
 import type { LandingHeroConfig } from '../api/client'
-import { DEFAULT_LANDING_SECTIONS, mergeLandingSections } from '../constants/landingDefaults'
+import {
+  DEFAULT_LANDING_HERO,
+  DEFAULT_LANDING_SECTIONS,
+  mergeLandingSections,
+} from '../constants/landingDefaults'
 import { normalizeLandingLayout } from '../constants/landingLayout'
+import type { LandingCustomBlock } from '../constants/landingCustomBlocks'
 import { resolveLandingSliderItems } from '../utils/landingSlider'
+import { filterCatalogByNavVisibility } from '../utils/navVisibility'
 import type { ContentItem } from '../types/content'
 
 const FALLBACK_HERO =
@@ -30,12 +36,14 @@ function findContent(catalog: ContentItem[], contentId: string | null | undefine
 
 export function LandingPage() {
   const [catalog, setCatalog] = useState<ContentItem[]>([])
-  const [heroConfig, setHeroConfig] = useState<LandingHeroConfig | null>(null)
+  const [heroConfig, setHeroConfig] = useState<LandingHeroConfig>(DEFAULT_LANDING_HERO)
   const [sections, setSections] = useState(DEFAULT_LANDING_SECTIONS)
   const [layout, setLayout] = useState(() => normalizeLandingLayout(null))
+  const [customBlocks, setCustomBlocks] = useState<LandingCustomBlock[]>([])
   const [sliderItems, setSliderItems] = useState<ContentItem[]>([])
   const [showcases, setShowcases] = useState(DEMO_LANDING_SHOWCASES)
   const [studentPicks, setStudentPicks] = useState<ContentItem[]>([])
+  const [studentMonthlyWinners, setStudentMonthlyWinners] = useState<ContentItem[]>([])
   const [scrolled, setScrolled] = useState(false)
   const [ready, setReady] = useState(false)
 
@@ -45,19 +53,40 @@ export function LandingPage() {
       fetchLandingConfig(),
     ])
 
-    const mergedCatalog =
+    const hidden = bootstrap.siteNav?.hidden ?? []
+
+    const mergedCatalogRaw =
       bootstrap.catalog.length >= 20 ? bootstrap.catalog : mergeCatalog(bootstrap.catalog)
+    const mergedCatalog = filterCatalogByNavVisibility(mergedCatalogRaw, hidden)
 
     setCatalog(mergedCatalog)
-    setHeroConfig(landing.hero ?? bootstrap.landing?.hero ?? null)
+    setHeroConfig(landing.hero ?? bootstrap.landing?.hero ?? DEFAULT_LANDING_HERO)
     setSections(mergeLandingSections(landing.sections ?? bootstrap.landing?.sections))
-    setLayout(normalizeLandingLayout(landing.layout ?? bootstrap.landing?.layout))
+    const loadedCustomBlocks = landing.customBlocks ?? []
+    setCustomBlocks(loadedCustomBlocks)
+    setLayout(
+      normalizeLandingLayout(
+        landing.layout ?? bootstrap.landing?.layout,
+        loadedCustomBlocks.map((block) => block.id),
+      ),
+    )
     const apiSlider = resolveLandingSliderItems(landing, mergedCatalog, bootstrap.trailers ?? [])
     setSliderItems(
-      apiSlider.length > 0 ? apiSlider : DEMO_LANDING_SHOWCASES[1].items.slice(0, 8),
+      filterCatalogByNavVisibility(
+        apiSlider.length > 0 ? apiSlider : DEMO_LANDING_SHOWCASES[1].items.slice(0, 8),
+        hidden,
+      ),
     )
-    setShowcases(resolveLandingShowcases(landing.showcases))
-    setStudentPicks(bootstrap.studentCinemaPicks ?? [])
+    setShowcases(
+      resolveLandingShowcases(landing.showcases).map((showcase) => ({
+        ...showcase,
+        items: filterCatalogByNavVisibility(showcase.items, hidden),
+      })),
+    )
+    setStudentPicks(filterCatalogByNavVisibility(bootstrap.studentCinemaPicks ?? [], hidden))
+    setStudentMonthlyWinners(
+      filterCatalogByNavVisibility(bootstrap.studentCinemaMonthlyWinners ?? [], hidden),
+    )
     setReady(true)
   }, [])
 
@@ -73,12 +102,12 @@ export function LandingPage() {
 
   const lookupCatalog = useMemo(() => {
     const seen = new Set<string>()
-    return [...catalog, ...studentPicks, ...sliderItems].filter((item) => {
+    return [...catalog, ...studentPicks, ...studentMonthlyWinners, ...sliderItems].filter((item) => {
       if (seen.has(item.id)) return false
       seen.add(item.id)
       return true
     })
-  }, [catalog, studentPicks, sliderItems])
+  }, [catalog, studentPicks, studentMonthlyWinners, sliderItems])
 
   const backgroundContent = useMemo(
     () => findContent(lookupCatalog, heroConfig?.backgroundContentId),
@@ -95,7 +124,7 @@ export function LandingPage() {
     )
   }, [lookupCatalog, heroConfig?.featuredContentId])
 
-  if (!ready || !heroConfig) {
+  if (!ready) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-sineoda-bg">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-sineoda-gold border-t-transparent" />
@@ -115,8 +144,10 @@ export function LandingPage() {
           sections,
           sliderItems,
           studentPicks,
+          studentMonthlyWinners,
           showcases,
           layout,
+          customBlocks,
         }}
       />
       <SiteFooter />

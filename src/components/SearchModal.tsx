@@ -13,22 +13,22 @@ interface SearchModalProps {
 }
 
 export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
-  const { catalog } = useContent()
+  const { visibleCatalog } = useContent()
   const { isOpen, closeSearch } = useSearchUI()
   const [query, setQuery] = useState('')
   const [genre, setGenre] = useState<string | null>(null)
   const [year, setYear] = useState<number | null>(null)
   const [type, setType] = useState<SearchFilters['type']>(null)
 
-  const genres = useMemo(() => getAllGenres(catalog), [catalog])
-  const years = useMemo(() => getAllYears(catalog), [catalog])
+  const genres = useMemo(() => getAllGenres(visibleCatalog), [visibleCatalog])
+  const years = useMemo(() => getAllYears(visibleCatalog), [visibleCatalog])
 
   const filters: SearchFilters = { query, genre, year, type }
   const results = useMemo(() => {
-    const found = searchContent(catalog, filters).filter((item) => item.program !== 'student_cinema')
+    const found = searchContent(visibleCatalog, filters).filter((item) => item.program !== 'student_cinema')
     if (!kidsSafe) return found
     return found.filter((item) => isContentAllowedForKids(item.rating))
-  }, [catalog, query, genre, year, type, kidsSafe])
+  }, [visibleCatalog, query, genre, year, type, kidsSafe])
 
   useEffect(() => {
     if (!isOpen) return

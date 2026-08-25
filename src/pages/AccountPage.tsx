@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { fetchBillingPlans, fetchSubscription } from '../api/client'
 import { PageFooter } from '../components/PageFooter'
+import { InstallAppStatusCard } from '../components/InstallAppButton'
 import { ProfileAvatar } from '../components/ProfileAvatar'
 import { ProfileAvatarPicker } from '../components/ProfileAvatarPicker'
 import { ProfileWatchStatsPanel } from '../components/ProfileWatchStatsPanel'
@@ -163,6 +164,10 @@ export function AccountPage() {
         {message && (
           <p className="mb-6 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm">{message}</p>
         )}
+
+        <div className="mb-8">
+          <InstallAppStatusCard />
+        </div>
 
         <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
           <h2 className="text-lg font-semibold">Hesap Bilgileri</h2>

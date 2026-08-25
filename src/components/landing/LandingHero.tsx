@@ -59,13 +59,13 @@ export function LandingHero({
 
         <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4">
           <Link
-            to="/kayit"
+            to={hero.ctaPrimaryLink || '/kayit'}
             className="inline-flex h-12 min-w-[200px] items-center justify-center rounded-md bg-sineoda-accent px-10 text-base font-semibold text-sineoda-bg transition hover:brightness-105"
           >
             {hero.ctaPrimary}
           </Link>
           <Link
-            to="/giris"
+            to={hero.ctaSecondaryLink || '/giris'}
             className="inline-flex h-12 min-w-[200px] items-center justify-center rounded-md border border-white/20 px-10 text-base font-medium text-white/90 transition hover:border-white/35 hover:bg-white/5"
           >
             {hero.ctaSecondary}

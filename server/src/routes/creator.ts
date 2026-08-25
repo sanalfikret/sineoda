@@ -12,6 +12,8 @@ import { mapContent, serializeSubtitles, slugify } from '../mappers.js'
 import { normalizeContentType } from '../constants/contentTypes.js'
 import { parseContentAddedAt } from '../services/license.js'
 import { serializeCredits } from '../services/credits.js'
+import { parseFestivalsBody, serializeFestivals } from '../services/festivals.js'
+import { resolveDurationFields } from '../services/duration.js'
 import { getContentEngagementStats } from '../services/studentCinema.js'
 import { getMonthlyReport, monthKey } from '../services/watchAccounting.js'
 import type { ContentRow, CreatorRow } from '../types.js'
@@ -248,20 +250,23 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
   const program = isStudentProgram ? 'student_cinema' : 'standard'
   const schoolId = isStudentProgram ? creator.school_id : null
   const schoolReviewStatus = isStudentProgram ? 'pending' : 'none'
+  const durationFields = resolveDurationFields(body)
+  const festivalsJson = serializeFestivals(parseFestivalsBody(body) ?? [])
 
   dbRun(
     `INSERT INTO content (
-      id, title, description, year, duration, rating, type, genres, poster, backdrop,
+      id, title, description, year, duration, duration_minutes, rating, type, genres, poster, backdrop,
       video_url, source_video_url, stream_provider, trailer_url, video_format, is_new, new_until, featured,
-      subtitles_json, credits_json, content_added_at, license_expires_at, published_at,
+      subtitles_json, credits_json, festivals_json, content_added_at, license_expires_at, published_at,
       creator_id, review_status, program, content_format, parent_content_id, school_id, school_review_status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       title,
       String(body.description ?? '').trim(),
       Number(body.year ?? new Date().getFullYear()),
-      String(body.duration ?? '').trim(),
+      durationFields.duration,
+      durationFields.durationMinutes,
       String(body.rating ?? '13+').trim(),
       type,
       JSON.stringify(body.genres ?? []),
@@ -277,6 +282,7 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
       0,
       serializeSubtitles(body.subtitles ?? []),
       body.credits !== undefined ? serializeCredits(body.credits) : '{}',
+      festivalsJson,
       parseContentAddedAt(now),
       null,
       null,
@@ -321,16 +327,19 @@ router.patch('/content/:id', requireApprovedCreator, (req: CreatorAuthRequest, r
 
   const body = req.body as Record<string, unknown>
   const nextVideoUrl = body.videoUrl !== undefined ? String(body.videoUrl).trim() : existing.video_url
+  const durationFields = resolveDurationFields(body, existing)
+  const festivalsParsed = parseFestivalsBody(body)
   dbRun(
     `UPDATE content SET
-      title = ?, description = ?, year = ?, duration = ?, rating = ?, type = ?,
-      genres = ?, poster = ?, backdrop = ?, video_url = ?, source_video_url = ?, credits_json = ?, review_status = ?
+      title = ?, description = ?, year = ?, duration = ?, duration_minutes = ?, rating = ?, type = ?,
+      genres = ?, poster = ?, backdrop = ?, video_url = ?, source_video_url = ?, credits_json = ?, festivals_json = ?, review_status = ?
     WHERE id = ? AND creator_id = ?`,
     [
       body.title !== undefined ? String(body.title) : existing.title,
       body.description !== undefined ? String(body.description) : existing.description,
       body.year !== undefined ? Number(body.year) : existing.year,
-      body.duration !== undefined ? String(body.duration) : existing.duration,
+      durationFields.duration,
+      durationFields.durationMinutes,
       body.rating !== undefined ? String(body.rating) : existing.rating,
       body.type !== undefined ? normalizeContentType(body.type, existing.type) : existing.type,
       body.genres !== undefined ? JSON.stringify(body.genres) : existing.genres,
@@ -339,6 +348,9 @@ router.patch('/content/:id', requireApprovedCreator, (req: CreatorAuthRequest, r
       nextVideoUrl,
       nextVideoUrl,
       body.credits !== undefined ? serializeCredits(body.credits) : existing.credits_json ?? '{}',
+      festivalsParsed !== undefined
+        ? serializeFestivals(festivalsParsed)
+        : existing.festivals_json ?? '[]',
       'pending',
       existing.id,
       creator.id,

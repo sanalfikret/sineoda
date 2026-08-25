@@ -1,20 +1,29 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { deleteJournalPost, fetchAdminJournalPosts } from '../../api/client'
+import {
+  deleteJournalPost,
+  fetchAdminJournalPosts,
+  updateAdminJournalPins,
+} from '../../api/client'
+import { AdminJournalPinsPanel } from '../../components/admin/AdminJournalPinsPanel'
 import { formatJournalDate } from '../../utils/journal'
 import type { JournalPost } from '../../types/journal'
 
 export function AdminJournalListPage() {
   const [posts, setPosts] = useState<JournalPost[]>([])
+  const [pinnedIds, setPinnedIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
+  const [savingPins, setSavingPins] = useState(false)
 
   const load = async () => {
     setLoading(true)
     try {
       const data = await fetchAdminJournalPosts()
       setPosts(data.posts)
+      setPinnedIds(data.pinnedIds ?? [])
     } catch {
       setPosts([])
+      setPinnedIds([])
     } finally {
       setLoading(false)
     }
@@ -34,6 +43,17 @@ export function AdminJournalListPage() {
     }
   }
 
+  const handleSavePins = async (nextPinnedIds: string[]) => {
+    setSavingPins(true)
+    try {
+      const data = await updateAdminJournalPins(nextPinnedIds)
+      setPinnedIds(data.pinnedIds)
+      await load()
+    } finally {
+      setSavingPins(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -41,6 +61,13 @@ export function AdminJournalListPage() {
           <h1 className="text-2xl font-bold text-white">Dergi</h1>
           <p className="mt-1 text-sm text-sineoda-muted">
             Bağımsız sinema yazıları · {posts.length} yazı
+          </p>
+          <p className="mt-1 text-xs text-sineoda-muted">
+            Dergi başlığı ve açıklaması{' '}
+            <Link to="/admin/ana-sayfa" className="text-sineoda-gold hover:underline">
+              Ana Sayfa
+            </Link>{' '}
+            ayarlarından düzenlenir.
           </p>
         </div>
         <Link
@@ -51,6 +78,15 @@ export function AdminJournalListPage() {
         </Link>
       </div>
 
+      {!loading && (
+        <AdminJournalPinsPanel
+          posts={posts}
+          pinnedIds={pinnedIds}
+          saving={savingPins}
+          onSave={handleSavePins}
+        />
+      )}
+
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#11141c]">
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-white/10 text-sineoda-muted">
@@ -58,6 +94,7 @@ export function AdminJournalListPage() {
               <th className="px-4 py-3 font-medium">Başlık</th>
               <th className="px-4 py-3 font-medium">Yazar</th>
               <th className="px-4 py-3 font-medium">Durum</th>
+              <th className="px-4 py-3 font-medium">Sıra</th>
               <th className="px-4 py-3 font-medium">Tarih</th>
               <th className="px-4 py-3 font-medium">İşlemler</th>
             </tr>
@@ -65,13 +102,13 @@ export function AdminJournalListPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-sineoda-muted">
+                <td colSpan={6} className="px-4 py-10 text-center text-sineoda-muted">
                   Yükleniyor...
                 </td>
               </tr>
             ) : posts.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-sineoda-muted">
+                <td colSpan={6} className="px-4 py-10 text-center text-sineoda-muted">
                   Henüz yazı yok.{' '}
                   <Link to="/admin/dergi/yeni" className="text-sineoda-gold hover:underline">
                     İlk yazıyı ekle
@@ -96,6 +133,15 @@ export function AdminJournalListPage() {
                     >
                       {post.status === 'published' ? 'Yayında' : 'Taslak'}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-white/70">
+                    {post.pinnedOrder ? (
+                      <span className="rounded-full bg-sineoda-gold/15 px-2 py-1 font-medium text-sineoda-gold">
+                        Sabit #{post.pinnedOrder}
+                      </span>
+                    ) : (
+                      <span className="text-sineoda-muted">Serbest</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-xs text-white/70">
                     {formatJournalDate(post.publishedAt ?? post.createdAt)}

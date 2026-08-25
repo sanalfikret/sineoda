@@ -24,17 +24,21 @@ import journalRoutes from './routes/journal.js'
 import adminJournalRoutes from './routes/adminJournal.js'
 import adminCreatorsRoutes from './routes/adminCreators.js'
 import adminMessagesRoutes from './routes/adminMessages.js'
+import messagesRoutes from './routes/messages.js'
 import adminStudentCinemaRoutes from './routes/adminStudentCinema.js'
 import studentCinemaRoutes from './routes/studentCinema.js'
 import creatorAuthRoutes from './routes/creatorAuth.js'
 import creatorRoutes from './routes/creator.js'
 import creatorUploadRoutes from './routes/creatorUpload.js'
-import messagesRoutes from './routes/messages.js'
+import adsRoutes from './routes/ads.js'
+import adminAdsRoutes from './routes/adminAds.js'
+import adminSiteNavRoutes from './routes/adminSiteNav.js'
 import { PUBLISHED_CONTENT_SQL } from './services/publish.js'
 import { MAIN_CATALOG_SQL, STANDARD_PROGRAM_SQL, ensureStudentCinemaCatalog } from './services/studentCinema.js'
-import { mapCategoriesResponse, reconcileCategoryOrder } from './services/categoryOrder.js'
-import { dedupeAllCategories } from './services/categoryDedup.js'
-import { fillCategoriesToTarget } from './services/categoryFill.js'
+import { mapCategoriesResponse } from './services/categoryOrder.js'
+import { getMonthlyAwardWinnersSql } from './services/studentCinemaAwards.js'
+import { mapSiteNavResponse } from './services/siteNav.js'
+import { runStartupCategoryMaintenance } from './services/categoryMaintenance.js'
 import { backfillMissingImages } from './backfillImages.js'
 import { backfillEpisodeVideoUrls } from './services/episodeVideos.js'
 import { ensureDemoCatalog } from './demoCatalog.js'
@@ -64,10 +68,8 @@ ensureStudentCinemaDemoCredits()
 ensureCreatorDemoSeed()
 backfillMissingImages()
 backfillEpisodeVideoUrls()
-fillCategoriesToTarget()
+runStartupCategoryMaintenance()
 ensureStudentCinemaCatalog()
-dedupeAllCategories()
-reconcileCategoryOrder()
 
 const app = express()
 
@@ -109,6 +111,7 @@ app.get('/api/health', (_req, res) => {
       creators: true,
       qualifiedWatch: true,
       studentCinema: true,
+      adCampaigns: true,
     },
     email: config.isEmailConfigured(),
   })
@@ -148,6 +151,16 @@ app.get('/api/bootstrap', (_req, res) => {
        LIMIT 12`,
     ).map(mapContent)
 
+    const studentCinemaMonthlyWinners = dbAll<ContentRow & { school_name: string | null; creator_name: string | null }>(
+      `${contentWithMetaSql}
+       WHERE ${PUBLISHED_CONTENT_SQL}
+         AND c.program = 'student_cinema'
+         AND ${MAIN_CATALOG_SQL}
+         AND ${getMonthlyAwardWinnersSql()}
+       ORDER BY c.monthly_award_period DESC
+       LIMIT 12`,
+    ).map(mapContent)
+
     const categories = mapCategoriesResponse()
 
     let landing = { slider: [] as ReturnType<typeof mapContent>[], showcases: [] as Array<{ id: string; title: string; icon: string; description: string; items: ReturnType<typeof mapContent>[] }> }
@@ -157,7 +170,17 @@ app.get('/api/bootstrap', (_req, res) => {
       // landing tabloları henüz yoksa bootstrap yine de çalışsın
     }
 
-    res.json({ catalog, categories, featuredContent: featured, trailers, newReleases, studentCinemaPicks, landing })
+    res.json({
+      catalog,
+      categories,
+      featuredContent: featured,
+      trailers,
+      newReleases,
+      studentCinemaPicks,
+      studentCinemaMonthlyWinners,
+      siteNav: mapSiteNavResponse(),
+      landing,
+    })
   } catch (error) {
     res.status(500).json({
       error: error instanceof Error ? error.message : 'Katalog yüklenemedi.',
@@ -190,7 +213,19 @@ app.use('/api/student-cinema', studentCinemaRoutes)
 app.use('/api/admin/users', userRoutes)
 app.use('/api/admin/messages', adminMessagesRoutes)
 app.use('/api/messages', messagesRoutes)
+app.use('/api/ads', adsRoutes)
+app.use('/api/admin/ads', adminAdsRoutes)
+app.use('/api/admin/site-nav', adminSiteNavRoutes)
 app.use('/api/admin/upload', uploadRoutes)
+
+if (config.webDistDir) {
+  const distPath = path.resolve(config.webDistDir)
+  app.use(express.static(distPath, { index: false }))
+  app.get(/^(?!\/api\/|\/uploads\/).*/, (_req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'))
+  })
+  console.log(`Web UI: ${distPath}`)
+}
 
 app.use((error: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   res.status(500).json({ error: error.message || 'Sunucu hatası.' })

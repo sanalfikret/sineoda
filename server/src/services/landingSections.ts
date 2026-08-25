@@ -46,6 +46,7 @@ export interface LandingSectionsConfig {
     stepsHeading: string
     steps: LandingTextItem[]
     ctaPrimary: string
+    ctaPrimaryLink: string
     ctaSecondary: string
     footnote: string
   }
@@ -55,7 +56,9 @@ export interface LandingSectionsConfig {
     subtitle: string
     perks: LandingTextItem[]
     ctaPrimary: string
+    ctaPrimaryLink: string
     ctaSecondary: string
+    ctaSecondaryLink: string
     footnote: string
   }
   faq: {
@@ -111,9 +114,9 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
     eyebrow: 'Abonelik',
     title: 'İzlemeye bugün başla',
     description: 'Aylık veya yıllık plan. İstediğin zaman iptal et.',
-    price: '₺149',
+    price: '₺49',
     priceSuffix: '/ay',
-    priceNote: 'veya yıllık ₺1.290 — 2 ay bedava',
+    priceNote: 'veya yıllık ₺490 — 2 ay bedava',
     image: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1200&h=800&fit=crop&q=80',
     ctaPrimary: 'Ücretsiz Dene',
     ctaPrimaryLink: '/kayit',
@@ -132,6 +135,7 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
       { title: 'Sineoda yayınlasın', text: 'Genç Sinema seçkisinde yerini alır.' },
     ],
     ctaPrimary: 'Filmini Gönder',
+    ctaPrimaryLink: '/creator/kayit?program=genc-sinema',
     ctaSecondary: 'Nasıl Çalışır?',
     footnote: 'Okulunuz seçer · Sineoda son onayı verir · Film + kamera arkası birlikte yayınlanır',
   },
@@ -146,7 +150,9 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
       { title: 'Tek platform, tek adres', text: 'Bağımsız yapımını tek yerden yönet.' },
     ],
     ctaPrimary: 'Yapımcı Üyeliği Oluştur',
+    ctaPrimaryLink: '/creator/kayit',
     ctaSecondary: 'Yapımcı Girişi',
+    ctaSecondaryLink: '/creator/giris',
     footnote: 'Bağımsız sinemanın buluşma noktası — izleyici tarafında keşfet, yapımcı tarafında yayınla.',
   },
   faq: {
@@ -160,7 +166,7 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
       {
         question: "Sineoda'nın maliyeti nedir?",
         answer:
-          'Aylık ₺149 veya yıllık ₺1.290 planlarımız mevcuttur. Yıllık planda 2 ay bedava avantajı sunulur.',
+          'Aylık ₺49 veya yıllık ₺490 planlarımız mevcuttur. Yıllık planda 2 ay bedava avantajı sunulur.',
       },
       {
         question: 'Nerede izleyebilirim?',
@@ -218,16 +224,7 @@ function parseFaqItems(raw: unknown, fallback: LandingFaqItem[]) {
       answer: trim((item as LandingFaqItem)?.answer),
     }))
     .filter((item) => item.question && item.answer)
-  return mergeFaqItems(parsed, fallback)
-}
-
-function mergeFaqItems(saved: LandingFaqItem[], defaults: LandingFaqItem[]) {
-  if (!saved.length) return defaults
-  const seen = new Set(saved.map((item) => item.question.trim().toLocaleLowerCase('tr')))
-  const missing = defaults.filter(
-    (item) => !seen.has(item.question.trim().toLocaleLowerCase('tr')),
-  )
-  return missing.length > 0 ? [...saved, ...missing] : saved
+  return parsed
 }
 
 export function parseLandingSections(input: Partial<LandingSectionsConfig> | null | undefined): LandingSectionsConfig {
@@ -268,6 +265,7 @@ export function parseLandingSections(input: Partial<LandingSectionsConfig> | nul
       stepsHeading: trim(source.studentCinema?.stepsHeading) || base.studentCinema.stepsHeading,
       steps: parseTextItems(source.studentCinema?.steps, base.studentCinema.steps),
       ctaPrimary: trim(source.studentCinema?.ctaPrimary) || base.studentCinema.ctaPrimary,
+      ctaPrimaryLink: trim(source.studentCinema?.ctaPrimaryLink) || base.studentCinema.ctaPrimaryLink,
       ctaSecondary: trim(source.studentCinema?.ctaSecondary) || base.studentCinema.ctaSecondary,
       footnote: trim(source.studentCinema?.footnote) || base.studentCinema.footnote,
     },
@@ -277,7 +275,9 @@ export function parseLandingSections(input: Partial<LandingSectionsConfig> | nul
       subtitle: trim(source.creator?.subtitle) || base.creator.subtitle,
       perks: parseTextItems(source.creator?.perks, base.creator.perks),
       ctaPrimary: trim(source.creator?.ctaPrimary) || base.creator.ctaPrimary,
+      ctaPrimaryLink: trim(source.creator?.ctaPrimaryLink) || base.creator.ctaPrimaryLink,
       ctaSecondary: trim(source.creator?.ctaSecondary) || base.creator.ctaSecondary,
+      ctaSecondaryLink: trim(source.creator?.ctaSecondaryLink) || base.creator.ctaSecondaryLink,
       footnote: trim(source.creator?.footnote) || base.creator.footnote,
     },
     faq: {

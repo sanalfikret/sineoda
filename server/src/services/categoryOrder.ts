@@ -60,8 +60,8 @@ export function appendCategoryToOrder(categoryId: string) {
 }
 
 export function listCategoriesOrdered() {
-  const rows = dbAll<{ id: string; title: string; sort_order: number }>(
-    'SELECT id, title, sort_order FROM categories',
+  const rows = dbAll<{ id: string; title: string; sort_order: number; hidden?: number | null }>(
+    'SELECT id, title, sort_order, hidden FROM categories',
   )
 
   return [...rows].sort(
@@ -78,6 +78,7 @@ export function mapCategoriesResponse() {
   return categories.map((category) => ({
     id: category.id,
     title: category.title,
+    hidden: category.hidden === 1,
     itemIds: items
       .filter((item) => item.category_id === category.id)
       .sort((a, b) => a.sort_order - b.sort_order)

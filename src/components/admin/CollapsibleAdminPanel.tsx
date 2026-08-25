@@ -17,6 +17,7 @@ export function CollapsibleAdminPanel({
   onDragOver,
   onDrop,
   onDragEnd,
+  panelId,
   children,
 }: {
   title: string
@@ -35,10 +36,12 @@ export function CollapsibleAdminPanel({
   onDragOver?: (event: DragEvent<HTMLElement>) => void
   onDrop?: (event: DragEvent<HTMLElement>) => void
   onDragEnd?: () => void
+  panelId?: string
   children: ReactNode
 }) {
   return (
     <section
+      id={panelId}
       draggable={draggable}
       onDragStart={onDragStart}
       onDragOver={onDragOver}

@@ -5,6 +5,7 @@ import { fetchAllWatchProgress, fetchEpisodes } from '../api/client'
 import { AppShell, useContentUI } from '../components/AppShell'
 import { ContentRow } from '../components/ContentRow'
 import { StudentCinemaPicksRow } from '../components/StudentCinemaPicksRow'
+import { StudentCinemaMonthlyWinnersRow } from '../components/StudentCinemaMonthlyWinnersRow'
 import { GenreFilterBar } from '../components/GenreFilterBar'
 import { Hero } from '../components/Hero'
 import { useAuth } from '../context/AuthContext'
@@ -32,7 +33,7 @@ function BrowseContent({
   const { openDetail, openPlayer } = useContentUI()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { categories, featuredContent, catalog, getContentById, isLoading, refresh, studentCinemaPicks } = useContent()
+  const { visibleCategories, featuredContent, visibleCatalog, getContentById, isLoading, refresh, studentCinemaPicks, studentCinemaMonthlyWinners, hiddenNavIds } = useContent()
   const { watchlistItems } = useWatchlist()
   const { activeProfile } = useAuth()
   const activeGenre = searchParams.get('tur')
@@ -62,13 +63,13 @@ function BrowseContent({
 
   const genreOptions = useMemo(
     () =>
-      genresForCatalog(catalog, {
+      genresForCatalog(visibleCatalog, {
         type: contentType,
         verticalOnly,
         genre: null,
         kidsSafe: Boolean(activeProfile?.isKids),
       }),
-    [catalog, contentType, verticalOnly, activeProfile?.isKids],
+    [visibleCatalog, contentType, verticalOnly, activeProfile?.isKids],
   )
 
   useEffect(() => {
@@ -127,8 +128,8 @@ function BrowseContent({
   )
 
   const filteredCatalog = useMemo(
-    () => filterCatalog(catalog, browseOptions),
-    [catalog, browseOptions],
+    () => filterCatalog(visibleCatalog, browseOptions),
+    [visibleCatalog, browseOptions],
   )
 
   const heroItem = useMemo(() => {
@@ -138,7 +139,7 @@ function BrowseContent({
     if (activeGenre) {
       return filteredCatalog[0] ?? null
     }
-    const pool = activeProfile?.isKids ? filteredCatalog : catalog
+    const pool = activeProfile?.isKids ? filteredCatalog : visibleCatalog
     const featured = activeProfile?.isKids
       ? featuredContent && isContentAllowedForKids(featuredContent.rating)
         ? featuredContent
@@ -146,7 +147,7 @@ function BrowseContent({
       : featuredContent
     return pickFeatured(pool, featured, contentType, verticalOnly)
   }, [
-    catalog,
+    visibleCatalog,
     featuredContent,
     contentType,
     activeGenre,
@@ -157,8 +158,8 @@ function BrowseContent({
   ])
 
   const rows = useMemo(
-    () => buildBrowseRows(catalog, browseOptions, categories, getContentById),
-    [catalog, browseOptions, categories, getContentById],
+    () => buildBrowseRows(visibleCatalog, browseOptions, visibleCategories, getContentById),
+    [visibleCatalog, browseOptions, visibleCategories, getContentById],
   )
 
   const handleSelect = verticalOnly
@@ -179,14 +180,14 @@ function BrowseContent({
   }
 
   const filteredWatchlist = useMemo(() => {
-    let items = watchlistItems
+    let items = watchlistItems.filter((item) => visibleCatalog.some((entry) => entry.id === item.id))
     if (activeProfile?.isKids) {
       items = items.filter((item) => isContentAllowedForKids(item.rating))
     }
     if (contentType) items = items.filter((item) => item.type === contentType)
     if (activeGenre) items = items.filter((item) => item.genres.includes(activeGenre))
     return items
-  }, [watchlistItems, contentType, activeGenre, activeProfile?.isKids])
+  }, [watchlistItems, visibleCatalog, contentType, activeGenre, activeProfile?.isKids])
 
   const continueWatching = useMemo(() => {
     if (!activeProfile) return []
@@ -259,6 +260,10 @@ function BrowseContent({
       )}
 
       <div className="pb-24 pt-2">
+        {!activeGenre && !contentType && !verticalOnly && !studentCinemaOnly && studentCinemaMonthlyWinners.length > 0 && (
+          <StudentCinemaMonthlyWinnersRow items={studentCinemaMonthlyWinners} onSelect={openDetail} />
+        )}
+
         {!activeGenre && !contentType && !verticalOnly && !studentCinemaOnly && studentCinemaPicks.length > 0 && (
           <StudentCinemaPicksRow items={studentCinemaPicks} onSelect={openDetail} />
         )}
@@ -285,18 +290,21 @@ function BrowseContent({
               onSelect={rowSelect(row.title)}
               progressMap={progressMap}
               viewAllHref={
-                !activeGenre && !contentType && row.title === 'Dikey Diziler'
+                !activeGenre &&
+                !contentType &&
+                row.title === 'Dikey Diziler' &&
+                !hiddenNavIds.includes('dikey')
                   ? '/dikey-diziler'
                   : undefined
               }
-              prominent={row.title === 'Dikey Diziler'}
+              prominent={false}
               layout={rowLayout(row.title, row.items)}
               variant={activeGenre || contentType || verticalOnly || studentCinemaOnly ? 'grid' : 'carousel'}
             />
           ))
         )}
 
-        {!activeGenre && !contentType && filteredWatchlist.length > 0 && (
+        {!activeGenre && !contentType && !hiddenNavIds.includes('listem') && filteredWatchlist.length > 0 && (
           <ContentRow title="Listem" items={filteredWatchlist} onSelect={openDetail} />
         )}
       </div>
