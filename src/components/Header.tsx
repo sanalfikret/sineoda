@@ -15,7 +15,7 @@ const creatorNavItems = [
 ]
 
 export function Header() {
-  const { user, activeProfile, logout, isCreator, clearActiveProfile } = useAuth()
+  const { user, activeProfile, logout, isCreator, isAdmin, clearActiveProfile } = useAuth()
   const { hiddenNavIds } = useContent()
   const { openSearch } = useSearchUI()
   const navigate = useNavigate()
@@ -26,14 +26,14 @@ export function Header() {
   const [unreadMessages, setUnreadMessages] = useState(0)
 
   useEffect(() => {
-    if (!user || isCreator || user.role !== 'user') {
+    if (!user || isCreator || isAdmin) {
       setUnreadMessages(0)
       return
     }
     void fetchUnreadMessageCount()
       .then((data) => setUnreadMessages(data.count))
       .catch(() => setUnreadMessages(0))
-  }, [user, isCreator, location.pathname])
+  }, [user, isCreator, isAdmin, location.pathname])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -98,6 +98,21 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          {!isCreator && !isAdmin && user && (
+            <Link
+              to="/mesajlar"
+              aria-label={unreadMessages > 0 ? `${unreadMessages} okunmamış mesaj` : 'Mesajlarım'}
+              className="relative rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold tv:p-3"
+            >
+              <MessagesIcon />
+              {unreadMessages > 0 && (
+                <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-sineoda-gold px-1 text-[10px] font-bold text-sineoda-bg">
+                  {unreadMessages > 9 ? '9+' : unreadMessages}
+                </span>
+              )}
+            </Link>
+          )}
+
           {!isCreator && (
             <button
               type="button"
@@ -159,7 +174,7 @@ export function Header() {
                     </>
                   ) : (
                     <>
-                      {user.role === 'user' && (
+                      {!isAdmin && (
                         <Link
                           to="/mesajlar"
                           className="flex items-center justify-between px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
@@ -271,6 +286,22 @@ export function Header() {
                 </Link>
               </li>
             )}
+            {user && !isAdmin && !isCreator && (
+              <li>
+                <Link
+                  to="/mesajlar"
+                  className="flex items-center justify-between rounded-lg px-3 py-3 text-sm font-medium text-white/90 hover:bg-white/5"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <span>Mesajlarım</span>
+                  {unreadMessages > 0 && (
+                    <span className="rounded-full bg-sineoda-gold px-2 py-0.5 text-xs font-semibold text-sineoda-bg">
+                      {unreadMessages}
+                    </span>
+                  )}
+                </Link>
+              </li>
+            )}
             <li>
               <InstallAppMenuItem onNavigate={() => setMenuOpen(false)} />
             </li>
@@ -286,6 +317,19 @@ function SearchIcon() {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
       <path d="M20 20L16.5 16.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function MessagesIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M4 5.5H20V16.5H7.5L4 19.5V5.5Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }

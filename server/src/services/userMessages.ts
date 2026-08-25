@@ -83,10 +83,12 @@ export function broadcastMessage(input: {
   let userIds: string[] = []
   if (input.audience === 'active_subscribers') {
     userIds = dbAll<{ id: string }>(
-      "SELECT id FROM users WHERE role = 'user' AND subscription_status = 'active'",
+      "SELECT id FROM users WHERE role NOT IN ('admin', 'manager', 'creator') AND subscription_status = 'active'",
     ).map((row) => row.id)
   } else {
-    userIds = dbAll<{ id: string }>("SELECT id FROM users WHERE role = 'user'").map((row) => row.id)
+    userIds = dbAll<{ id: string }>(
+      "SELECT id FROM users WHERE role NOT IN ('admin', 'manager', 'creator')",
+    ).map((row) => row.id)
   }
 
   const now = new Date().toISOString()

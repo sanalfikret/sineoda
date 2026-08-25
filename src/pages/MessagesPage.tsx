@@ -9,14 +9,13 @@ import { Header } from '../components/Header'
 import { useAuth } from '../context/AuthContext'
 
 export function MessagesPage() {
-  const { user, isAdmin, isCreator } = useAuth()
+  const { isAdmin, isCreator } = useAuth()
   const [messages, setMessages] = useState<UserMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  const viewerOnly =
-    isAdmin || isCreator || (user && user.role !== 'user')
+  const viewerOnly = isAdmin || isCreator
 
   const load = async () => {
     if (viewerOnly) {
@@ -68,7 +67,7 @@ export function MessagesPage() {
       <Header />
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
         <div className="mb-6">
-          <Link to="/browse" className="text-sm text-sineoda-muted hover:text-white">
+          <Link to="/" className="text-sm text-sineoda-muted hover:text-white">
             ← Ana sayfa
           </Link>
           <h1 className="mt-2 text-2xl font-bold">Mesajlarım</h1>

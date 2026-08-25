@@ -117,9 +117,13 @@ export function AdminUsersPage() {
     setBroadcasting(true)
     try {
       const result = await broadcastAdminMessage(broadcastForm)
-      setSuccess(`${result.sent} izleyiciye mesaj gönderildi.`)
-      setBroadcastForm({ subject: '', body: '', audience: 'all' })
-      setShowBroadcast(false)
+      if (result.sent === 0) {
+        setError('Hiç izleyici bulunamadı. Önce üye kaydı olduğundan emin olun.')
+      } else {
+        setSuccess(`${result.sent} izleyiciye mesaj gönderildi.`)
+        setBroadcastForm({ subject: '', body: '', audience: 'all' })
+        setShowBroadcast(false)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Toplu mesaj gönderilemedi.')
     } finally {

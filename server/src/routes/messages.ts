@@ -12,7 +12,11 @@ const router = Router()
 
 router.get('/', requireAuth, (req: AuthRequest, res) => {
   const user = dbGet<UserRow>('SELECT role FROM users WHERE id = ?', [req.auth!.userId])
-  if (!user || user.role !== 'user') {
+  if (!user) {
+    res.status(404).json({ error: 'Kullanıcı bulunamadı.' })
+    return
+  }
+  if (user.role === 'admin' || user.role === 'manager' || user.role === 'creator') {
     res.status(403).json({ error: 'Mesajlar yalnızca izleyici (üye) hesapları için.' })
     return
   }
@@ -22,7 +26,7 @@ router.get('/', requireAuth, (req: AuthRequest, res) => {
 
 router.get('/unread-count', requireAuth, (req: AuthRequest, res) => {
   const user = dbGet<UserRow>('SELECT role FROM users WHERE id = ?', [req.auth!.userId])
-  if (!user || user.role !== 'user') {
+  if (!user || user.role === 'admin' || user.role === 'manager' || user.role === 'creator') {
     res.json({ count: 0 })
     return
   }
