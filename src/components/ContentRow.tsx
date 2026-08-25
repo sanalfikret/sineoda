@@ -3,6 +3,13 @@ import { Link } from 'react-router-dom'
 import type { ContentItem } from '../types/content'
 import { ContentCard } from './ContentCard'
 
+/** Ana sayfa + kategori listesi ortak kart aralıkları */
+const BROWSE_SECTION_MB = 'mb-5'
+const BROWSE_TRACK_PX = 'px-4 sm:px-6 lg:px-8'
+const BROWSE_TRACK_BOTTOM = 'pb-20'
+const BROWSE_CARD_GAP_X = 'gap-x-3'
+const BROWSE_CARD_GAP_Y = 'gap-y-20'
+
 interface ContentRowProps {
   title: string
   items: ContentItem[]
@@ -39,7 +46,7 @@ export function ContentRow({
   }
 
   return (
-    <section className="relative mb-8 overflow-visible">
+    <section className={`relative overflow-visible ${BROWSE_SECTION_MB}`}>
       <div className="mb-2 flex items-center justify-between px-4 sm:px-6 lg:px-8">
         <h2 className="text-lg font-semibold text-white sm:text-xl">{title}</h2>
         <div className="flex items-center gap-2">
@@ -59,8 +66,8 @@ export function ContentRow({
 
       {isGrid ? (
         gridFixedWidth ? (
-          <div className="overflow-visible px-4 pt-10 pb-36 sm:px-6 lg:px-8">
-            <div className="flex flex-wrap items-start gap-x-2.5 gap-y-16 overflow-visible sm:gap-x-3 sm:gap-y-20">
+          <div className={`overflow-visible ${BROWSE_TRACK_PX} ${BROWSE_TRACK_BOTTOM}`}>
+            <div className={`flex flex-wrap items-start overflow-visible ${BROWSE_CARD_GAP_X} ${BROWSE_CARD_GAP_Y}`}>
               {items.map((item) => (
                 <ContentCard
                   key={item.id}
@@ -95,13 +102,9 @@ export function ContentRow({
       ) : (
         <div
           ref={rowRef}
-          className="hide-scrollbar overflow-x-auto overflow-y-hidden px-4 pt-10 pb-36 sm:px-6 lg:px-8"
+          className={`hide-scrollbar overflow-x-auto overflow-y-hidden ${BROWSE_TRACK_PX} ${BROWSE_TRACK_BOTTOM}`}
         >
-          <div
-            className={`flex snap-x snap-mandatory items-start gap-2.5 overflow-visible sm:gap-3 ${
-              prominent ? 'sm:gap-4' : ''
-            }`}
-          >
+          <div className={`flex snap-x snap-mandatory items-start overflow-visible ${BROWSE_CARD_GAP_X}`}>
             {items.map((item) => (
               <ContentCard
                 key={item.id}
