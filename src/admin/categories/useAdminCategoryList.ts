@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type DragEvent } from 'react'
 import type { ContentCategory } from '../../types/content'
-import { mergeOrderedCategories, patchCategoryInList } from './mergeOrderedCategories'
+import { patchCategoryInList } from './mergeOrderedCategories'
 
 interface UseAdminCategoryListOptions {
   categories: ContentCategory[]
@@ -36,7 +36,7 @@ export function useAdminCategoryList({ categories, reorderCategories }: UseAdmin
       return
     }
 
-    setOrderedCategories((current) => mergeOrderedCategories(current, categories))
+    setOrderedCategories(categories)
   }, [categories, savingOrder, draggingId])
 
   const setEditingCategory = useCallback((categoryId: string, editing: boolean) => {
@@ -84,7 +84,7 @@ export function useAdminCategoryList({ categories, reorderCategories }: UseAdmin
         setOrderedCategories(saved)
       } catch (error) {
         setOrderError(error instanceof Error ? error.message : 'Sıra kaydedilemedi.')
-        setOrderedCategories((current) => mergeOrderedCategories(current, categories))
+        setOrderedCategories(categories)
       } finally {
         setSavingOrder(false)
       }

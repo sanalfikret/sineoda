@@ -20,6 +20,7 @@ import { StudentCinemaPicksRow } from '../StudentCinemaPicksRow'
 import { StudentCinemaMonthlyWinnersRow } from '../StudentCinemaMonthlyWinnersRow'
 import type { ContentItem } from '../../types/content'
 import type { LandingShowcaseResponse } from '../../api/client'
+import type { SiteNavId } from '../../constants/siteNav'
 
 export interface LandingPageBlockContext {
   heroConfig: LandingHeroConfig
@@ -33,6 +34,17 @@ export interface LandingPageBlockContext {
   showcases: LandingShowcaseResponse[]
   layout?: LandingLayoutConfig | null
   customBlocks?: LandingCustomBlock[]
+  hiddenNavIds?: SiteNavId[]
+}
+
+function isLandingBlockHidden(id: string, hiddenNavIds: SiteNavId[]) {
+  if (hiddenNavIds.includes('gencSinema') && ['studentPicks', 'studentMonthlyWinners', 'studentCinema'].includes(id)) {
+    return true
+  }
+  if (hiddenNavIds.includes('dergi') && id === 'journal') {
+    return true
+  }
+  return false
 }
 
 function renderLandingBlock(id: string, ctx: LandingPageBlockContext): ReactNode {
@@ -64,7 +76,7 @@ function renderLandingBlock(id: string, ctx: LandingPageBlockContext): ReactNode
     case 'studentPicks':
       return <StudentCinemaPicksRow items={ctx.studentPicks} guestMode className="pt-4" />
     case 'showcases':
-      return <LandingCategoryShowcase showcases={ctx.showcases} />
+      return ctx.showcases.length > 0 ? <LandingCategoryShowcase showcases={ctx.showcases} /> : null
     case 'journal':
       return <LandingJournalTeaser section={ctx.sections.journal} />
     case 'features':
@@ -87,7 +99,10 @@ function renderLandingBlock(id: string, ctx: LandingPageBlockContext): ReactNode
 export function LandingPageBlocks({ ctx }: { ctx: LandingPageBlockContext }) {
   const customBlockIds = ctx.customBlocks?.map((block) => block.id) ?? []
   const layout = normalizeLandingLayout(ctx.layout, customBlockIds)
-  const visibleOrder = layout.order.filter((id) => !layout.hidden.includes(id))
+  const hiddenNavIds = ctx.hiddenNavIds ?? []
+  const visibleOrder = layout.order.filter(
+    (id) => !layout.hidden.includes(id) && !isLandingBlockHidden(id, hiddenNavIds),
+  )
 
   return (
     <>

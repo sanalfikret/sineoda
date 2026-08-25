@@ -86,15 +86,11 @@ export function buildCategoryBrowseRows(
   getContentById: (id: string) => ContentItem | undefined,
   options: BrowseFilterOptions,
 ): BrowseRow[] {
-  const seenTitles = new Set<string>()
   const rows: BrowseRow[] = []
 
   for (const category of categories) {
     if (category.hidden) continue
     if (BROWSE_EXCLUSIVE_ROW_TITLES.has(category.title)) continue
-
-    const titleKey = category.title.trim().toLocaleLowerCase('tr')
-    if (seenTitles.has(titleKey)) continue
 
     const rowOptions = categoryFilterOptions(category, options)
     const items = category.itemIds
@@ -106,7 +102,6 @@ export function buildCategoryBrowseRows(
 
     if (items.length === 0) continue
 
-    seenTitles.add(titleKey)
     rows.push({
       id: category.id,
       title: category.title,

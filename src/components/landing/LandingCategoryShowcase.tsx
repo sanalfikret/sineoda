@@ -74,12 +74,22 @@ function posterSizeClass(item: ContentItem) {
 }
 
 export function LandingCategoryShowcase({ showcases }: LandingCategoryShowcaseProps) {
+  const visibleShowcases = useMemo(
+    () => showcases.filter((showcase) => showcase.items.length > 0),
+    [showcases],
+  )
   const [activeIndex, setActiveIndex] = useState(0)
   const [pageIndex, setPageIndex] = useState(0)
   const [perPage, setPerPage] = useState(5)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  const active = showcases[activeIndex] ?? showcases[0]
+  const active = visibleShowcases[activeIndex] ?? visibleShowcases[0]
+
+  useEffect(() => {
+    if (activeIndex >= visibleShowcases.length) {
+      setActiveIndex(Math.max(0, visibleShowcases.length - 1))
+    }
+  }, [activeIndex, visibleShowcases.length])
 
   const pages = useMemo(() => {
     if (!active) return []
@@ -116,7 +126,7 @@ export function LandingCategoryShowcase({ showcases }: LandingCategoryShowcasePr
     setPageIndex(0)
   }, [perPage])
 
-  if (showcases.length === 0) return null
+  if (visibleShowcases.length === 0) return null
 
   const goToPage = (index: number) => {
     const next = Math.max(0, Math.min(index, pages.length - 1))
@@ -142,7 +152,7 @@ export function LandingCategoryShowcase({ showcases }: LandingCategoryShowcasePr
         </h2>
 
         <div className="mt-10 flex flex-wrap items-end justify-center gap-x-8 gap-y-6 sm:gap-x-12 lg:gap-x-16">
-          {showcases.map((showcase, index) => {
+          {visibleShowcases.map((showcase, index) => {
             const isActive = index === activeIndex
             return (
               <button

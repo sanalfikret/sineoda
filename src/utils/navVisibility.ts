@@ -10,7 +10,7 @@ export function deriveHiddenNavFromCategories(categories: ContentCategory[]): Si
     if (navId === 'home') continue
     const linked = NAV_CATEGORY_SYNC[navId]
     if (linked.length === 0) continue
-    if (linked.every((categoryId) => byId.get(categoryId)?.hidden)) {
+    if (linked.some((categoryId) => byId.get(categoryId)?.hidden)) {
       hidden.push(navId)
     }
   }
@@ -18,8 +18,26 @@ export function deriveHiddenNavFromCategories(categories: ContentCategory[]): Si
   return hidden
 }
 
-export function isNavHidden(navId: SiteNavId, hidden: SiteNavId[]) {
-  return hidden.includes(navId)
+/** Vitrin ikonu → menü kimliği (misafir ana sayfa). */
+export const SHOWCASE_ICON_TO_NAV: Record<string, SiteNavId> = {
+  dizi: 'diziler',
+  film: 'filmler',
+  belgesel: 'belgeseller',
+  dikey: 'dikey',
+}
+
+export function isShowcaseNavHidden(icon: string, hiddenNav: SiteNavId[]) {
+  const navId = SHOWCASE_ICON_TO_NAV[icon]
+  return navId ? hiddenNav.includes(navId) : false
+}
+
+export function filterShowcasesByNavVisibility<T extends { icon: string; items: unknown[] }>(
+  showcases: T[],
+  hiddenNav: SiteNavId[],
+): T[] {
+  return showcases.filter(
+    (showcase) => !isShowcaseNavHidden(showcase.icon, hiddenNav) && showcase.items.length > 0,
+  )
 }
 
 export function isContentBlockedByNav(item: ContentItem, hiddenNav: SiteNavId[]) {

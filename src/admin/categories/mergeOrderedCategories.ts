@@ -1,29 +1,25 @@
 import type { ContentCategory } from '../../types/content'
 
-/** Sunucudan gelen kategori listesini mevcut sırayla birleştirir (yinelemeli başlıkları atlar). */
+/** Sunucudan gelen kategori listesini mevcut sırayla birleştirir (kimlik bazlı). */
 export function mergeOrderedCategories(
   current: ContentCategory[],
   incoming: ContentCategory[],
 ): ContentCategory[] {
   const byId = new Map(incoming.map((category) => [category.id, category]))
-  const seenTitles = new Set<string>()
   const next: ContentCategory[] = []
+  const placed = new Set<string>()
 
   for (const category of current) {
     const fresh = byId.get(category.id)
     if (!fresh) continue
-    const titleKey = fresh.title.trim().toLocaleLowerCase('tr')
-    if (seenTitles.has(titleKey)) continue
-    seenTitles.add(titleKey)
     next.push(fresh)
+    placed.add(category.id)
   }
 
   for (const category of incoming) {
-    const titleKey = category.title.trim().toLocaleLowerCase('tr')
-    if (seenTitles.has(titleKey)) continue
-    if (next.some((entry) => entry.id === category.id)) continue
-    seenTitles.add(titleKey)
+    if (placed.has(category.id)) continue
     next.push(category)
+    placed.add(category.id)
   }
 
   return next
