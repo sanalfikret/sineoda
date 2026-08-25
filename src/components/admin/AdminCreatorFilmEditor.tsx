@@ -9,6 +9,7 @@ import {
 import { ImageUpload } from './ImageUpload'
 import { VideoUpload } from './VideoUpload'
 import { CONTENT_TYPES } from '../../constants/contentTypes'
+import { CREATOR_DOC_TYPES } from '../../constants/creatorLegal'
 import { buildCredits, creditsToForm } from '../../utils/credits'
 import { formatLicenseDate, getLicenseDaysRemaining, toDateInputValue } from '../../utils/license'
 import { defaultScheduledDateTime, formatPublishDate, toDateTimeLocalValue } from '../../utils/publish'
@@ -264,6 +265,35 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
                       {item.isPublished && item.reviewStatus === 'published' && ' · Yayında'}
                     </p>
                   </div>
+                </div>
+              )}
+
+              {item?.applicationDocuments && item.applicationDocuments.length > 0 && (
+                <div className="mb-5 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+                  <h3 className="text-sm font-semibold text-amber-100">Başvuru belgeleri</h3>
+                  <ul className="mt-3 space-y-2">
+                    {item.applicationDocuments.map((doc) => (
+                      <li key={doc.id} className="flex items-center justify-between gap-3 text-sm">
+                        <span className="text-white/85">
+                          {CREATOR_DOC_TYPES.find((entry) => entry.value === doc.docType)?.label ?? doc.docType}
+                        </span>
+                        <a
+                          href={resolveMediaUrl(doc.fileUrl)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-sineoda-gold hover:underline"
+                        >
+                          Görüntüle
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                  {item.applicationDeclaration?.declaredAt && (
+                    <p className="mt-3 text-xs text-sineoda-muted">
+                      Beyan tarihi:{' '}
+                      {new Date(item.applicationDeclaration.declaredAt).toLocaleString('tr-TR')}
+                    </p>
+                  )}
                 </div>
               )}
 

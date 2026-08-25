@@ -70,6 +70,7 @@ export interface ContentRow {
   monthly_award_period?: string | null
   monthly_award_badge?: string | null
   monthly_award_prize?: string | null
+  application_declaration_json?: string | null
 }
 
 export interface CreatorRow {

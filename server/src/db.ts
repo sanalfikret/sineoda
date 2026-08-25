@@ -387,6 +387,8 @@ function runMigrations() {
   ensureColumn('content', 'monthly_award_enabled', 'INTEGER NOT NULL DEFAULT 0')
   ensureColumn('content', 'monthly_award_period', 'TEXT')
   ensureColumn('content', 'monthly_award_badge', 'TEXT')
+  ensureColumn('content', 'application_declaration_json', 'TEXT')
+  ensureColumn('creator_documents', 'content_id', 'TEXT')
   ensureColumn('content', 'monthly_award_prize', 'TEXT')
   ensureColumn('content', 'festivals_json', "TEXT NOT NULL DEFAULT '[]'")
   ensureColumn('content', 'duration_minutes', 'INTEGER')

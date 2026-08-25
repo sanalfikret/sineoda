@@ -993,10 +993,13 @@ export async function creatorUploadVideo(file: File): Promise<string> {
 }
 
 export async function creatorAddDocument(docType: string, fileUrl: string) {
-  return api('/api/creator/documents', {
-    method: 'POST',
-    body: JSON.stringify({ docType, fileUrl }),
-  })
+  return api<{ document: { id: string; docType: string; fileUrl: string; uploadedAt: string } }>(
+    '/api/creator/documents',
+    {
+      method: 'POST',
+      body: JSON.stringify({ docType, fileUrl }),
+    },
+  )
 }
 
 export async function creatorDeleteDocument(id: string) {
@@ -1045,6 +1048,12 @@ export interface AdminCreatorContentDetail extends AdminCreatorContent {
   studioName?: string | null
   creatorName?: string | null
   creatorEmail?: string | null
+  applicationDeclaration?: {
+    declaredAt: string
+    rights: Record<string, boolean>
+    legal: Record<string, boolean>
+  } | null
+  applicationDocuments?: AdminCreatorDocument[]
 }
 
 export interface AdminCreatorDetail {

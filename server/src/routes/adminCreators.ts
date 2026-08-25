@@ -5,6 +5,7 @@ import { dbAll, dbGet, dbRun, uploadsDir } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import { mapContent, mapContentAdmin } from '../mappers.js'
 import { addToGencSinemaCategory, isStudentMainRow } from '../services/studentCinema.js'
+import { getContentApplicationDocuments } from '../services/filmApplication.js'
 import {
   applyCreatorReviewStatus,
   resolveCreatorPublishUpdate,
@@ -222,6 +223,22 @@ router.get('/content/:id', requireAdmin, (req: AuthRequest, res) => {
   }
 
   const stats = getContentEngagementStats([row.id]).get(row.id)
+  let applicationDeclaration = null
+  if (row.application_declaration_json) {
+    try {
+      applicationDeclaration = JSON.parse(row.application_declaration_json)
+    } catch {
+      applicationDeclaration = null
+    }
+  }
+  const applicationDocuments = row.creator_id
+    ? getContentApplicationDocuments(row.id, row.creator_id).map((doc) => ({
+        id: doc.id,
+        docType: doc.doc_type,
+        fileUrl: doc.file_url,
+        uploadedAt: doc.uploaded_at,
+      }))
+    : []
 
   res.json({
     item: {
@@ -229,6 +246,8 @@ router.get('/content/:id', requireAdmin, (req: AuthRequest, res) => {
       studioName: row.studio_name,
       creatorName: row.creator_name,
       creatorEmail: row.creator_email,
+      applicationDeclaration,
+      applicationDocuments,
     },
   })
 })
