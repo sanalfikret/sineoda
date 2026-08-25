@@ -44,6 +44,7 @@ import { backfillEpisodeVideoUrls } from './services/episodeVideos.js'
 import { ensureDemoCatalog } from './demoCatalog.js'
 import { ensureGenreCatalog } from './genreCatalog.js'
 import { ensureJournalPosts } from './journalSeed.js'
+import { ensureCekimNotlariCategories } from './services/cekimNotlariCategories.js'
 import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureLandingShowcases, ensureFilmSchools, ensureStudentCinemaDemoFilms, ensureStudentCinemaDemoCredits, ensureCreatorDemoSeed } from './seed.js'
 import { ensureMonthlyRollover, seedDemoMonthlyIfEmpty } from './services/watchAccounting.js'
 import type { ContentRow } from './types.js'
@@ -57,6 +58,7 @@ ensureContentMeta()
 ensureExtraSeedContent()
 ensureVerticalSeries()
 ensureGenreCategories()
+ensureCekimNotlariCategories()
 seedLandingData()
 ensureLandingShowcases()
 ensureDemoCatalog()

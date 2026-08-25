@@ -62,13 +62,16 @@ export function navIdForBrowseRoute(options: {
   contentType?: string | null
   verticalOnly?: boolean
   studentCinemaOnly?: boolean
+  cekimNotlariOnly?: boolean
   path?: string
 }): SiteNavId | null {
+  if (options.cekimNotlariOnly) return 'cekimNotlari'
   if (options.studentCinemaOnly) return 'gencSinema'
   if (options.verticalOnly) return 'dikey'
   if (options.contentType === 'dizi') return 'diziler'
   if (options.contentType === 'film') return 'filmler'
   if (options.contentType === 'belgesel') return 'belgeseller'
+  if (options.path === '/cekim-notlari') return 'cekimNotlari'
   if (options.path === '/listem') return 'listem'
   if (options.path === '/dergi' || options.path?.startsWith('/dergi/')) return 'dergi'
   return null

@@ -5,6 +5,7 @@ export const SITE_NAV_IDS = [
   'belgeseller',
   'dikey',
   'gencSinema',
+  'cekimNotlari',
   'listem',
   'dergi',
 ] as const
@@ -39,6 +40,12 @@ export const SITE_NAV_ITEMS: SiteNavItemDef[] = [
     label: 'Genç Sinema',
     path: '/genc-sinema',
     match: (path) => path === '/genc-sinema',
+  },
+  {
+    id: 'cekimNotlari',
+    label: 'Çekim Notları',
+    path: '/cekim-notlari',
+    match: (path) => path === '/cekim-notlari',
   },
   { id: 'listem', label: 'Listem', path: '/listem', match: (path) => path === '/listem' },
   {

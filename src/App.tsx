@@ -233,6 +233,18 @@ function App() {
         }
       />
       <Route
+        path="/cekim-notlari"
+        element={
+          <ProtectedRoute requireProfile>
+            <AuthenticatedProviders>
+              <NavRouteGuard cekimNotlariOnly>
+                <BrowsePage cekimNotlariOnly pageTitle="Çekim Notları" />
+              </NavRouteGuard>
+            </AuthenticatedProviders>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/kisa-filmler"
         element={
           <ProtectedRoute requireProfile>
