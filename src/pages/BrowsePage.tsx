@@ -16,12 +16,14 @@ import { restoreBrowseScroll } from '../utils/browseState'
 import { isVerticalContent } from '../utils/vertical'
 import { getContentTypeLabel } from '../constants/contentTypes'
 import { isContentAllowedForKids } from '../utils/contentRating'
+import { CEKIM_NOTLARI_SECTION_TITLE } from '../constants/cekimNotlari'
 
 interface BrowsePageProps {
   contentType?: ContentType | null
   pageTitle?: string
   verticalOnly?: boolean
   studentCinemaOnly?: boolean
+  cekimNotlariOnly?: boolean
 }
 
 function BrowseContent({
@@ -29,6 +31,7 @@ function BrowseContent({
   pageTitle,
   verticalOnly = false,
   studentCinemaOnly = false,
+  cekimNotlariOnly = false,
 }: BrowsePageProps) {
   const { openDetail, openPlayer } = useContentUI()
   const location = useLocation()
@@ -48,18 +51,18 @@ function BrowseContent({
   }
 
   useEffect(() => {
-    if (contentType || verticalOnly) return
+    if (contentType || verticalOnly || cekimNotlariOnly) return
     void refresh()
-  }, [contentType, verticalOnly, refresh])
+  }, [contentType, verticalOnly, cekimNotlariOnly, refresh])
 
   useEffect(() => {
     const onFocus = () => {
-      if (contentType || verticalOnly) return
+      if (contentType || verticalOnly || cekimNotlariOnly) return
       void refresh()
     }
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
-  }, [contentType, verticalOnly, refresh])
+  }, [contentType, verticalOnly, cekimNotlariOnly, refresh])
 
   const genreOptions = useMemo(
     () =>
@@ -118,13 +121,14 @@ function BrowseContent({
 
   const browseOptions = useMemo(
     () => ({
-      type: studentCinemaOnly ? null : contentType,
-      genre: studentCinemaOnly ? null : activeGenre,
-      verticalOnly: studentCinemaOnly ? false : verticalOnly,
+      type: studentCinemaOnly || cekimNotlariOnly ? null : contentType,
+      genre: studentCinemaOnly || cekimNotlariOnly ? null : activeGenre,
+      verticalOnly: studentCinemaOnly || cekimNotlariOnly ? false : verticalOnly,
       kidsSafe: Boolean(activeProfile?.isKids),
       studentOnly: studentCinemaOnly,
+      cekimNotlariOnly,
     }),
-    [contentType, activeGenre, verticalOnly, activeProfile?.isKids, studentCinemaOnly],
+    [contentType, activeGenre, verticalOnly, activeProfile?.isKids, studentCinemaOnly, cekimNotlariOnly],
   )
 
   const filteredCatalog = useMemo(
@@ -132,7 +136,18 @@ function BrowseContent({
     [visibleCatalog, browseOptions],
   )
 
+  const rows = useMemo(
+    () => buildBrowseRows(visibleCatalog, browseOptions, visibleCategories, getContentById),
+    [visibleCatalog, browseOptions, visibleCategories, getContentById],
+  )
+
   const heroItem = useMemo(() => {
+    if (cekimNotlariOnly) {
+      for (const row of rows) {
+        if (row.items[0]) return row.items[0]
+      }
+      return null
+    }
     if (studentCinemaOnly) {
       return filteredCatalog[0] ?? null
     }
@@ -155,12 +170,9 @@ function BrowseContent({
     verticalOnly,
     activeProfile?.isKids,
     studentCinemaOnly,
+    cekimNotlariOnly,
+    rows,
   ])
-
-  const rows = useMemo(
-    () => buildBrowseRows(visibleCatalog, browseOptions, visibleCategories, getContentById),
-    [visibleCatalog, browseOptions, visibleCategories, getContentById],
-  )
 
   const handleSelect = verticalOnly
     ? (item: ContentItem) => void openPlayer(item)
@@ -214,8 +226,13 @@ function BrowseContent({
     openPlayer(item)
   }
 
-  const displayHero = activeGenre ? filteredCatalog[0] : heroItem ?? filteredCatalog[0] ?? null
+  const displayHero = cekimNotlariOnly
+    ? heroItem
+    : activeGenre
+      ? filteredCatalog[0]
+      : heroItem ?? filteredCatalog[0] ?? null
   const isBrowseList = Boolean(activeGenre || contentType || verticalOnly || studentCinemaOnly)
+  const showSectionExtras = !cekimNotlariOnly
 
   if (isLoading) {
     return (
@@ -233,7 +250,9 @@ function BrowseContent({
         onPlay={openPlayer}
         onDetails={verticalOnly ? (item) => void openPlayer(item) : openDetail}
         eyebrow={
-          studentCinemaOnly
+          cekimNotlariOnly
+            ? CEKIM_NOTLARI_SECTION_TITLE
+            : studentCinemaOnly
             ? 'Genç Sinema'
             : activeGenre
             ? activeGenre
@@ -243,14 +262,14 @@ function BrowseContent({
       ) : (
         <div className="px-4 pb-4 pt-28 sm:px-6 lg:px-8">
           <h1 className="text-2xl font-bold text-white sm:text-3xl">
-            {pageTitle ?? (verticalOnly ? 'Dikey Diziler' : contentType ? getContentTypeLabel(contentType) : 'Senin İçin')}
+            {pageTitle ?? (verticalOnly ? 'Dikey Diziler' : contentType ? getContentTypeLabel(contentType) : cekimNotlariOnly ? 'Çekim Notları' : 'Senin İçin')}
           </h1>
         </div>
       )}
 
       <GenreFilterBar
-        activeGenre={studentCinemaOnly ? null : activeGenre}
-        genres={studentCinemaOnly ? [] : genreOptions}
+        activeGenre={studentCinemaOnly || cekimNotlariOnly ? null : activeGenre}
+        genres={studentCinemaOnly || cekimNotlariOnly ? [] : genreOptions}
         onChange={setActiveGenre}
       />
 
@@ -260,16 +279,22 @@ function BrowseContent({
         </p>
       )}
 
+      {cekimNotlariOnly && (
+        <p className="mx-auto max-w-3xl px-4 pb-2 text-center text-sm text-sineoda-muted sm:px-6">
+          Alanında uzman isimlerden eğitici videolar — setten post prodüksiyona.
+        </p>
+      )}
+
       <div className="pb-24 pt-7">
-        {!activeGenre && !contentType && !verticalOnly && !studentCinemaOnly && studentCinemaMonthlyWinners.length > 0 && (
+        {showSectionExtras && !activeGenre && !contentType && !verticalOnly && !studentCinemaOnly && studentCinemaMonthlyWinners.length > 0 && (
           <StudentCinemaMonthlyWinnersRow items={studentCinemaMonthlyWinners} onSelect={openDetail} />
         )}
 
-        {!activeGenre && !contentType && !verticalOnly && !studentCinemaOnly && studentCinemaPicks.length > 0 && (
+        {showSectionExtras && !activeGenre && !contentType && !verticalOnly && !studentCinemaOnly && studentCinemaPicks.length > 0 && (
           <StudentCinemaPicksRow items={studentCinemaPicks} onSelect={openDetail} />
         )}
 
-        {!activeGenre && !contentType && continueWatching.length > 0 && (
+        {showSectionExtras && !activeGenre && !contentType && continueWatching.length > 0 && (
           <ContentRow
             title="Kaldığın Yerden Devam Et"
             items={continueWatching}
@@ -306,7 +331,7 @@ function BrowseContent({
           ))
         )}
 
-        {!activeGenre && !contentType && !hiddenNavIds.includes('listem') && filteredWatchlist.length > 0 && (
+        {showSectionExtras && !activeGenre && !contentType && !hiddenNavIds.includes('listem') && filteredWatchlist.length > 0 && (
           <ContentRow title="Listem" items={filteredWatchlist} onSelect={openDetail} />
         )}
       </div>

@@ -1,4 +1,5 @@
 import type { SiteNavId } from './siteNav'
+import { CEKIM_NOTLARI_CATEGORY_IDS } from './cekimNotlari'
 
 /** Menü ↔ kategori çift yönlü senkron (server ile aynı tablo). */
 export const NAV_CATEGORY_SYNC: Record<SiteNavId, readonly string[]> = {
@@ -8,6 +9,7 @@ export const NAV_CATEGORY_SYNC: Record<SiteNavId, readonly string[]> = {
   belgeseller: ['documentary'],
   dikey: ['vertical-series'],
   gencSinema: ['genc-sinema'],
+  cekimNotlari: CEKIM_NOTLARI_CATEGORY_IDS,
   listem: [],
   dergi: [],
 }
@@ -30,6 +32,7 @@ export const NAV_LABELS: Record<SiteNavId, string> = {
   belgeseller: 'Belgeseller',
   dikey: 'Dikey Diziler',
   gencSinema: 'Genç Sinema',
+  cekimNotlari: 'Çekim Notları',
   listem: 'Listem',
   dergi: 'Dergi',
 }

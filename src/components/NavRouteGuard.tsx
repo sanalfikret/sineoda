@@ -9,6 +9,7 @@ interface NavRouteGuardProps {
   contentType?: string | null
   verticalOnly?: boolean
   studentCinemaOnly?: boolean
+  cekimNotlariOnly?: boolean
 }
 
 function resolveNavId(
@@ -19,6 +20,7 @@ function resolveNavId(
     contentType: props.contentType,
     verticalOnly: props.verticalOnly,
     studentCinemaOnly: props.studentCinemaOnly,
+    cekimNotlariOnly: props.cekimNotlariOnly,
     path,
   })
   if (fromBrowse) return fromBrowse
@@ -33,7 +35,7 @@ export function NavRouteGuard({ children, ...props }: NavRouteGuardProps) {
 
   const navId = useMemo(
     () => resolveNavId(location.pathname, props),
-    [location.pathname, props.contentType, props.verticalOnly, props.studentCinemaOnly],
+    [location.pathname, props.contentType, props.verticalOnly, props.studentCinemaOnly, props.cekimNotlariOnly],
   )
 
   if (isLoading) {
