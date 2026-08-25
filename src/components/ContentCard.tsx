@@ -48,7 +48,6 @@ export function ContentCard({
         : 'w-[220px] sm:w-[260px] lg:w-[280px]'
 
   const aspectClass = isPortrait ? 'aspect-[9/16]' : 'aspect-video'
-  const metaLine = [item.rating, item.duration, String(item.year)].filter(Boolean).join(' · ')
   const genreLine = item.genres.slice(0, 3).join(' · ')
   const enableNetflixHover = !isGrid && !guestHref
 
@@ -70,11 +69,11 @@ export function ContentCard({
   const handleLeave = () => {
     if (!enableNetflixHover) return
     clearLeaveTimer()
-    leaveTimerRef.current = window.setTimeout(() => setHovered(false), 100)
+    leaveTimerRef.current = window.setTimeout(() => setHovered(false), 140)
   }
 
   const shellClass = [
-    'group relative text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold',
+    'group relative flex flex-col text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold',
     widthClass,
     isGrid ? 'overflow-hidden rounded-md bg-sineoda-surface hover:ring-2 hover:ring-white/20' : 'shrink-0 snap-start',
     enableNetflixHover ? (hovered ? 'z-30' : 'z-0') : '',
@@ -120,25 +119,45 @@ export function ContentCard({
     </>
   )
 
+  const titleBlock = (
+    <div className="mt-2 min-h-[2.75rem] px-0.5">
+      <p className={`line-clamp-2 text-sm font-medium leading-snug text-white/90 transition-opacity duration-200 ${hovered && enableNetflixHover ? 'opacity-0' : 'opacity-100'}`}>
+        {item.title}
+      </p>
+      {item.monthlyAward?.enabled && item.monthlyAward.prize && (
+        <p className={`mt-0.5 line-clamp-1 text-xs font-medium text-emerald-300 transition-opacity duration-200 ${hovered && enableNetflixHover ? 'opacity-0' : 'opacity-100'}`}>
+          {item.monthlyAward.prize}
+        </p>
+      )}
+    </div>
+  )
+
   const hoverDetails = (
-    <div className="rounded-b-md border border-t-0 border-white/10 bg-[#181818] p-3 shadow-2xl">
+    <div className="border border-t-0 border-white/10 bg-[#181818] p-3">
       <div className="flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-black" aria-hidden="true">
-          ▶
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-black shadow" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M8 5v14l11-7z" />
+          </svg>
         </span>
-        <span className="rounded-full border border-white/20 p-1.5 text-xs text-white/80" aria-hidden="true">
-          i
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 text-white/80" aria-hidden="true">
+          +
+        </span>
+        <span className="ml-auto flex h-7 w-7 items-center justify-center rounded-full border border-white/20 text-xs text-white/70" aria-hidden="true">
+          ▾
         </span>
       </div>
-      <p className="mt-2 line-clamp-1 text-sm font-semibold text-white">{item.title}</p>
-      <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-white/75">
-        <span className="rounded border border-white/25 px-1.5 py-0.5">{item.rating}</span>
+      <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px] font-medium text-[#bcbcbc]">
+        <span className="rounded border border-white/25 px-1.5 py-0.5 text-white">{item.rating}</span>
         <span>{item.duration}</span>
-        <span>{item.year}</span>
-        <span className="text-white/45">HD</span>
+        <span className="rounded border border-white/20 px-1 text-[10px] uppercase tracking-wide text-white/60">HD</span>
       </div>
-      {genreLine && <p className="mt-1.5 text-xs text-white/60">{genreLine}</p>}
-      <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-white/55">{item.description}</p>
+      {genreLine && (
+        <p className="mt-2 text-[11px] leading-relaxed text-[#d2d2d2]">
+          {genreLine}
+          {item.type ? ` · ${getContentTypeLabel(item.type)}` : ''}
+        </p>
+      )}
     </div>
   )
 
@@ -150,7 +169,6 @@ export function ContentCard({
         {item.monthlyAward?.enabled && item.monthlyAward.prize ? (
           <p className="mt-0.5 truncate text-xs font-medium text-emerald-300">{item.monthlyAward.prize}</p>
         ) : null}
-        <p className="mt-0.5 truncate text-xs text-white/75 md:hidden">{metaLine}</p>
         <div className="mt-2 hidden space-y-1.5 md:block md:opacity-0 md:transition md:duration-200 md:group-hover:opacity-100 md:group-focus-visible:opacity-100">
           <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-white/80">
             <span className="rounded border border-white/25 px-1.5 py-0.5">{item.rating}</span>
@@ -165,49 +183,47 @@ export function ContentCard({
     </>
   )
 
+  const imageBlock = (
+    <div className={`relative overflow-hidden rounded-md bg-sineoda-surface ${aspectClass}`}>
+      <img
+        src={imageSrc}
+        alt={item.title}
+        loading="lazy"
+        onError={() => setImageSrc(fallbackUrl)}
+        className={`h-full w-full object-cover ${!enableNetflixHover ? 'transition duration-300 group-hover:scale-105' : ''}`}
+      />
+      {badges}
+    </div>
+  )
+
   const cardInner = enableNetflixHover ? (
     <>
-      {/* Satır yüksekliğini sabit tutar — hover taşması layout'u oynatmaz */}
-      <div className={`${aspectClass} pointer-events-none opacity-0`} aria-hidden="true" />
-
-      <div
-        className={`absolute left-0 top-0 w-full transition-[transform,box-shadow] duration-300 ease-out will-change-transform ${
-          hovered ? 'shadow-2xl' : ''
-        }`}
-        style={{
-          transformOrigin: '50% 0%',
-          transform: hovered ? `scale(${HOVER_SCALE})` : 'scale(1)',
-        }}
-      >
-        <div className={`relative overflow-hidden rounded-md bg-sineoda-surface ring-1 ring-white/10 ${hovered ? 'rounded-b-none ring-white/20' : ''}`}>
-          <div className={aspectClass}>
-            <img
-              src={imageSrc}
-              alt={item.title}
-              loading="lazy"
-              onError={() => setImageSrc(fallbackUrl)}
-              className="h-full w-full object-cover"
-            />
+      <div className={`relative w-full overflow-visible ${aspectClass}`}>
+        <div
+          className={`absolute bottom-0 left-0 w-full transition-[transform,box-shadow] duration-300 ease-out will-change-transform ${
+            hovered ? 'shadow-[0_12px_40px_rgba(0,0,0,0.65)]' : ''
+          }`}
+          style={{
+            transformOrigin: '50% 100%',
+            transform: hovered ? `scale(${HOVER_SCALE})` : 'scale(1)',
+          }}
+        >
+          <div className={`overflow-hidden rounded-md ring-1 ring-white/10 ${hovered ? 'rounded-b-none ring-white/20' : ''}`}>
+            {imageBlock}
           </div>
-          {badges}
+          {hovered && hoverDetails}
         </div>
-        {hovered && hoverDetails}
       </div>
+      {titleBlock}
     </>
   ) : (
-    <div className="relative h-full w-full">
-      <div className={aspectClass}>
-        <img
-          src={imageSrc}
-          alt={item.title}
-          loading="lazy"
-          onError={() => setImageSrc(fallbackUrl)}
-          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-        />
+    <>
+      <div className="relative w-full">
+        {imageBlock}
+        {guestHref && legacyOverlay}
       </div>
-      {badges}
-      {!enableNetflixHover && legacyOverlay}
-    </div>
+      {isGrid && titleBlock}
+    </>
   )
 
   if (guestHref) {
