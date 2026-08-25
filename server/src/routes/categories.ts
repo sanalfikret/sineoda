@@ -7,7 +7,7 @@ import { resetContent } from '../seed.js'
 import { dedupeAllCategories } from '../services/categoryDedup.js'
 import { fillCategoriesToTarget } from '../services/categoryFill.js'
 import { mapCategoriesResponse, removeCategoryFromOrder, saveCategoryOrder, appendCategoryToOrder } from '../services/categoryOrder.js'
-import { syncLinkedNavForCategory } from '../services/siteNav.js'
+import { mapSiteNavResponse, syncLinkedNavForCategory } from '../services/siteNav.js'
 
 const router = Router()
 
@@ -94,7 +94,11 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
     return
   }
 
-  res.json(req.body.hidden !== undefined ? { category, categories } : { category })
+  res.json(
+    req.body.hidden !== undefined
+      ? { category, categories, siteNav: mapSiteNavResponse() }
+      : { category },
+  )
 })
 
 router.delete('/:id', requireAdmin, (req: AuthRequest, res) => {

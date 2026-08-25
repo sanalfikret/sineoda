@@ -176,6 +176,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       const result = await api<{
         category: ContentCategory
         categories?: ContentCategory[]
+        siteNav?: { hidden: SiteNavId[] }
       }>(`/api/categories/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(updates),
@@ -188,7 +189,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           nextCategories = all.categories
         }
         setCategories(nextCategories)
-        setHiddenNavIds(deriveHiddenNavFromCategories(nextCategories))
+        setHiddenNavIds(result.siteNav?.hidden ?? deriveHiddenNavFromCategories(nextCategories))
       } else {
         setCategories((prev) =>
           prev.map((entry) => (entry.id === id ? result.category : entry)),

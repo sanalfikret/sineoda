@@ -1,11 +1,27 @@
 import { Link } from 'react-router-dom'
 import { InstallAppButton } from '../InstallAppButton'
+import { SITE_NAV_ITEMS, type SiteNavId } from '../../constants/siteNav'
 
 interface LandingHeaderProps {
   scrolled: boolean
+  hiddenNavIds?: SiteNavId[]
 }
 
-export function LandingHeader({ scrolled }: LandingHeaderProps) {
+const GUEST_NAV_IDS = new Set<SiteNavId>([
+  'diziler',
+  'filmler',
+  'belgeseller',
+  'dikey',
+  'gencSinema',
+  'dergi',
+])
+
+export function LandingHeader({ scrolled, hiddenNavIds = [] }: LandingHeaderProps) {
+  const hidden = new Set(hiddenNavIds)
+  const browseLinks = SITE_NAV_ITEMS.filter(
+    (item) => GUEST_NAV_IDS.has(item.id) && !hidden.has(item.id),
+  )
+
   return (
     <header
       className={`safe-top fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
@@ -22,10 +38,18 @@ export function LandingHeader({ scrolled }: LandingHeaderProps) {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-8 md:flex">
-          <Link to="/dergi" className="text-sm font-medium text-white/70 transition hover:text-white">
-            Dergi
-          </Link>
+        <nav className="hidden items-center gap-6 lg:gap-8 md:flex">
+          {browseLinks.map((item) => (
+            <Link
+              key={item.id}
+              to={item.path}
+              className={`text-sm font-medium transition hover:text-white ${
+                item.id === 'gencSinema' ? 'text-emerald-300/90 hover:text-emerald-200' : 'text-white/70'
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
           <Link to="/planlar" className="text-sm font-medium text-white/70 transition hover:text-white">
             Planlar
           </Link>

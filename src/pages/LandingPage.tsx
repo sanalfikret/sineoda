@@ -17,8 +17,9 @@ import {
 import { normalizeLandingLayout } from '../constants/landingLayout'
 import type { LandingCustomBlock } from '../constants/landingCustomBlocks'
 import { resolveLandingSliderItems } from '../utils/landingSlider'
-import { filterCatalogByNavVisibility } from '../utils/navVisibility'
+import { filterCatalogByNavVisibility, filterShowcasesByNavVisibility } from '../utils/navVisibility'
 import type { ContentItem } from '../types/content'
+import type { SiteNavId } from '../constants/siteNav'
 
 const FALLBACK_HERO =
   'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&h=1080&fit=crop&q=80'
@@ -44,6 +45,7 @@ export function LandingPage() {
   const [showcases, setShowcases] = useState(DEMO_LANDING_SHOWCASES)
   const [studentPicks, setStudentPicks] = useState<ContentItem[]>([])
   const [studentMonthlyWinners, setStudentMonthlyWinners] = useState<ContentItem[]>([])
+  const [hiddenNavIds, setHiddenNavIds] = useState<SiteNavId[]>([])
   const [scrolled, setScrolled] = useState(false)
   const [ready, setReady] = useState(false)
 
@@ -54,6 +56,7 @@ export function LandingPage() {
     ])
 
     const hidden = bootstrap.siteNav?.hidden ?? []
+    setHiddenNavIds(hidden)
 
     const mergedCatalogRaw =
       bootstrap.catalog.length >= 20 ? bootstrap.catalog : mergeCatalog(bootstrap.catalog)
@@ -78,10 +81,13 @@ export function LandingPage() {
       ),
     )
     setShowcases(
-      resolveLandingShowcases(landing.showcases).map((showcase) => ({
-        ...showcase,
-        items: filterCatalogByNavVisibility(showcase.items, hidden),
-      })),
+      filterShowcasesByNavVisibility(
+        resolveLandingShowcases(landing.showcases).map((showcase) => ({
+          ...showcase,
+          items: filterCatalogByNavVisibility(showcase.items, hidden),
+        })),
+        hidden,
+      ),
     )
     setStudentPicks(filterCatalogByNavVisibility(bootstrap.studentCinemaPicks ?? [], hidden))
     setStudentMonthlyWinners(
@@ -134,7 +140,7 @@ export function LandingPage() {
 
   return (
     <div className="min-h-dvh bg-sineoda-bg text-white">
-      <LandingHeader scrolled={scrolled} />
+      <LandingHeader scrolled={scrolled} hiddenNavIds={hiddenNavIds} />
       <LandingPageBlocks
         ctx={{
           heroConfig,
@@ -148,6 +154,7 @@ export function LandingPage() {
           showcases,
           layout,
           customBlocks,
+          hiddenNavIds,
         }}
       />
       <SiteFooter />
