@@ -6,24 +6,24 @@ import type { LandingSectionsConfig } from '../../constants/landingDefaults'
 import type { JournalPost } from '../../types/journal'
 import { JournalCard } from '../journal/JournalCard'
 
+const TEASER_COUNT = 3
+
 export function LandingJournalTeaser({
   section,
 }: {
   section: LandingSectionsConfig['journal']
 }) {
-  const [posts, setPosts] = useState<JournalPost[]>(DEMO_JOURNAL_POSTS.slice(0, 3))
+  const [posts, setPosts] = useState<JournalPost[]>(DEMO_JOURNAL_POSTS.slice(0, TEASER_COUNT))
 
   useEffect(() => {
-    void fetchJournalPosts({ limit: 3 })
+    void fetchJournalPosts({ limit: TEASER_COUNT })
       .then((data) => {
-        if (data.posts.length > 0) setPosts(data.posts)
+        if (data.posts.length > 0) setPosts(data.posts.slice(0, TEASER_COUNT))
       })
       .catch(() => undefined)
   }, [])
 
   if (posts.length === 0) return null
-
-  const [featured, ...rest] = posts
 
   return (
     <section className="border-y border-white/[0.06] bg-sineoda-bg px-5 py-20 sm:px-8 sm:py-24">
@@ -46,13 +46,10 @@ export function LandingJournalTeaser({
           </Link>
         </div>
 
-        <div className="mt-10 space-y-5">
-          <JournalCard post={featured} featured />
-          <div className="grid gap-5 md:grid-cols-2">
-            {rest.map((post) => (
-              <JournalCard key={post.id} post={post} />
-            ))}
-          </div>
+        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+          {posts.map((post) => (
+            <JournalCard key={post.id} post={post} compact />
+          ))}
         </div>
       </div>
     </section>
