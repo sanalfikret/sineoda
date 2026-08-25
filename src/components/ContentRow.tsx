@@ -62,7 +62,7 @@ export function ContentRow({
         className={
           isGrid
             ? 'grid grid-cols-2 gap-3 px-4 sm:grid-cols-3 sm:gap-4 sm:px-6 md:grid-cols-4 lg:grid-cols-5 lg:px-8'
-            : `hide-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-visible px-4 pb-10 pt-2 sm:px-6 lg:px-8 ${
+            : `hide-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-visible px-4 pb-6 pt-1 sm:px-6 lg:px-8 ${
                 prominent ? 'gap-3 sm:gap-4' : 'gap-2.5 sm:gap-3'
               }`
         }
