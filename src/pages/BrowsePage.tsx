@@ -215,6 +215,7 @@ function BrowseContent({
   }
 
   const displayHero = activeGenre ? filteredCatalog[0] : heroItem ?? filteredCatalog[0] ?? null
+  const isBrowseList = Boolean(activeGenre || contentType || verticalOnly || studentCinemaOnly)
 
   if (isLoading) {
     return (
@@ -299,7 +300,8 @@ function BrowseContent({
               }
               prominent={false}
               layout={rowLayout(row.title, row.items)}
-              variant="carousel"
+              variant={isBrowseList ? 'grid' : 'carousel'}
+              gridFixedWidth={isBrowseList}
             />
           ))
         )}
