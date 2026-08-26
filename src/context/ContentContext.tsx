@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { api, fetchBootstrap, updateAdminSiteNav } from '../api/client'
+import { api, fetchBootstrap, seedCekimNotlariCache, updateAdminSiteNav, type CekimNotlariSection } from '../api/client'
 import { DEFAULT_SITE_NAV, type SiteNavId } from '../constants/siteNav'
 import { mergeWithDemoCatalog } from '../data/demoLandingPosters'
 import type { ContentCategory, ContentItem } from '../types/content'
@@ -29,6 +29,7 @@ interface ContentContextValue {
   newReleases: ContentItem[]
   studentCinemaPicks: ContentItem[]
   studentCinemaMonthlyWinners: ContentItem[]
+  cekimNotlariSections: CekimNotlariSection[]
   isLoading: boolean
   refresh: () => Promise<void>
   getContentById: (id: string) => ContentItem | undefined
@@ -59,6 +60,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const [newReleases, setNewReleases] = useState<ContentItem[]>([])
   const [studentCinemaPicks, setStudentCinemaPicks] = useState<ContentItem[]>([])
   const [studentCinemaMonthlyWinners, setStudentCinemaMonthlyWinners] = useState<ContentItem[]>([])
+  const [cekimNotlariSections, setCekimNotlariSections] = useState<CekimNotlariSection[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   const refresh = useCallback(async () => {
@@ -71,6 +73,10 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     setNewReleases(data.newReleases ?? [])
     setStudentCinemaPicks(data.studentCinemaPicks ?? [])
     setStudentCinemaMonthlyWinners(data.studentCinemaMonthlyWinners ?? [])
+    if (data.cekimNotlari?.sections) {
+      setCekimNotlariSections(data.cekimNotlari.sections)
+      seedCekimNotlariCache(data.cekimNotlari)
+    }
   }, [])
 
   useEffect(() => {
@@ -266,6 +272,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       newReleases,
       studentCinemaPicks: visibleStudentCinemaPicks,
       studentCinemaMonthlyWinners: visibleStudentCinemaMonthlyWinners,
+      cekimNotlariSections,
       isLoading,
       refresh,
       getContentById,
@@ -292,6 +299,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       newReleases,
       visibleStudentCinemaPicks,
       visibleStudentCinemaMonthlyWinners,
+      cekimNotlariSections,
       isLoading,
       refresh,
       getContentById,

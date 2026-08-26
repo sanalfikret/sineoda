@@ -38,6 +38,7 @@ import { MAIN_CATALOG_SQL, STANDARD_PROGRAM_SQL, ensureStudentCinemaCatalog } fr
 import { mapCategoriesResponse } from './services/categoryOrder.js'
 import { getMonthlyAwardWinnersSql } from './services/studentCinemaAwards.js'
 import { mapSiteNavResponse } from './services/siteNav.js'
+import { listCekimNotlariSections } from './services/cekimNotlari.js'
 import { runStartupCategoryMaintenance } from './services/categoryMaintenance.js'
 import { backfillMissingImages } from './backfillImages.js'
 import { backfillEpisodeVideoUrls } from './services/episodeVideos.js'
@@ -186,6 +187,10 @@ app.get('/api/bootstrap', (_req, res) => {
       studentCinemaMonthlyWinners,
       siteNav: mapSiteNavResponse(),
       landing,
+      cekimNotlari: {
+        title: 'Çekim İçin Notlar',
+        sections: listCekimNotlariSections(),
+      },
     })
   } catch (error) {
     res.status(500).json({

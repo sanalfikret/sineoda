@@ -16,6 +16,12 @@ export const CEKIM_NOTLARI_CATEGORIES = [
   { id: 'cekim-kurgu', title: 'Kurgu' },
 ] as const
 
+export const CEKIM_CATEGORY_PREFIX = 'cekim-'
+
+export function isCekimCategoryId(categoryId: string) {
+  return categoryId.startsWith(CEKIM_CATEGORY_PREFIX)
+}
+
 export const CEKIM_NOTLARI_CATEGORY_IDS: readonly string[] = CEKIM_NOTLARI_CATEGORIES.map(
   (entry) => entry.id,
 )
