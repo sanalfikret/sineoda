@@ -1,6 +1,11 @@
 import { dbAll, dbGet, dbRun } from '../db.js'
+import { isCekimCategoryId } from '../constants/cekimNotlari.js'
 
 const SETTINGS_KEY = 'category_order'
+
+function isMainCategoryId(categoryId: string) {
+  return !isCekimCategoryId(categoryId)
+}
 
 export function loadCategoryOrder(): string[] | null {
   const row = dbGet<{ value: string }>('SELECT value FROM site_settings WHERE key = ?', [SETTINGS_KEY])
@@ -15,7 +20,9 @@ export function loadCategoryOrder(): string[] | null {
 }
 
 function allCategoryIds() {
-  return dbAll<{ id: string }>('SELECT id FROM categories ORDER BY sort_order, title').map((row) => row.id)
+  return dbAll<{ id: string }>('SELECT id FROM categories ORDER BY sort_order, title')
+    .map((row) => row.id)
+    .filter(isMainCategoryId)
 }
 
 /** Admin sıralamasını tüm kategori kimliklerini kapsayacak şekilde tamamla. */
@@ -64,7 +71,9 @@ export function listCategoriesOrdered() {
     'SELECT id, title, sort_order, hidden FROM categories',
   )
 
-  return [...rows].sort(
+  return [...rows]
+    .filter((row) => isMainCategoryId(row.id))
+    .sort(
     (a, b) => a.sort_order - b.sort_order || a.title.localeCompare(b.title, 'tr'),
   )
 }

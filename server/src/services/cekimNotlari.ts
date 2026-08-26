@@ -12,6 +12,13 @@ export const CEKIM_CATEGORY_PREFIX = 'cekim-'
 
 export const CEKIM_CATEGORY_BASE_SORT = 200
 
+export type CekimCategoryRow = {
+  id: string
+  title: string
+  sort_order: number
+  hidden: boolean
+}
+
 export function isCekimCategoryId(categoryId: string) {
   return categoryId.startsWith(CEKIM_CATEGORY_PREFIX)
 }
@@ -20,11 +27,21 @@ export function isShootingNotesRow(row: Pick<ContentRow, 'program'>) {
   return (row.program ?? 'standard') === SHOOTING_NOTES_PROGRAM
 }
 
-export function listCekimNotlariCategoryRows() {
-  return dbAll<{ id: string; title: string; sort_order: number }>(
-    `SELECT id, title, sort_order FROM categories WHERE id LIKE ? ORDER BY sort_order, title`,
+export function listCekimNotlariCategoryRows(options?: { includeHidden?: boolean }) {
+  const rows = dbAll<{ id: string; title: string; sort_order: number; hidden: number | null }>(
+    `SELECT id, title, sort_order, COALESCE(hidden, 0) AS hidden FROM categories WHERE id LIKE ? ORDER BY sort_order, title`,
     [`${CEKIM_CATEGORY_PREFIX}%`],
   )
+  const mapped: CekimCategoryRow[] = rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    sort_order: row.sort_order,
+    hidden: row.hidden === 1,
+  }))
+  if (options?.includeHidden === false) {
+    return mapped.filter((row) => !row.hidden)
+  }
+  return mapped
 }
 
 export function newCekimCategoryId(title: string) {
@@ -56,20 +73,48 @@ export function createCekimNotlariCategory(title: string) {
   return { id, title: trimmed }
 }
 
-export function updateCekimNotlariCategoryTitle(categoryId: string, title: string) {
+export function updateCekimNotlariCategory(
+  categoryId: string,
+  updates: { title?: string; hidden?: boolean },
+) {
   if (!isCekimCategoryId(categoryId)) {
     throw new Error('Geçersiz kategori.')
   }
-  const trimmed = title.trim()
-  if (!trimmed) {
-    throw new Error('Kategori adı boş olamaz.')
-  }
-  const existing = dbGet('SELECT id FROM categories WHERE id = ?', [categoryId])
+  const existing = dbGet<{ id: string; title: string; hidden: number | null }>(
+    'SELECT id, title, hidden FROM categories WHERE id = ?',
+    [categoryId],
+  )
   if (!existing) {
     throw new Error('Kategori bulunamadı.')
   }
-  dbRun('UPDATE categories SET title = ? WHERE id = ?', [trimmed, categoryId])
-  return { id: categoryId, title: trimmed }
+
+  if (updates.title !== undefined) {
+    const trimmed = updates.title.trim()
+    if (!trimmed) {
+      throw new Error('Kategori adı boş olamaz.')
+    }
+    dbRun('UPDATE categories SET title = ? WHERE id = ?', [trimmed, categoryId])
+  }
+
+  if (updates.hidden !== undefined) {
+    dbRun('UPDATE categories SET hidden = ? WHERE id = ?', [updates.hidden ? 1 : 0, categoryId])
+  }
+
+  const row = dbGet<{ id: string; title: string; hidden: number | null }>(
+    'SELECT id, title, hidden FROM categories WHERE id = ?',
+    [categoryId],
+  )!
+
+  return {
+    id: row.id,
+    title: row.title,
+    hidden: row.hidden === 1,
+  }
+}
+
+/** @deprecated use updateCekimNotlariCategory */
+export function updateCekimNotlariCategoryTitle(categoryId: string, title: string) {
+  return updateCekimNotlariCategory(categoryId, { title })
 }
 
 export function reorderCekimNotlariCategories(orderedIds: string[]) {
@@ -158,7 +203,10 @@ export function addToCekimCategory(contentId: string, categoryId: string) {
   ])
 }
 
-function mapSection(category: { id: string; title: string }, mapper: (row: ContentRow) => ReturnType<typeof mapContent>) {
+function mapSection(
+  category: CekimCategoryRow,
+  mapper: (row: ContentRow) => ReturnType<typeof mapContent>,
+) {
   const rows = dbAll<ContentRow>(
     `SELECT c.*
      FROM content c
@@ -171,12 +219,13 @@ function mapSection(category: { id: string; title: string }, mapper: (row: Conte
   return {
     id: category.id,
     title: category.title,
+    hidden: category.hidden,
     items: rows.map(mapper),
   }
 }
 
 export function listCekimNotlariSections() {
-  const categories = listCekimNotlariCategoryRows()
+  const categories = listCekimNotlariCategoryRows({ includeHidden: false })
   if (categories.length === 0) return []
 
   const rows = dbAll<ContentRow & { category_id: string }>(
@@ -185,6 +234,7 @@ export function listCekimNotlariSections() {
      INNER JOIN categories cat ON cat.id = ci.category_id
      INNER JOIN content c ON c.id = ci.content_id
      WHERE cat.id LIKE ?
+       AND (cat.hidden IS NULL OR cat.hidden = 0)
        AND c.program = ?
        AND ${PUBLISHED_CONTENT_SQL}
      ORDER BY cat.sort_order, cat.title, ci.sort_order, c.title`,

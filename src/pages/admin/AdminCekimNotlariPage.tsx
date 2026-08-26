@@ -143,7 +143,7 @@ export function AdminCekimNotlariPage() {
     setSavingCategory(true)
     setError('')
     try {
-      const data = await updateAdminCekimNotlariCategory(categoryId, title)
+      const data = await updateAdminCekimNotlariCategory(categoryId, { title })
       await syncAfterMutation(data.sections)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kategori güncellenemedi.')
@@ -161,6 +161,19 @@ export function AdminCekimNotlariPage() {
       await syncAfterMutation(data.sections)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kategori silinemedi.')
+    } finally {
+      setSavingCategory(false)
+    }
+  }
+
+  const handleToggleCategoryHidden = async (categoryId: string, hidden: boolean) => {
+    setSavingCategory(true)
+    setError('')
+    try {
+      const data = await updateAdminCekimNotlariCategory(categoryId, { hidden })
+      await syncAfterMutation(data.sections)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Kategori güncellenemedi.')
     } finally {
       setSavingCategory(false)
     }
@@ -276,6 +289,11 @@ export function AdminCekimNotlariPage() {
                   >
                     <span className="text-white/50">{expanded ? '▼' : '▶'}</span>
                     <span className="truncate font-semibold text-white">{section.title}</span>
+                    {section.hidden ? (
+                      <span className="shrink-0 rounded bg-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-sineoda-muted">
+                        Gizli
+                      </span>
+                    ) : null}
                     <span className="shrink-0 text-xs text-sineoda-muted">{section.items.length} video</span>
                   </button>
                 </div>
@@ -296,6 +314,18 @@ export function AdminCekimNotlariPage() {
                           className="rounded-lg border border-white/10 bg-sineoda-bg px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold"
                         />
                       </label>
+                      <button
+                        type="button"
+                        disabled={savingCategory}
+                        onClick={() => void handleToggleCategoryHidden(section.id, !section.hidden)}
+                        className={`rounded-lg border px-3 py-2 text-sm transition disabled:opacity-50 ${
+                          section.hidden
+                            ? 'border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10'
+                            : 'border-white/10 text-white/85 hover:bg-white/5'
+                        }`}
+                      >
+                        {section.hidden ? 'Yayında göster' : 'Gizle'}
+                      </button>
                       <button
                         type="button"
                         disabled={savingCategory}
