@@ -23,7 +23,7 @@ export function StudentCinemaMonthlyWinnersRow({
         title="Ayın Genç Sinema Birincileri"
         items={winners}
         onSelect={onSelect ?? (() => undefined)}
-        layout="portrait"
+        layout="landscape"
         viewAllHref={guestMode ? '/giris' : '/genc-sinema'}
         guestMode={guestMode}
       />

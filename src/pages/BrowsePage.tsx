@@ -4,14 +4,13 @@ import type { ContentItem, ContentType } from '../types/content'
 import { fetchAllWatchProgress, fetchEpisodes } from '../api/client'
 import { AppShell, useContentUI } from '../components/AppShell'
 import { ContentRow } from '../components/ContentRow'
-import { StudentCinemaPicksRow } from '../components/StudentCinemaPicksRow'
-import { StudentCinemaMonthlyWinnersRow } from '../components/StudentCinemaMonthlyWinnersRow'
 import { GenreFilterBar } from '../components/GenreFilterBar'
 import { Hero } from '../components/Hero'
 import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
 import { useWatchlist } from '../context/WatchlistContext'
-import { buildBrowseRows, filterCatalog, genresForCatalog, pickFeatured } from '../utils/browse'
+import { buildBrowseRows, filterCatalog, genresForCatalog, pickFeatured, STUDENT_MONTHLY_WINNERS_ROW_ID } from '../utils/browse'
+import { BRAND_STUDENT_CINEMA } from '../constants/brand'
 import { restoreBrowseScroll } from '../utils/browseState'
 import { isVerticalContent } from '../utils/vertical'
 import { getContentTypeLabel } from '../constants/contentTypes'
@@ -137,8 +136,12 @@ function BrowseContent({
   )
 
   const rows = useMemo(
-    () => buildBrowseRows(visibleCatalog, browseOptions, visibleCategories, getContentById),
-    [visibleCatalog, browseOptions, visibleCategories, getContentById],
+    () =>
+      buildBrowseRows(visibleCatalog, browseOptions, visibleCategories, getContentById, {
+        studentCinemaPicks,
+        studentCinemaMonthlyWinners,
+      }),
+    [visibleCatalog, browseOptions, visibleCategories, getContentById, studentCinemaPicks, studentCinemaMonthlyWinners],
   )
 
   const heroItem = useMemo(() => {
@@ -178,7 +181,7 @@ function BrowseContent({
     ? (item: ContentItem) => void openPlayer(item)
     : openDetail
 
-  const rowLayout = (rowTitle: string, items: ContentItem[]) => {
+  const rowLayout = (_rowId: string, rowTitle: string, items: ContentItem[]) => {
     if (verticalOnly) return 'portrait' as const
     if (rowTitle === 'Dikey Diziler' || items.every(isVerticalContent)) return 'portrait' as const
     return 'landscape' as const
@@ -286,14 +289,6 @@ function BrowseContent({
       )}
 
       <div className="pb-24">
-        {showSectionExtras && !activeGenre && !contentType && !verticalOnly && !studentCinemaOnly && studentCinemaMonthlyWinners.length > 0 && (
-          <StudentCinemaMonthlyWinnersRow items={studentCinemaMonthlyWinners} onSelect={openDetail} />
-        )}
-
-        {showSectionExtras && !activeGenre && !contentType && !verticalOnly && !studentCinemaOnly && studentCinemaPicks.length > 0 && (
-          <StudentCinemaPicksRow items={studentCinemaPicks} onSelect={openDetail} />
-        )}
-
         {showSectionExtras && !activeGenre && !contentType && continueWatching.length > 0 && (
           <ContentRow
             title="Kaldığın Yerden Devam Et"
@@ -318,13 +313,23 @@ function BrowseContent({
               viewAllHref={
                 !activeGenre &&
                 !contentType &&
-                row.title === 'Dikey Diziler' &&
-                !hiddenNavIds.includes('dikey')
-                  ? '/dikey-diziler'
-                  : undefined
+                row.id === BRAND_STUDENT_CINEMA.id &&
+                !hiddenNavIds.includes('gencSinema')
+                  ? '/genc-sinema'
+                  : !activeGenre &&
+                      !contentType &&
+                      row.id === STUDENT_MONTHLY_WINNERS_ROW_ID &&
+                      !hiddenNavIds.includes('gencSinema')
+                    ? '/genc-sinema'
+                    : !activeGenre &&
+                        !contentType &&
+                        row.title === 'Dikey Diziler' &&
+                        !hiddenNavIds.includes('dikey')
+                      ? '/dikey-diziler'
+                      : undefined
               }
               prominent={false}
-              layout={rowLayout(row.title, row.items)}
+              layout={rowLayout(row.id, row.title, row.items)}
               variant={isBrowseList ? 'grid' : 'carousel'}
               gridFixedWidth={isBrowseList}
             />

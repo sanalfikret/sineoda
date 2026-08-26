@@ -5,6 +5,9 @@ import { isCekimCategoryId } from '../constants/cekimNotlari'
 import type { ContentCategory, ContentItem, ContentType } from '../types/content'
 import { isContentAllowedForKids } from './contentRating'
 
+export const STUDENT_MONTHLY_WINNERS_ROW_ID = 'student-monthly-winners'
+export const STUDENT_MONTHLY_WINNERS_ROW_TITLE = 'Ayın Genç Sinema Birincileri'
+
 export type BrowseFilterOptions = {
   type?: ContentType | null
   genre?: string | null
@@ -22,8 +25,10 @@ export type BrowseRow = {
   items: ContentItem[]
 }
 
-/** BrowsePage'de ayrı satır olarak gösterildiği için kategori listesinden çıkarılır */
-export const BROWSE_EXCLUSIVE_ROW_TITLES = new Set<string>(['Genç Sinema'])
+export type BrowseRowExtras = {
+  studentCinemaPicks?: ContentItem[]
+  studentCinemaMonthlyWinners?: ContentItem[]
+}
 
 function categoryFilterOptions(category: ContentCategory, options: BrowseFilterOptions): BrowseFilterOptions {
   if (category.id === BRAND_STUDENT_CINEMA.id) {
@@ -88,21 +93,25 @@ export function buildCategoryBrowseRows(
   _catalog: ContentItem[],
   getContentById: (id: string) => ContentItem | undefined,
   options: BrowseFilterOptions,
+  extras?: BrowseRowExtras,
 ): BrowseRow[] {
   const rows: BrowseRow[] = []
 
   for (const category of categories) {
     if (category.hidden) continue
-    if (BROWSE_EXCLUSIVE_ROW_TITLES.has(category.title)) continue
     if (!options.cekimNotlariOnly && isCekimCategoryId(category.id)) continue
 
     const rowOptions = categoryFilterOptions(category, options)
-    const items = category.itemIds
+    let items = category.itemIds
       .map((id) => getContentById(id))
       .filter((item): item is ContentItem =>
         Boolean(item && itemAllowedInCategory(category, item, rowOptions)),
       )
       .slice(0, BROWSE_ITEMS_PER_ROW)
+
+    if (category.id === BRAND_STUDENT_CINEMA.id && items.length === 0 && extras?.studentCinemaPicks?.length) {
+      items = extras.studentCinemaPicks.slice(0, BROWSE_ITEMS_PER_ROW)
+    }
 
     if (items.length === 0) continue
 
@@ -112,6 +121,20 @@ export function buildCategoryBrowseRows(
       itemIds: items.map((item) => item.id),
       items,
     })
+
+    if (category.id === BRAND_STUDENT_CINEMA.id && extras?.studentCinemaMonthlyWinners?.length) {
+      const winners = extras.studentCinemaMonthlyWinners
+        .filter((item) => item.monthlyAward?.enabled)
+        .slice(0, BROWSE_ITEMS_PER_ROW)
+      if (winners.length > 0) {
+        rows.push({
+          id: STUDENT_MONTHLY_WINNERS_ROW_ID,
+          title: STUDENT_MONTHLY_WINNERS_ROW_TITLE,
+          itemIds: winners.map((item) => item.id),
+          items: winners,
+        })
+      }
+    }
   }
 
   return rows
@@ -178,6 +201,7 @@ export function buildBrowseRows(
   options: BrowseFilterOptions,
   categories: ContentCategory[] = [],
   getContentById?: (id: string) => ContentItem | undefined,
+  extras?: BrowseRowExtras,
 ) {
   if (options.studentOnly) {
     const items = filterCatalog(catalog, options).sort((a, b) => a.title.localeCompare(b.title, 'tr'))
@@ -194,7 +218,7 @@ export function buildBrowseRows(
 
   if (options.cekimNotlariOnly && categories.length > 0 && getContentById) {
     const orderedCategories = categories.filter((category) => isCekimCategoryId(category.id))
-    return buildCategoryBrowseRows(orderedCategories, catalog, getContentById, options)
+    return buildCategoryBrowseRows(orderedCategories, catalog, getContentById, options, extras)
   }
 
   if (options.genre) {
@@ -215,7 +239,7 @@ export function buildBrowseRows(
   }
 
   if (categories.length > 0 && getContentById) {
-    return buildCategoryBrowseRows(categories, catalog, getContentById, options)
+    return buildCategoryBrowseRows(categories, catalog, getContentById, options, extras)
   }
 
   return buildGenreBrowseRows(catalog, options)
