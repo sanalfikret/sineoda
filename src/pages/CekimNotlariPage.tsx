@@ -13,6 +13,7 @@ interface CekimSection {
 }
 
 const PREVIEW_COUNT = 3
+const SKELETON_SECTIONS = 4
 
 function CekimNotlariContent() {
   const { openDetail, openPlayer } = useContentUI()
@@ -39,14 +40,6 @@ function CekimNotlariContent() {
 
   const heroItem = sections.flatMap((section) => section.items)[0] ?? null
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-sineoda-gold border-t-transparent" />
-      </div>
-    )
-  }
-
   if (error) {
     return (
       <p className="px-4 py-16 text-center text-sineoda-muted sm:px-6">{error}</p>
@@ -55,7 +48,7 @@ function CekimNotlariContent() {
 
   return (
     <main className="bg-sineoda-bg">
-      {heroItem ? (
+      {!loading && heroItem ? (
         <Hero
           item={heroItem}
           onPlay={openPlayer}
@@ -76,55 +69,76 @@ function CekimNotlariContent() {
       </p>
 
       <div className="mx-auto max-w-[1400px] space-y-6 px-5 pb-24 sm:px-8">
-        {sections.map((section) => {
-          const expanded = expandedIds.has(section.id)
-          const hasMore = section.items.length > PREVIEW_COUNT
-          const visibleItems = expanded ? section.items : section.items.slice(0, PREVIEW_COUNT)
-
-          return (
-            <section key={section.id} className="border-t border-white/5 pt-6 first:border-t-0 first:pt-0">
-              <button
-                type="button"
-                onClick={() => toggleSection(section.id)}
-                className="group mb-4 flex w-full items-center justify-between gap-3 text-left"
-                aria-expanded={expanded}
-              >
-                <span className="text-lg font-semibold text-white transition group-hover:text-sineoda-accent sm:text-xl">
-                  {section.title}
-                </span>
-                <span className="flex shrink-0 items-center gap-2 text-sm text-sineoda-muted">
-                  {section.items.length > 0 && (
-                    <span className="hidden sm:inline">
-                      {expanded ? 'Daralt' : hasMore ? `${section.items.length} video` : `${section.items.length} video`}
-                    </span>
-                  )}
-                  <ChevronIcon expanded={expanded} />
-                </span>
-              </button>
-
-              {section.items.length > 0 ? (
-                <>
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
-                    {visibleItems.map((item) => (
-                      <CekimNotlariCard key={item.id} item={item} onSelect={openDetail} />
-                    ))}
+        {loading ? (
+          Array.from({ length: SKELETON_SECTIONS }, (_, index) => (
+            <section key={index} className="border-t border-white/5 pt-6 first:border-t-0 first:pt-0">
+              <div className="mb-4 h-7 w-48 animate-pulse rounded-lg bg-white/10" />
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
+                {Array.from({ length: PREVIEW_COUNT }, (__, cardIndex) => (
+                  <div
+                    key={cardIndex}
+                    className="flex h-[8.5rem] animate-pulse overflow-hidden rounded-xl border border-white/[0.06] bg-sineoda-surface"
+                  >
+                    <div className="w-[38%] bg-white/5 sm:w-[42%]" />
+                    <div className="flex flex-1 flex-col justify-center gap-2 px-4 py-3">
+                      <div className="h-3 w-16 rounded bg-white/10" />
+                      <div className="h-4 w-full rounded bg-white/10" />
+                      <div className="h-3 w-4/5 rounded bg-white/5" />
+                    </div>
                   </div>
-                  {!expanded && hasMore && (
-                    <button
-                      type="button"
-                      onClick={() => toggleSection(section.id)}
-                      className="mt-3 text-sm font-medium text-sineoda-accent transition hover:text-white"
-                    >
-                      Tümünü gör ({section.items.length} video)
-                    </button>
-                  )}
-                </>
-              ) : (
-                <p className="text-sm text-sineoda-muted">Bu bölüm için henüz video eklenmedi.</p>
-              )}
+                ))}
+              </div>
             </section>
-          )
-        })}
+          ))
+        ) : (
+          sections.map((section) => {
+            const expanded = expandedIds.has(section.id)
+            const hasMore = section.items.length > PREVIEW_COUNT
+            const visibleItems = expanded ? section.items : section.items.slice(0, PREVIEW_COUNT)
+
+            return (
+              <section key={section.id} className="border-t border-white/5 pt-6 first:border-t-0 first:pt-0">
+                <button
+                  type="button"
+                  onClick={() => toggleSection(section.id)}
+                  className="group mb-4 flex w-full items-center justify-between gap-3 text-left"
+                  aria-expanded={expanded}
+                >
+                  <span className="text-lg font-semibold text-white transition group-hover:text-sineoda-accent sm:text-xl">
+                    {section.title}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-2 text-sm text-sineoda-muted">
+                    {section.items.length > 0 && (
+                      <span className="hidden sm:inline">{expanded ? 'Daralt' : `${section.items.length} video`}</span>
+                    )}
+                    <ChevronIcon expanded={expanded} />
+                  </span>
+                </button>
+
+                {section.items.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
+                      {visibleItems.map((item) => (
+                        <CekimNotlariCard key={item.id} item={item} onSelect={openDetail} />
+                      ))}
+                    </div>
+                    {!expanded && hasMore && (
+                      <button
+                        type="button"
+                        onClick={() => toggleSection(section.id)}
+                        className="mt-3 text-sm font-medium text-sineoda-accent transition hover:text-white"
+                      >
+                        Tümünü gör ({section.items.length} video)
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-sineoda-muted">Bu bölüm için henüz video eklenmedi.</p>
+                )}
+              </section>
+            )
+          })
+        )}
       </div>
     </main>
   )

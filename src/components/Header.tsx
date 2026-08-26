@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { fetchUnreadMessageCount } from '../api/client'
+import { fetchUnreadMessageCount, prefetchCekimNotlariSections } from '../api/client'
 import { SITE_NAV_ITEMS, EXPLORE_NAV_IDS, PRIMARY_NAV_IDS, type SiteNavId } from '../constants/siteNav'
 import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
@@ -128,6 +128,8 @@ export function Header() {
                 <button
                   type="button"
                   onClick={() => setExploreOpen((open) => !open)}
+                  onMouseEnter={() => prefetchCekimNotlariSections()}
+                  onFocus={() => prefetchCekimNotlariSections()}
                   onBlur={() => window.setTimeout(() => setExploreOpen(false), 150)}
                   className={`whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold lg:px-3 lg:text-sm xl:text-[15px] ${
                     exploreActive || exploreOpen
@@ -144,6 +146,8 @@ export function Header() {
                         key={item.to}
                         to={item.to}
                         onClick={() => setExploreOpen(false)}
+                        onMouseEnter={item.id === 'cekimNotlari' ? () => prefetchCekimNotlariSections() : undefined}
+                        onFocus={item.id === 'cekimNotlari' ? () => prefetchCekimNotlariSections() : undefined}
                         className={`block whitespace-nowrap px-4 py-2.5 text-sm transition hover:bg-white/5 ${
                           item.isStudentCinema
                             ? isActive(item.match)

@@ -43,6 +43,22 @@ function demoContentId(categoryId: string, index: number) {
   return `${categoryId}-demo-${String(index + 1).padStart(2, '0')}`
 }
 
+let demoSeedChecked = false
+
+/** Her istekte ağır seed çalıştırmaz — yalnızca içerik boşsa bir kez dener */
+export function ensureCekimNotlariDemoContentIfEmpty() {
+  if (demoSeedChecked) return
+  demoSeedChecked = true
+
+  const count = dbGet<{ count: number }>(
+    `SELECT COUNT(*) AS count FROM content WHERE program = ? LIMIT 1`,
+    [SHOOTING_NOTES_PROGRAM],
+  )
+  if ((count?.count ?? 0) > 0) return
+
+  ensureCekimNotlariDemoContent()
+}
+
 export function ensureCekimNotlariDemoContent() {
   const now = new Date().toISOString()
 
