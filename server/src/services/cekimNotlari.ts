@@ -154,8 +154,7 @@ export function listCekimNotlariSections() {
        INNER JOIN category_items ci ON ci.content_id = c.id AND ci.category_id = ?
        WHERE ${PUBLISHED_CONTENT_SQL}
          AND c.program = ?
-       ORDER BY ci.sort_order, c.title
-       LIMIT 3`,
+       ORDER BY ci.sort_order, c.title`,
       [category.id, SHOOTING_NOTES_PROGRAM],
     )
 
