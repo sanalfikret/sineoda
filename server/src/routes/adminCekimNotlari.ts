@@ -17,7 +17,7 @@ import {
   reorderCekimNotlariCategories,
   reorderCekimNotlariCategoryItems,
   SHOOTING_NOTES_PROGRAM,
-  updateCekimNotlariCategoryTitle,
+  updateCekimNotlariCategory,
 } from '../services/cekimNotlari.js'
 import { newShootingNotesContentId } from '../services/cekimNotlariSeed.js'
 import { resolveStreamProvider } from '../services/streamProvider.js'
@@ -76,10 +76,11 @@ router.patch('/categories/:categoryId/items/reorder', (req: AuthRequest, res) =>
 
 router.patch('/categories/:categoryId', (req: AuthRequest, res) => {
   try {
-    const category = updateCekimNotlariCategoryTitle(
-      req.params.categoryId,
-      String(req.body.title ?? ''),
-    )
+    const body = req.body as { title?: string; hidden?: boolean }
+    const updates: { title?: string; hidden?: boolean } = {}
+    if (body.title !== undefined) updates.title = String(body.title)
+    if (body.hidden !== undefined) updates.hidden = body.hidden === true || body.hidden === 1
+    const category = updateCekimNotlariCategory(String(req.params.categoryId), updates)
     res.json({ category, sections: listAdminCekimNotlariSections() })
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : 'Kategori güncellenemedi.' })

@@ -1,5 +1,4 @@
 import type { SiteNavId } from './siteNav.js'
-import { listCekimNotlariCategoryRows } from '../services/cekimNotlari.js'
 import { isCekimCategoryId } from './cekimNotlari.js'
 
 /** Menü ↔ kategori çift yönlü senkron. */
@@ -23,14 +22,12 @@ for (const [navId, categoryIds] of Object.entries(NAV_CATEGORY_SYNC) as [SiteNav
 }
 
 export function getNavIdForCategory(categoryId: string): SiteNavId | null {
-  if (isCekimCategoryId(categoryId)) return 'cekimNotlari'
+  if (isCekimCategoryId(categoryId)) return null
   return categoryToNavMap.get(categoryId) ?? null
 }
 
 export function getCategoryIdsForNav(navId: SiteNavId): readonly string[] {
-  if (navId === 'cekimNotlari') {
-    return listCekimNotlariCategoryRows().map((row) => row.id)
-  }
+  if (navId === 'cekimNotlari') return []
   return NAV_CATEGORY_SYNC[navId] ?? []
 }
 

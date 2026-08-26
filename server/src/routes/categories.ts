@@ -7,6 +7,7 @@ import { resetContent } from '../seed.js'
 import { dedupeAllCategories } from '../services/categoryDedup.js'
 import { fillCategoriesToTarget } from '../services/categoryFill.js'
 import { mapCategoriesResponse, removeCategoryFromOrder, saveCategoryOrder, appendCategoryToOrder } from '../services/categoryOrder.js'
+import { isCekimCategoryId } from '../services/cekimNotlari.js'
 import { mapSiteNavResponse, syncLinkedNavForCategory } from '../services/siteNav.js'
 
 const router = Router()
@@ -57,7 +58,13 @@ router.post('/fill', requireAdmin, (_req: AuthRequest, res) => {
 })
 
 router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
-  const existing = dbGet('SELECT * FROM categories WHERE id = ?', [req.params.id])
+  const categoryId = String(req.params.id)
+  if (isCekimCategoryId(categoryId)) {
+    res.status(400).json({ error: 'Çekim Notları kategorileri yalnızca Çekim Notları admininden düzenlenir.' })
+    return
+  }
+
+  const existing = dbGet('SELECT * FROM categories WHERE id = ?', [categoryId])
   if (!existing) {
     res.status(404).json({ error: 'Kategori bulunamadı.' })
     return
@@ -69,26 +76,26 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
       res.status(400).json({ error: 'Kategori adı boş olamaz.' })
       return
     }
-    dbRun('UPDATE categories SET title = ? WHERE id = ?', [title, req.params.id])
+    dbRun('UPDATE categories SET title = ? WHERE id = ?', [title, categoryId])
   }
 
   if (Array.isArray(req.body.itemIds)) {
-    dbRun('DELETE FROM category_items WHERE category_id = ?', [req.params.id])
+    dbRun('DELETE FROM category_items WHERE category_id = ?', [categoryId])
     req.body.itemIds.forEach((contentId: string, index: number) => {
       dbRun('INSERT INTO category_items (category_id, content_id, sort_order) VALUES (?, ?, ?)', [
-        req.params.id, contentId, index,
+        categoryId, contentId, index,
       ])
     })
   }
 
   if (req.body.hidden !== undefined) {
     const hidden = req.body.hidden === true || req.body.hidden === 1 ? 1 : 0
-    dbRun('UPDATE categories SET hidden = ? WHERE id = ?', [hidden, req.params.id])
-    syncLinkedNavForCategory(req.params.id, hidden === 1)
+    dbRun('UPDATE categories SET hidden = ? WHERE id = ?', [hidden, categoryId])
+    syncLinkedNavForCategory(categoryId, hidden === 1)
   }
 
   const categories = mapCategoriesResponse()
-  const category = categories.find((entry) => entry.id === req.params.id)
+  const category = categories.find((entry) => entry.id === categoryId)
   if (!category) {
     res.status(404).json({ error: 'Kategori bulunamadı.' })
     return
@@ -102,13 +109,18 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
 })
 
 router.delete('/:id', requireAdmin, (req: AuthRequest, res) => {
-  const existing = dbGet('SELECT id FROM categories WHERE id = ?', [req.params.id])
+  const categoryId = String(req.params.id)
+  if (isCekimCategoryId(categoryId)) {
+    res.status(400).json({ error: 'Çekim Notları kategorileri yalnızca Çekim Notları admininden silinir.' })
+    return
+  }
+  const existing = dbGet('SELECT id FROM categories WHERE id = ?', [categoryId])
   if (!existing) {
     res.status(404).json({ error: 'Kategori bulunamadı.' })
     return
   }
-  removeCategoryFromOrder(req.params.id)
-  dbRun('DELETE FROM categories WHERE id = ?', [req.params.id])
+  removeCategoryFromOrder(categoryId)
+  dbRun('DELETE FROM categories WHERE id = ?', [categoryId])
   res.status(204).send()
 })
 

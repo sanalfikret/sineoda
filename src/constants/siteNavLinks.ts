@@ -1,7 +1,5 @@
 import type { SiteNavId } from './siteNav'
 import { isCekimCategoryId } from './cekimNotlari'
-
-/** Menü ↔ kategori çift yönlü senkron (server ile aynı tablo). */
 export const NAV_CATEGORY_SYNC: Record<SiteNavId, readonly string[]> = {
   home: [],
   diziler: ['series', 'anime-animation', 'crime'],
@@ -22,7 +20,7 @@ for (const [navId, categoryIds] of Object.entries(NAV_CATEGORY_SYNC) as [SiteNav
 }
 
 export function getNavIdForCategory(categoryId: string): SiteNavId | null {
-  if (isCekimCategoryId(categoryId)) return 'cekimNotlari'
+  if (isCekimCategoryId(categoryId)) return null
   return categoryToNavMap.get(categoryId) ?? null
 }
 

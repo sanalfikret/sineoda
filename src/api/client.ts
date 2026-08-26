@@ -876,6 +876,7 @@ export async function fetchJournalPost(slug: string) {
 export interface CekimNotlariSection {
   id: string
   title: string
+  hidden?: boolean
   items: import('../types/content').AdminContentItem[]
 }
 
@@ -959,10 +960,13 @@ export async function createAdminCekimNotlariCategory(title: string) {
   return result
 }
 
-export async function updateAdminCekimNotlariCategory(categoryId: string, title: string) {
-  const result = await api<{ category: { id: string; title: string }; sections: CekimNotlariSection[] }>(
+export async function updateAdminCekimNotlariCategory(
+  categoryId: string,
+  updates: { title?: string; hidden?: boolean },
+) {
+  const result = await api<{ category: { id: string; title: string; hidden?: boolean }; sections: CekimNotlariSection[] }>(
     `/api/admin/cekim-notlari/categories/${encodeURIComponent(categoryId)}`,
-    { method: 'PATCH', body: JSON.stringify({ title }) },
+    { method: 'PATCH', body: JSON.stringify(updates) },
   )
   invalidateCekimNotlariCache()
   return result

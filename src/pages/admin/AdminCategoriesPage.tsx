@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useAdminCategoryList } from '../../admin/categories/useAdminCategoryList'
 import { AdminCategoryRow } from '../../components/admin/AdminCategoryRow'
 import { AdminSiteNavPanel } from '../../components/admin/AdminSiteNavPanel'
+import { isCekimCategoryId } from '../../constants/cekimNotlari'
 import type { SiteNavId } from '../../constants/siteNav'
 import { useContent } from '../../context/ContentContext'
 
@@ -17,6 +18,10 @@ export function AdminCategoriesPage() {
     reorderCategories,
     resetToSeed,
   } = useContent()
+  const mainCategories = useMemo(
+    () => categories.filter((category) => !isCekimCategoryId(category.id)),
+    [categories],
+  )
   const [newTitle, setNewTitle] = useState('')
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [searchByCategory, setSearchByCategory] = useState<Record<string, string>>({})
@@ -38,7 +43,7 @@ export function AdminCategoriesPage() {
     handleDragEnd,
     nudgeCategory,
     resetListFromServer,
-  } = useAdminCategoryList({ categories, reorderCategories })
+  } = useAdminCategoryList({ categories: mainCategories, reorderCategories })
 
   const catalogById = useMemo(() => new Map(catalog.map((item) => [item.id, item])), [catalog])
 
