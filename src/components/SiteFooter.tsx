@@ -18,7 +18,7 @@ export function SiteFooter() {
             Yapımcı Girişi
           </Link>
           <Link to="/creator/kayit" className="text-sineoda-muted transition hover:text-white">
-            Filmini Yükle
+            Film Başvurusu Yap
           </Link>
           <InstallAppButton variant="link" label="Uygulamayı indir" />
           {LEGAL_LINKS.map((link) => (

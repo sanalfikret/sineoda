@@ -977,6 +977,15 @@ export async function reorderAdminCekimNotlariCategories(orderedIds: string[]) {
   return result
 }
 
+export async function reorderAdminCekimNotlariCategoryItems(categoryId: string, orderedIds: string[]) {
+  const result = await api<{ sections: CekimNotlariSection[] }>(
+    `/api/admin/cekim-notlari/categories/${encodeURIComponent(categoryId)}/items/reorder`,
+    { method: 'PATCH', body: JSON.stringify({ orderedIds }) },
+  )
+  invalidateCekimNotlariCache()
+  return result
+}
+
 export async function deleteAdminCekimNotlariCategory(categoryId: string) {
   const result = await api<{ sections: CekimNotlariSection[] }>(
     `/api/admin/cekim-notlari/categories/${encodeURIComponent(categoryId)}`,

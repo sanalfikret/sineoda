@@ -92,6 +92,35 @@ export function reorderCekimNotlariCategories(orderedIds: string[]) {
   })
 }
 
+export function reorderCekimNotlariCategoryItems(categoryId: string, orderedIds: string[]) {
+  if (!isCekimCategoryId(categoryId)) {
+    throw new Error('Geçersiz kategori.')
+  }
+  if (!dbGet('SELECT id FROM categories WHERE id = ?', [categoryId])) {
+    throw new Error('Kategori bulunamadı.')
+  }
+
+  const existing = dbAll<{ content_id: string }>(
+    'SELECT content_id FROM category_items WHERE category_id = ? ORDER BY sort_order, content_id',
+    [categoryId],
+  )
+  const known = new Set(existing.map((row) => row.content_id))
+  const unique = [...new Set(orderedIds.map(String).filter((id) => known.has(id)))]
+  for (const id of known) {
+    if (!unique.includes(id)) unique.push(id)
+  }
+
+  unique.forEach((contentId, index) => {
+    dbRun('UPDATE category_items SET sort_order = ? WHERE category_id = ? AND content_id = ?', [
+      index,
+      categoryId,
+      contentId,
+    ])
+  })
+
+  return listAdminCekimNotlariSections()
+}
+
 export function deleteCekimNotlariCategory(categoryId: string) {
   if (!isCekimCategoryId(categoryId)) {
     throw new Error('Geçersiz kategori.')

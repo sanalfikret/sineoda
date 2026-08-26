@@ -35,7 +35,7 @@ export const BRAND_CREATOR = {
       text: 'Uzun metraj, kısa film, belgesel ve dizi — bağımsız yapımını tek yerden yönet.',
     },
   ],
-  ctaPrimary: 'Yapımcı Üyeliği Oluştur',
+  ctaPrimary: 'Film Başvurusu Yap',
   ctaSecondary: 'Yapımcı Girişi',
 } as const
 
@@ -76,9 +76,9 @@ export const BRAND_STUDENT_CINEMA = {
       text: 'İçerik ve platform standartlarına uygunsa Genç Sinema seçkisinde yerini alır.',
     },
   ],
-  ctaPrimary: 'Filmini Gönder',
+  ctaPrimary: 'Film Başvurusu Yap',
   ctaSecondary: 'Nasıl Çalışır?',
-  registerCta: "Genç Sinema'ya Başvur",
+  registerCta: 'Film Başvurusu Yap',
 } as const
 
 export const BRAND_FEATURES = [
