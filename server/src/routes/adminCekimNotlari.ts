@@ -5,7 +5,7 @@ import { mapContent, mapContentAdmin, serializeSubtitles } from '../mappers.js'
 import { serializeCredits } from '../services/credits.js'
 import { resolveDurationFields } from '../services/duration.js'
 import { parseContentAddedAt, parseLicenseDate } from '../services/license.js'
-import { parsePublishedAt } from '../services/publish.js'
+import { parsePublishedAt, parsePublishNowFlag } from '../services/publish.js'
 import {
   addToCekimCategory,
   createCekimNotlariCategory,
@@ -170,7 +170,9 @@ router.post('/', (req: AuthRequest, res) => {
       0,
       SHOOTING_NOTES_PROGRAM,
       'main',
-      body.publishNow === false && !body.publishedAt ? null : parsePublishedAt(body.publishedAt, { publishNow: true }),
+      body.publishNow === false || body.publish_now === false
+        ? parsePublishedAt(body.publishedAt, { publishNow: false })
+        : parsePublishedAt(body.publishedAt, { publishNow: true }),
       serializeCredits({
         directors: expert ? [expert] : [],
         producers: [],
@@ -246,9 +248,9 @@ router.patch('/:id', (req: AuthRequest, res) => {
       nextStreamProvider,
       body.trailerUrl !== undefined ? String(body.trailerUrl) : existing.trailer_url,
       credits,
-      body.publishedAt !== undefined || body.publishNow !== undefined
+      body.publishedAt !== undefined || body.publishNow !== undefined || body.publish_now !== undefined
         ? parsePublishedAt(body.publishedAt ?? body.published_at, {
-            publishNow: body.publishNow === true || body.publish_now === true,
+            publishNow: parsePublishNowFlag(body),
             existing: existing.published_at,
           })
         : existing.published_at,
