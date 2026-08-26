@@ -51,9 +51,7 @@ export function ContentCard({
   const fallbackUrl = isPortrait ? posterUrlForId(item.id, true) : backdropUrlForId(item.id)
   const [imageSrc, setImageSrc] = useState(imageUrl)
   const [hovered, setHovered] = useState(false)
-  const [posterOriginY, setPosterOriginY] = useState(0)
   const leaveTimerRef = useRef<number | null>(null)
-  const slotRef = useRef<HTMLDivElement>(null)
 
   const widthClass = isBrowseGrid || !isGrid
     ? isPortrait
@@ -73,17 +71,6 @@ export function ContentCard({
   }
 
   useEffect(() => () => clearLeaveTimer(), [])
-
-  useEffect(() => {
-    if (!enableNetflixHover || !slotRef.current) return
-    const syncOrigin = () => {
-      if (slotRef.current) setPosterOriginY(slotRef.current.clientHeight / 2)
-    }
-    syncOrigin()
-    const observer = new ResizeObserver(syncOrigin)
-    observer.observe(slotRef.current)
-    return () => observer.disconnect()
-  }, [enableNetflixHover, widthClass])
 
   const handleEnter = () => {
     if (!enableNetflixHover) return
@@ -148,7 +135,7 @@ export function ContentCard({
   )
 
   const hoverDetails = (
-    <div className="border-t border-white/10 bg-[#181818] p-3">
+    <div className="rounded-b-md border-t border-white/10 bg-[#181818] p-3">
       <div className="flex items-center gap-2">
         <span
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-black shadow"
@@ -191,6 +178,7 @@ export function ContentCard({
           {item.type ? ` · ${getContentTypeLabel(item.type)}` : ''}
         </p>
       )}
+      <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-white/55">{item.description}</p>
     </div>
   )
 
@@ -217,10 +205,10 @@ export function ContentCard({
   )
 
   const netflixHoverCard = (
-    <div
-      ref={slotRef}
-      className={`relative shrink-0 snap-start overflow-visible ${widthClass} ${aspectClass}`}
-    >
+    <div className={`relative shrink-0 snap-start overflow-visible ${widthClass}`}>
+      {/* Satır yüksekliğini sabit tutar — hover taşması layout'u oynatmaz */}
+      <div className={`${aspectClass} pointer-events-none opacity-0`} aria-hidden="true" />
+
       <button
         type="button"
         onClick={() => onSelect(item)}
@@ -231,27 +219,34 @@ export function ContentCard({
           event.currentTarget.focus({ preventScroll: true })
         }}
         onBlur={handleLeave}
-        className={`absolute left-0 top-0 w-full border-0 bg-transparent p-0 text-left transition-[transform,box-shadow] duration-300 ease-out will-change-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold ${
-          hovered ? 'z-50 shadow-[0_20px_50px_rgba(0,0,0,0.85)]' : 'z-[1]'
+        className={`absolute left-0 top-0 w-full border-0 bg-transparent p-0 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold ${
+          hovered ? 'z-50' : 'z-[1]'
         }`}
-        style={{
-          transform: hovered ? `scale(${HOVER_SCALE})` : undefined,
-          transformOrigin: posterOriginY > 0 ? `50% ${posterOriginY}px` : '50% 50%',
-        }}
       >
         <div
-          className={`bg-sineoda-surface ring-1 ${hovered ? 'overflow-visible rounded-md ring-white/25' : 'overflow-hidden rounded-md ring-white/10'}`}
+          className="transition-[transform,box-shadow] duration-300 ease-out will-change-transform"
+          style={{
+            transformOrigin: '50% 0%',
+            transform: hovered ? `scale(${HOVER_SCALE})` : 'scale(1)',
+            boxShadow: hovered ? '0 20px 50px rgba(0,0,0,0.85)' : undefined,
+          }}
         >
-          <div className={`relative ${aspectClass} overflow-hidden`}>
-            <img
-              src={imageSrc}
-              alt={item.title}
-              loading="lazy"
-              onError={() => setImageSrc(fallbackUrl)}
-              className="h-full w-full object-cover"
-            />
-            {badges}
-            {posterTitleOverlay(hovered)}
+          <div
+            className={`overflow-hidden bg-sineoda-surface ring-1 ${
+              hovered ? 'rounded-t-md rounded-b-none ring-white/25' : 'rounded-md ring-white/10'
+            }`}
+          >
+            <div className={`relative ${aspectClass} overflow-hidden`}>
+              <img
+                src={imageSrc}
+                alt={item.title}
+                loading="lazy"
+                onError={() => setImageSrc(fallbackUrl)}
+                className="h-full w-full object-cover"
+              />
+              {badges}
+              {posterTitleOverlay(hovered)}
+            </div>
           </div>
           {hovered && hoverDetails}
         </div>
