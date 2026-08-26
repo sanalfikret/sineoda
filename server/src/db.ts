@@ -1,19 +1,19 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import initSqlJs, { type Database } from 'sql.js'
 import { config } from './config.js'
+import { resolveWritableDir } from './storagePaths.js'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const dataDir = config.dataDir
-const dbPath = path.join(dataDir, 'sineoda.db')
-export const uploadsDir = config.uploadsDir
+let dataDir = config.dataDir
+let dbPath = path.join(dataDir, 'sineoda.db')
+export let uploadsDir = config.uploadsDir
 
 let db: Database
 
 export async function initDatabase() {
-  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true })
-  if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true })
+  dataDir = resolveWritableDir(config.dataDir, 'data')
+  dbPath = path.join(dataDir, 'sineoda.db')
+  uploadsDir = resolveWritableDir(config.uploadsDir, 'uploads')
 
   const SQL = await initSqlJs()
   if (fs.existsSync(dbPath)) {
