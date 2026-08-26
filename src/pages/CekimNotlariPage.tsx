@@ -1,33 +1,44 @@
 import { useEffect, useState } from 'react'
 import { AppShell, useContentUI } from '../components/AppShell'
 import { fetchCekimNotlariSections } from '../api/client'
+import { useContent } from '../context/ContentContext'
 import type { ContentItem } from '../types/content'
 import { CEKIM_NOTLARI_NAV_LABEL, CEKIM_NOTLARI_SECTION_TITLE } from '../constants/cekimNotlari'
 import { CekimNotlariCard } from '../components/cekimNotlari/CekimNotlariCard'
 import { Hero } from '../components/Hero'
-
-interface CekimSection {
-  id: string
-  title: string
-  items: ContentItem[]
-}
 
 const PREVIEW_COUNT = 3
 const SKELETON_SECTIONS = 4
 
 function CekimNotlariContent() {
   const { openDetail, openPlayer } = useContentUI()
-  const [sections, setSections] = useState<CekimSection[]>([])
-  const [loading, setLoading] = useState(true)
+  const { cekimNotlariSections, isLoading: bootstrapLoading, refresh } = useContent()
+  const [sections, setSections] = useState(cekimNotlariSections)
+  const [loadingFallback, setLoadingFallback] = useState(false)
   const [error, setError] = useState('')
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
+    if (cekimNotlariSections.length > 0) {
+      setSections(cekimNotlariSections)
+    }
+  }, [cekimNotlariSections])
+
+  useEffect(() => {
+    if (bootstrapLoading || sections.length > 0) return
+
+    setLoadingFallback(true)
     void fetchCekimNotlariSections()
       .then((data) => setSections(data.sections))
       .catch((err) => setError(err instanceof Error ? err.message : 'İçerik yüklenemedi.'))
-      .finally(() => setLoading(false))
-  }, [])
+      .finally(() => setLoadingFallback(false))
+  }, [bootstrapLoading, sections.length])
+
+  useEffect(() => {
+    if (!bootstrapLoading && cekimNotlariSections.length === 0 && sections.length === 0) {
+      void refresh()
+    }
+  }, [bootstrapLoading, cekimNotlariSections.length, sections.length, refresh])
 
   const toggleSection = (sectionId: string) => {
     setExpandedIds((prev) => {
@@ -38,6 +49,7 @@ function CekimNotlariContent() {
     })
   }
 
+  const loading = (bootstrapLoading && sections.length === 0) || loadingFallback
   const heroItem = sections.flatMap((section) => section.items)[0] ?? null
 
   if (error) {
@@ -119,7 +131,7 @@ function CekimNotlariContent() {
                   <>
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
                       {visibleItems.map((item) => (
-                        <CekimNotlariCard key={item.id} item={item} onSelect={openDetail} />
+                        <CekimNotlariCard key={item.id} item={item as ContentItem} onSelect={openDetail} />
                       ))}
                     </div>
                     {!expanded && hasMore && (

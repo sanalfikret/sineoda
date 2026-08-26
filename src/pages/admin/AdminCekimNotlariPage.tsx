@@ -13,10 +13,12 @@ import { useAdminOrderedList } from '../../admin/useAdminOrderedList'
 import { AdminDragHandle } from '../../components/admin/AdminDragHandle'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { CEKIM_NOTLARI_NAV_LABEL, CEKIM_NOTLARI_SECTION_TITLE } from '../../constants/cekimNotlari'
+import { useContent } from '../../context/ContentContext'
 import { fuzzySearchMatch } from '../../utils/search'
 
 export function AdminCekimNotlariPage() {
   const navigate = useNavigate()
+  const { refresh: refreshBootstrap } = useContent()
   const [sections, setSections] = useState<CekimNotlariSection[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -29,9 +31,9 @@ export function AdminCekimNotlariPage() {
 
   const reorderSections = useCallback(async (orderedIds: string[]) => {
     const data = await reorderAdminCekimNotlariCategories(orderedIds)
-    setSections(data.sections)
+    await refreshBootstrap()
     return data.sections
-  }, [])
+  }, [refreshBootstrap])
 
   const {
     orderedItems: orderedSections,
@@ -56,12 +58,13 @@ export function AdminCekimNotlariPage() {
         Object.fromEntries(data.sections.map((section) => [section.id, section.title])),
       )
       resetListFromServer()
+      await refreshBootstrap()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Veriler yüklenemedi.')
     } finally {
       setLoading(false)
     }
-  }, [resetListFromServer])
+  }, [resetListFromServer, refreshBootstrap])
 
   useEffect(() => {
     void load()
@@ -103,6 +106,15 @@ export function AdminCekimNotlariPage() {
     }
   }
 
+  const syncAfterMutation = useCallback(
+    async (nextSections: CekimNotlariSection[]) => {
+      setSections(nextSections)
+      resetListFromServer()
+      await refreshBootstrap()
+    },
+    [refreshBootstrap, resetListFromServer],
+  )
+
   const handleAddCategory = async () => {
     const title = newCategoryTitle.trim()
     if (!title) return
@@ -110,13 +122,12 @@ export function AdminCekimNotlariPage() {
     setError('')
     try {
       const data = await createAdminCekimNotlariCategory(title)
-      setSections(data.sections)
+      await syncAfterMutation(data.sections)
       setEditingTitles(
         Object.fromEntries(data.sections.map((section) => [section.id, section.title])),
       )
       setExpandedIds((current) => new Set([...current, data.category.id]))
       setNewCategoryTitle('')
-      resetListFromServer()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kategori eklenemedi.')
     } finally {
@@ -131,7 +142,7 @@ export function AdminCekimNotlariPage() {
     setError('')
     try {
       const data = await updateAdminCekimNotlariCategory(categoryId, title)
-      setSections(data.sections)
+      await syncAfterMutation(data.sections)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kategori güncellenemedi.')
     } finally {
@@ -145,8 +156,7 @@ export function AdminCekimNotlariPage() {
     setError('')
     try {
       const data = await deleteAdminCekimNotlariCategory(categoryId)
-      setSections(data.sections)
-      resetListFromServer()
+      await syncAfterMutation(data.sections)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kategori silinemedi.')
     } finally {

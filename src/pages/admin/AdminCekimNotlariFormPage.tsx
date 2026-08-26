@@ -1,14 +1,14 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   createAdminCekimNotlariItem,
-  fetchAdminCekimNotlari,
   fetchAdminCekimNotlariItem,
   updateAdminCekimNotlariItem,
 } from '../../api/client'
 import { ImageUpload } from '../../components/admin/ImageUpload'
 import { VideoUpload } from '../../components/admin/VideoUpload'
 import { STREAM_PROVIDERS } from '../../constants/genres'
+import { useContent } from '../../context/ContentContext'
 
 const RATINGS = ['Genel', '7+', '13+', '16+', '18+']
 
@@ -31,8 +31,12 @@ export function AdminCekimNotlariFormPage() {
   const { id } = useParams()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { cekimNotlariSections, refresh } = useContent()
   const isNew = !id || id === 'yeni'
-  const [categoryOptions, setCategoryOptions] = useState<Array<{ id: string; title: string }>>([])
+  const categoryOptions = useMemo(
+    () => cekimNotlariSections.map((section) => ({ id: section.id, title: section.title })),
+    [cekimNotlariSections],
+  )
   const [form, setForm] = useState({
     ...EMPTY_FORM,
     categoryId: searchParams.get('kategori') ?? '',
@@ -42,19 +46,15 @@ export function AdminCekimNotlariFormPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    void fetchAdminCekimNotlari()
-      .then((data) => {
-        setCategoryOptions(data.categories)
-        if (isNew) {
-          const preferred = searchParams.get('kategori') ?? data.categories[0]?.id ?? ''
-          setForm((current) => ({ ...current, categoryId: preferred }))
-        }
-      })
-      .catch((err) => setError(err instanceof Error ? err.message : 'Kategoriler yüklenemedi.'))
-      .finally(() => {
-        if (isNew) setLoading(false)
-      })
-  }, [isNew, searchParams])
+    void refresh()
+  }, [refresh])
+
+  useEffect(() => {
+    if (!isNew) return
+    const preferred = searchParams.get('kategori') ?? categoryOptions[0]?.id ?? ''
+    setForm((current) => ({ ...current, categoryId: preferred }))
+    setLoading(false)
+  }, [isNew, searchParams, categoryOptions])
 
   useEffect(() => {
     if (isNew) return

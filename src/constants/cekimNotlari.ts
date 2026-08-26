@@ -19,8 +19,9 @@ export const CEKIM_NOTLARI_CATEGORIES = [
   { id: 'cekim-kurgu', title: 'Kurgu' },
 ] as const
 
-export const CEKIM_NOTLARI_CATEGORY_IDS: readonly string[] = CEKIM_NOTLARI_CATEGORIES.map(
-  (entry) => entry.id,
-)
+/** Çekim Notları alt kategori kimliği (admin'den eklenenler dahil) */
+export const CEKIM_CATEGORY_PREFIX = 'cekim-'
 
-export const CEKIM_NOTLARI_CATEGORY_ID_SET = new Set<string>(CEKIM_NOTLARI_CATEGORY_IDS)
+export function isCekimCategoryId(categoryId: string) {
+  return categoryId.startsWith(CEKIM_CATEGORY_PREFIX)
+}

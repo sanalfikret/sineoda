@@ -1,7 +1,7 @@
 import { BROWSE_GENRES, genreToCategoryId } from '../constants/genres'
 import { getContentTypeLabel } from '../constants/contentTypes'
 import { BRAND_STUDENT_CINEMA } from '../constants/brand'
-import { CEKIM_NOTLARI_CATEGORY_ID_SET, CEKIM_NOTLARI_CATEGORY_IDS } from '../constants/cekimNotlari'
+import { isCekimCategoryId } from '../constants/cekimNotlari'
 import type { ContentCategory, ContentItem, ContentType } from '../types/content'
 import { isContentAllowedForKids } from './contentRating'
 
@@ -94,7 +94,7 @@ export function buildCategoryBrowseRows(
   for (const category of categories) {
     if (category.hidden) continue
     if (BROWSE_EXCLUSIVE_ROW_TITLES.has(category.title)) continue
-    if (!options.cekimNotlariOnly && CEKIM_NOTLARI_CATEGORY_ID_SET.has(category.id)) continue
+    if (!options.cekimNotlariOnly && isCekimCategoryId(category.id)) continue
 
     const rowOptions = categoryFilterOptions(category, options)
     const items = category.itemIds
@@ -193,9 +193,7 @@ export function buildBrowseRows(
   }
 
   if (options.cekimNotlariOnly && categories.length > 0 && getContentById) {
-    const orderedCategories = CEKIM_NOTLARI_CATEGORY_IDS.map((id) =>
-      categories.find((category) => category.id === id),
-    ).filter((category): category is ContentCategory => Boolean(category))
+    const orderedCategories = categories.filter((category) => isCekimCategoryId(category.id))
     return buildCategoryBrowseRows(orderedCategories, catalog, getContentById, options)
   }
 

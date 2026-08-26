@@ -195,6 +195,7 @@ export interface BootstrapResponse {
   studentCinemaMonthlyWinners?: ContentItem[]
   siteNav?: SiteNavConfig
   landing?: LandingConfigResponse
+  cekimNotlari?: CekimNotlariPayload
 }
 
 export interface LandingShowcaseResponse {
@@ -887,6 +888,12 @@ const CEKIM_NOTLARI_CACHE_MS = 3 * 60 * 1000
 export function invalidateCekimNotlariCache() {
   cekimNotlariCache = null
 }
+
+export function seedCekimNotlariCache(data: CekimNotlariPayload) {
+  cekimNotlariCache = { fetchedAt: Date.now(), data }
+}
+
+export type { CekimNotlariPayload }
 
 export function prefetchCekimNotlariSections() {
   if (cekimNotlariCache && Date.now() - cekimNotlariCache.fetchedAt < CEKIM_NOTLARI_CACHE_MS) return
