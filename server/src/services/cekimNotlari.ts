@@ -147,23 +147,33 @@ function mapSection(category: { id: string; title: string }, mapper: (row: Conte
 }
 
 export function listCekimNotlariSections() {
-  return listCekimNotlariCategoryRows().map((category) => {
-    const rows = dbAll<ContentRow>(
-      `SELECT c.*
-       FROM content c
-       INNER JOIN category_items ci ON ci.content_id = c.id AND ci.category_id = ?
-       WHERE ${PUBLISHED_CONTENT_SQL}
-         AND c.program = ?
-       ORDER BY ci.sort_order, c.title`,
-      [category.id, SHOOTING_NOTES_PROGRAM],
-    )
+  const categories = listCekimNotlariCategoryRows()
+  if (categories.length === 0) return []
 
-    return {
-      id: category.id,
-      title: category.title,
-      items: rows.map(mapContent),
-    }
-  })
+  const rows = dbAll<ContentRow & { category_id: string }>(
+    `SELECT c.*, ci.category_id
+     FROM category_items ci
+     INNER JOIN categories cat ON cat.id = ci.category_id
+     INNER JOIN content c ON c.id = ci.content_id
+     WHERE cat.id LIKE ?
+       AND c.program = ?
+       AND ${PUBLISHED_CONTENT_SQL}
+     ORDER BY cat.sort_order, cat.title, ci.sort_order, c.title`,
+    [`${CEKIM_CATEGORY_PREFIX}%`, SHOOTING_NOTES_PROGRAM],
+  )
+
+  const itemsByCategory = new Map<string, ReturnType<typeof mapContent>[]>()
+  for (const row of rows) {
+    const list = itemsByCategory.get(row.category_id) ?? []
+    list.push(mapContent(row))
+    itemsByCategory.set(row.category_id, list)
+  }
+
+  return categories.map((category) => ({
+    id: category.id,
+    title: category.title,
+    items: itemsByCategory.get(category.id) ?? [],
+  }))
 }
 
 export function listAdminCekimNotlariSections() {

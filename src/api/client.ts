@@ -878,8 +878,32 @@ export interface CekimNotlariSection {
   items: import('../types/content').AdminContentItem[]
 }
 
+type CekimNotlariPayload = { title: string; sections: CekimNotlariSection[] }
+
+let cekimNotlariCache: { fetchedAt: number; data: CekimNotlariPayload } | null = null
+let cekimNotlariInflight: Promise<CekimNotlariPayload> | null = null
+const CEKIM_NOTLARI_CACHE_MS = 3 * 60 * 1000
+
+export function invalidateCekimNotlariCache() {
+  cekimNotlariCache = null
+}
+
+export function prefetchCekimNotlariSections() {
+  if (cekimNotlariCache && Date.now() - cekimNotlariCache.fetchedAt < CEKIM_NOTLARI_CACHE_MS) return
+  if (cekimNotlariInflight) return
+  cekimNotlariInflight = fetchCekimNotlariSections().finally(() => {
+    cekimNotlariInflight = null
+  })
+}
+
 export async function fetchCekimNotlariSections() {
-  return api<{ title: string; sections: CekimNotlariSection[] }>('/api/cekim-notlari')
+  if (cekimNotlariCache && Date.now() - cekimNotlariCache.fetchedAt < CEKIM_NOTLARI_CACHE_MS) {
+    return cekimNotlariCache.data
+  }
+
+  const data = await api<CekimNotlariPayload>('/api/cekim-notlari')
+  cekimNotlariCache = { fetchedAt: Date.now(), data }
+  return data
 }
 
 export async function fetchAdminCekimNotlari() {
@@ -897,49 +921,62 @@ export async function fetchAdminCekimNotlariItem(id: string) {
 }
 
 export async function createAdminCekimNotlariItem(data: Record<string, unknown>) {
-  return api<{ item: import('../types/content').AdminContentItem; categoryId: string }>(
+  const result = await api<{ item: import('../types/content').AdminContentItem; categoryId: string }>(
     '/api/admin/cekim-notlari',
     { method: 'POST', body: JSON.stringify(data) },
   )
+  invalidateCekimNotlariCache()
+  return result
 }
 
 export async function updateAdminCekimNotlariItem(id: string, data: Record<string, unknown>) {
-  return api<{ item: import('../types/content').ContentItem; categoryId: string | null }>(
+  const result = await api<{ item: import('../types/content').ContentItem; categoryId: string | null }>(
     `/api/admin/cekim-notlari/${encodeURIComponent(id)}`,
     { method: 'PATCH', body: JSON.stringify(data) },
   )
+  invalidateCekimNotlariCache()
+  return result
 }
 
 export async function deleteAdminCekimNotlariItem(id: string) {
-  return api<void>(`/api/admin/cekim-notlari/${encodeURIComponent(id)}`, { method: 'DELETE' })
+  await api<void>(`/api/admin/cekim-notlari/${encodeURIComponent(id)}`, { method: 'DELETE' })
+  invalidateCekimNotlariCache()
 }
 
 export async function createAdminCekimNotlariCategory(title: string) {
-  return api<{ category: { id: string; title: string }; sections: CekimNotlariSection[] }>(
+  const result = await api<{ category: { id: string; title: string }; sections: CekimNotlariSection[] }>(
     '/api/admin/cekim-notlari/categories',
     { method: 'POST', body: JSON.stringify({ title }) },
   )
+  invalidateCekimNotlariCache()
+  return result
 }
 
 export async function updateAdminCekimNotlariCategory(categoryId: string, title: string) {
-  return api<{ category: { id: string; title: string }; sections: CekimNotlariSection[] }>(
+  const result = await api<{ category: { id: string; title: string }; sections: CekimNotlariSection[] }>(
     `/api/admin/cekim-notlari/categories/${encodeURIComponent(categoryId)}`,
     { method: 'PATCH', body: JSON.stringify({ title }) },
   )
+  invalidateCekimNotlariCache()
+  return result
 }
 
 export async function reorderAdminCekimNotlariCategories(orderedIds: string[]) {
-  return api<{ categories: Array<{ id: string; title: string }>; sections: CekimNotlariSection[] }>(
+  const result = await api<{ categories: Array<{ id: string; title: string }>; sections: CekimNotlariSection[] }>(
     '/api/admin/cekim-notlari/categories/reorder',
     { method: 'PATCH', body: JSON.stringify({ orderedIds }) },
   )
+  invalidateCekimNotlariCache()
+  return result
 }
 
 export async function deleteAdminCekimNotlariCategory(categoryId: string) {
-  return api<{ sections: CekimNotlariSection[] }>(
+  const result = await api<{ sections: CekimNotlariSection[] }>(
     `/api/admin/cekim-notlari/categories/${encodeURIComponent(categoryId)}`,
     { method: 'DELETE' },
   )
+  invalidateCekimNotlariCache()
+  return result
 }
 
 export async function fetchAdminJournalPosts() {
