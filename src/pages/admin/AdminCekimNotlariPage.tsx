@@ -9,6 +9,8 @@ import {
   updateAdminCekimNotlariCategory,
   type CekimNotlariSection,
 } from '../../api/client'
+import { useAdminOrderedList } from '../../admin/useAdminOrderedList'
+import { AdminDragHandle } from '../../components/admin/AdminDragHandle'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { CEKIM_NOTLARI_NAV_LABEL, CEKIM_NOTLARI_SECTION_TITLE } from '../../constants/cekimNotlari'
 import { fuzzySearchMatch } from '../../utils/search'
@@ -23,8 +25,26 @@ export function AdminCekimNotlariPage() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [newCategoryTitle, setNewCategoryTitle] = useState('')
   const [savingCategory, setSavingCategory] = useState(false)
-  const [reordering, setReordering] = useState(false)
   const [editingTitles, setEditingTitles] = useState<Record<string, string>>({})
+
+  const reorderSections = useCallback(async (orderedIds: string[]) => {
+    const data = await reorderAdminCekimNotlariCategories(orderedIds)
+    setSections(data.sections)
+    return data.sections
+  }, [])
+
+  const {
+    orderedItems: orderedSections,
+    draggingId,
+    savingOrder,
+    orderError,
+    handleDragStart,
+    handleDragOver,
+    handleDrop,
+    handleDragEnd,
+    nudgeItem,
+    resetListFromServer,
+  } = useAdminOrderedList({ items: sections, reorderItems: reorderSections })
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -35,20 +55,21 @@ export function AdminCekimNotlariPage() {
       setEditingTitles(
         Object.fromEntries(data.sections.map((section) => [section.id, section.title])),
       )
+      resetListFromServer()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Veriler yüklenemedi.')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [resetListFromServer])
 
   useEffect(() => {
     void load()
   }, [load])
 
   const filteredSections = useMemo(() => {
-    if (!query.trim()) return sections
-    return sections
+    if (!query.trim()) return orderedSections
+    return orderedSections
       .map((section) => ({
         ...section,
         items: section.items.filter((item) =>
@@ -56,9 +77,9 @@ export function AdminCekimNotlariPage() {
         ),
       }))
       .filter((section) => fuzzySearchMatch(query, section.title) || section.items.length > 0)
-  }, [sections, query])
+  }, [orderedSections, query])
 
-  const totalVideos = sections.reduce((count, section) => count + section.items.length, 0)
+  const totalVideos = orderedSections.reduce((count, section) => count + section.items.length, 0)
 
   const toggleExpanded = (id: string) => {
     setExpandedIds((current) => {
@@ -95,6 +116,7 @@ export function AdminCekimNotlariPage() {
       )
       setExpandedIds((current) => new Set([...current, data.category.id]))
       setNewCategoryTitle('')
+      resetListFromServer()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kategori eklenemedi.')
     } finally {
@@ -124,6 +146,7 @@ export function AdminCekimNotlariPage() {
     try {
       const data = await deleteAdminCekimNotlariCategory(categoryId)
       setSections(data.sections)
+      resetListFromServer()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kategori silinemedi.')
     } finally {
@@ -131,23 +154,7 @@ export function AdminCekimNotlariPage() {
     }
   }
 
-  const moveCategory = async (sectionId: string, direction: -1 | 1) => {
-    const index = sections.findIndex((section) => section.id === sectionId)
-    const target = index + direction
-    if (index < 0 || target < 0 || target >= sections.length) return
-    const orderedIds = sections.map((section) => section.id)
-    ;[orderedIds[index], orderedIds[target]] = [orderedIds[target], orderedIds[index]]
-    setReordering(true)
-    setError('')
-    try {
-      const data = await reorderAdminCekimNotlariCategories(orderedIds)
-      setSections(data.sections)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sıralama kaydedilemedi.')
-    } finally {
-      setReordering(false)
-    }
-  }
+  const displayError = error || orderError
 
   return (
     <div className="space-y-6">
@@ -158,7 +165,8 @@ export function AdminCekimNotlariPage() {
           </p>
           <h1 className="mt-2 text-2xl font-bold text-white">{CEKIM_NOTLARI_NAV_LABEL}</h1>
           <p className="mt-2 text-sm text-sineoda-muted">
-            {totalVideos} video · {sections.length} alt kategori
+            {totalVideos} video · {orderedSections.length} alt kategori
+            {savingOrder ? ' · Sıra kaydediliyor...' : ''}
           </p>
         </div>
         <button
@@ -199,16 +207,52 @@ export function AdminCekimNotlariPage() {
         <div className="flex min-h-[30vh] items-center justify-center">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-sineoda-gold border-t-transparent" />
         </div>
-      ) : error ? (
-        <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</p>
+      ) : displayError ? (
+        <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{displayError}</p>
       ) : (
         <div className="space-y-3">
           {filteredSections.map((section) => {
-            const index = sections.findIndex((entry) => entry.id === section.id)
+            const index = orderedSections.findIndex((entry) => entry.id === section.id)
             const expanded = expandedIds.has(section.id)
+            const dragging = draggingId === section.id
+
             return (
-              <section key={section.id} className="overflow-hidden rounded-2xl border border-white/10 bg-[#11141c]">
+              <section
+                key={section.id}
+                onDragOver={(event) => handleDragOver(event, section.id)}
+                onDrop={handleDrop}
+                className={`overflow-hidden rounded-2xl border bg-[#11141c] transition ${
+                  dragging ? 'border-sineoda-gold/50 opacity-70' : 'border-white/10'
+                }`}
+              >
                 <div className="flex items-center gap-2 border-b border-white/5 px-4 py-3">
+                  <AdminDragHandle
+                    disabled={savingOrder || Boolean(query.trim())}
+                    onDragStart={(event) => handleDragStart(event, section.id)}
+                    onDragEnd={handleDragEnd}
+                  />
+
+                  <div className="flex flex-col gap-1">
+                    <button
+                      type="button"
+                      aria-label="Yukarı taşı"
+                      disabled={index === 0 || savingOrder || Boolean(query.trim())}
+                      onClick={() => nudgeItem(index, -1)}
+                      className="rounded-md border border-white/10 px-2 py-0.5 text-xs text-white/70 disabled:opacity-30"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Aşağı taşı"
+                      disabled={index === orderedSections.length - 1 || savingOrder || Boolean(query.trim())}
+                      onClick={() => nudgeItem(index, 1)}
+                      className="rounded-md border border-white/10 px-2 py-0.5 text-xs text-white/70 disabled:opacity-30"
+                    >
+                      ↓
+                    </button>
+                  </div>
+
                   <button
                     type="button"
                     onClick={() => toggleExpanded(section.id)}
@@ -218,26 +262,6 @@ export function AdminCekimNotlariPage() {
                     <span className="truncate font-semibold text-white">{section.title}</span>
                     <span className="shrink-0 text-xs text-sineoda-muted">{section.items.length} video</span>
                   </button>
-                  <div className="flex shrink-0 items-center gap-1">
-                    <button
-                      type="button"
-                      disabled={index === 0 || reordering}
-                      onClick={() => void moveCategory(section.id, -1)}
-                      className="rounded-md border border-white/10 px-2 py-1 text-xs text-white/70 disabled:opacity-30"
-                      aria-label="Yukarı taşı"
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      disabled={index === sections.length - 1 || reordering}
-                      onClick={() => void moveCategory(section.id, 1)}
-                      className="rounded-md border border-white/10 px-2 py-1 text-xs text-white/70 disabled:opacity-30"
-                      aria-label="Aşağı taşı"
-                    >
-                      ↓
-                    </button>
-                  </div>
                 </div>
 
                 {expanded && (

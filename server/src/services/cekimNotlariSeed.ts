@@ -78,7 +78,7 @@ export function ensureCekimNotlariDemoContent() {
             POSTERS[index % POSTERS.length],
             BACKDROPS[index % BACKDROPS.length],
             VIDEO_ROTATION[index % VIDEO_ROTATION.length],
-            'custom',
+            'bunny',
             'standard',
             0,
             0,

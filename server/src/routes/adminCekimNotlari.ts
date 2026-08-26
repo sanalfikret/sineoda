@@ -19,6 +19,7 @@ import {
   updateCekimNotlariCategoryTitle,
 } from '../services/cekimNotlari.js'
 import { newShootingNotesContentId } from '../services/cekimNotlariSeed.js'
+import { resolveStreamProvider } from '../services/streamProvider.js'
 import type { ContentRow } from '../types.js'
 
 const router = Router()
@@ -123,6 +124,8 @@ router.post('/', (req: AuthRequest, res) => {
   const durationFields = resolveDurationFields(body)
   const expert = String(body.expert ?? body.directors ?? '').trim()
   const now = new Date().toISOString()
+  const videoUrl = String(body.videoUrl ?? body.video_url ?? '')
+  const streamProvider = resolveStreamProvider(body, videoUrl)
 
   dbRun(
     `INSERT INTO content (
@@ -143,8 +146,8 @@ router.post('/', (req: AuthRequest, res) => {
       JSON.stringify(['Eğitim', 'Sinema']),
       String(body.poster ?? ''),
       String(body.backdrop ?? body.poster ?? ''),
-      String(body.videoUrl ?? body.video_url ?? ''),
-      'custom',
+      videoUrl,
+      streamProvider,
       String(body.trailerUrl ?? body.trailer_url ?? ''),
       'standard',
       0,
@@ -189,6 +192,16 @@ router.patch('/:id', (req: AuthRequest, res) => {
   const body = req.body as Record<string, unknown>
   const durationFields = resolveDurationFields(body, existing)
   const expert = body.expert !== undefined ? String(body.expert).trim() : undefined
+  const nextVideoUrl =
+    body.videoUrl !== undefined
+      ? String(body.videoUrl)
+      : body.video_url !== undefined
+        ? String(body.video_url)
+        : existing.video_url
+  const nextStreamProvider =
+    body.streamProvider !== undefined || body.videoUrl !== undefined || body.video_url !== undefined
+      ? resolveStreamProvider(body, nextVideoUrl)
+      : existing.stream_provider ?? 'bunny'
   const credits = expert !== undefined
     ? serializeCredits({
         directors: expert ? [expert] : [],
@@ -201,7 +214,7 @@ router.patch('/:id', (req: AuthRequest, res) => {
   dbRun(
     `UPDATE content SET
       title = ?, description = ?, year = ?, duration = ?, duration_minutes = ?, rating = ?,
-      poster = ?, backdrop = ?, video_url = ?, trailer_url = ?,
+      poster = ?, backdrop = ?, video_url = ?, stream_provider = ?, trailer_url = ?,
       credits_json = ?, published_at = ?, license_expires_at = ?
      WHERE id = ?`,
     [
@@ -213,7 +226,8 @@ router.patch('/:id', (req: AuthRequest, res) => {
       body.rating !== undefined ? String(body.rating) : existing.rating,
       body.poster !== undefined ? String(body.poster) : existing.poster,
       body.backdrop !== undefined ? String(body.backdrop) : existing.backdrop,
-      body.videoUrl !== undefined ? String(body.videoUrl) : body.video_url !== undefined ? String(body.video_url) : existing.video_url,
+      nextVideoUrl,
+      nextStreamProvider,
       body.trailerUrl !== undefined ? String(body.trailerUrl) : existing.trailer_url,
       credits,
       body.publishedAt !== undefined || body.publishNow !== undefined

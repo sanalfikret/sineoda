@@ -8,6 +8,7 @@ import {
 } from '../../api/client'
 import { ImageUpload } from '../../components/admin/ImageUpload'
 import { VideoUpload } from '../../components/admin/VideoUpload'
+import { STREAM_PROVIDERS } from '../../constants/genres'
 
 const RATINGS = ['Genel', '7+', '13+', '16+', '18+']
 
@@ -22,6 +23,7 @@ const EMPTY_FORM = {
   poster: '',
   backdrop: '',
   videoUrl: '',
+  streamProvider: 'bunny',
   publishNow: true,
 }
 
@@ -69,6 +71,7 @@ export function AdminCekimNotlariFormPage() {
           poster: item.poster,
           backdrop: item.backdrop,
           videoUrl: item.videoUrl,
+          streamProvider: item.streamProvider ?? 'bunny',
           publishNow: Boolean(item.publishedAt),
         })
       })
@@ -96,6 +99,7 @@ export function AdminCekimNotlariFormPage() {
         poster: form.poster,
         backdrop: form.backdrop || form.poster,
         videoUrl: form.videoUrl,
+        streamProvider: form.streamProvider,
         publishNow: form.publishNow,
       }
       if (isNew) {
@@ -226,10 +230,28 @@ export function AdminCekimNotlariFormPage() {
           onChange={(backdrop) => setForm((current) => ({ ...current, backdrop }))}
         />
         <VideoUpload
-          label="Eğitim videosu"
+          label="CDN video URL (Bunny.net / HLS / MP4)"
           value={form.videoUrl}
           onChange={(videoUrl) => setForm((current) => ({ ...current, videoUrl }))}
         />
+        <p className="-mt-3 text-xs text-sineoda-muted">
+          Videolar CDN üzerinden sunulur. Bunny.net HLS (.m3u8) veya MP4 linkini yapıştırın.
+        </p>
+
+        <label className="block space-y-2">
+          <span className="text-sm font-medium text-white/80">Stream sağlayıcı</span>
+          <select
+            value={form.streamProvider}
+            onChange={(event) => setForm((current) => ({ ...current, streamProvider: event.target.value }))}
+            className="w-full rounded-lg border border-white/10 bg-sineoda-surface px-3 py-2.5 text-white outline-none focus:border-sineoda-gold"
+          >
+            {STREAM_PROVIDERS.map((provider) => (
+              <option key={provider.id} value={provider.id}>
+                {provider.label}
+              </option>
+            ))}
+          </select>
+        </label>
 
         <label className="flex items-center gap-2 text-sm text-white/80">
           <input
