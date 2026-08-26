@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { resolveMediaUrl } from '../api/client'
 import { getContentTypeLabel } from '../constants/contentTypes'
@@ -31,6 +32,12 @@ export const CARD_WIDTH = {
   },
 } as const
 
+type HoverAnchor = {
+  top: number
+  left: number
+  width: number
+}
+
 export function ContentCard({
   item,
   onSelect,
@@ -51,7 +58,9 @@ export function ContentCard({
   const fallbackUrl = isPortrait ? posterUrlForId(item.id, true) : backdropUrlForId(item.id)
   const [imageSrc, setImageSrc] = useState(imageUrl)
   const [hovered, setHovered] = useState(false)
+  const [anchor, setAnchor] = useState<HoverAnchor | null>(null)
   const leaveTimerRef = useRef<number | null>(null)
+  const slotRef = useRef<HTMLDivElement>(null)
 
   const widthClass = isBrowseGrid || !isGrid
     ? isPortrait
@@ -70,18 +79,41 @@ export function ContentCard({
     }
   }
 
+  const syncAnchor = useCallback(() => {
+    const el = slotRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    setAnchor({ top: rect.top, left: rect.left, width: rect.width })
+  }, [])
+
   useEffect(() => () => clearLeaveTimer(), [])
+
+  useEffect(() => {
+    if (!hovered) return
+    syncAnchor()
+    const onMove = () => syncAnchor()
+    window.addEventListener('scroll', onMove, true)
+    window.addEventListener('resize', onMove)
+    return () => {
+      window.removeEventListener('scroll', onMove, true)
+      window.removeEventListener('resize', onMove)
+    }
+  }, [hovered, syncAnchor])
 
   const handleEnter = () => {
     if (!enableNetflixHover) return
     clearLeaveTimer()
+    syncAnchor()
     setHovered(true)
   }
 
   const handleLeave = () => {
     if (!enableNetflixHover) return
     clearLeaveTimer()
-    leaveTimerRef.current = window.setTimeout(() => setHovered(false), 180)
+    leaveTimerRef.current = window.setTimeout(() => {
+      setHovered(false)
+      setAnchor(null)
+    }, 200)
   }
 
   const badges = (
@@ -182,6 +214,16 @@ export function ContentCard({
     </div>
   )
 
+  const posterImage = (
+    <img
+      src={imageSrc}
+      alt={item.title}
+      loading="lazy"
+      onError={() => setImageSrc(fallbackUrl)}
+      className="h-full w-full object-cover"
+    />
+  )
+
   const legacyOverlay = (
     <>
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/95 via-black/55 to-black/10 opacity-100 transition duration-200 md:opacity-0 md:group-hover:opacity-100 md:group-focus-visible:opacity-100" />
@@ -204,75 +246,74 @@ export function ContentCard({
     </>
   )
 
-  const netflixHoverCard = (
-    <div className={`relative shrink-0 snap-start overflow-visible ${widthClass}`}>
-      {/* Satır yüksekliğini sabit tutar */}
-      <div className={`${aspectClass} pointer-events-none opacity-0`} aria-hidden="true" />
+  const expandedWidth = anchor ? anchor.width * HOVER_SCALE : 0
+  const expandedLeft = anchor ? anchor.left + anchor.width / 2 - expandedWidth / 2 : 0
 
-      <button
-        type="button"
-        onClick={() => onSelect(item)}
-        onMouseEnter={handleEnter}
-        onMouseLeave={handleLeave}
-        onFocus={(event) => {
-          handleEnter()
-          event.currentTarget.focus({ preventScroll: true })
-        }}
-        onBlur={handleLeave}
-        className={`absolute left-0 top-0 w-full border-0 bg-transparent p-0 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold ${
-          hovered ? 'z-50' : 'z-[1]'
-        }`}
-      >
-        <div className={`relative w-full overflow-visible ${aspectClass}`}>
-          {/* Yalnızca poster büyür — üst kenar sabit kalır */}
+  const hoverPortal =
+    hovered && anchor
+      ? createPortal(
           <div
-            className={`absolute inset-0 overflow-hidden rounded-md bg-sineoda-surface ring-1 transition-[transform,box-shadow] duration-300 ease-out will-change-transform ${
-              hovered ? 'rounded-b-none shadow-[0_16px_48px_rgba(0,0,0,0.75)] ring-white/25' : 'ring-white/10'
-            }`}
+            className="fixed z-[9999] shadow-[0_16px_48px_rgba(0,0,0,0.75)]"
             style={{
-              transformOrigin: '50% 0%',
-              transform: hovered ? `scale(${HOVER_SCALE})` : 'scale(1)',
+              top: anchor.top,
+              left: expandedLeft,
+              width: expandedWidth,
             }}
+            onMouseEnter={handleEnter}
+            onMouseLeave={handleLeave}
           >
-            <img
-              src={imageSrc}
-              alt={item.title}
-              loading="lazy"
-              onError={() => setImageSrc(fallbackUrl)}
-              className="h-full w-full object-cover"
-            />
-            {badges}
-            {posterTitleOverlay(hovered)}
-          </div>
-
-          {/* Detay paneli ölçeklenmez — posterin hemen altında */}
-          {hovered && (
-            <div
-              className="absolute left-1/2 z-50 -translate-x-1/2"
-              style={{
-                top: `${HOVER_SCALE * 100}%`,
-                width: `${HOVER_SCALE * 100}%`,
-              }}
+            <button
+              type="button"
+              onClick={() => onSelect(item)}
+              className="block w-full border-0 bg-transparent p-0 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold"
             >
+              <div className="overflow-hidden rounded-t-md bg-sineoda-surface ring-1 ring-white/25">
+                <div className={`relative ${aspectClass} overflow-hidden`}>
+                  {posterImage}
+                  {badges}
+                </div>
+              </div>
               {hoverDetails}
-            </div>
-          )}
+            </button>
+          </div>,
+          document.body,
+        )
+      : null
+
+  const netflixHoverCard = (
+    <>
+      <div
+        ref={slotRef}
+        className={`relative shrink-0 snap-start ${widthClass} ${hovered ? 'opacity-0' : 'opacity-100'}`}
+      >
+        <div className={`relative overflow-hidden rounded-md bg-sineoda-surface ring-1 ring-white/10 ${aspectClass}`}>
+          {posterImage}
+          {badges}
+          {posterTitleOverlay(false)}
         </div>
-      </button>
-    </div>
+        <button
+          type="button"
+          aria-label={item.title}
+          onClick={() => onSelect(item)}
+          onMouseEnter={handleEnter}
+          onMouseLeave={handleLeave}
+          onFocus={(event) => {
+            handleEnter()
+            event.currentTarget.focus({ preventScroll: true })
+          }}
+          onBlur={handleLeave}
+          className="absolute inset-0 z-10 border-0 bg-transparent p-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold"
+        />
+      </div>
+      {hoverPortal}
+    </>
   )
 
   const standardCard = (
     <div className={`group relative flex flex-col text-left ${widthClass} ${isGrid ? 'overflow-hidden rounded-md bg-sineoda-surface hover:ring-2 hover:ring-white/20' : 'shrink-0 snap-start overflow-hidden rounded-md bg-sineoda-surface hover:z-10 hover:ring-2 hover:ring-white/20'}`}>
       <div className="relative w-full">
         <div className={`relative overflow-hidden rounded-md bg-sineoda-surface ${aspectClass}`}>
-          <img
-            src={imageSrc}
-            alt={item.title}
-            loading="lazy"
-            onError={() => setImageSrc(fallbackUrl)}
-            className={`h-full w-full object-cover ${!guestHref ? 'transition duration-300 group-hover:scale-105' : ''}`}
-          />
+          {posterImage}
           {badges}
           {isGrid ? posterTitleOverlay(false) : null}
           {guestHref && legacyOverlay}
