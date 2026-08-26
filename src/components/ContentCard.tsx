@@ -206,7 +206,7 @@ export function ContentCard({
 
   const netflixHoverCard = (
     <div className={`relative shrink-0 snap-start overflow-visible ${widthClass}`}>
-      {/* Satır yüksekliğini sabit tutar — hover taşması layout'u oynatmaz */}
+      {/* Satır yüksekliğini sabit tutar */}
       <div className={`${aspectClass} pointer-events-none opacity-0`} aria-hidden="true" />
 
       <button
@@ -223,32 +223,40 @@ export function ContentCard({
           hovered ? 'z-50' : 'z-[1]'
         }`}
       >
-        <div
-          className="transition-[transform,box-shadow] duration-300 ease-out will-change-transform"
-          style={{
-            transformOrigin: '50% 0%',
-            transform: hovered ? `scale(${HOVER_SCALE})` : 'scale(1)',
-            boxShadow: hovered ? '0 20px 50px rgba(0,0,0,0.85)' : undefined,
-          }}
-        >
+        <div className={`relative w-full overflow-visible ${aspectClass}`}>
+          {/* Yalnızca poster büyür — üst kenar sabit kalır */}
           <div
-            className={`overflow-hidden bg-sineoda-surface ring-1 ${
-              hovered ? 'rounded-t-md rounded-b-none ring-white/25' : 'rounded-md ring-white/10'
+            className={`absolute inset-0 overflow-hidden rounded-md bg-sineoda-surface ring-1 transition-[transform,box-shadow] duration-300 ease-out will-change-transform ${
+              hovered ? 'rounded-b-none shadow-[0_16px_48px_rgba(0,0,0,0.75)] ring-white/25' : 'ring-white/10'
             }`}
+            style={{
+              transformOrigin: '50% 0%',
+              transform: hovered ? `scale(${HOVER_SCALE})` : 'scale(1)',
+            }}
           >
-            <div className={`relative ${aspectClass} overflow-hidden`}>
-              <img
-                src={imageSrc}
-                alt={item.title}
-                loading="lazy"
-                onError={() => setImageSrc(fallbackUrl)}
-                className="h-full w-full object-cover"
-              />
-              {badges}
-              {posterTitleOverlay(hovered)}
-            </div>
+            <img
+              src={imageSrc}
+              alt={item.title}
+              loading="lazy"
+              onError={() => setImageSrc(fallbackUrl)}
+              className="h-full w-full object-cover"
+            />
+            {badges}
+            {posterTitleOverlay(hovered)}
           </div>
-          {hovered && hoverDetails}
+
+          {/* Detay paneli ölçeklenmez — posterin hemen altında */}
+          {hovered && (
+            <div
+              className="absolute left-1/2 z-50 -translate-x-1/2"
+              style={{
+                top: `${HOVER_SCALE * 100}%`,
+                width: `${HOVER_SCALE * 100}%`,
+              }}
+            >
+              {hoverDetails}
+            </div>
+          )}
         </div>
       </button>
     </div>
