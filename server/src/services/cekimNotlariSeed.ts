@@ -3,31 +3,41 @@ import { CEKIM_NOTLARI_CATEGORIES } from '../constants/cekimNotlari.js'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { addToCekimCategory, SHOOTING_NOTES_PROGRAM } from './cekimNotlari.js'
 
+const DEMO_VIDEOS_PER_CATEGORY = 5
+
 const V = {
   bunny: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
   sintel: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
   tears: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+  elephant: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+  sub: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
 }
 
 const EXPERTS = [
   'Ayşe Kaya',
   'Mehmet Demir',
   'Zeynep Arslan',
+  'Can Öztürk',
+  'Elif Yıldız',
 ]
 
 const BACKDROPS = [
   'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1600&h=900&fit=crop',
   'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=1600&h=900&fit=crop',
   'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=1600&h=900&fit=crop',
+  'https://images.unsplash.com/photo-1516035069371-29a1af244608?w=1600&h=900&fit=crop',
+  'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1600&h=900&fit=crop',
 ]
 
 const POSTERS = [
   'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&h=600&fit=crop',
   'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=400&h=600&fit=crop',
   'https://images.unsplash.com/photo-1535016120720-40c6464ebe02?w=400&h=600&fit=crop',
+  'https://images.unsplash.com/photo-1440409857634-1061a4a6389f?w=400&h=600&fit=crop',
+  'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=400&h=600&fit=crop',
 ]
 
-const VIDEO_ROTATION = [V.tears, V.sintel, V.bunny]
+const VIDEO_ROTATION = [V.tears, V.sintel, V.bunny, V.elephant, V.sub]
 
 function demoContentId(categoryId: string, index: number) {
   return `${categoryId}-demo-${String(index + 1).padStart(2, '0')}`
@@ -43,10 +53,10 @@ export function ensureCekimNotlariDemoContent() {
   const targets = categories.length > 0 ? categories : CEKIM_NOTLARI_CATEGORIES.map((c) => ({ id: c.id, title: c.title }))
 
   for (const category of targets) {
-    for (let index = 0; index < 3; index += 1) {
+    for (let index = 0; index < DEMO_VIDEOS_PER_CATEGORY; index += 1) {
       const id = demoContentId(category.id, index)
       const title = `${category.title} — Ders ${index + 1}`
-      const expert = EXPERTS[index]
+      const expert = EXPERTS[index % EXPERTS.length]
       const exists = dbGet<{ id: string }>('SELECT id FROM content WHERE id = ?', [id])
 
       if (!exists) {
@@ -65,9 +75,9 @@ export function ensureCekimNotlariDemoContent() {
             '13+',
             'belgesel',
             JSON.stringify(['Eğitim', 'Sinema']),
-            POSTERS[index],
-            BACKDROPS[index],
-            VIDEO_ROTATION[index],
+            POSTERS[index % POSTERS.length],
+            BACKDROPS[index % BACKDROPS.length],
+            VIDEO_ROTATION[index % VIDEO_ROTATION.length],
             'custom',
             'standard',
             0,

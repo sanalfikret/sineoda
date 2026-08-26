@@ -12,11 +12,14 @@ interface CekimSection {
   items: ContentItem[]
 }
 
+const PREVIEW_COUNT = 3
+
 function CekimNotlariContent() {
   const { openDetail, openPlayer } = useContentUI()
   const [sections, setSections] = useState<CekimSection[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     void fetchCekimNotlariSections()
@@ -24,6 +27,15 @@ function CekimNotlariContent() {
       .catch((err) => setError(err instanceof Error ? err.message : 'İçerik yüklenemedi.'))
       .finally(() => setLoading(false))
   }, [])
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(sectionId)) next.delete(sectionId)
+      else next.add(sectionId)
+      return next
+    })
+  }
 
   const heroItem = sections.flatMap((section) => section.items)[0] ?? null
 
@@ -63,23 +75,75 @@ function CekimNotlariContent() {
         Alanında uzman isimlerden eğitici videolar — setten post prodüksiyona.
       </p>
 
-      <div className="mx-auto max-w-[1400px] space-y-10 px-5 pb-24 sm:px-8">
-        {sections.map((section) => (
-          <section key={section.id} className="border-t border-white/5 pt-8 first:border-t-0 first:pt-0">
-            <h2 className="mb-4 text-lg font-semibold text-white sm:text-xl">{section.title}</h2>
-            {section.items.length > 0 ? (
-              <div className="grid grid-cols-1 gap-3 lg:grid-cols-3 lg:gap-4">
-                {section.items.map((item) => (
-                  <CekimNotlariCard key={item.id} item={item} onSelect={openDetail} />
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-sineoda-muted">Bu bölüm için henüz video eklenmedi.</p>
-            )}
-          </section>
-        ))}
+      <div className="mx-auto max-w-[1400px] space-y-6 px-5 pb-24 sm:px-8">
+        {sections.map((section) => {
+          const expanded = expandedIds.has(section.id)
+          const hasMore = section.items.length > PREVIEW_COUNT
+          const visibleItems = expanded ? section.items : section.items.slice(0, PREVIEW_COUNT)
+
+          return (
+            <section key={section.id} className="border-t border-white/5 pt-6 first:border-t-0 first:pt-0">
+              <button
+                type="button"
+                onClick={() => toggleSection(section.id)}
+                className="group mb-4 flex w-full items-center justify-between gap-3 text-left"
+                aria-expanded={expanded}
+              >
+                <span className="text-lg font-semibold text-white transition group-hover:text-sineoda-accent sm:text-xl">
+                  {section.title}
+                </span>
+                <span className="flex shrink-0 items-center gap-2 text-sm text-sineoda-muted">
+                  {section.items.length > 0 && (
+                    <span className="hidden sm:inline">
+                      {expanded ? 'Daralt' : hasMore ? `${section.items.length} video` : `${section.items.length} video`}
+                    </span>
+                  )}
+                  <ChevronIcon expanded={expanded} />
+                </span>
+              </button>
+
+              {section.items.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
+                    {visibleItems.map((item) => (
+                      <CekimNotlariCard key={item.id} item={item} onSelect={openDetail} />
+                    ))}
+                  </div>
+                  {!expanded && hasMore && (
+                    <button
+                      type="button"
+                      onClick={() => toggleSection(section.id)}
+                      className="mt-3 text-sm font-medium text-sineoda-accent transition hover:text-white"
+                    >
+                      Tümünü gör ({section.items.length} video)
+                    </button>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm text-sineoda-muted">Bu bölüm için henüz video eklenmedi.</p>
+              )}
+            </section>
+          )
+        })}
       </div>
     </main>
+  )
+}
+
+function ChevronIcon({ expanded }: { expanded: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      className={`h-5 w-5 transition-transform ${expanded ? 'rotate-180' : ''}`}
+      aria-hidden
+    >
+      <path
+        fillRule="evenodd"
+        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+        clipRule="evenodd"
+      />
+    </svg>
   )
 }
 

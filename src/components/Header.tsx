@@ -76,7 +76,7 @@ export function Header() {
     [isCreator, navItems],
   )
 
-  const showListemInUserMenu = !hiddenNavIds.includes('listem')
+  const showListemLink = !isCreator && !hiddenNavIds.includes('listem')
   const isActive = (match: (path: string) => boolean) => match(location.pathname)
   const exploreActive = exploreNavItems.some((item) => isActive(item.match))
 
@@ -191,6 +191,19 @@ export function Header() {
             </button>
           )}
 
+          {showListemLink && user && activeProfile && (
+            <Link
+              to="/listem"
+              className={`hidden whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold sm:inline-flex lg:px-3 lg:text-sm ${
+                isActive((path) => path === '/listem')
+                  ? 'bg-white/10 text-white'
+                  : 'text-white/75 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              Listem
+            </Link>
+          )}
+
           {user && (activeProfile || isCreator) ? (
             <div className="relative">
               <button
@@ -280,15 +293,6 @@ export function Header() {
                       >
                         Abonelik
                       </Link>
-                      {showListemInUserMenu ? (
-                        <Link
-                          to="/listem"
-                          className="block px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
-                          onClick={() => setUserMenuOpen(false)}
-                        >
-                          Listem
-                        </Link>
-                      ) : null}
                       <InstallAppMenuItem onNavigate={() => setUserMenuOpen(false)} />
                       <button
                         type="button"

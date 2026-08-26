@@ -75,7 +75,7 @@ export const DEFAULT_SITE_NAV: SiteNavConfig = {
 export { NAV_CATEGORY_SYNC, getNavIdForCategory, NAV_LABELS, STANDALONE_CATEGORY_IDS } from './siteNavLinks'
 
 /** Üst menüde doğrudan gösterilir */
-export const PRIMARY_NAV_IDS: SiteNavId[] = ['home', 'diziler', 'filmler', 'belgeseller', 'listem']
+export const PRIMARY_NAV_IDS: SiteNavId[] = ['home', 'diziler', 'filmler', 'belgeseller', 'gencSinema']
 
 /** "Keşfet" menüsünde toplanır — tek satır taşmayı önler */
-export const EXPLORE_NAV_IDS: SiteNavId[] = ['dikey', 'gencSinema', 'cekimNotlari', 'dergi']
+export const EXPLORE_NAV_IDS: SiteNavId[] = ['dikey', 'cekimNotlari', 'dergi']
