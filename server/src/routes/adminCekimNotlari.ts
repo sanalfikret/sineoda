@@ -1,0 +1,212 @@
+import { Router } from 'express'
+import { dbGet, dbRun } from '../db.js'
+import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
+import { mapContent, mapContentAdmin, serializeSubtitles } from '../mappers.js'
+import { serializeCredits } from '../services/credits.js'
+import { resolveDurationFields } from '../services/duration.js'
+import { parseContentAddedAt, parseLicenseDate } from '../services/license.js'
+import { parsePublishedAt } from '../services/publish.js'
+import { CEKIM_NOTLARI_CATEGORIES } from '../constants/cekimNotlari.js'
+import {
+  addToCekimCategory,
+  listAdminCekimNotlariItems,
+  listAdminCekimNotlariSections,
+  SHOOTING_NOTES_PROGRAM,
+} from '../services/cekimNotlari.js'
+import { newShootingNotesContentId } from '../services/cekimNotlariSeed.js'
+import type { ContentRow } from '../types.js'
+
+const router = Router()
+router.use(requireAdmin)
+
+router.get('/', (_req, res) => {
+  res.json({
+    categories: CEKIM_NOTLARI_CATEGORIES,
+    sections: listAdminCekimNotlariSections(),
+    items: listAdminCekimNotlariItems(),
+  })
+})
+
+router.get('/:id', (req, res) => {
+  const row = dbGet<ContentRow>('SELECT * FROM content WHERE id = ? AND program = ?', [
+    req.params.id,
+    SHOOTING_NOTES_PROGRAM,
+  ])
+  if (!row) {
+    res.status(404).json({ error: 'Video bulunamadı.' })
+    return
+  }
+
+  const categoryRow = dbGet<{ category_id: string }>(
+    `SELECT category_id FROM category_items ci
+     INNER JOIN categories c ON c.id = ci.category_id
+     WHERE ci.content_id = ? AND ci.category_id LIKE 'cekim-%'
+     LIMIT 1`,
+    [req.params.id],
+  )
+
+  res.json({
+    item: mapContentAdmin(row),
+    categoryId: categoryRow?.category_id ?? CEKIM_NOTLARI_CATEGORIES[0].id,
+  })
+})
+
+router.post('/', (req: AuthRequest, res) => {
+  const body = req.body as Record<string, unknown>
+  const title = String(body.title ?? '').trim()
+  const categoryId = String(body.categoryId ?? '').trim()
+  if (!title) {
+    res.status(400).json({ error: 'Başlık zorunlu.' })
+    return
+  }
+  if (!CEKIM_NOTLARI_CATEGORIES.some((entry) => entry.id === categoryId)) {
+    res.status(400).json({ error: 'Geçerli bir alt kategori seçin.' })
+    return
+  }
+
+  const id = body.id ? String(body.id) : newShootingNotesContentId(title)
+  if (dbGet('SELECT id FROM content WHERE id = ?', [id])) {
+    res.status(409).json({ error: 'Bu id zaten kullanılıyor.' })
+    return
+  }
+
+  const durationFields = resolveDurationFields(body)
+  const expert = String(body.expert ?? body.directors ?? '').trim()
+  const now = new Date().toISOString()
+
+  dbRun(
+    `INSERT INTO content (
+      id, title, description, year, duration, duration_minutes, rating, type, genres,
+      poster, backdrop, video_url, stream_provider, trailer_url, video_format,
+      is_new, featured, program, content_format, published_at,
+      credits_json, festivals_json, subtitles_json, content_added_at, license_expires_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      title,
+      String(body.description ?? ''),
+      Number(body.year ?? new Date().getFullYear()),
+      durationFields.duration,
+      durationFields.durationMinutes,
+      String(body.rating ?? '13+'),
+      'belgesel',
+      JSON.stringify(['Eğitim', 'Sinema']),
+      String(body.poster ?? ''),
+      String(body.backdrop ?? body.poster ?? ''),
+      String(body.videoUrl ?? body.video_url ?? ''),
+      'custom',
+      String(body.trailerUrl ?? body.trailer_url ?? ''),
+      'standard',
+      0,
+      0,
+      SHOOTING_NOTES_PROGRAM,
+      'main',
+      body.publishNow === false && !body.publishedAt ? null : parsePublishedAt(body.publishedAt, { publishNow: true }),
+      serializeCredits({
+        directors: expert ? [expert] : [],
+        producers: [],
+        cast: [],
+        studio: String(body.studio ?? 'Sineoda Eğitim'),
+      }),
+      '[]',
+      serializeSubtitles(body.subtitles ?? []),
+      parseContentAddedAt(body.contentAddedAt ?? now),
+      body.licenseUnlimited === false && body.licenseExpiresAt
+        ? parseLicenseDate(body.licenseExpiresAt)
+        : null,
+    ],
+  )
+
+  addToCekimCategory(id, categoryId)
+
+  res.status(201).json({
+    item: mapContent(dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [id])!),
+    categoryId,
+  })
+})
+
+router.patch('/:id', (req: AuthRequest, res) => {
+  const existing = dbGet<ContentRow>('SELECT * FROM content WHERE id = ? AND program = ?', [
+    req.params.id,
+    SHOOTING_NOTES_PROGRAM,
+  ])
+  if (!existing) {
+    res.status(404).json({ error: 'Video bulunamadı.' })
+    return
+  }
+
+  const body = req.body as Record<string, unknown>
+  const durationFields = resolveDurationFields(body, existing)
+  const expert = body.expert !== undefined ? String(body.expert).trim() : undefined
+  const credits = expert !== undefined
+    ? serializeCredits({
+        directors: expert ? [expert] : [],
+        producers: [],
+        cast: [],
+        studio: String(body.studio ?? 'Sineoda Eğitim'),
+      })
+    : existing.credits_json
+
+  dbRun(
+    `UPDATE content SET
+      title = ?, description = ?, year = ?, duration = ?, duration_minutes = ?, rating = ?,
+      poster = ?, backdrop = ?, video_url = ?, trailer_url = ?,
+      credits_json = ?, published_at = ?, license_expires_at = ?
+     WHERE id = ?`,
+    [
+      body.title !== undefined ? String(body.title) : existing.title,
+      body.description !== undefined ? String(body.description) : existing.description,
+      body.year !== undefined ? Number(body.year) : existing.year,
+      durationFields.duration,
+      durationFields.durationMinutes,
+      body.rating !== undefined ? String(body.rating) : existing.rating,
+      body.poster !== undefined ? String(body.poster) : existing.poster,
+      body.backdrop !== undefined ? String(body.backdrop) : existing.backdrop,
+      body.videoUrl !== undefined ? String(body.videoUrl) : body.video_url !== undefined ? String(body.video_url) : existing.video_url,
+      body.trailerUrl !== undefined ? String(body.trailerUrl) : existing.trailer_url,
+      credits,
+      body.publishedAt !== undefined || body.publishNow !== undefined
+        ? parsePublishedAt(body.publishedAt ?? body.published_at, {
+            publishNow: body.publishNow === true || body.publish_now === true,
+            existing: existing.published_at,
+          })
+        : existing.published_at,
+      body.licenseUnlimited === true
+        ? null
+        : body.licenseExpiresAt !== undefined
+          ? parseLicenseDate(body.licenseExpiresAt)
+          : existing.license_expires_at,
+      existing.id,
+    ],
+  )
+
+  if (body.categoryId !== undefined) {
+    addToCekimCategory(existing.id, String(body.categoryId))
+  }
+
+  const categoryRow = dbGet<{ category_id: string }>(
+    `SELECT category_id FROM category_items WHERE content_id = ? AND category_id LIKE 'cekim-%' LIMIT 1`,
+    [existing.id],
+  )
+
+  res.json({
+    item: mapContent(dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [existing.id])!),
+    categoryId: categoryRow?.category_id ?? null,
+  })
+})
+
+router.delete('/:id', (req: AuthRequest, res) => {
+  const existing = dbGet('SELECT id FROM content WHERE id = ? AND program = ?', [
+    req.params.id,
+    SHOOTING_NOTES_PROGRAM,
+  ])
+  if (!existing) {
+    res.status(404).json({ error: 'Video bulunamadı.' })
+    return
+  }
+  dbRun('DELETE FROM category_items WHERE content_id = ?', [req.params.id])
+  dbRun('DELETE FROM content WHERE id = ?', [req.params.id])
+  res.status(204).send()
+})
+
+export default router

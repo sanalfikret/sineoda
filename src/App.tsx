@@ -21,8 +21,11 @@ import { AdminUsersPage } from './pages/admin/AdminUsersPage'
 import { AdminCreatorsPage } from './pages/admin/AdminCreatorsPage'
 import { AdminStudentCinemaPage } from './pages/admin/AdminStudentCinemaPage'
 import { AdminStudentCinemaFormPage } from './pages/admin/AdminStudentCinemaFormPage'
+import { AdminCekimNotlariPage } from './pages/admin/AdminCekimNotlariPage'
+import { AdminCekimNotlariFormPage } from './pages/admin/AdminCekimNotlariFormPage'
 import { AccountPage } from './pages/AccountPage'
 import { BrowsePage } from './pages/BrowsePage'
+import { CekimNotlariPage } from './pages/CekimNotlariPage'
 import { LandingPage } from './pages/LandingPage'
 import { LoginPage } from './pages/LoginPage'
 import { MessagesPage } from './pages/MessagesPage'
@@ -238,7 +241,7 @@ function App() {
           <ProtectedRoute requireProfile>
             <AuthenticatedProviders>
               <NavRouteGuard cekimNotlariOnly>
-                <BrowsePage cekimNotlariOnly pageTitle="Çekim Notları" />
+                <CekimNotlariPage />
               </NavRouteGuard>
             </AuthenticatedProviders>
           </ProtectedRoute>
@@ -289,6 +292,8 @@ function App() {
         <Route path="muhasebe" element={<AdminWatchAccountingPage />} />
         <Route path="genc-sinema" element={<AdminStudentCinemaPage />} />
         <Route path="genc-sinema/:id" element={<AdminStudentCinemaFormPage />} />
+        <Route path="cekim-notlari" element={<AdminCekimNotlariPage />} />
+        <Route path="cekim-notlari/:id" element={<AdminCekimNotlariFormPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

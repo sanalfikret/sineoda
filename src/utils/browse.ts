@@ -47,6 +47,7 @@ export function filterCatalog(catalog: ContentItem[], options: BrowseFilterOptio
       return item.program === 'student_cinema' && (item.contentFormat ?? 'main') === 'main'
     }
     if (options.excludeStudent !== false && item.program === 'student_cinema') return false
+    if (item.program === 'shooting_notes') return false
     if (options.kidsSafe && !isContentAllowedForKids(item.rating)) return false
     if (options.verticalOnly && item.videoFormat !== 'vertical') return false
     if (!options.verticalOnly && item.videoFormat === 'vertical') return false

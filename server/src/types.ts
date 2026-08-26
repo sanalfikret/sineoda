@@ -4,7 +4,7 @@ export type UserRole = 'user' | 'admin' | 'creator'
 export type CreatorStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
 export type ContentReviewStatus = 'draft' | 'pending' | 'published' | 'rejected'
 export type CreatorProgram = 'standard' | 'student_cinema'
-export type ContentProgram = 'standard' | 'student_cinema'
+export type ContentProgram = 'standard' | 'student_cinema' | 'shooting_notes'
 export type StudentContentFormat = 'main' | 'bts' | 'teacher_note'
 export type SchoolReviewStatus = 'none' | 'pending' | 'approved' | 'rejected'
 export type { ContentType }

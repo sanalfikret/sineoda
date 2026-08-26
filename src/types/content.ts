@@ -50,7 +50,7 @@ export interface ContentItem {
   subtitles?: SubtitleTrack[]
   credits?: ContentCredits
   festivals?: FestivalEntry[]
-  program?: 'standard' | 'student_cinema'
+  program?: 'standard' | 'student_cinema' | 'shooting_notes'
   contentFormat?: 'main' | 'bts' | 'teacher_note'
   schoolName?: string | null
   creatorName?: string | null
