@@ -914,6 +914,34 @@ export async function deleteAdminCekimNotlariItem(id: string) {
   return api<void>(`/api/admin/cekim-notlari/${encodeURIComponent(id)}`, { method: 'DELETE' })
 }
 
+export async function createAdminCekimNotlariCategory(title: string) {
+  return api<{ category: { id: string; title: string }; sections: CekimNotlariSection[] }>(
+    '/api/admin/cekim-notlari/categories',
+    { method: 'POST', body: JSON.stringify({ title }) },
+  )
+}
+
+export async function updateAdminCekimNotlariCategory(categoryId: string, title: string) {
+  return api<{ category: { id: string; title: string }; sections: CekimNotlariSection[] }>(
+    `/api/admin/cekim-notlari/categories/${encodeURIComponent(categoryId)}`,
+    { method: 'PATCH', body: JSON.stringify({ title }) },
+  )
+}
+
+export async function reorderAdminCekimNotlariCategories(orderedIds: string[]) {
+  return api<{ categories: Array<{ id: string; title: string }>; sections: CekimNotlariSection[] }>(
+    '/api/admin/cekim-notlari/categories/reorder',
+    { method: 'PATCH', body: JSON.stringify({ orderedIds }) },
+  )
+}
+
+export async function deleteAdminCekimNotlariCategory(categoryId: string) {
+  return api<{ sections: CekimNotlariSection[] }>(
+    `/api/admin/cekim-notlari/categories/${encodeURIComponent(categoryId)}`,
+    { method: 'DELETE' },
+  )
+}
+
 export async function fetchAdminJournalPosts() {
   return api<{
     posts: import('../types/journal').JournalPost[]

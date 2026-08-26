@@ -6,12 +6,17 @@ import { serializeCredits } from '../services/credits.js'
 import { resolveDurationFields } from '../services/duration.js'
 import { parseContentAddedAt, parseLicenseDate } from '../services/license.js'
 import { parsePublishedAt } from '../services/publish.js'
-import { CEKIM_NOTLARI_CATEGORIES } from '../constants/cekimNotlari.js'
 import {
   addToCekimCategory,
+  createCekimNotlariCategory,
+  deleteCekimNotlariCategory,
+  isCekimCategoryId,
   listAdminCekimNotlariItems,
   listAdminCekimNotlariSections,
+  listCekimNotlariCategoryRows,
+  reorderCekimNotlariCategories,
   SHOOTING_NOTES_PROGRAM,
+  updateCekimNotlariCategoryTitle,
 } from '../services/cekimNotlari.js'
 import { newShootingNotesContentId } from '../services/cekimNotlariSeed.js'
 import type { ContentRow } from '../types.js'
@@ -21,10 +26,57 @@ router.use(requireAdmin)
 
 router.get('/', (_req, res) => {
   res.json({
-    categories: CEKIM_NOTLARI_CATEGORIES,
+    categories: listCekimNotlariCategoryRows().map(({ id, title }) => ({ id, title })),
     sections: listAdminCekimNotlariSections(),
     items: listAdminCekimNotlariItems(),
   })
+})
+
+router.post('/categories', (req: AuthRequest, res) => {
+  try {
+    const category = createCekimNotlariCategory(String(req.body.title ?? ''))
+    res.status(201).json({
+      category,
+      sections: listAdminCekimNotlariSections(),
+    })
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'Kategori eklenemedi.' })
+  }
+})
+
+router.patch('/categories/reorder', (req: AuthRequest, res) => {
+  const orderedIds = req.body.orderedIds
+  if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
+    res.status(400).json({ error: 'orderedIds dizisi zorunlu.' })
+    return
+  }
+  try {
+    const categories = reorderCekimNotlariCategories(orderedIds.map(String))
+    res.json({ categories, sections: listAdminCekimNotlariSections() })
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'Sıralama kaydedilemedi.' })
+  }
+})
+
+router.patch('/categories/:categoryId', (req: AuthRequest, res) => {
+  try {
+    const category = updateCekimNotlariCategoryTitle(
+      req.params.categoryId,
+      String(req.body.title ?? ''),
+    )
+    res.json({ category, sections: listAdminCekimNotlariSections() })
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'Kategori güncellenemedi.' })
+  }
+})
+
+router.delete('/categories/:categoryId', (req: AuthRequest, res) => {
+  try {
+    deleteCekimNotlariCategory(req.params.categoryId)
+    res.json({ sections: listAdminCekimNotlariSections() })
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'Kategori silinemedi.' })
+  }
 })
 
 router.get('/:id', (req, res) => {
@@ -38,16 +90,14 @@ router.get('/:id', (req, res) => {
   }
 
   const categoryRow = dbGet<{ category_id: string }>(
-    `SELECT category_id FROM category_items ci
-     INNER JOIN categories c ON c.id = ci.category_id
-     WHERE ci.content_id = ? AND ci.category_id LIKE 'cekim-%'
-     LIMIT 1`,
+    `SELECT category_id FROM category_items WHERE content_id = ? AND category_id LIKE 'cekim-%' LIMIT 1`,
     [req.params.id],
   )
+  const fallbackCategory = listCekimNotlariCategoryRows()[0]
 
   res.json({
     item: mapContentAdmin(row),
-    categoryId: categoryRow?.category_id ?? CEKIM_NOTLARI_CATEGORIES[0].id,
+    categoryId: categoryRow?.category_id ?? fallbackCategory?.id ?? '',
   })
 })
 
@@ -59,7 +109,7 @@ router.post('/', (req: AuthRequest, res) => {
     res.status(400).json({ error: 'Başlık zorunlu.' })
     return
   }
-  if (!CEKIM_NOTLARI_CATEGORIES.some((entry) => entry.id === categoryId)) {
+  if (!isCekimCategoryId(categoryId) || !dbGet('SELECT id FROM categories WHERE id = ?', [categoryId])) {
     res.status(400).json({ error: 'Geçerli bir alt kategori seçin.' })
     return
   }
@@ -122,6 +172,7 @@ router.post('/', (req: AuthRequest, res) => {
   res.status(201).json({
     item: mapContent(dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [id])!),
     categoryId,
+    sections: listAdminCekimNotlariSections(),
   })
 })
 
@@ -192,6 +243,7 @@ router.patch('/:id', (req: AuthRequest, res) => {
   res.json({
     item: mapContent(dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [existing.id])!),
     categoryId: categoryRow?.category_id ?? null,
+    sections: listAdminCekimNotlariSections(),
   })
 })
 

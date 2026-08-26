@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
+  createAdminCekimNotlariCategory,
+  deleteAdminCekimNotlariCategory,
   deleteAdminCekimNotlariItem,
   fetchAdminCekimNotlari,
+  reorderAdminCekimNotlariCategories,
+  updateAdminCekimNotlariCategory,
   type CekimNotlariSection,
 } from '../../api/client'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
@@ -16,6 +20,11 @@ export function AdminCekimNotlariPage() {
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  const [newCategoryTitle, setNewCategoryTitle] = useState('')
+  const [savingCategory, setSavingCategory] = useState(false)
+  const [reordering, setReordering] = useState(false)
+  const [editingTitles, setEditingTitles] = useState<Record<string, string>>({})
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -23,6 +32,9 @@ export function AdminCekimNotlariPage() {
     try {
       const data = await fetchAdminCekimNotlari()
       setSections(data.sections)
+      setEditingTitles(
+        Object.fromEntries(data.sections.map((section) => [section.id, section.title])),
+      )
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Veriler yüklenemedi.')
     } finally {
@@ -48,7 +60,16 @@ export function AdminCekimNotlariPage() {
 
   const totalVideos = sections.reduce((count, section) => count + section.items.length, 0)
 
-  const handleDelete = async (id: string, title: string) => {
+  const toggleExpanded = (id: string) => {
+    setExpandedIds((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const handleDeleteVideo = async (id: string, title: string) => {
     if (!window.confirm(`"${title}" videosunu silmek istediğine emin misin?`)) return
     setDeletingId(id)
     try {
@@ -61,6 +82,73 @@ export function AdminCekimNotlariPage() {
     }
   }
 
+  const handleAddCategory = async () => {
+    const title = newCategoryTitle.trim()
+    if (!title) return
+    setSavingCategory(true)
+    setError('')
+    try {
+      const data = await createAdminCekimNotlariCategory(title)
+      setSections(data.sections)
+      setEditingTitles(
+        Object.fromEntries(data.sections.map((section) => [section.id, section.title])),
+      )
+      setExpandedIds((current) => new Set([...current, data.category.id]))
+      setNewCategoryTitle('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Kategori eklenemedi.')
+    } finally {
+      setSavingCategory(false)
+    }
+  }
+
+  const handleSaveCategoryTitle = async (categoryId: string) => {
+    const title = editingTitles[categoryId]?.trim()
+    if (!title) return
+    setSavingCategory(true)
+    setError('')
+    try {
+      const data = await updateAdminCekimNotlariCategory(categoryId, title)
+      setSections(data.sections)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Kategori güncellenemedi.')
+    } finally {
+      setSavingCategory(false)
+    }
+  }
+
+  const handleDeleteCategory = async (categoryId: string, title: string) => {
+    if (!window.confirm(`"${title}" kategorisini silmek istediğine emin misin?`)) return
+    setSavingCategory(true)
+    setError('')
+    try {
+      const data = await deleteAdminCekimNotlariCategory(categoryId)
+      setSections(data.sections)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Kategori silinemedi.')
+    } finally {
+      setSavingCategory(false)
+    }
+  }
+
+  const moveCategory = async (sectionId: string, direction: -1 | 1) => {
+    const index = sections.findIndex((section) => section.id === sectionId)
+    const target = index + direction
+    if (index < 0 || target < 0 || target >= sections.length) return
+    const orderedIds = sections.map((section) => section.id)
+    ;[orderedIds[index], orderedIds[target]] = [orderedIds[target], orderedIds[index]]
+    setReordering(true)
+    setError('')
+    try {
+      const data = await reorderAdminCekimNotlariCategories(orderedIds)
+      setSections(data.sections)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sıralama kaydedilemedi.')
+    } finally {
+      setReordering(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -70,7 +158,7 @@ export function AdminCekimNotlariPage() {
           </p>
           <h1 className="mt-2 text-2xl font-bold text-white">{CEKIM_NOTLARI_NAV_LABEL}</h1>
           <p className="mt-2 text-sm text-sineoda-muted">
-            {totalVideos} video · 14 alt kategori · başlık, uzman, video ve kategori yönetimi
+            {totalVideos} video · {sections.length} alt kategori
           </p>
         </div>
         <button
@@ -82,6 +170,29 @@ export function AdminCekimNotlariPage() {
         </button>
       </div>
 
+      <div className="rounded-2xl border border-white/10 bg-[#11141c] p-4">
+        <h2 className="text-sm font-semibold text-white">Yeni kategori ekle</h2>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <input
+            value={newCategoryTitle}
+            onChange={(event) => setNewCategoryTitle(event.target.value)}
+            placeholder="Örn. Kurgu Dersleri"
+            className="min-w-[220px] flex-1 rounded-lg border border-white/10 bg-sineoda-bg px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') void handleAddCategory()
+            }}
+          />
+          <button
+            type="button"
+            disabled={savingCategory || !newCategoryTitle.trim()}
+            onClick={() => void handleAddCategory()}
+            className="rounded-lg bg-sineoda-gold px-4 py-2.5 text-sm font-semibold text-sineoda-bg disabled:opacity-50"
+          >
+            Kategori Ekle
+          </button>
+        </div>
+      </div>
+
       <AdminSearchBar value={query} onChange={setQuery} placeholder="Kategori veya video ara..." />
 
       {loading ? (
@@ -91,71 +202,140 @@ export function AdminCekimNotlariPage() {
       ) : error ? (
         <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</p>
       ) : (
-        <div className="space-y-8">
-          {filteredSections.map((section) => (
-            <section key={section.id} className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold text-white">{section.title}</h2>
-                <Link
-                  to={`/admin/cekim-notlari/yeni?kategori=${encodeURIComponent(section.id)}`}
-                  className="text-sm font-medium text-sineoda-gold hover:underline"
-                >
-                  + Bu kategoriye video ekle
-                </Link>
-              </div>
-
-              {section.items.length === 0 ? (
-                <p className="text-sm text-sineoda-muted">Henüz video yok.</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-left text-sm">
-                    <thead className="text-xs uppercase tracking-wide text-sineoda-muted">
-                      <tr>
-                        <th className="pb-3 pr-4">Başlık</th>
-                        <th className="pb-3 pr-4">Uzman</th>
-                        <th className="pb-3 pr-4">Süre</th>
-                        <th className="pb-3 pr-4">Durum</th>
-                        <th className="pb-3">İşlem</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                      {section.items.map((item) => (
-                        <tr key={item.id}>
-                          <td className="py-3 pr-4 font-medium text-white">{item.title}</td>
-                          <td className="py-3 pr-4 text-sineoda-muted">
-                            {item.credits?.directors?.[0] ?? '—'}
-                          </td>
-                          <td className="py-3 pr-4 text-sineoda-muted">{item.duration}</td>
-                          <td className="py-3 pr-4 text-sineoda-muted">
-                            {item.publishedAt ? 'Yayında' : 'Taslak'}
-                          </td>
-                          <td className="py-3">
-                            <div className="flex flex-wrap gap-2">
-                              <button
-                                type="button"
-                                onClick={() => navigate(`/admin/cekim-notlari/${item.id}`)}
-                                className="rounded-md border border-white/10 px-2.5 py-1 text-xs text-white/80 hover:bg-white/5"
-                              >
-                                Düzenle
-                              </button>
-                              <button
-                                type="button"
-                                disabled={deletingId === item.id}
-                                onClick={() => void handleDelete(item.id, item.title)}
-                                className="rounded-md border border-red-500/30 px-2.5 py-1 text-xs text-red-300 hover:bg-red-500/10 disabled:opacity-50"
-                              >
-                                Sil
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+        <div className="space-y-3">
+          {filteredSections.map((section) => {
+            const index = sections.findIndex((entry) => entry.id === section.id)
+            const expanded = expandedIds.has(section.id)
+            return (
+              <section key={section.id} className="overflow-hidden rounded-2xl border border-white/10 bg-[#11141c]">
+                <div className="flex items-center gap-2 border-b border-white/5 px-4 py-3">
+                  <button
+                    type="button"
+                    onClick={() => toggleExpanded(section.id)}
+                    className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                  >
+                    <span className="text-white/50">{expanded ? '▼' : '▶'}</span>
+                    <span className="truncate font-semibold text-white">{section.title}</span>
+                    <span className="shrink-0 text-xs text-sineoda-muted">{section.items.length} video</span>
+                  </button>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      disabled={index === 0 || reordering}
+                      onClick={() => void moveCategory(section.id, -1)}
+                      className="rounded-md border border-white/10 px-2 py-1 text-xs text-white/70 disabled:opacity-30"
+                      aria-label="Yukarı taşı"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      disabled={index === sections.length - 1 || reordering}
+                      onClick={() => void moveCategory(section.id, 1)}
+                      className="rounded-md border border-white/10 px-2 py-1 text-xs text-white/70 disabled:opacity-30"
+                      aria-label="Aşağı taşı"
+                    >
+                      ↓
+                    </button>
+                  </div>
                 </div>
-              )}
-            </section>
-          ))}
+
+                {expanded && (
+                  <div className="space-y-4 p-4">
+                    <div className="flex flex-wrap items-end gap-2">
+                      <label className="flex min-w-[220px] flex-1 flex-col gap-1 text-xs text-sineoda-muted">
+                        Kategori başlığı
+                        <input
+                          value={editingTitles[section.id] ?? section.title}
+                          onChange={(event) =>
+                            setEditingTitles((current) => ({
+                              ...current,
+                              [section.id]: event.target.value,
+                            }))
+                          }
+                          className="rounded-lg border border-white/10 bg-sineoda-bg px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        disabled={savingCategory}
+                        onClick={() => void handleSaveCategoryTitle(section.id)}
+                        className="rounded-lg border border-white/10 px-3 py-2 text-sm text-white/85 hover:bg-white/5"
+                      >
+                        Başlığı Kaydet
+                      </button>
+                      <button
+                        type="button"
+                        disabled={savingCategory || section.items.length > 0}
+                        title={section.items.length > 0 ? 'Önce videoları silin' : undefined}
+                        onClick={() => void handleDeleteCategory(section.id, section.title)}
+                        className="rounded-lg border border-red-500/30 px-3 py-2 text-sm text-red-300 hover:bg-red-500/10 disabled:opacity-40"
+                      >
+                        Kategoriyi Sil
+                      </button>
+                      <Link
+                        to={`/admin/cekim-notlari/yeni?kategori=${encodeURIComponent(section.id)}`}
+                        className="ml-auto text-sm font-medium text-sineoda-gold hover:underline"
+                      >
+                        + Bu kategoriye video ekle
+                      </Link>
+                    </div>
+
+                    {section.items.length === 0 ? (
+                      <p className="text-sm text-sineoda-muted">Henüz video yok.</p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full text-left text-sm">
+                          <thead className="text-xs uppercase tracking-wide text-sineoda-muted">
+                            <tr>
+                              <th className="pb-3 pr-4">Başlık</th>
+                              <th className="pb-3 pr-4">Uzman</th>
+                              <th className="pb-3 pr-4">Süre</th>
+                              <th className="pb-3 pr-4">Durum</th>
+                              <th className="pb-3">İşlem</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-white/5">
+                            {section.items.map((item) => (
+                              <tr key={item.id}>
+                                <td className="py-3 pr-4 font-medium text-white">{item.title}</td>
+                                <td className="py-3 pr-4 text-sineoda-muted">
+                                  {item.credits?.directors?.[0] ?? '—'}
+                                </td>
+                                <td className="py-3 pr-4 text-sineoda-muted">{item.duration}</td>
+                                <td className="py-3 pr-4 text-sineoda-muted">
+                                  {item.publishedAt ? 'Yayında' : 'Taslak'}
+                                </td>
+                                <td className="py-3">
+                                  <div className="flex flex-wrap gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => navigate(`/admin/cekim-notlari/${item.id}`)}
+                                      className="rounded-md border border-white/10 px-2.5 py-1 text-xs text-white/80 hover:bg-white/5"
+                                    >
+                                      Düzenle
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={deletingId === item.id}
+                                      onClick={() => void handleDeleteVideo(item.id, item.title)}
+                                      className="rounded-md border border-red-500/30 px-2.5 py-1 text-xs text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+                                    >
+                                      Sil
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </section>
+            )
+          })}
         </div>
       )}
     </div>

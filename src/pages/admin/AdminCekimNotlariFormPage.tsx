@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   createAdminCekimNotlariItem,
+  fetchAdminCekimNotlari,
   fetchAdminCekimNotlariItem,
   updateAdminCekimNotlariItem,
 } from '../../api/client'
 import { ImageUpload } from '../../components/admin/ImageUpload'
 import { VideoUpload } from '../../components/admin/VideoUpload'
-import { CEKIM_NOTLARI_CATEGORIES } from '../../constants/cekimNotlari'
 
 const RATINGS = ['Genel', '7+', '13+', '16+', '18+']
 
@@ -15,7 +15,7 @@ const EMPTY_FORM = {
   title: '',
   description: '',
   expert: '',
-  categoryId: CEKIM_NOTLARI_CATEGORIES[0].id,
+  categoryId: '',
   year: new Date().getFullYear(),
   duration: '10 dk',
   rating: '13+',
@@ -30,13 +30,29 @@ export function AdminCekimNotlariFormPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const isNew = !id || id === 'yeni'
+  const [categoryOptions, setCategoryOptions] = useState<Array<{ id: string; title: string }>>([])
   const [form, setForm] = useState({
     ...EMPTY_FORM,
-    categoryId: searchParams.get('kategori') ?? EMPTY_FORM.categoryId,
+    categoryId: searchParams.get('kategori') ?? '',
   })
-  const [loading, setLoading] = useState(!isNew)
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    void fetchAdminCekimNotlari()
+      .then((data) => {
+        setCategoryOptions(data.categories)
+        if (isNew) {
+          const preferred = searchParams.get('kategori') ?? data.categories[0]?.id ?? ''
+          setForm((current) => ({ ...current, categoryId: preferred }))
+        }
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : 'Kategoriler yüklenemedi.'))
+      .finally(() => {
+        if (isNew) setLoading(false)
+      })
+  }, [isNew, searchParams])
 
   useEffect(() => {
     if (isNew) return
@@ -59,8 +75,6 @@ export function AdminCekimNotlariFormPage() {
       .catch((err) => setError(err instanceof Error ? err.message : 'Video yüklenemedi.'))
       .finally(() => setLoading(false))
   }, [id, isNew])
-
-  const categoryOptions = useMemo(() => CEKIM_NOTLARI_CATEGORIES, [])
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
