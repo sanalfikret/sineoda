@@ -108,7 +108,7 @@ export function ContentRow({
       ) : (
         <div
           ref={rowRef}
-          className={`hide-scrollbar overflow-x-auto overflow-y-visible ${BROWSE_TRACK_PX}`}
+          className={`hide-scrollbar overflow-x-auto overflow-y-hidden ${BROWSE_TRACK_PX}`}
         >
           <div className={`flex snap-x snap-mandatory items-start overflow-visible ${BROWSE_CARD_GAP_X}`}>
             {items.map((item) => (
