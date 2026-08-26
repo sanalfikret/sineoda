@@ -2,12 +2,13 @@ import { dbAll } from '../db.js'
 import { mapJournalPost } from '../mappers.js'
 import { getLandingSectionsConfig } from './landingSections.js'
 import { journalPinOrderMap, loadJournalPinIds } from './journalPins.js'
+import { JOURNAL_PUBLISHED_SQL } from './publish.js'
 import type { JournalPostRow } from '../types.js'
 
 export const JOURNAL_PAGE_SIZE = 12
 
 function publishedClause() {
-  return `status = 'published' AND (published_at IS NULL OR published_at <= datetime('now'))`
+  return JOURNAL_PUBLISHED_SQL
 }
 
 function compareByDate(a: JournalPostRow, b: JournalPostRow) {
