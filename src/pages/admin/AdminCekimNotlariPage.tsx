@@ -32,6 +32,7 @@ export function AdminCekimNotlariPage() {
 
   const reorderSections = useCallback(async (orderedIds: string[]) => {
     const data = await reorderAdminCekimNotlariCategories(orderedIds)
+    setSections(data.sections)
     await refreshBootstrap()
     return data.sections
   }, [refreshBootstrap])

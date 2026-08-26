@@ -2,13 +2,10 @@ import { Router } from 'express'
 import { dbGet } from '../db.js'
 import { mapJournalPost } from '../mappers.js'
 import { listPublishedJournalPostsPage } from '../services/journalList.js'
+import { JOURNAL_PUBLISHED_SQL } from '../services/publish.js'
 import type { JournalPostRow } from '../types.js'
 
 const router = Router()
-
-function publishedClause() {
-  return `status = 'published' AND (published_at IS NULL OR published_at <= datetime('now'))`
-}
 
 router.get('/', (req, res) => {
   const page = Number(req.query.page ?? 1)
@@ -18,7 +15,7 @@ router.get('/', (req, res) => {
 
 router.get('/:slug', (req, res) => {
   const row = dbGet<JournalPostRow>(
-    `SELECT * FROM journal_posts WHERE slug = ? AND ${publishedClause()}`,
+    `SELECT * FROM journal_posts WHERE slug = ? AND ${JOURNAL_PUBLISHED_SQL}`,
     [req.params.slug],
   )
   if (!row) {

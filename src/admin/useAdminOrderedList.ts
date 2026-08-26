@@ -70,6 +70,7 @@ export function useAdminOrderedList<T extends { id: string }>({
         setOrderedItems(items)
       } finally {
         setSavingOrder(false)
+        setDraggingId(null)
       }
     },
     [items, reorderItems],
@@ -96,10 +97,11 @@ export function useAdminOrderedList<T extends { id: string }>({
   }, [])
 
   const handleDragEnd = useCallback(() => {
-    setDraggingId(null)
     if (orderDirtyRef.current) {
       void persistOrder(orderedRef.current)
+      return
     }
+    setDraggingId(null)
   }, [persistOrder])
 
   const nudgeItem = useCallback(
