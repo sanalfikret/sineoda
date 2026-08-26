@@ -22,7 +22,7 @@ export function StudentCinemaPicksRow({
         title="Ayın Genç Sinema Seçkileri"
         items={items}
         onSelect={onSelect ?? (() => undefined)}
-        layout="portrait"
+        layout="landscape"
         viewAllHref={guestMode ? '/giris' : '/genc-sinema'}
         guestMode={guestMode}
       />
