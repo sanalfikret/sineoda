@@ -69,7 +69,7 @@ export function VideoUpload({ label, value, onChange }: VideoUploadProps) {
         type="url"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="veya video URL yapıştır"
+        placeholder="Bunny CDN HLS (.m3u8) veya MP4 URL yapıştır"
         className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
       />
 
