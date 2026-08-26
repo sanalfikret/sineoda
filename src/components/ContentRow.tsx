@@ -3,18 +3,18 @@ import { Link } from 'react-router-dom'
 import type { ContentItem } from '../types/content'
 import { ContentCard } from './ContentCard'
 
-/** Ana sayfa + kategori listesi ortak kart aralıkları */
-const BROWSE_SECTION_MB = 'mb-5'
-const BROWSE_TRACK_PX = 'px-4 sm:px-6 lg:px-8'
-const BROWSE_TRACK_BOTTOM = 'pb-20'
+/** Ana sayfa carousel + kategori grid ortak yatay aralık (12px) */
 const BROWSE_CARD_GAP_X = 'gap-x-3'
-const BROWSE_CARD_GAP_Y = 'gap-y-20'
 
-/** Hover paneli carousel satırında kesilmesin (poster + detay yüksekliği) */
-const CAROUSEL_TRACK_MIN_H = {
-  landscape: 'min-h-[19rem]',
-  portrait: 'min-h-[26rem]',
-} as const
+/** Kategori listesi (Filmler vb.) dikey satır arası */
+const GRID_ROW_GAP_Y = 'gap-y-20'
+
+/** Ana sayfa carousel: satırlar arası sıkı (hover üst üste biner, ekstra pb yok) */
+const CAROUSEL_SECTION_MB = 'mb-2'
+
+/** Kategori grid sayfaları */
+const GRID_TRACK_BOTTOM = 'pb-20'
+const BROWSE_TRACK_PX = 'px-4 sm:px-6 lg:px-8'
 
 interface ContentRowProps {
   title: string
@@ -52,7 +52,7 @@ export function ContentRow({
   }
 
   return (
-    <section className={`relative overflow-visible ${BROWSE_SECTION_MB}`}>
+    <section className={`relative overflow-visible ${isGrid ? 'mb-5' : CAROUSEL_SECTION_MB}`}>
       <div className="mb-2 flex items-center justify-between px-4 sm:px-6 lg:px-8">
         <h2 className="text-lg font-semibold text-white sm:text-xl">{title}</h2>
         <div className="flex items-center gap-2">
@@ -72,8 +72,8 @@ export function ContentRow({
 
       {isGrid ? (
         gridFixedWidth ? (
-          <div className={`overflow-visible ${BROWSE_TRACK_PX} ${BROWSE_TRACK_BOTTOM}`}>
-            <div className={`flex flex-wrap items-start overflow-visible ${BROWSE_CARD_GAP_X} ${BROWSE_CARD_GAP_Y}`}>
+          <div className={`overflow-visible ${BROWSE_TRACK_PX} ${GRID_TRACK_BOTTOM}`}>
+            <div className={`flex flex-wrap items-start overflow-visible ${BROWSE_CARD_GAP_X} ${GRID_ROW_GAP_Y}`}>
               {items.map((item) => (
                 <ContentCard
                   key={item.id}
@@ -108,11 +108,9 @@ export function ContentRow({
       ) : (
         <div
           ref={rowRef}
-          className={`hide-scrollbar overflow-x-auto overflow-y-hidden ${BROWSE_TRACK_PX} ${BROWSE_TRACK_BOTTOM}`}
+          className={`hide-scrollbar overflow-x-auto overflow-y-visible ${BROWSE_TRACK_PX}`}
         >
-          <div
-            className={`flex snap-x snap-mandatory items-start overflow-visible ${BROWSE_CARD_GAP_X} ${CAROUSEL_TRACK_MIN_H[layout]}`}
-          >
+          <div className={`flex snap-x snap-mandatory items-start overflow-visible ${BROWSE_CARD_GAP_X}`}>
             {items.map((item) => (
               <ContentCard
                 key={item.id}
