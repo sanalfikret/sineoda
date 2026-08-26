@@ -43,6 +43,7 @@ export function filterShowcasesByNavVisibility<T extends { icon: string; items: 
 export function isContentBlockedByNav(item: ContentItem, hiddenNav: SiteNavId[]) {
   if (hiddenNav.includes('dikey') && item.videoFormat === 'vertical') return true
   if (hiddenNav.includes('gencSinema') && item.program === 'student_cinema') return true
+  if (hiddenNav.includes('cekimNotlari') && item.program === 'shooting_notes') return true
   if (hiddenNav.includes('diziler') && item.type === 'dizi') return true
   if (hiddenNav.includes('filmler') && item.type === 'film') return true
   if (hiddenNav.includes('belgeseller') && item.type === 'belgesel') return true

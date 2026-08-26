@@ -45,6 +45,9 @@ import { ensureDemoCatalog } from './demoCatalog.js'
 import { ensureGenreCatalog } from './genreCatalog.js'
 import { ensureJournalPosts } from './journalSeed.js'
 import { ensureCekimNotlariCategories } from './services/cekimNotlariCategories.js'
+import { ensureCekimNotlariDemoContent } from './services/cekimNotlariSeed.js'
+import adminCekimNotlariRoutes from './routes/adminCekimNotlari.js'
+import cekimNotlariRoutes from './routes/cekimNotlari.js'
 import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureLandingShowcases, ensureFilmSchools, ensureStudentCinemaDemoFilms, ensureStudentCinemaDemoCredits, ensureCreatorDemoSeed } from './seed.js'
 import { ensureMonthlyRollover, seedDemoMonthlyIfEmpty } from './services/watchAccounting.js'
 import type { ContentRow } from './types.js'
@@ -59,6 +62,7 @@ ensureExtraSeedContent()
 ensureVerticalSeries()
 ensureGenreCategories()
 ensureCekimNotlariCategories()
+ensureCekimNotlariDemoContent()
 seedLandingData()
 ensureLandingShowcases()
 ensureDemoCatalog()
@@ -211,7 +215,9 @@ app.use('/api/creator', creatorRoutes)
 app.use('/api/creator/upload', creatorUploadRoutes)
 app.use('/api/admin/creators', adminCreatorsRoutes)
 app.use('/api/admin/student-cinema', adminStudentCinemaRoutes)
+app.use('/api/admin/cekim-notlari', adminCekimNotlariRoutes)
 app.use('/api/student-cinema', studentCinemaRoutes)
+app.use('/api/cekim-notlari', cekimNotlariRoutes)
 app.use('/api/admin/users', userRoutes)
 app.use('/api/admin/messages', adminMessagesRoutes)
 app.use('/api/messages', messagesRoutes)

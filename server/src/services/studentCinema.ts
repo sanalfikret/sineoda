@@ -6,7 +6,7 @@ export const GENC_SINEMA_CATEGORY_ID = 'genc-sinema'
 
 export const MAIN_CATALOG_SQL = `COALESCE(content_format, 'main') = 'main'`
 
-export const STANDARD_PROGRAM_SQL = `COALESCE(program, 'standard') != 'student_cinema'`
+export const STANDARD_PROGRAM_SQL = `COALESCE(program, 'standard') NOT IN ('student_cinema', 'shooting_notes')`
 
 export function isStudentMainRow(row: Pick<ContentRow, 'program' | 'content_format'>) {
   return (row.program ?? 'standard') === 'student_cinema' && (row.content_format ?? 'main') === 'main'

@@ -25,7 +25,9 @@ export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
 
   const filters: SearchFilters = { query, genre, year, type }
   const results = useMemo(() => {
-    const found = searchContent(visibleCatalog, filters).filter((item) => item.program !== 'student_cinema')
+    const found = searchContent(visibleCatalog, filters).filter(
+      (item) => item.program !== 'student_cinema' && item.program !== 'shooting_notes',
+    )
     if (!kidsSafe) return found
     return found.filter((item) => isContentAllowedForKids(item.rating))
   }, [visibleCatalog, query, genre, year, type, kidsSafe])
