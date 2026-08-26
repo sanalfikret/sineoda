@@ -12,8 +12,12 @@ export function parsePublishedAt(
   value: unknown,
   options?: { publishNow?: boolean; existing?: string | null },
 ) {
-  if (options?.publishNow) {
+  if (options?.publishNow === true) {
     return new Date().toISOString()
+  }
+
+  if (options?.publishNow === false) {
+    return null
   }
 
   if (value === null) return null
@@ -27,6 +31,13 @@ export function parsePublishedAt(
   }
 
   return options?.existing ?? null
+}
+
+/** POST/PATCH gövdesinden yayın durumu: true = yayınla, false = taslağa al, undefined = dokunma */
+export function parsePublishNowFlag(body: Record<string, unknown>): boolean | undefined {
+  if (body.publishNow === true || body.publish_now === true) return true
+  if (body.publishNow === false || body.publish_now === false) return false
+  return undefined
 }
 
 /** ISO (`2026-08-26T12:00:00.000Z`) ve SQLite datetime karşılaştırması */

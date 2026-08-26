@@ -938,7 +938,11 @@ export async function createAdminCekimNotlariItem(data: Record<string, unknown>)
 }
 
 export async function updateAdminCekimNotlariItem(id: string, data: Record<string, unknown>) {
-  const result = await api<{ item: import('../types/content').ContentItem; categoryId: string | null }>(
+  const result = await api<{
+    item: import('../types/content').ContentItem
+    categoryId: string | null
+    sections: CekimNotlariSection[]
+  }>(
     `/api/admin/cekim-notlari/${encodeURIComponent(id)}`,
     { method: 'PATCH', body: JSON.stringify(data) },
   )

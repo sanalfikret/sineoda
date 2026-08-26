@@ -7,21 +7,26 @@ import {
 import type { AdminContentItem } from '../../types/content'
 import { useAdminOrderedList } from '../../admin/useAdminOrderedList'
 import { AdminDragHandle } from './AdminDragHandle'
+import { AdminCekimNotlariPublishButton } from './AdminCekimNotlariPublishButton'
 import { useContent } from '../../context/ContentContext'
 
 interface AdminCekimNotlariVideoListProps {
   section: CekimNotlariSection
   deletingId: string | null
+  togglingPublishId: string | null
   dragDisabled?: boolean
   onDelete: (id: string, title: string) => void
+  onTogglePublish: (item: AdminContentItem) => void
   onSectionsUpdate: (sections: CekimNotlariSection[]) => void
 }
 
 export function AdminCekimNotlariVideoList({
   section,
   deletingId,
+  togglingPublishId,
   dragDisabled = false,
   onDelete,
+  onTogglePublish,
   onSectionsUpdate,
 }: AdminCekimNotlariVideoListProps) {
   const navigate = useNavigate()
@@ -129,6 +134,11 @@ export function AdminCekimNotlariVideoList({
                   </td>
                   <td className="py-3">
                     <div className="flex flex-wrap gap-2">
+                      <AdminCekimNotlariPublishButton
+                        published={Boolean(item.publishedAt)}
+                        loading={togglingPublishId === item.id}
+                        onClick={() => onTogglePublish(item)}
+                      />
                       <button
                         type="button"
                         onClick={() => navigate(`/admin/cekim-notlari/${item.id}`)}

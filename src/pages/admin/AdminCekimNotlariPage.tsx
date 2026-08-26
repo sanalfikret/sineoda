@@ -7,14 +7,17 @@ import {
   fetchAdminCekimNotlari,
   reorderAdminCekimNotlariCategories,
   updateAdminCekimNotlariCategory,
+  updateAdminCekimNotlariItem,
   type CekimNotlariSection,
 } from '../../api/client'
 import { useAdminOrderedList } from '../../admin/useAdminOrderedList'
+import { AdminCekimNotlariPublishButton } from '../../components/admin/AdminCekimNotlariPublishButton'
 import { AdminCekimNotlariVideoList } from '../../components/admin/AdminCekimNotlariVideoList'
 import { AdminDragHandle } from '../../components/admin/AdminDragHandle'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { CEKIM_NOTLARI_NAV_LABEL, CEKIM_NOTLARI_SECTION_TITLE } from '../../constants/cekimNotlari'
 import { useContent } from '../../context/ContentContext'
+import type { AdminContentItem } from '../../types/content'
 import { fuzzySearchMatch } from '../../utils/search'
 
 export function AdminCekimNotlariPage() {
@@ -25,6 +28,7 @@ export function AdminCekimNotlariPage() {
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [togglingPublishId, setTogglingPublishId] = useState<string | null>(null)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [newCategoryTitle, setNewCategoryTitle] = useState('')
   const [savingCategory, setSavingCategory] = useState(false)
@@ -176,6 +180,19 @@ export function AdminCekimNotlariPage() {
       setError(err instanceof Error ? err.message : 'Kategori güncellenemedi.')
     } finally {
       setSavingCategory(false)
+    }
+  }
+
+  const handleTogglePublish = async (item: AdminContentItem) => {
+    setTogglingPublishId(item.id)
+    setError('')
+    try {
+      const data = await updateAdminCekimNotlariItem(item.id, { publishNow: !item.publishedAt })
+      await syncAfterMutation(data.sections)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Yayın durumu güncellenemedi.')
+    } finally {
+      setTogglingPublishId(null)
     }
   }
 
@@ -378,6 +395,11 @@ export function AdminCekimNotlariPage() {
                                 </td>
                                 <td className="py-3">
                                   <div className="flex flex-wrap gap-2">
+                                    <AdminCekimNotlariPublishButton
+                                      published={Boolean(item.publishedAt)}
+                                      loading={togglingPublishId === item.id}
+                                      onClick={() => void handleTogglePublish(item)}
+                                    />
                                     <button
                                       type="button"
                                       onClick={() => navigate(`/admin/cekim-notlari/${item.id}`)}
@@ -404,7 +426,9 @@ export function AdminCekimNotlariPage() {
                       <AdminCekimNotlariVideoList
                         section={orderedSections.find((entry) => entry.id === section.id) ?? section}
                         deletingId={deletingId}
+                        togglingPublishId={togglingPublishId}
                         onDelete={(id, title) => void handleDeleteVideo(id, title)}
+                        onTogglePublish={(item) => void handleTogglePublish(item)}
                         onSectionsUpdate={handleVideoSectionsUpdate}
                       />
                     )}
