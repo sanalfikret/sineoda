@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid'
 import { CEKIM_NOTLARI_CATEGORIES } from '../constants/cekimNotlari.js'
-import { dbGet, dbRun } from '../db.js'
+import { dbAll, dbGet, dbRun } from '../db.js'
 import { addToCekimCategory, SHOOTING_NOTES_PROGRAM } from './cekimNotlari.js'
 
 const V = {
@@ -36,7 +36,13 @@ function demoContentId(categoryId: string, index: number) {
 export function ensureCekimNotlariDemoContent() {
   const now = new Date().toISOString()
 
-  for (const category of CEKIM_NOTLARI_CATEGORIES) {
+  const categories = dbAll<{ id: string; title: string }>(
+    `SELECT id, title FROM categories WHERE id LIKE 'cekim-%' ORDER BY sort_order, title`,
+  )
+
+  const targets = categories.length > 0 ? categories : CEKIM_NOTLARI_CATEGORIES.map((c) => ({ id: c.id, title: c.title }))
+
+  for (const category of targets) {
     for (let index = 0; index < 3; index += 1) {
       const id = demoContentId(category.id, index)
       const title = `${category.title} — Ders ${index + 1}`
@@ -75,9 +81,10 @@ export function ensureCekimNotlariDemoContent() {
           ],
         )
       } else {
-        dbRun('UPDATE content SET program = ?, title = ? WHERE id = ?', [
+        dbRun('UPDATE content SET program = ?, title = ?, published_at = COALESCE(published_at, ?) WHERE id = ?', [
           SHOOTING_NOTES_PROGRAM,
           title,
+          now,
           id,
         ])
       }

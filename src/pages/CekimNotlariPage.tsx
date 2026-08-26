@@ -25,8 +25,7 @@ function CekimNotlariContent() {
       .finally(() => setLoading(false))
   }, [])
 
-  const heroItem =
-    sections.flatMap((section) => section.items)[0] ?? null
+  const heroItem = sections.flatMap((section) => section.items)[0] ?? null
 
   if (loading) {
     return (
@@ -60,22 +59,22 @@ function CekimNotlariContent() {
         </div>
       )}
 
-      <p className="mx-auto max-w-3xl px-4 pb-6 pt-2 text-center text-sm text-sineoda-muted sm:px-6">
+      <p className="mx-auto max-w-3xl px-4 pb-8 pt-2 text-center text-sm text-sineoda-muted sm:px-6">
         Alanında uzman isimlerden eğitici videolar — setten post prodüksiyona.
       </p>
 
-      <div className="mx-auto max-w-[1400px] space-y-12 px-5 pb-24 sm:px-8">
+      <div className="mx-auto max-w-[1400px] space-y-10 px-5 pb-24 sm:px-8">
         {sections.map((section) => (
-          <section key={section.id}>
-            <h2 className="text-lg font-semibold text-white sm:text-xl">{section.title}</h2>
+          <section key={section.id} className="border-t border-white/5 pt-8 first:border-t-0 first:pt-0">
+            <h2 className="mb-4 text-lg font-semibold text-white sm:text-xl">{section.title}</h2>
             {section.items.length > 0 ? (
-              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-                {section.items.slice(0, 3).map((item) => (
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-3 lg:gap-4">
+                {section.items.map((item) => (
                   <CekimNotlariCard key={item.id} item={item} onSelect={openDetail} />
                 ))}
               </div>
             ) : (
-              <p className="mt-3 text-sm text-sineoda-muted">Bu bölüm için henüz video eklenmedi.</p>
+              <p className="text-sm text-sineoda-muted">Bu bölüm için henüz video eklenmedi.</p>
             )}
           </section>
         ))}
