@@ -10,6 +10,7 @@ import {
   type CekimNotlariSection,
 } from '../../api/client'
 import { useAdminOrderedList } from '../../admin/useAdminOrderedList'
+import { AdminCekimNotlariVideoList } from '../../components/admin/AdminCekimNotlariVideoList'
 import { AdminDragHandle } from '../../components/admin/AdminDragHandle'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { CEKIM_NOTLARI_NAV_LABEL, CEKIM_NOTLARI_SECTION_TITLE } from '../../constants/cekimNotlari'
@@ -164,6 +165,10 @@ export function AdminCekimNotlariPage() {
     }
   }
 
+  const handleVideoSectionsUpdate = useCallback((nextSections: CekimNotlariSection[]) => {
+    setSections(nextSections)
+  }, [])
+
   const displayError = error || orderError
 
   return (
@@ -317,7 +322,7 @@ export function AdminCekimNotlariPage() {
 
                     {section.items.length === 0 ? (
                       <p className="text-sm text-sineoda-muted">Henüz video yok.</p>
-                    ) : (
+                    ) : query.trim() ? (
                       <div className="overflow-x-auto">
                         <table className="min-w-full text-left text-sm">
                           <thead className="text-xs uppercase tracking-wide text-sineoda-muted">
@@ -364,6 +369,13 @@ export function AdminCekimNotlariPage() {
                           </tbody>
                         </table>
                       </div>
+                    ) : (
+                      <AdminCekimNotlariVideoList
+                        section={orderedSections.find((entry) => entry.id === section.id) ?? section}
+                        deletingId={deletingId}
+                        onDelete={(id, title) => void handleDeleteVideo(id, title)}
+                        onSectionsUpdate={handleVideoSectionsUpdate}
+                      />
                     )}
                   </div>
                 )}

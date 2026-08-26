@@ -15,6 +15,7 @@ import {
   listAdminCekimNotlariSections,
   listCekimNotlariCategoryRows,
   reorderCekimNotlariCategories,
+  reorderCekimNotlariCategoryItems,
   SHOOTING_NOTES_PROGRAM,
   updateCekimNotlariCategoryTitle,
 } from '../services/cekimNotlari.js'
@@ -56,6 +57,20 @@ router.patch('/categories/reorder', (req: AuthRequest, res) => {
     res.json({ categories, sections: listAdminCekimNotlariSections() })
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : 'Sıralama kaydedilemedi.' })
+  }
+})
+
+router.patch('/categories/:categoryId/items/reorder', (req: AuthRequest, res) => {
+  const orderedIds = req.body.orderedIds
+  if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
+    res.status(400).json({ error: 'orderedIds dizisi zorunlu.' })
+    return
+  }
+  try {
+    const sections = reorderCekimNotlariCategoryItems(String(req.params.categoryId), orderedIds.map(String))
+    res.json({ sections })
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'Video sırası kaydedilemedi.' })
   }
 })
 
