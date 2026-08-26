@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { fetchUnreadMessageCount } from '../api/client'
-import { SITE_NAV_ITEMS } from '../constants/siteNav'
+import { SITE_NAV_ITEMS, EXPLORE_NAV_IDS, PRIMARY_NAV_IDS, type SiteNavId } from '../constants/siteNav'
 import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
 import { useSearchUI } from '../context/SearchContext'
@@ -23,6 +23,7 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [exploreOpen, setExploreOpen] = useState(false)
   const [unreadMessages, setUnreadMessages] = useState(0)
 
   useEffect(() => {
@@ -36,6 +37,11 @@ export function Header() {
   }, [user, isCreator, isAdmin, location.pathname])
 
   useEffect(() => {
+    setExploreOpen(false)
+    setUserMenuOpen(false)
+  }, [location.pathname])
+
+  useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
@@ -43,18 +49,47 @@ export function Header() {
 
   const navItems = useMemo(() => {
     if (isCreator) {
-      return creatorNavItems.map((item) => ({ ...item, isStudentCinema: false }))
+      return creatorNavItems.map((item) => ({
+        ...item,
+        id: item.to as SiteNavId,
+        shortLabel: undefined as string | undefined,
+        isStudentCinema: false,
+      }))
     }
     return SITE_NAV_ITEMS.filter((item) => !hiddenNavIds.includes(item.id)).map((item) => ({
+      id: item.id,
       label: item.label,
+      shortLabel: item.shortLabel,
       to: item.path,
       match: item.match,
       isStudentCinema: item.id === 'gencSinema',
     }))
   }, [isCreator, hiddenNavIds])
 
+  const primaryNavItems = useMemo(
+    () => (isCreator ? navItems : navItems.filter((item) => PRIMARY_NAV_IDS.includes(item.id as SiteNavId))),
+    [isCreator, navItems],
+  )
+
+  const exploreNavItems = useMemo(
+    () => (isCreator ? [] : navItems.filter((item) => EXPLORE_NAV_IDS.includes(item.id as SiteNavId))),
+    [isCreator, navItems],
+  )
+
   const showListemInUserMenu = !hiddenNavIds.includes('listem')
   const isActive = (match: (path: string) => boolean) => match(location.pathname)
+  const exploreActive = exploreNavItems.some((item) => isActive(item.match))
+
+  const navLinkClass = (item: (typeof navItems)[number], active: boolean) =>
+    `whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold lg:px-3 lg:text-sm xl:text-[15px] tv:px-4 tv:py-3 tv:text-base ${
+      item.isStudentCinema
+        ? active
+          ? 'bg-emerald-500/15 text-emerald-300'
+          : 'text-emerald-200/80 hover:bg-emerald-500/10 hover:text-emerald-200'
+        : active
+          ? 'bg-white/10 text-white'
+          : 'text-white/75 hover:bg-white/5 hover:text-white'
+    }`
 
   return (
     <header
@@ -76,24 +111,56 @@ export function Header() {
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-1 md:flex">
-            {navItems.map((item) => (
+          <nav className="hidden min-w-0 flex-nowrap items-center gap-0.5 md:flex lg:gap-1">
+            {primaryNavItems.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                className={`rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold tv:px-4 tv:py-3 tv:text-base ${
-                  item.isStudentCinema
-                    ? isActive(item.match)
-                      ? 'bg-emerald-500/15 text-emerald-300'
-                      : 'text-emerald-200/80 hover:bg-emerald-500/10 hover:text-emerald-200'
-                    : isActive(item.match)
-                      ? 'bg-white/10 text-white'
-                      : 'text-white/75 hover:bg-white/5 hover:text-white'
-                }`}
+                className={navLinkClass(item, isActive(item.match))}
               >
-                {item.label}
+                <span className="xl:hidden">{item.shortLabel ?? item.label}</span>
+                <span className="hidden xl:inline">{item.label}</span>
               </Link>
             ))}
+
+            {exploreNavItems.length > 0 && (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setExploreOpen((open) => !open)}
+                  onBlur={() => window.setTimeout(() => setExploreOpen(false), 150)}
+                  className={`whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold lg:px-3 lg:text-sm xl:text-[15px] ${
+                    exploreActive || exploreOpen
+                      ? 'bg-white/10 text-white'
+                      : 'text-white/75 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  Keşfet <span className="text-[10px] opacity-70">▾</span>
+                </button>
+                {exploreOpen && (
+                  <div className="absolute left-0 top-full z-50 mt-1 min-w-[11rem] overflow-hidden rounded-xl border border-white/10 bg-sineoda-elevated py-1 shadow-xl">
+                    {exploreNavItems.map((item) => (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        onClick={() => setExploreOpen(false)}
+                        className={`block whitespace-nowrap px-4 py-2.5 text-sm transition hover:bg-white/5 ${
+                          item.isStudentCinema
+                            ? isActive(item.match)
+                              ? 'text-emerald-300'
+                              : 'text-emerald-200/90'
+                            : isActive(item.match)
+                              ? 'text-white'
+                              : 'text-white/85'
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </nav>
         </div>
 
