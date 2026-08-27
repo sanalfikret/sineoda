@@ -57,11 +57,11 @@ export function Hero({ item, onPlay, onDetails, eyebrow = 'Öne Çıkan' }: Hero
           <p className="mt-4 max-w-2xl line-clamp-3 text-sm leading-relaxed text-white/80 sm:mt-5 sm:line-clamp-none sm:text-lg">
             {item.description}
           </p>
-          <div className="mt-6 flex flex-wrap gap-2.5 sm:mt-8 sm:gap-3">
+          <div className="mt-6 flex flex-wrap gap-2 sm:mt-8 sm:gap-3">
             <button
               type="button"
               onClick={() => onPlay(item)}
-              className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-sineoda-gold px-5 py-3 text-sm font-semibold text-sineoda-bg shadow-lg shadow-sineoda-gold/20 transition hover:brightness-110 sm:flex-none sm:px-6 sm:py-3.5"
+              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-sineoda-gold px-4 text-sm font-semibold text-sineoda-bg shadow-lg shadow-sineoda-gold/20 transition hover:brightness-110 sm:h-auto sm:min-h-11 sm:gap-2 sm:px-6 sm:py-3.5"
             >
               <PlayIcon />
               {item.videoFormat === 'vertical' ? 'Dikey İzle' : 'Oynat'}
@@ -70,7 +70,7 @@ export function Hero({ item, onPlay, onDetails, eyebrow = 'Öne Çıkan' }: Hero
               <button
                 type="button"
                 onClick={() => onDetails(item)}
-                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/15 sm:flex-none sm:px-6 sm:py-3.5"
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-4 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/15 sm:h-auto sm:min-h-11 sm:gap-2 sm:px-6 sm:py-3.5"
               >
                 <InfoIcon />
                 Fragman & Detay
@@ -80,7 +80,7 @@ export function Hero({ item, onPlay, onDetails, eyebrow = 'Öne Çıkan' }: Hero
               <button
                 type="button"
                 onClick={() => onDetails(item)}
-                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/15 sm:flex-none sm:px-6 sm:py-3.5"
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-4 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/15 sm:h-auto sm:min-h-11 sm:gap-2 sm:px-6 sm:py-3.5"
               >
                 <InfoIcon />
                 Detaylar
