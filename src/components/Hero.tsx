@@ -10,16 +10,16 @@ interface HeroProps {
 
 export function Hero({ item, onPlay, onDetails, eyebrow = 'Öne Çıkan' }: HeroProps) {
   return (
-    <section className="relative min-h-[78vh] overflow-hidden sm:min-h-[88vh] tv:min-h-[85vh]">
+    <section className="relative min-h-[58vh] overflow-hidden sm:min-h-[72vh] lg:min-h-[88vh] tv:min-h-[85vh]">
       <TrailerBackdrop item={item} />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(232,184,74,0.12),transparent_50%)]" />
       <div className="absolute inset-0 bg-gradient-to-r from-sineoda-bg via-sineoda-bg/90 to-sineoda-bg/20" />
       <div className="absolute inset-0 bg-gradient-to-t from-sineoda-bg via-sineoda-bg/30 to-black/20" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-sineoda-gold/40 to-transparent" />
 
-      <div className="relative mx-auto flex h-full max-w-7xl items-end px-4 pb-14 pt-28 sm:px-6 sm:pb-20 lg:px-8 tv:pb-24 tv:pt-32">
+      <div className="relative mx-auto flex h-full max-w-7xl items-end px-4 pb-10 pt-24 sm:px-6 sm:pb-16 sm:pt-28 lg:px-8 lg:pb-20 tv:pb-24 tv:pt-32">
         <div className="max-w-3xl">
-          <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.28em] text-sineoda-gold sm:text-sm">
+          <p className="mb-3 inline-flex max-w-full flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-sineoda-gold sm:mb-4 sm:text-sm sm:tracking-[0.28em]">
             <span className="h-px w-8 bg-sineoda-gold/70" />
             {eyebrow}
             {item.isNew && (
@@ -28,7 +28,7 @@ export function Hero({ item, onPlay, onDetails, eyebrow = 'Öne Çıkan' }: Hero
               </span>
             )}
           </p>
-          <h1 className="text-4xl font-bold leading-[1.05] text-white sm:text-6xl lg:text-7xl tv:text-7xl">
+          <h1 className="text-3xl font-bold leading-[1.08] text-white sm:text-5xl lg:text-7xl tv:text-7xl">
             {item.title}
           </h1>
           <div className="mt-5 flex flex-wrap items-center gap-2 text-sm text-white/75">
@@ -54,14 +54,14 @@ export function Hero({ item, onPlay, onDetails, eyebrow = 'Öne Çıkan' }: Hero
               </span>
             ))}
           </div>
-          <p className="mt-5 max-w-2xl line-clamp-3 text-sm leading-relaxed text-white/80 sm:line-clamp-none sm:text-lg">
+          <p className="mt-4 max-w-2xl line-clamp-3 text-sm leading-relaxed text-white/80 sm:mt-5 sm:line-clamp-none sm:text-lg">
             {item.description}
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-wrap gap-2.5 sm:mt-8 sm:gap-3">
             <button
               type="button"
               onClick={() => onPlay(item)}
-              className="inline-flex items-center gap-2 rounded-lg bg-sineoda-gold px-6 py-3.5 text-sm font-semibold text-sineoda-bg shadow-lg shadow-sineoda-gold/20 transition hover:brightness-110"
+              className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-sineoda-gold px-5 py-3 text-sm font-semibold text-sineoda-bg shadow-lg shadow-sineoda-gold/20 transition hover:brightness-110 sm:flex-none sm:px-6 sm:py-3.5"
             >
               <PlayIcon />
               {item.videoFormat === 'vertical' ? 'Dikey İzle' : 'Oynat'}
@@ -70,7 +70,7 @@ export function Hero({ item, onPlay, onDetails, eyebrow = 'Öne Çıkan' }: Hero
               <button
                 type="button"
                 onClick={() => onDetails(item)}
-                className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/15"
+                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/15 sm:flex-none sm:px-6 sm:py-3.5"
               >
                 <InfoIcon />
                 Fragman & Detay
@@ -80,7 +80,7 @@ export function Hero({ item, onPlay, onDetails, eyebrow = 'Öne Çıkan' }: Hero
               <button
                 type="button"
                 onClick={() => onDetails(item)}
-                className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/15"
+                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/15 sm:flex-none sm:px-6 sm:py-3.5"
               >
                 <InfoIcon />
                 Detaylar

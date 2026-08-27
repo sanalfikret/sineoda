@@ -10,6 +10,7 @@
     "build": "tsc -b && vite build",
     "build:cpanel": "vite build",
     "build:server": "npm run build --prefix server",
+    "icons": "node scripts/generate-pwa-icons.mjs",
     "lint": "oxlint",
     "preview": "vite preview"
   },
@@ -27,6 +28,7 @@
     "@vitejs/plugin-react": "^6.0.4",
     "concurrently": "^9.2.1",
     "oxlint": "^1.75.0",
+    "sharp": "^0.35.4",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "vite": "^8.2.0",

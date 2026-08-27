@@ -288,7 +288,7 @@ function BrowseContent({
         </p>
       )}
 
-      <div className="pb-24">
+      <div className="mobile-page-bottom pb-8">
         {showSectionExtras && !activeGenre && !contentType && continueWatching.length > 0 && (
           <ContentRow
             title="Kaldığın Yerden Devam Et"

@@ -42,6 +42,15 @@ export function Header() {
   }, [location.pathname])
 
   useEffect(() => {
+    if (!menuOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [menuOpen])
+
+  useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
@@ -99,14 +108,14 @@ export function Header() {
           : 'bg-gradient-to-b from-black/80 to-transparent'
       }`}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8 tv:py-5">
-        <div className="flex items-center gap-4 lg:gap-8">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2.5 sm:px-6 sm:py-3 lg:px-8 tv:py-5">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-4 lg:gap-8">
           <Link
             to={isCreator ? '/creator' : '/'}
-            className="flex items-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sineoda-gold"
+            className="flex shrink-0 items-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sineoda-gold"
           >
             <img src="/icon.svg" alt="" className="h-8 w-8 rounded-lg sm:h-9 sm:w-9 tv:h-11 tv:w-11" />
-            <span className="text-xl font-bold tracking-tight text-white sm:text-2xl tv:text-3xl">
+            <span className="hidden text-lg font-bold tracking-tight text-white sm:inline sm:text-2xl tv:text-3xl">
               Sine<span className="text-sineoda-gold">oda</span>
             </span>
           </Link>
@@ -168,7 +177,7 @@ export function Header() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2 md:gap-3">
           {!isCreator && !isAdmin && user && (
             <Link
               to="/mesajlar"
@@ -335,13 +344,13 @@ export function Header() {
       </div>
 
       {menuOpen && (
-        <nav className="border-t border-white/10 px-4 py-4 md:hidden">
+        <nav className="safe-bottom max-h-[calc(100dvh-3.5rem)] overflow-y-auto border-t border-white/10 px-3 py-3 md:hidden">
           <ul className="space-y-1">
             {navItems.map((item) => (
               <li key={item.to}>
                 <Link
                   to={item.to}
-                  className={`block w-full rounded-lg px-3 py-3 text-sm font-medium ${
+                  className={`block w-full rounded-lg px-3 py-3.5 text-base font-medium ${
                     isActive(item.match) ? 'bg-white/10 text-white' : 'text-white/90 hover:bg-white/5'
                   }`}
                   onClick={() => setMenuOpen(false)}
@@ -350,6 +359,28 @@ export function Header() {
                 </Link>
               </li>
             ))}
+            {showListemLink && user && activeProfile && (
+              <li>
+                <Link
+                  to="/listem"
+                  className="block w-full rounded-lg px-3 py-3.5 text-base font-medium text-white/90 hover:bg-white/5"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Listem
+                </Link>
+              </li>
+            )}
+            {user && !isCreator && (
+              <li>
+                <Link
+                  to="/planlar"
+                  className="block w-full rounded-lg px-3 py-3.5 text-base font-medium text-white/90 hover:bg-white/5"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Abonelik
+                </Link>
+              </li>
+            )}
             {!user && (
               <li>
                 <Link

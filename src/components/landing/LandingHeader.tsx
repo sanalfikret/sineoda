@@ -62,7 +62,7 @@ export function LandingHeader({ scrolled, hiddenNavIds = [] }: LandingHeaderProp
           <InstallAppButton
             variant="ghost"
             className="hidden sm:inline-flex"
-            label="Uygulamayı indir"
+            label="Yükle"
           />
           <Link
             to="/giris"
