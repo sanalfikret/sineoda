@@ -178,19 +178,29 @@ export function Header() {
         </div>
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-2 md:gap-3">
-          {!isCreator && !isAdmin && user && (
-            <Link
-              to="/mesajlar"
-              aria-label={unreadMessages > 0 ? `${unreadMessages} okunmamış mesaj` : 'Mesajlarım'}
-              className="relative rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold tv:p-3"
-            >
-              <MessagesIcon />
-              {unreadMessages > 0 && (
-                <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-sineoda-gold px-1 text-[10px] font-bold text-sineoda-bg">
-                  {unreadMessages > 9 ? '9+' : unreadMessages}
-                </span>
-              )}
-            </Link>
+          {!isCreator && !isAdmin && (
+            user ? (
+              <Link
+                to="/mesajlar"
+                aria-label={unreadMessages > 0 ? `${unreadMessages} okunmamış mesaj` : 'Mesajlarım'}
+                className="relative rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold tv:p-3"
+              >
+                <MessagesIcon />
+                {unreadMessages > 0 && (
+                  <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-sineoda-gold px-1 text-[10px] font-bold text-sineoda-bg">
+                    {unreadMessages > 9 ? '9+' : unreadMessages}
+                  </span>
+                )}
+              </Link>
+            ) : (
+              <Link
+                to="/iletisim"
+                aria-label="İletişim"
+                className="rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold tv:p-3"
+              >
+                <MessagesIcon />
+              </Link>
+            )
           )}
 
           {!isCreator && (
@@ -382,15 +392,26 @@ export function Header() {
               </li>
             )}
             {!user && (
-              <li>
-                <Link
-                  to="/giris"
-                  className="mt-2 block w-full rounded-lg bg-sineoda-gold px-3 py-3 text-center text-sm font-semibold text-sineoda-bg"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Giriş Yap
-                </Link>
-              </li>
+              <>
+                <li>
+                  <Link
+                    to="/iletisim"
+                    className="block w-full rounded-lg px-3 py-3.5 text-base font-medium text-white/90 hover:bg-white/5"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    İletişim
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/giris"
+                    className="mt-2 block w-full rounded-lg bg-sineoda-gold px-3 py-3 text-center text-sm font-semibold text-sineoda-bg"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Giriş Yap
+                  </Link>
+                </li>
+              </>
             )}
             {user && !isAdmin && !isCreator && (
               <li>
