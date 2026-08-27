@@ -7,7 +7,7 @@ COPY . .
 # Aynı domain'de API + site: boş bırak (relative /api)
 ARG VITE_API_URL=
 ENV VITE_API_URL=$VITE_API_URL
-RUN npm run build
+RUN npm run build:cpanel
 
 FROM node:22-alpine
 WORKDIR /app/server
