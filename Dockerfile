@@ -13,7 +13,8 @@ FROM node:22-alpine
 WORKDIR /app/server
 COPY server/package.json server/package-lock.json ./
 RUN npm ci --omit=dev
-COPY server/ .
+COPY server/tsconfig.json ./
+COPY server/src ./src
 COPY --from=frontend /app/dist /app/web-dist
 
 ENV NODE_ENV=production
@@ -23,4 +24,4 @@ ENV WEB_DIST_DIR=/app/web-dist
 EXPOSE 3001
 VOLUME ["/app/server/data", "/app/server/uploads"]
 
-CMD ["npm", "start"]
+CMD ["node", "--import", "tsx", "src/index.ts"]
