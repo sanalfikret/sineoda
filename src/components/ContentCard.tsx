@@ -23,12 +23,13 @@ const HOVER_SCALE = 1.2
 /** Ana sayfa ve kategori satırlarında ortak kart genişliği */
 export const CARD_WIDTH = {
   landscape: {
-    default: 'w-[220px] sm:w-[260px] lg:w-[280px]',
-    large: 'w-[260px] sm:w-[300px] lg:w-[320px]',
+    /** Mobilde tam 2 kart (yarım kart yok); sm+ sabit genişlik */
+    default: 'w-[calc((100vw-2.75rem)/2)] sm:w-[260px] lg:w-[280px]',
+    large: 'w-[calc((100vw-2.75rem)/2)] sm:w-[300px] lg:w-[320px]',
   },
   portrait: {
-    default: 'w-[120px] sm:w-[140px]',
-    large: 'w-[140px] sm:w-[160px]',
+    default: 'w-[calc((100vw-2.75rem)/3)] sm:w-[140px]',
+    large: 'w-[calc((100vw-2.75rem)/3)] sm:w-[160px]',
   },
 } as const
 

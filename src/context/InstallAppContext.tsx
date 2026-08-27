@@ -1,11 +1,14 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
   type BeforeInstallPromptEvent,
   detectInstallPlatform,
   dismissInstallBanner,
   isInstallBannerDismissed,
+  isMobileInstallPlatform,
   isStandaloneDisplayMode,
+  markAutoInstallPrompted,
   type InstallPlatform,
+  wasAutoInstallPrompted,
 } from '../utils/pwaInstall'
 
 interface InstallAppContextValue {
@@ -13,7 +16,7 @@ interface InstallAppContextValue {
   isStandalone: boolean
   canNativeInstall: boolean
   isBannerDismissed: boolean
-  installApp: () => Promise<void>
+  installApp: () => Promise<boolean>
   openInstallGuide: () => void
   dismissBanner: () => void
 }
@@ -24,8 +27,23 @@ export function InstallAppProvider({ children }: { children: ReactNode }) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [isStandalone, setIsStandalone] = useState(false)
   const [platform, setPlatform] = useState<InstallPlatform>('unknown')
-  const [guideOpen, setGuideOpen] = useState(false)
   const [bannerDismissed, setBannerDismissed] = useState(false)
+  const [hintMessage, setHintMessage] = useState<string | null>(null)
+  const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null)
+
+  useEffect(() => {
+    deferredPromptRef.current = deferredPrompt
+  }, [deferredPrompt])
+
+  const promptNativeInstall = useCallback(async (event?: BeforeInstallPromptEvent | null) => {
+    const promptEvent = event ?? deferredPromptRef.current
+    if (!promptEvent) return false
+    await promptEvent.prompt()
+    const choice = await promptEvent.userChoice
+    setDeferredPrompt(null)
+    deferredPromptRef.current = null
+    return choice.outcome === 'accepted'
+  }, [])
 
   useEffect(() => {
     setIsStandalone(isStandaloneDisplayMode())
@@ -38,7 +56,23 @@ export function InstallAppProvider({ children }: { children: ReactNode }) {
 
     const handler = (event: Event) => {
       event.preventDefault()
-      setDeferredPrompt(event as BeforeInstallPromptEvent)
+      const installEvent = event as BeforeInstallPromptEvent
+      setDeferredPrompt(installEvent)
+      deferredPromptRef.current = installEvent
+
+      const currentPlatform = detectInstallPlatform()
+      const canAutoPrompt =
+        isMobileInstallPlatform(currentPlatform) &&
+        !isStandaloneDisplayMode() &&
+        !isInstallBannerDismissed() &&
+        !wasAutoInstallPrompted()
+
+      if (canAutoPrompt) {
+        markAutoInstallPrompted()
+        window.setTimeout(() => {
+          void promptNativeInstall(installEvent)
+        }, 1200)
+      }
     }
 
     window.addEventListener('beforeinstallprompt', handler)
@@ -46,28 +80,38 @@ export function InstallAppProvider({ children }: { children: ReactNode }) {
       media.removeEventListener('change', onDisplayModeChange)
       window.removeEventListener('beforeinstallprompt', handler)
     }
-  }, [])
+  }, [promptNativeInstall])
 
-  const promptNativeInstall = useCallback(async () => {
-    if (!deferredPrompt) return false
-    await deferredPrompt.prompt()
-    const choice = await deferredPrompt.userChoice
-    setDeferredPrompt(null)
-    return choice.outcome === 'accepted'
-  }, [deferredPrompt])
+  useEffect(() => {
+    if (!hintMessage) return
+    const timer = window.setTimeout(() => setHintMessage(null), 6000)
+    return () => window.clearTimeout(timer)
+  }, [hintMessage])
 
   const installApp = useCallback(async () => {
-    if (isStandalone) return
-    if (deferredPrompt) {
-      await promptNativeInstall()
-      return
+    if (isStandalone) return false
+
+    if (deferredPromptRef.current) {
+      return promptNativeInstall()
     }
-    setGuideOpen(true)
-  }, [deferredPrompt, isStandalone, promptNativeInstall])
+
+    if (platform === 'ios') {
+      setHintMessage('Safari → Paylaş → Ana Ekrana Ekle (uygulama gibi açılır)')
+      return false
+    }
+
+    if (platform === 'android') {
+      setHintMessage('Chrome menüsünden "Uygulamayı yükle" seçin')
+      return false
+    }
+
+    setHintMessage('Adres çubuğundaki "Yükle" simgesine dokunun')
+    return false
+  }, [isStandalone, platform, promptNativeInstall])
 
   const openInstallGuide = useCallback(() => {
-    if (!isStandalone) setGuideOpen(true)
-  }, [isStandalone])
+    if (!isStandalone) void installApp()
+  }, [installApp, isStandalone])
 
   const dismissBanner = useCallback(() => {
     dismissInstallBanner()
@@ -90,13 +134,13 @@ export function InstallAppProvider({ children }: { children: ReactNode }) {
   return (
     <InstallAppContext.Provider value={value}>
       {children}
-      {!isStandalone && guideOpen && (
-        <InstallGuideModal
-          platform={platform}
-          canNativeInstall={Boolean(deferredPrompt)}
-          onClose={() => setGuideOpen(false)}
-          onNativeInstall={() => void promptNativeInstall()}
-        />
+      {hintMessage && (
+        <div
+          className="safe-bottom pointer-events-none fixed inset-x-4 bottom-20 z-[85] mx-auto max-w-md rounded-xl border border-white/10 bg-sineoda-elevated/95 px-4 py-3 text-center text-sm text-white shadow-xl backdrop-blur-md sm:bottom-6"
+          role="status"
+        >
+          {hintMessage}
+        </div>
       )}
     </InstallAppContext.Provider>
   )
@@ -108,136 +152,4 @@ export function useInstallApp() {
     throw new Error('useInstallApp must be used within InstallAppProvider')
   }
   return context
-}
-
-function InstallGuideModal({
-  platform,
-  canNativeInstall,
-  onClose,
-  onNativeInstall,
-}: {
-  platform: InstallPlatform
-  canNativeInstall: boolean
-  onClose: () => void
-  onNativeInstall: () => void
-}) {
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
-
-  return (
-    <div
-      className="safe-top safe-bottom fixed inset-0 z-[90] flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-4"
-      onClick={onClose}
-      role="presentation"
-    >
-      <div
-        className="flex max-h-[min(90dvh,720px)] w-full max-w-lg flex-col rounded-t-2xl border border-white/10 bg-sineoda-bg shadow-2xl sm:rounded-2xl"
-        onClick={(event) => event.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="install-guide-title"
-      >
-        <div className="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4 sm:px-6">
-          <div className="flex items-start gap-3">
-            <img src="/icon.svg" alt="" className="h-12 w-12 shrink-0 rounded-xl" />
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sineoda-gold">Kurulum</p>
-              <h2 id="install-guide-title" className="mt-1 text-xl font-bold text-white">
-                Sineoda&apos;yı uygulama gibi kullanın
-              </h2>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="shrink-0 rounded-lg border border-white/10 px-3 py-1.5 text-sm text-white/80 hover:bg-white/5"
-          >
-            Kapat
-          </button>
-        </div>
-
-        <div className="overflow-y-auto px-5 py-5 sm:px-6">
-          {canNativeInstall ? (
-            <div className="space-y-4">
-              <p className="text-sm leading-relaxed text-white/80">
-                Tarayıcınız Sineoda&apos;yı bilgisayarınıza veya telefonunuza uygulama olarak kurmanıza izin veriyor.
-              </p>
-              <button
-                type="button"
-                onClick={onNativeInstall}
-                className="w-full rounded-lg bg-sineoda-gold py-3 text-sm font-semibold text-sineoda-bg"
-              >
-                Şimdi yükle
-              </button>
-            </div>
-          ) : (
-            <InstallSteps platform={platform} />
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function InstallSteps({ platform }: { platform: InstallPlatform }) {
-  if (platform === 'ios') {
-    return (
-      <ol className="space-y-4 text-sm leading-relaxed text-white/80">
-        <li className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <span className="font-semibold text-white">1.</span> Safari ile siteyi açın (Chrome değil).
-        </li>
-        <li className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <span className="font-semibold text-white">2.</span> Alttaki <strong>Paylaş</strong> düğmesine dokunun.
-        </li>
-        <li className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <span className="font-semibold text-white">3.</span>{' '}
-          <strong>Ana Ekrana Ekle</strong> seçeneğini seçin.
-        </li>
-        <li className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <span className="font-semibold text-white">4.</span> Sineoda ana ekranınızda uygulama gibi açılır.
-        </li>
-      </ol>
-    )
-  }
-
-  if (platform === 'android') {
-    return (
-      <ol className="space-y-4 text-sm leading-relaxed text-white/80">
-        <li className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <span className="font-semibold text-white">1.</span> Chrome ile siteyi açın.
-        </li>
-        <li className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <span className="font-semibold text-white">2.</span> Sağ üstteki menüden{' '}
-          <strong>Ana ekrana ekle</strong> veya <strong>Uygulamayı yükle</strong> seçeneğini bulun.
-        </li>
-        <li className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <span className="font-semibold text-white">3.</span> Onaylayın; Sineoda uygulama simgesiyle açılır.
-        </li>
-      </ol>
-    )
-  }
-
-  return (
-    <ol className="space-y-4 text-sm leading-relaxed text-white/80">
-      <li className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-        <span className="font-semibold text-white">1.</span> Chrome veya Edge ile siteyi açın.
-      </li>
-      <li className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-        <span className="font-semibold text-white">2.</span> Adres çubuğunun sağındaki{' '}
-        <strong>Yükle / Bilgisayara ekle</strong> simgesine tıklayın.
-      </li>
-      <li className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-        <span className="font-semibold text-white">3.</span> Alternatif: menüden{' '}
-        <strong>Uygulamayı yükle</strong> veya <strong>Ana ekrana ekle</strong>.
-      </li>
-      <li className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-        <span className="font-semibold text-white">4.</span> Sineoda masaüstünde ayrı bir pencere gibi çalışır.
-      </li>
-    </ol>
-  )
 }

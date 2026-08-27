@@ -10,7 +10,7 @@ interface InstallAppButtonProps {
 export function InstallAppButton({
   className = '',
   variant = 'ghost',
-  label = 'Uygulamayı indir',
+  label = 'Yükle',
   onClick,
 }: InstallAppButtonProps) {
   const { isStandalone, installApp } = useInstallApp()
@@ -52,7 +52,7 @@ export function InstallAppMenuItem({ onNavigate }: { onNavigate?: () => void }) 
         void installApp()
       }}
     >
-      Uygulamayı indir
+      Yükle
     </button>
   )
 }
@@ -62,22 +62,22 @@ export function InstallAppStatusCard() {
 
   return (
     <section className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
-      <h2 className="text-lg font-semibold text-white">Uygulama kurulumu</h2>
+      <h2 className="text-lg font-semibold text-white">Mobil uygulama</h2>
       {isStandalone ? (
         <p className="mt-2 text-sm text-emerald-300">
-          Sineoda cihazınıza uygulama olarak yüklü. Ana ekrandan veya masaüstünden açabilirsiniz.
+          Sineoda telefonunuza yüklü. Ana ekrandan uygulama gibi açılır.
         </p>
       ) : (
         <>
           <p className="mt-2 text-sm text-sineoda-muted">
-            Sineoda&apos;yı telefona, tablete veya bilgisayara uygulama gibi ekleyin — mağaza indirmesi gerekmez.
+            Sineoda&apos;yı telefona uygulama olarak yükleyin — mağaza veya APK gerekmez.
           </p>
           <button
             type="button"
             onClick={() => void installApp()}
             className="mt-4 rounded-lg bg-sineoda-gold px-4 py-2.5 text-sm font-semibold text-sineoda-bg hover:brightness-110"
           >
-            Uygulamayı indir
+            Yükle
           </button>
         </>
       )}

@@ -108,9 +108,9 @@ export function ContentRow({
       ) : (
         <div
           ref={rowRef}
-          className={`hide-scrollbar overflow-x-auto overflow-y-hidden ${BROWSE_TRACK_PX}`}
+          className={`hide-scrollbar overflow-x-auto overflow-y-hidden scroll-pl-4 scroll-pr-4 ${BROWSE_TRACK_PX}`}
         >
-          <div className={`flex snap-x snap-mandatory items-start overflow-visible ${BROWSE_CARD_GAP_X}`}>
+          <div className={`flex snap-x snap-mandatory items-start overflow-visible ${BROWSE_CARD_GAP_X} pr-1`}>
             {items.map((item) => (
               <ContentCard
                 key={item.id}

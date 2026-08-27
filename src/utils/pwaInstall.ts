@@ -1,6 +1,7 @@
 export type InstallPlatform = 'ios' | 'android' | 'desktop' | 'unknown'
 
 const DISMISS_KEY = 'sineoda-install-dismissed-until'
+const AUTO_PROMPT_KEY = 'sineoda-install-auto-prompted'
 
 export interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>
@@ -46,4 +47,24 @@ export function clearInstallBannerDismissal() {
   } catch {
     // ignore
   }
+}
+
+export function wasAutoInstallPrompted() {
+  try {
+    return sessionStorage.getItem(AUTO_PROMPT_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function markAutoInstallPrompted() {
+  try {
+    sessionStorage.setItem(AUTO_PROMPT_KEY, '1')
+  } catch {
+    // ignore
+  }
+}
+
+export function isMobileInstallPlatform(platform: InstallPlatform) {
+  return platform === 'ios' || platform === 'android'
 }
