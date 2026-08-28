@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # ACİL 502 kurtarma — /opt/sineoda içinde: bash deploy/recover-vps.sh
+# (git pull + rebuild + container temizliği — eksik dosya / eski image için gerekli)
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -12,6 +13,12 @@ else
   echo "docker-compose bulunamadı."
   exit 1
 fi
+
+echo ">>> git pull"
+git pull
+
+echo ">>> build (kod güncellendi; birkaç dakika sürebilir)"
+$DC build
 
 echo ">>> eski container temizle (KeyError ContainerConfig fix)"
 $DC down --remove-orphans 2>/dev/null || true
