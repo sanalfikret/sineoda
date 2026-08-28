@@ -10,6 +10,8 @@
     "build": "tsc -b && vite build",
     "build:cpanel": "vite build",
     "build:server": "npm run build --prefix server",
+    "check:server": "node scripts/check-server-boot.mjs",
+    "check:deploy": "npm run check:server && npm run build:cpanel",
     "icons": "node scripts/generate-pwa-icons.mjs",
     "lint": "oxlint",
     "preview": "vite preview"
