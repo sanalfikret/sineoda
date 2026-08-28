@@ -130,7 +130,7 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
     setPlaying(true)
   }, [])
 
-  const { guardState, confirmStillWatching } = usePlaybackGuard({
+  const { guardState, guardMessage, confirmStillWatching } = usePlaybackGuard({
     enabled: Boolean(target && canTrack),
     contentId: target?.item.id,
     episodeId: target?.episodeId,
@@ -308,6 +308,7 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
       {guardState !== 'playing' && (
         <PlaybackGuardOverlay
           mode={guardState}
+          message={guardMessage}
           onContinue={confirmStillWatching}
           onClose={handleClose}
         />

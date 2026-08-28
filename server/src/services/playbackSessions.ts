@@ -12,7 +12,11 @@ export type PlaybackSessionRow = {
   last_seen_at: string
 }
 
-export function claimPlaybackSession(input: {
+function isSessionFresh(lastSeenAt: string) {
+  return Date.now() - new Date(lastSeenAt).getTime() < PLAYBACK_STALE_MS
+}
+
+export function tryClaimPlaybackSession(input: {
   userId: string
   sessionId: string
   profileId: string | null
@@ -25,6 +29,14 @@ export function claimPlaybackSession(input: {
     [input.userId],
   )
 
+  if (
+    existing &&
+    existing.session_id !== input.sessionId &&
+    isSessionFresh(existing.last_seen_at)
+  ) {
+    return { ok: false as const, reason: 'other_device' as const }
+  }
+
   if (existing) {
     dbRun(
       `UPDATE playback_sessions
@@ -32,9 +44,7 @@ export function claimPlaybackSession(input: {
        WHERE user_id = ?`,
       [input.sessionId, input.profileId, input.contentId, input.episodeId, now, input.userId],
     )
-    return {
-      previousSessionId: existing.session_id !== input.sessionId ? existing.session_id : null,
-    }
+    return { ok: true as const }
   }
 
   dbRun(
@@ -42,7 +52,7 @@ export function claimPlaybackSession(input: {
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [input.userId, input.sessionId, input.profileId, input.contentId, input.episodeId, now, now],
   )
-  return { previousSessionId: null }
+  return { ok: true as const }
 }
 
 export function touchPlaybackSession(userId: string, sessionId: string) {
@@ -51,10 +61,10 @@ export function touchPlaybackSession(userId: string, sessionId: string) {
     [userId],
   )
   if (!row) {
-    return { active: false as const, reason: 'no_session' as const }
+    return { active: false as const, reason: 'no_session' as const, profileId: null as string | null }
   }
   if (row.session_id !== sessionId) {
-    return { active: false as const, reason: 'other_device' as const }
+    return { active: false as const, reason: 'other_device' as const, profileId: row.profile_id }
   }
 
   const now = new Date().toISOString()
@@ -63,7 +73,7 @@ export function touchPlaybackSession(userId: string, sessionId: string) {
     userId,
     sessionId,
   ])
-  return { active: true as const }
+  return { active: true as const, profileId: row.profile_id }
 }
 
 export function stopPlaybackSession(userId: string, sessionId: string) {

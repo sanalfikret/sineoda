@@ -10,8 +10,7 @@ alwaysApply: true
 - Eski veritabanı yedeklerini geri yüklemeyi **önerme veya zorlama**.
 - Kayıp eski üyelik/admin verisi için restore script'leri çalıştırma — kullanıcı bilinçli sıfırdan test ediyor.
 - Odak: **yeni kayıt + admin değişikliği deploy sonrası kalıyor mu?**
-- Günlük izleme kotası (3 film / 300 dk) **henüz yok** — kullanıcı isteyene kadar ekleme.
-- Tek cihaz + 15 dk idle koruması **aktif** (playback guard).
+- Günlük kota **aktif**: günde 3 içerik veya 300 dk (İstanbul saati), play ile sayılır; idle süre de dakikaya girer.
 - Deploy sonrası doğrulama: `curl -s http://127.0.0.1:3001/api/health` → `storage.dbExists: true`, `userCount` deploy öncesiyle aynı veya artmış olmalı (düşmemeli).
 
 ## Gerçek yayın (production) — henüz değil
