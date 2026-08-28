@@ -30,6 +30,14 @@ for f in "${required[@]}"; do
   fi
 done
 
+mkdir -p "${PERSIST_DIR:-./persistent}/data" "${PERSIST_DIR:-./persistent}/uploads"
+
+echo ">>> eski docker volume varsa host diske taşı (tek seferlik)"
+bash deploy/migrate-persistent.sh || true
+
+echo ">>> yedek al"
+bash deploy/backup-vps.sh
+
 echo ">>> build (site birkaç dakika kapalı olabilir)"
 $DC build
 
@@ -52,8 +60,13 @@ done
 
 if [ "$ok" -eq 1 ]; then
   echo "OK — site ayakta."
-  curl -sf "http://127.0.0.1:${HOST_PORT:-3001}/api/health" | head -c 120 || true
+  HEALTH=$(curl -sf "http://127.0.0.1:${HOST_PORT:-3001}/api/health" || true)
+  echo "$HEALTH" | head -c 300 || true
   echo ""
+  if echo "$HEALTH" | grep -q '"dbExists":false'; then
+    echo "UYARI: Veritabanı dosyası yok — persistent/data kontrol et!"
+    exit 1
+  fi
 else
   echo "HATA — container ayakta değil. Log:"
   $DC logs --tail=40

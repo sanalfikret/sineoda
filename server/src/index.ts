@@ -1,9 +1,10 @@
 import cors from 'cors'
 import express from 'express'
+import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { config } from './config.js'
-import { initDatabase, uploadsDir, dbAll } from './db.js'
+import { initDatabase, uploadsDir, dbAll, dbGet } from './db.js'
 import { mapContent } from './mappers.js'
 import billingRoutes from './routes/billing.js'
 import episodeRoutes from './routes/episodes.js'
@@ -105,10 +106,28 @@ app.use(express.urlencoded({ extended: true }))
 app.use('/uploads', express.static(uploadsDir))
 
 app.get('/api/health', (_req, res) => {
+  const dbPath = path.join(config.dataDir, 'sineoda.db')
+  let dbSizeBytes = 0
+  let dbExists = false
+  try {
+    dbExists = fs.existsSync(dbPath)
+    if (dbExists) dbSizeBytes = fs.statSync(dbPath).size
+  } catch {
+    dbExists = false
+  }
+  const userCount = dbGet<{ count: number }>('SELECT COUNT(*) as count FROM users')?.count ?? 0
+
   res.json({
     ok: true,
     service: 'sineoda-api',
     version: 2,
+    storage: {
+      dataDir: config.dataDir,
+      uploadsDir: config.uploadsDir,
+      dbExists,
+      dbSizeBytes,
+      userCount,
+    },
     features: {
       landing: true,
       contact: true,
