@@ -1,16 +1,36 @@
 import { Router } from 'express'
+import multer from 'multer'
+import path from 'node:path'
 import { v4 as uuid } from 'uuid'
-import { config } from '../config.js'
-import { dbGet, dbRun } from '../db.js'
+import { config, publicAssetUrl } from '../config.js'
+import { dbGet, dbRun, uploadsDir } from '../db.js'
 import { createIyzicoCheckout, retrieveIyzicoCheckout } from '../services/iyzico.js'
 import { createPaytrToken, verifyPaytrCallback } from '../services/paytr.js'
-import { BILLING_PLANS, getPlan } from '../services/plans.js'
+import { BILLING_PLANS, getPlan, normalizePlanId, planRequiresStudentId } from '../services/plans.js'
 import { canUserPlay, getUserSubscription } from '../services/subscription.js'
 import { activateUserSubscription } from '../services/subscriptionActivation.js'
 import { requireAuth, type AuthRequest } from '../middleware/auth.js'
 import type { UserRow } from '../types.js'
 
 const router = Router()
+
+const studentIdUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadsDir),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase() || '.jpg'
+      cb(null, `${uuid()}${ext}`)
+    },
+  }),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed =
+      file.mimetype.startsWith('image/') ||
+      file.mimetype === 'application/pdf'
+    if (allowed) cb(null, true)
+    else cb(new Error('Öğrenci kimliği yalnızca görsel veya PDF olarak yüklenebilir.'))
+  },
+})
 
 function getClientIp(req: { headers: Record<string, unknown>; socket: { remoteAddress?: string } }) {
   const forwarded = req.headers['x-forwarded-for']
@@ -68,12 +88,23 @@ router.get('/subscription', requireAuth, (req: AuthRequest, res) => {
   })
 })
 
+router.post('/student-id', requireAuth, studentIdUpload.single('file'), (req: AuthRequest, res) => {
+  if (!req.file) {
+    res.status(400).json({ error: 'Öğrenci kimliği dosyası gerekli.' })
+    return
+  }
+  const url = publicAssetUrl(`/uploads/${req.file.filename}`)
+  dbRun('UPDATE users SET student_id_url = ? WHERE id = ?', [url, req.auth!.userId])
+  res.status(201).json({ url })
+})
+
 router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
   const planId = String(req.body.planId ?? '')
   const provider = String(req.body.provider ?? config.paymentProvider) as 'paytr' | 'iyzico'
+  const normalizedPlanId = normalizePlanId(planId)
   const plan = getPlan(planId)
 
-  if (!plan) {
+  if (!normalizedPlanId || !plan) {
     res.status(400).json({ error: 'Geçersiz plan.' })
     return
   }
@@ -84,8 +115,18 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
     return
   }
 
+  if (planRequiresStudentId(normalizedPlanId) && !user.student_id_url) {
+    res.status(400).json({
+      error: 'Öğrenci planı için öğrenci kimliği yüklemeniz gerekir.',
+      code: 'STUDENT_ID_REQUIRED',
+    })
+    return
+  }
+
+  dbRun('UPDATE users SET pending_plan_id = ? WHERE id = ?', [normalizedPlanId, user.id])
+
   if (!config.isPaymentConfigured()) {
-    const { startedAt, expiresAt } = activateUserSubscription(user.id, planId)
+    const { startedAt, expiresAt } = activateUserSubscription(user.id, normalizedPlanId)
     res.json({
       message: 'Demo modu: ödeme sağlayıcısı yapılandırılmadı, abonelik otomatik aktif edildi.',
       demoMode: true,
@@ -102,7 +143,7 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
   dbRun(
     `INSERT INTO payment_orders (id, user_id, plan_id, provider, amount, status, merchant_oid, created_at)
      VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)`,
-    [orderId, user.id, planId, provider, amountKurus, merchantOid, new Date().toISOString()],
+    [orderId, user.id, normalizedPlanId, provider, amountKurus, merchantOid, new Date().toISOString()],
   )
 
   if (provider === 'paytr') {

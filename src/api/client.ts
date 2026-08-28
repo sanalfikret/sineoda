@@ -265,10 +265,19 @@ export async function signupRequest(
   password: string,
   phone: string,
   smsCode: string,
-): Promise<{ message: string; email: string; devVerifyUrl?: string }> {
+  options?: { planId?: string; studentIdUrl?: string },
+): Promise<{ message: string; email: string; planId?: string; devVerifyUrl?: string }> {
   return api('/api/auth/signup', {
     method: 'POST',
-    body: JSON.stringify({ name, email, password, phone, smsCode }),
+    body: JSON.stringify({
+      name,
+      email,
+      password,
+      phone,
+      smsCode,
+      planId: options?.planId,
+      studentIdUrl: options?.studentIdUrl,
+    }),
   })
 }
 
@@ -597,6 +606,7 @@ export interface BillingPlan {
   interval: 'month' | 'year'
   features: string[]
   popular?: boolean
+  requiresStudentId?: boolean
 }
 
 export interface BillingProviders {
@@ -626,6 +636,16 @@ export async function startCheckout(
     method: 'POST',
     body: JSON.stringify({ planId, provider }),
   })
+}
+
+export async function uploadBillingStudentId(file: File): Promise<string> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const result = await api<{ url: string }>('/api/billing/student-id', {
+    method: 'POST',
+    body: formData,
+  })
+  return result.url
 }
 
 export async function fetchSubscription(): Promise<{

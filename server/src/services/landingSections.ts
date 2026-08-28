@@ -113,10 +113,10 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
   campaign: {
     eyebrow: 'Abonelik',
     title: 'İzlemeye bugün başla',
-    description: 'Aylık veya yıllık plan. İstediğin zaman iptal et.',
+    description: 'Öğrenci veya standart plan. Aylık yenilenir, istediğin zaman iptal et.',
     price: '₺49',
-    priceSuffix: '/ay',
-    priceNote: 'veya yıllık ₺490 — 2 ay bedava',
+    priceSuffix: "'ten başlayan /ay",
+    priceNote: 'Öğrenci planı ₺49/ay (kimlik gerekir) · Standart plan ₺69/ay',
     image: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1200&h=800&fit=crop&q=80',
     ctaPrimary: 'Ücretsiz Dene',
     ctaPrimaryLink: '/kayit',
@@ -166,7 +166,7 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
       {
         question: "Sineoda'nın maliyeti nedir?",
         answer:
-          'Aylık ₺49 veya yıllık ₺490 planlarımız mevcuttur. Yıllık planda 2 ay bedava avantajı sunulur.',
+          'Öğrenci planı aylık ₺49 (geçerli öğrenci kimliği gerekir), standart plan aylık ₺69’dur.',
       },
       {
         question: 'Nerede izleyebilirim?',
