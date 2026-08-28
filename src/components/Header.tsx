@@ -15,7 +15,7 @@ const creatorNavItems = [
 ]
 
 export function Header() {
-  const { user, activeProfile, logout, isCreator, isAdmin, clearActiveProfile } = useAuth()
+  const { user, activeProfile, logout, isCreator, clearActiveProfile } = useAuth()
   const { hiddenNavIds } = useContent()
   const { openSearch } = useSearchUI()
   const navigate = useNavigate()
@@ -26,15 +26,17 @@ export function Header() {
   const [exploreOpen, setExploreOpen] = useState(false)
   const [unreadMessages, setUnreadMessages] = useState(0)
 
+  const showMemberInbox = Boolean(user && activeProfile && !isCreator && user.role === 'user')
+
   useEffect(() => {
-    if (!user || isCreator || isAdmin) {
+    if (!showMemberInbox) {
       setUnreadMessages(0)
       return
     }
     void fetchUnreadMessageCount()
       .then((data) => setUnreadMessages(data.count))
       .catch(() => setUnreadMessages(0))
-  }, [user, isCreator, isAdmin, location.pathname])
+  }, [showMemberInbox, location.pathname])
 
   useEffect(() => {
     setExploreOpen(false)
@@ -178,12 +180,12 @@ export function Header() {
         </div>
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-2 md:gap-3">
-          {!isCreator && !isAdmin && (
-            user ? (
+          {showMemberInbox && (
+            <>
               <Link
                 to="/mesajlar"
                 aria-label={unreadMessages > 0 ? `${unreadMessages} okunmamış mesaj` : 'Mesajlarım'}
-                className="relative rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold tv:p-3"
+                className="relative rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold sm:hidden tv:p-3"
               >
                 <MessagesIcon />
                 {unreadMessages > 0 && (
@@ -192,15 +194,32 @@ export function Header() {
                   </span>
                 )}
               </Link>
-            ) : (
               <Link
-                to="/iletisim"
-                aria-label="İletişim"
-                className="rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold tv:p-3"
+                to="/mesajlar"
+                className={`hidden items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold sm:inline-flex lg:px-3 lg:text-sm ${
+                  isActive((path) => path === '/mesajlar')
+                    ? 'bg-white/10 text-white'
+                    : 'text-white/75 hover:bg-white/5 hover:text-white'
+                }`}
               >
-                <MessagesIcon />
+                Mesajlarım
+                {unreadMessages > 0 && (
+                  <span className="rounded-full bg-sineoda-gold px-1.5 py-0.5 text-[10px] font-bold leading-none text-sineoda-bg">
+                    {unreadMessages > 9 ? '9+' : unreadMessages}
+                  </span>
+                )}
               </Link>
-            )
+            </>
+          )}
+
+          {!isCreator && !user && (
+            <Link
+              to="/iletisim"
+              aria-label="İletişim"
+              className="rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold tv:p-3"
+            >
+              <MessagesIcon />
+            </Link>
           )}
 
           {!isCreator && (
@@ -277,7 +296,7 @@ export function Header() {
                     </>
                   ) : (
                     <>
-                      {!isAdmin && (
+                      {showMemberInbox && (
                         <Link
                           to="/mesajlar"
                           className="flex items-center justify-between px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
@@ -380,7 +399,7 @@ export function Header() {
                 </Link>
               </li>
             )}
-            {user && !isAdmin && !isCreator && (
+            {showMemberInbox && (
               <li>
                 <Link
                   to="/mesajlar"
