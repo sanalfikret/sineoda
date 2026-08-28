@@ -1,6 +1,6 @@
 import { createRandomId } from '../utils/id'
 
-export type LandingCustomBlockType = 'richText' | 'ctaBanner' | 'imageText'
+export type LandingCustomBlockType = 'richText' | 'ctaBanner' | 'imageText' | 'contentRow'
 
 export interface LandingCustomBlock {
   /** Layout kimliği: custom:{id} */
@@ -15,6 +15,8 @@ export interface LandingCustomBlock {
   ctaLink: string
   ctaSecondaryLabel: string
   ctaSecondaryLink: string
+  /** contentRow: seçili film/dizi id'leri */
+  itemIds: string[]
 }
 
 export const CUSTOM_BLOCK_PREFIX = 'custom:'
@@ -23,6 +25,7 @@ export const CUSTOM_BLOCK_TYPE_LABELS: Record<LandingCustomBlockType, string> = 
   richText: 'Metin bloğu',
   ctaBanner: 'CTA / banner',
   imageText: 'Görsel + metin',
+  contentRow: 'Film / dizi satırı',
 }
 
 export function customBlockLayoutId(id: string) {
@@ -43,17 +46,19 @@ export function createCustomBlockId() {
 
 export function createEmptyCustomBlock(type: LandingCustomBlockType = 'richText'): LandingCustomBlock {
   const id = createCustomBlockId()
-  return {
+  const base: LandingCustomBlock = {
     id,
-    adminLabel: 'Yeni özel bölüm',
+    adminLabel: type === 'contentRow' ? 'İçerik satırı' : 'Yeni özel bölüm',
     type,
     eyebrow: '',
-    title: '',
+    title: type === 'contentRow' ? 'Öne çıkanlar' : '',
     body: '',
     image: '',
-    ctaLabel: '',
+    ctaLabel: type === 'contentRow' ? 'Tümünü gör' : '',
     ctaLink: '/kayit',
     ctaSecondaryLabel: '',
     ctaSecondaryLink: '',
+    itemIds: [],
   }
+  return base
 }

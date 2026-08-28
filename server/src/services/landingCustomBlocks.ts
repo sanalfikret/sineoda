@@ -1,6 +1,6 @@
 import { dbGet, dbRun } from '../db.js'
 
-export type LandingCustomBlockType = 'richText' | 'ctaBanner' | 'imageText'
+export type LandingCustomBlockType = 'richText' | 'ctaBanner' | 'imageText' | 'contentRow'
 
 export interface LandingCustomBlock {
   id: string
@@ -14,10 +14,11 @@ export interface LandingCustomBlock {
   ctaLink: string
   ctaSecondaryLabel: string
   ctaSecondaryLink: string
+  itemIds: string[]
 }
 
 const SETTINGS_KEY = 'landing_custom_blocks'
-const VALID_TYPES: LandingCustomBlockType[] = ['richText', 'ctaBanner', 'imageText']
+const VALID_TYPES: LandingCustomBlockType[] = ['richText', 'ctaBanner', 'imageText', 'contentRow']
 
 function trim(value: unknown) {
   return String(value ?? '').trim()
@@ -44,6 +45,9 @@ function parseBlock(raw: unknown): LandingCustomBlock | null {
     ctaLink: trim(source.ctaLink) || '/kayit',
     ctaSecondaryLabel: trim(source.ctaSecondaryLabel),
     ctaSecondaryLink: trim(source.ctaSecondaryLink),
+    itemIds: Array.isArray(source.itemIds)
+      ? source.itemIds.map((entry) => trim(entry)).filter(Boolean)
+      : [],
   }
 }
 

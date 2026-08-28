@@ -31,6 +31,7 @@ import {
   customBlockLayoutId,
   CUSTOM_BLOCK_TYPE_LABELS,
   type LandingCustomBlock,
+  type LandingCustomBlockType,
 } from '../../constants/landingCustomBlocks'
 import { getContentDisplayLabel, getContentTypeLabel } from '../../constants/contentTypes'
 import type { ContentItem, ContentType } from '../../types/content'
@@ -347,7 +348,11 @@ export function AdminLandingPage() {
   const blockSubtitle = (id: LandingLayoutBlockId): string => {
     if (isCustomLandingBlockId(id)) {
       const block = customBlocks.find((entry) => customBlockLayoutId(entry.id) === id)
-      return block ? CUSTOM_BLOCK_TYPE_LABELS[block.type] : 'Özel bölüm'
+      return block
+        ? block.type === 'contentRow'
+          ? `${CUSTOM_BLOCK_TYPE_LABELS[block.type]} · ${(block.itemIds ?? []).length} içerik`
+          : CUSTOM_BLOCK_TYPE_LABELS[block.type]
+        : 'Özel bölüm'
     }
     const builtInId = id as BuiltInLandingBlockId
     if (builtInId === 'slider') return `${sliderIds.length} içerik seçili`
@@ -357,9 +362,9 @@ export function AdminLandingPage() {
     return LANDING_BLOCK_HINTS[builtInId] ?? ''
   }
 
-  const addCustomBlock = () => {
+  const addCustomBlock = (type: LandingCustomBlockType = 'richText') => {
     try {
-      const block = createEmptyCustomBlock('richText')
+      const block = createEmptyCustomBlock(type)
       const layoutId = customBlockLayoutId(block.id) as LandingLayoutBlockId
 
       setCustomBlocks((current) => {
@@ -378,7 +383,11 @@ export function AdminLandingPage() {
       })
 
       setExpandedBlocks((current) => new Set([...current, layoutId]))
-      setMessage('Özel bölüm eklendi. Yayına almak için Kaydet\'e basın.')
+      setMessage(
+        type === 'contentRow'
+          ? 'İçerik satırı eklendi. Film seçip Kaydet\'e basın.'
+          : 'Özel bölüm eklendi. Yayına almak için Kaydet\'e basın.',
+      )
 
       requestAnimationFrame(() => {
         document.getElementById(`landing-block-${layoutId}`)?.scrollIntoView({
@@ -420,13 +429,21 @@ export function AdminLandingPage() {
       }))
       const skipped = sliderIds.length - persistedSliderIds.length
 
+      const persistedCustomBlocks = customBlocks.map((block) => ({
+        ...block,
+        itemIds:
+          block.type === 'contentRow'
+            ? (block.itemIds ?? []).filter((id) => validIds.has(id))
+            : block.itemIds ?? [],
+      }))
+
       const data = await saveLandingPageConfig({
         hero,
         sections,
         layout,
         sliderIds: persistedSliderIds,
         showcases: persistedShowcases,
-        customBlocks,
+        customBlocks: persistedCustomBlocks,
       })
 
       setHero(data.hero ?? hero)
@@ -482,6 +499,7 @@ export function AdminLandingPage() {
       return (
         <AdminLandingCustomBlockEditor
           block={block}
+          catalog={pickerCatalog}
           onChange={(next) => updateCustomBlock(id, next)}
           onRemove={() => removeCustomBlock(id)}
         />
@@ -886,17 +904,23 @@ export function AdminLandingPage() {
         </p>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed border-white/15 bg-[#11141c]/60 px-4 py-3">
+      <div className="rounded-2xl border border-dashed border-white/15 bg-[#11141c]/60 px-4 py-4">
         <p className="text-sm text-sineoda-muted">
-          Sponsor, duyuru veya özel metin bloğu ekleyebilirsiniz.
+          Yeni bölüm ekleyin — tip seçin, içerik satırına film/dizi ekleyebilirsiniz. Gizlemek için bölüm panelindeki göz
+          simgesini kullanın.
         </p>
-        <button
-          type="button"
-          onClick={addCustomBlock}
-          className="rounded-lg border border-sineoda-gold/40 px-4 py-2 text-sm font-medium text-sineoda-gold hover:bg-sineoda-gold/10"
-        >
-          + Özel bölüm ekle
-        </button>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {(Object.entries(CUSTOM_BLOCK_TYPE_LABELS) as [LandingCustomBlockType, string][]).map(([type, label]) => (
+            <button
+              key={type}
+              type="button"
+              onClick={() => addCustomBlock(type)}
+              className="rounded-lg border border-sineoda-gold/40 px-3 py-2 text-sm font-medium text-sineoda-gold hover:bg-sineoda-gold/10"
+            >
+              + {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-3">
