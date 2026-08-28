@@ -149,17 +149,6 @@ app.get('/api/bootstrap', (_req, res) => {
     const newReleases = catalog
       .filter((item) => item.isNew && item.program !== 'student_cinema')
       .slice(0, 12)
-    const studentCinemaPicks =
-      landing.studentPicks.length > 0
-        ? landing.studentPicks
-        : dbAll<ContentRow & { school_name: string | null; creator_name: string | null }>(
-            `${contentWithMetaSql}
-       WHERE ${PUBLISHED_CONTENT_SQL}
-         AND c.program = 'student_cinema'
-         AND ${MAIN_CATALOG_SQL}
-       ORDER BY c.published_at DESC
-       LIMIT 12`,
-          ).map(mapContent)
 
     let landing
     try {
@@ -179,6 +168,18 @@ app.get('/api/bootstrap', (_req, res) => {
         studentPicks: [],
       }
     }
+
+    const studentCinemaPicks =
+      landing.studentPicks.length > 0
+        ? landing.studentPicks
+        : dbAll<ContentRow & { school_name: string | null; creator_name: string | null }>(
+            `${contentWithMetaSql}
+       WHERE ${PUBLISHED_CONTENT_SQL}
+         AND c.program = 'student_cinema'
+         AND ${MAIN_CATALOG_SQL}
+       ORDER BY c.published_at DESC
+       LIMIT 12`,
+          ).map(mapContent)
 
     const studentCinemaMonthlyWinners =
       landing.monthlyWinners.length > 0
