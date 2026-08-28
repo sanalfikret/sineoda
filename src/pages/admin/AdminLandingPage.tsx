@@ -35,7 +35,14 @@ import {
   type LandingCustomBlockType,
 } from '../../constants/landingCustomBlocks'
 import { getContentDisplayLabel, getContentTypeLabel } from '../../constants/contentTypes'
-import type { ContentItem, ContentType } from '../../types/content'
+import type { ContentItem } from '../../types/content'
+import {
+  filterCatalogByPool,
+  LANDING_CONTENT_POOL_FILTERS,
+  matchesContentPool,
+  poolForShowcaseIcon,
+  type ContentPoolId,
+} from '../../utils/contentPools'
 import { fuzzySearchMatch } from '../../utils/search'
 
 interface ShowcaseDraft {
@@ -71,37 +78,22 @@ function heroBackgroundMode(hero: LandingHeroConfig): 'image' | 'video' | 'conte
 
 const ICON_OPTIONS = [
   { value: 'dizi', label: 'Dizi' },
-  { value: 'film', label: 'Film' },
+  { value: 'film', label: 'Uzun metraj' },
+  { value: 'kisa-film', label: 'Kısa film' },
   { value: 'belgesel', label: 'Belgesel' },
-  { value: 'cocuk', label: 'Çocuk' },
+  { value: 'genc-sinema', label: 'Öğrenci filmleri' },
+  { value: 'cekim-notlari', label: 'Ders notları' },
   { value: 'dikey', label: 'Dikey Diziler' },
+  { value: 'cocuk', label: 'Çocuk / Aile' },
 ]
-
-type SliderTypeFilter = 'all' | ContentType | 'vertical'
-
-const SLIDER_TYPE_FILTERS: Array<{ id: SliderTypeFilter; label: string }> = [
-  { id: 'all', label: 'Tümü' },
-  { id: 'film', label: 'Filmler' },
-  { id: 'dizi', label: 'Diziler' },
-  { id: 'belgesel', label: 'Belgeseller' },
-  { id: 'kisa-film', label: 'Kısa Filmler' },
-  { id: 'vertical', label: 'Dikey Diziler' },
-]
-
-function matchesSliderTypeFilter(item: ContentItem, filter: SliderTypeFilter) {
-  if (filter === 'all') return true
-  if (filter === 'vertical') return item.videoFormat === 'vertical'
-  if (item.videoFormat === 'vertical') return false
-  return item.type === filter
-}
 
 function filterPickerCatalog(
   catalog: ContentItem[],
   query: string,
-  typeFilter?: SliderTypeFilter,
+  poolFilter?: ContentPoolId,
 ) {
   return catalog.filter((item) => {
-    if (typeFilter && !matchesSliderTypeFilter(item, typeFilter)) return false
+    if (poolFilter && !matchesContentPool(item, poolFilter)) return false
     if (!query.trim()) return true
     return fuzzySearchMatch(
       query,
@@ -109,6 +101,7 @@ function filterPickerCatalog(
       item.id,
       item.genres.join(' '),
       getContentTypeLabel(item.type),
+      item.program ?? 'standard',
     )
   })
 }
@@ -758,7 +751,8 @@ export function AdminLandingPage() {
               catalog={pickerCatalog}
               selectedIds={sliderIds}
               onToggle={toggleSliderItem}
-              typeFilters={SLIDER_TYPE_FILTERS}
+              poolFilters={LANDING_CONTENT_POOL_FILTERS}
+              defaultPool="platform"
               searchPlaceholder="Başlık, tür veya ID ile ara..."
             />
           </>
@@ -1036,10 +1030,10 @@ export function AdminLandingPage() {
                       </div>
                     )}
                     <ContentPicker
-                      catalog={pickerCatalog}
+                      catalog={filterCatalogByPool(pickerCatalog, poolForShowcaseIcon(showcase.icon))}
                       selectedIds={showcase.itemIds}
                       onToggle={(contentId) => toggleShowcaseItem(index, contentId)}
-                      searchPlaceholder="Bu kategori için içerik ara..."
+                      searchPlaceholder={`${ICON_OPTIONS.find((option) => option.value === showcase.icon)?.label ?? 'Kategori'} içeriği ara...`}
                     />
                   </div>
                 </section>
@@ -1240,38 +1234,40 @@ function ContentPicker({
   catalog,
   selectedIds,
   onToggle,
-  typeFilters,
+  poolFilters,
+  defaultPool = 'platform',
   searchPlaceholder = 'İçerik ara...',
   maxResults = 48,
 }: {
   catalog: ContentItem[]
   selectedIds: string[]
   onToggle: (contentId: string) => void
-  typeFilters?: Array<{ id: SliderTypeFilter; label: string }>
+  poolFilters?: Array<{ id: ContentPoolId; label: string }>
+  defaultPool?: ContentPoolId
   searchPlaceholder?: string
   maxResults?: number
 }) {
   const [query, setQuery] = useState('')
-  const [typeFilter, setTypeFilter] = useState<SliderTypeFilter>('all')
+  const [poolFilter, setPoolFilter] = useState<ContentPoolId>(defaultPool)
 
   const filteredCatalog = useMemo(
-    () => filterPickerCatalog(catalog, query, typeFilters ? typeFilter : undefined),
-    [catalog, query, typeFilter, typeFilters],
+    () => filterPickerCatalog(catalog, query, poolFilters ? poolFilter : undefined),
+    [catalog, query, poolFilter, poolFilters],
   )
 
   const visibleItems = filteredCatalog.slice(0, maxResults)
 
   return (
     <div className="mt-4 space-y-3">
-      {typeFilters && typeFilters.length > 0 && (
+      {poolFilters && poolFilters.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {typeFilters.map((filter) => (
+          {poolFilters.map((filter) => (
             <button
               key={filter.id}
               type="button"
-              onClick={() => setTypeFilter(filter.id)}
+              onClick={() => setPoolFilter(filter.id)}
               className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
-                typeFilter === filter.id
+                poolFilter === filter.id
                   ? 'bg-sineoda-gold text-sineoda-bg'
                   : 'bg-white/10 text-white/80 hover:bg-white/15'
               }`}

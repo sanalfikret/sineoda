@@ -35,7 +35,7 @@ function BrowseContent({
   const { openDetail, openPlayer } = useContentUI()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { visibleCategories, featuredContent, visibleCatalog, getContentById, isLoading, refresh, studentCinemaPicks, studentCinemaMonthlyWinners, hiddenNavIds } = useContent()
+  const { visibleCategories, featuredContent, visibleCatalog, getContentById, isLoading, refresh, studentCinemaPicks, studentCinemaCatalog, studentCinemaMonthlyWinners, hiddenNavIds } = useContent()
   const { watchlistItems } = useWatchlist()
   const { activeProfile } = useAuth()
   const activeGenre = searchParams.get('tur')
@@ -130,19 +130,27 @@ function BrowseContent({
     [contentType, activeGenre, verticalOnly, activeProfile?.isKids, studentCinemaOnly, cekimNotlariOnly],
   )
 
-  const filteredCatalog = useMemo(
-    () => filterCatalog(visibleCatalog, browseOptions),
-    [visibleCatalog, browseOptions],
-  )
+  const filteredCatalog = useMemo(() => {
+    const source = studentCinemaOnly ? studentCinemaCatalog : visibleCatalog
+    return filterCatalog(source, browseOptions)
+  }, [studentCinemaOnly, studentCinemaCatalog, visibleCatalog, browseOptions])
 
-  const rows = useMemo(
-    () =>
-      buildBrowseRows(visibleCatalog, browseOptions, visibleCategories, getContentById, {
-        studentCinemaPicks,
-        studentCinemaMonthlyWinners,
-      }),
-    [visibleCatalog, browseOptions, visibleCategories, getContentById, studentCinemaPicks, studentCinemaMonthlyWinners],
-  )
+  const rows = useMemo(() => {
+    const source = studentCinemaOnly ? studentCinemaCatalog : visibleCatalog
+    return buildBrowseRows(source, browseOptions, visibleCategories, getContentById, {
+      studentCinemaPicks,
+      studentCinemaMonthlyWinners,
+    })
+  }, [
+    studentCinemaOnly,
+    studentCinemaCatalog,
+    visibleCatalog,
+    browseOptions,
+    visibleCategories,
+    getContentById,
+    studentCinemaPicks,
+    studentCinemaMonthlyWinners,
+  ])
 
   const heroItem = useMemo(() => {
     if (cekimNotlariOnly) {

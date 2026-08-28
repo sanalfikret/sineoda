@@ -8,6 +8,7 @@ import { dedupeAllCategories } from '../services/categoryDedup.js'
 import { fillCategoriesToTarget } from '../services/categoryFill.js'
 import { mapCategoriesResponse, removeCategoryFromOrder, saveCategoryOrder, appendCategoryToOrder } from '../services/categoryOrder.js'
 import { isCekimCategoryId } from '../services/cekimNotlari.js'
+import { filterContentIdsForCategory } from '../services/contentPools.js'
 import { mapSiteNavResponse, syncLinkedNavForCategory } from '../services/siteNav.js'
 
 const router = Router()
@@ -80,8 +81,9 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
   }
 
   if (Array.isArray(req.body.itemIds)) {
+    const itemIds = filterContentIdsForCategory(categoryId, req.body.itemIds.map(String))
     dbRun('DELETE FROM category_items WHERE category_id = ?', [categoryId])
-    req.body.itemIds.forEach((contentId: string, index: number) => {
+    itemIds.forEach((contentId: string, index: number) => {
       dbRun('INSERT INTO category_items (category_id, content_id, sort_order) VALUES (?, ?, ?)', [
         categoryId, contentId, index,
       ])

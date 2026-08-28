@@ -3,6 +3,7 @@ import { resolveMediaUrl } from '../../api/client'
 import { AdminCategoryTitleField } from './AdminCategoryTitleField'
 import type { ContentCategory, ContentItem } from '../../types/content'
 import { fuzzySearchMatch } from '../../utils/search'
+import { contentAllowedInCategory } from '../../utils/contentPools'
 import {
   getNavIdForCategory,
   NAV_LABELS,
@@ -66,6 +67,7 @@ export function AdminCategoryRow({
 
   const addableItems = catalog.filter(
     (item) =>
+      contentAllowedInCategory(category.id, item) &&
       !category.itemIds.includes(item.id) &&
       fuzzySearchMatch(search, item.title, item.id, item.genres.join(' ')),
   )

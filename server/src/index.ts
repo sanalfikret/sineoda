@@ -34,7 +34,7 @@ import adsRoutes from './routes/ads.js'
 import adminAdsRoutes from './routes/adminAds.js'
 import adminSiteNavRoutes from './routes/adminSiteNav.js'
 import { PUBLISHED_CONTENT_SQL } from './services/publish.js'
-import { MAIN_CATALOG_SQL, STANDARD_PROGRAM_SQL, ensureStudentCinemaCatalog } from './services/studentCinema.js'
+import { STANDARD_PROGRAM_SQL, MAIN_CATALOG_SQL, ensureStudentCinemaCatalog } from './services/studentCinema.js'
 import { mapCategoriesResponse } from './services/categoryOrder.js'
 import { getMonthlyAwardWinnersSql } from './services/studentCinemaAwards.js'
 import { mapSiteNavResponse } from './services/siteNav.js'
@@ -135,19 +135,24 @@ app.get('/api/bootstrap', (_req, res) => {
       LEFT JOIN users u ON u.id = cr.user_id
     `
     const catalog = dbAll<ContentRow & { school_name: string | null; creator_name: string | null }>(
-      `${contentWithMetaSql} WHERE ${PUBLISHED_CONTENT_SQL} AND ${MAIN_CATALOG_SQL} ORDER BY c.title`,
+      `${contentWithMetaSql} WHERE ${PUBLISHED_CONTENT_SQL} AND ${STANDARD_PROGRAM_SQL} AND ${MAIN_CATALOG_SQL} ORDER BY c.title`,
+    ).map(mapContent)
+    const studentCinemaCatalog = dbAll<ContentRow & { school_name: string | null; creator_name: string | null }>(
+      `${contentWithMetaSql}
+       WHERE ${PUBLISHED_CONTENT_SQL}
+         AND c.program = 'student_cinema'
+         AND ${MAIN_CATALOG_SQL}
+       ORDER BY c.title`,
     ).map(mapContent)
     const featured =
-      catalog.find(
-        (item) => item.featured && item.program !== 'student_cinema',
-      ) ??
-      catalog.find((item) => item.program !== 'student_cinema') ??
+      catalog.find((item) => item.featured) ??
+      catalog[0] ??
       null
     const trailers = catalog
-      .filter((item) => item.trailerUrl && item.program !== 'student_cinema')
+      .filter((item) => item.trailerUrl)
       .slice(0, 6)
     const newReleases = catalog
-      .filter((item) => item.isNew && item.program !== 'student_cinema')
+      .filter((item) => item.isNew)
       .slice(0, 12)
 
     let landing
@@ -203,6 +208,7 @@ app.get('/api/bootstrap', (_req, res) => {
       trailers,
       newReleases,
       studentCinemaPicks,
+      studentCinemaCatalog,
       studentCinemaMonthlyWinners,
       siteNav: mapSiteNavResponse(),
       landing,

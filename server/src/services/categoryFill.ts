@@ -16,6 +16,7 @@ function parseGenres(row: ContentRow) {
 
 function matchesCategory(categoryTitle: string, categoryId: string, row: ContentRow) {
   if ((row.program ?? 'standard') === 'student_cinema') return false
+  if ((row.program ?? 'standard') === 'shooting_notes') return false
   if ((row.content_format ?? 'main') !== 'main') return false
 
   const genres = parseGenres(row)
@@ -63,7 +64,7 @@ export function fillCategoriesToTarget(target = ITEMS_PER_CATEGORY) {
     `SELECT * FROM content WHERE ${PUBLISHED_CONTENT_SQL} AND ${STANDARD_PROGRAM_SQL} AND ${MAIN_CATALOG_SQL} ORDER BY title`,
   )
   const categories = dbAll<{ id: string; title: string }>(
-    'SELECT id, title FROM categories WHERE id != ?',
+    `SELECT id, title FROM categories WHERE id != ? AND id NOT LIKE 'cekim-%'`,
     [GENC_SINEMA_CATEGORY_ID],
   )
 

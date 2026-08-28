@@ -17,6 +17,7 @@ import {
   filterVisibleCategories,
   isContentBlockedByNav,
 } from '../utils/navVisibility'
+import { isPlatformMainContent } from '../utils/contentPools'
 
 interface ContentContextValue {
   catalog: ContentItem[]
@@ -28,6 +29,7 @@ interface ContentContextValue {
   trailers: ContentItem[]
   newReleases: ContentItem[]
   studentCinemaPicks: ContentItem[]
+  studentCinemaCatalog: ContentItem[]
   studentCinemaMonthlyWinners: ContentItem[]
   cekimNotlariSections: CekimNotlariSection[]
   isLoading: boolean
@@ -59,6 +61,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const [trailers, setTrailers] = useState<ContentItem[]>([])
   const [newReleases, setNewReleases] = useState<ContentItem[]>([])
   const [studentCinemaPicks, setStudentCinemaPicks] = useState<ContentItem[]>([])
+  const [studentCinemaCatalog, setStudentCinemaCatalog] = useState<ContentItem[]>([])
   const [studentCinemaMonthlyWinners, setStudentCinemaMonthlyWinners] = useState<ContentItem[]>([])
   const [cekimNotlariSections, setCekimNotlariSections] = useState<CekimNotlariSection[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -72,6 +75,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     setTrailers(data.trailers ?? [])
     setNewReleases(data.newReleases ?? [])
     setStudentCinemaPicks(data.studentCinemaPicks ?? [])
+    setStudentCinemaCatalog(data.studentCinemaCatalog ?? data.studentCinemaPicks ?? [])
     setStudentCinemaMonthlyWinners(data.studentCinemaMonthlyWinners ?? [])
     if (data.cekimNotlari?.sections) {
       setCekimNotlariSections(data.cekimNotlari.sections)
@@ -95,35 +99,65 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     [hiddenNavIds],
   )
 
+  const platformCatalog = useMemo(
+    () => catalog.filter((item) => isPlatformMainContent(item)),
+    [catalog],
+  )
+
   const visibleCatalog = useMemo(
-    () => filterCatalogByNavVisibility(catalog, hiddenNavIds),
-    [catalog, hiddenNavIds],
+    () => filterCatalogByNavVisibility(platformCatalog, hiddenNavIds),
+    [platformCatalog, hiddenNavIds],
+  )
+
+  const cekimNotlariItems = useMemo(
+    () => cekimNotlariSections.flatMap((section) => section.items),
+    [cekimNotlariSections],
   )
 
   const visibleCategories = useMemo(() => filterVisibleCategories(categories), [categories])
 
   const getContentById = useCallback(
     (id: string): ContentItem | undefined => {
-      const fromCatalog = catalog.find((item) => item.id === id)
+      const fromCatalog = platformCatalog.find((item) => item.id === id)
+      const fromStudent = studentCinemaCatalog.find((item) => item.id === id)
       const fromPicks = studentCinemaPicks.find((item) => item.id === id)
       const fromWinners = studentCinemaMonthlyWinners.find((item) => item.id === id)
-      const base = fromCatalog ?? fromPicks ?? fromWinners
+      const fromCekim = cekimNotlariItems.find((item) => item.id === id)
+      const base = fromCatalog ?? fromStudent ?? fromPicks ?? fromWinners ?? fromCekim
       if (!base) return undefined
 
       const merged: ContentItem = {
         ...base,
         ...fromCatalog,
+        ...fromStudent,
         ...fromPicks,
         ...fromWinners,
-        credits: fromPicks?.credits ?? fromWinners?.credits ?? fromCatalog?.credits ?? base.credits,
+        ...fromCekim,
+        credits:
+          fromPicks?.credits ??
+          fromWinners?.credits ??
+          fromStudent?.credits ??
+          fromCatalog?.credits ??
+          base.credits,
         monthlyAward:
-          fromWinners?.monthlyAward ?? fromPicks?.monthlyAward ?? fromCatalog?.monthlyAward ?? base.monthlyAward,
+          fromWinners?.monthlyAward ??
+          fromPicks?.monthlyAward ??
+          fromStudent?.monthlyAward ??
+          fromCatalog?.monthlyAward ??
+          base.monthlyAward,
       }
 
       if (isContentBlockedByNav(merged, hiddenNavIds)) return undefined
       return merged
     },
-    [catalog, studentCinemaPicks, studentCinemaMonthlyWinners, hiddenNavIds],
+    [
+      platformCatalog,
+      studentCinemaCatalog,
+      studentCinemaPicks,
+      studentCinemaMonthlyWinners,
+      cekimNotlariItems,
+      hiddenNavIds,
+    ],
   )
 
   const addContent = useCallback(
@@ -271,6 +305,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       trailers,
       newReleases,
       studentCinemaPicks: visibleStudentCinemaPicks,
+      studentCinemaCatalog,
       studentCinemaMonthlyWinners: visibleStudentCinemaMonthlyWinners,
       cekimNotlariSections,
       isLoading,
@@ -298,6 +333,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       trailers,
       newReleases,
       visibleStudentCinemaPicks,
+      studentCinemaCatalog,
       visibleStudentCinemaMonthlyWinners,
       cekimNotlariSections,
       isLoading,

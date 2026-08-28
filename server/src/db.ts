@@ -422,6 +422,26 @@ function runMigrations() {
   ensureColumn('content', 'monthly_award_period', 'TEXT')
   ensureColumn('content', 'monthly_award_badge', 'TEXT')
   ensureColumn('content', 'application_declaration_json', 'TEXT')
+
+  db.run(`
+    DELETE FROM category_items
+    WHERE content_id IN (SELECT id FROM content WHERE program = 'student_cinema')
+      AND category_id != 'genc-sinema'
+  `)
+  db.run(`
+    DELETE FROM category_items
+    WHERE content_id IN (SELECT id FROM content WHERE program = 'shooting_notes')
+      AND category_id NOT LIKE 'cekim-%'
+  `)
+  db.run(`
+    DELETE FROM category_items
+    WHERE content_id IN (
+      SELECT id FROM content
+      WHERE COALESCE(program, 'standard') = 'standard'
+        AND COALESCE(content_format, 'main') = 'main'
+    )
+      AND category_id = 'genc-sinema'
+  `)
   ensureColumn('creator_documents', 'content_id', 'TEXT')
   ensureColumn('content', 'monthly_award_prize', 'TEXT')
   ensureColumn('content', 'festivals_json', "TEXT NOT NULL DEFAULT '[]'")
