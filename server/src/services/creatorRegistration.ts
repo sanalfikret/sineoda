@@ -1,9 +1,11 @@
 import { config } from '../config.js'
 import { dbGet, dbRun } from '../db.js'
 import type { CreatorRow } from '../types.js'
+import { createStudentFilmSubmission } from './studentFilmSubmission.js'
 
-export function isCreatorRegistrationPaid(creator: Pick<CreatorRow, 'program' | 'registration_paid_at'>) {
-  if ((creator.program ?? 'standard') === 'student_cinema') return true
+export function isCreatorRegistrationPaid(
+  creator: Pick<CreatorRow, 'program' | 'registration_paid_at'>,
+) {
   if (creator.registration_paid_at) return true
   if (!config.isPaymentConfigured()) return true
   return false
@@ -11,8 +13,26 @@ export function isCreatorRegistrationPaid(creator: Pick<CreatorRow, 'program' | 
 
 export function activateCreatorRegistration(userId: string) {
   const now = new Date().toISOString()
+  const creator = dbGet<CreatorRow>('SELECT * FROM creators WHERE user_id = ?', [userId])
+
+  if (
+    creator &&
+    (creator.program ?? 'standard') === 'student_cinema' &&
+    creator.pending_film_link?.trim() &&
+    creator.school_id
+  ) {
+    createStudentFilmSubmission({
+      creatorId: creator.id,
+      schoolId: creator.school_id,
+      title: creator.studio_name,
+      description: creator.bio ?? '',
+      filmLink: creator.pending_film_link.trim(),
+      now,
+    })
+  }
+
   dbRun(
-    "UPDATE creators SET registration_paid_at = ?, status = 'approved' WHERE user_id = ?",
+    "UPDATE creators SET registration_paid_at = ?, status = 'approved', pending_film_link = NULL WHERE user_id = ?",
     [now, userId],
   )
   return { paidAt: now }

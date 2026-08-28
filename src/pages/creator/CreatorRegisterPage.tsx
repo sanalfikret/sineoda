@@ -96,7 +96,7 @@ export function CreatorRegisterPage() {
         filmLink: isStudentProgram ? filmLink : undefined,
         studentIdFileUrl,
       })
-      navigate(isStudentProgram ? '/creator' : '/creator/odeme?checkout=1', { replace: true })
+      navigate('/creator/odeme?checkout=1', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kayıt başarısız.')
     } finally {

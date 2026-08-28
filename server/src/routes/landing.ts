@@ -85,6 +85,16 @@ export function getLandingConfig() {
     .map((contentId) => catalogMap.get(contentId))
     .filter((item): item is NonNullable<typeof item> => Boolean(item))
 
+  const studentPickRows = dbAll<{ content_id: string; sort_order: number }>(
+    'SELECT content_id, sort_order FROM landing_student_picks ORDER BY sort_order',
+  )
+  const studentPickContentIds = studentPickRows
+    .map((row) => row.content_id)
+    .filter((contentId) => validContentIds.has(contentId))
+  const studentPicks = studentPickContentIds
+    .map((contentId) => catalogMap.get(contentId))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item))
+
   return {
     slider,
     sliderContentIds,
@@ -95,6 +105,8 @@ export function getLandingConfig() {
     customBlocks,
     monthlyWinnerContentIds,
     monthlyWinners,
+    studentPickContentIds,
+    studentPicks,
   }
 }
 
@@ -169,6 +181,7 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
     showcases?: unknown
     customBlocks?: unknown
     monthlyWinnerIds?: unknown
+    studentPickIds?: unknown
   }
 
   let customBlocks: LandingCustomBlock[] | null = null
@@ -194,6 +207,9 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
   const monthlyWinnerIds = Array.isArray(body.monthlyWinnerIds)
     ? body.monthlyWinnerIds.map(String)
     : null
+  const studentPickIds = Array.isArray(body.studentPickIds)
+    ? body.studentPickIds.map(String)
+    : null
   const catalogIds = new Set(dbAll<{ id: string }>('SELECT id FROM content').map((row) => row.id))
 
   if (monthlyWinnerIds) {
@@ -202,6 +218,18 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
       .filter((contentId) => catalogIds.has(contentId))
       .forEach((contentId: string, index: number) => {
         dbRun('INSERT INTO landing_monthly_winners (content_id, sort_order) VALUES (?, ?)', [
+          contentId,
+          index,
+        ])
+      })
+  }
+
+  if (studentPickIds) {
+    dbRun('DELETE FROM landing_student_picks')
+    studentPickIds
+      .filter((contentId) => catalogIds.has(contentId))
+      .forEach((contentId: string, index: number) => {
+        dbRun('INSERT INTO landing_student_picks (content_id, sort_order) VALUES (?, ?)', [
           contentId,
           index,
         ])
@@ -254,7 +282,8 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
     !body.sections &&
     !body.layout &&
     !body.customBlocks &&
-    !monthlyWinnerIds
+    !monthlyWinnerIds &&
+    !studentPickIds
   ) {
     res.status(400).json({ error: 'Kaydedilecek ana sayfa verisi bulunamadı.' })
     return

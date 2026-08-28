@@ -81,7 +81,7 @@ export function requireApprovedCreator(req: AuthRequest, res: Response, next: Ne
     }
     if (!isCreatorRegistrationPaid(creator)) {
       res.status(402).json({
-        error: 'Film başvurusu için 69 TL yapımcı başvuru ücretini ödemelisiniz.',
+        error: 'Film başvurusu için başvuru ücretini ödemelisiniz.',
         code: 'CREATOR_PAYMENT_REQUIRED',
       })
       return

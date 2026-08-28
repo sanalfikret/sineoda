@@ -1,4 +1,8 @@
-export type BillingPlanId = 'standard' | 'student' | 'creator_application'
+export type BillingPlanId =
+  | 'standard'
+  | 'student'
+  | 'creator_application'
+  | 'student_cinema_application'
 
 const PLAN_ALIASES: Record<string, BillingPlanId> = {
   monthly: 'standard',
@@ -35,6 +39,15 @@ export const BILLING_PLANS = [
     audience: 'creator' as const,
     features: ['Yapımcı paneli erişimi', 'Film başvurusu gönderme', 'Gelir paylaşımı modeli'],
   },
+  {
+    id: 'student_cinema_application' as const,
+    name: 'Genç Sinema Başvuru Ücreti',
+    price: 49,
+    currency: 'TRY',
+    interval: 'once' as const,
+    audience: 'creator' as const,
+    features: ['Genç Sinema paneli erişimi', 'Film başvurusu gönderme', 'Okul ve admin incelemesi'],
+  },
 ]
 
 export function normalizePlanId(planId: string): BillingPlanId | null {
@@ -62,5 +75,14 @@ export function planExpiry(planId: string) {
 }
 
 export function isCreatorApplicationPlan(planId: string) {
-  return normalizePlanId(planId) === 'creator_application'
+  const normalized = normalizePlanId(planId)
+  return normalized === 'creator_application' || normalized === 'student_cinema_application'
+}
+
+export function getCreatorRegistrationPlanId(program: 'standard' | 'student_cinema' = 'standard') {
+  return program === 'student_cinema' ? 'student_cinema_application' : 'creator_application'
+}
+
+export function getCreatorRegistrationPrice(program: 'standard' | 'student_cinema' = 'standard') {
+  return getPlan(getCreatorRegistrationPlanId(program))?.price ?? 69
 }

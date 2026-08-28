@@ -4,8 +4,8 @@ import { v4 as uuid } from 'uuid'
 import { config } from '../config.js'
 import { dbGet, dbRun } from '../db.js'
 import { signToken } from '../middleware/auth.js'
-import { mapUser, slugify } from '../mappers.js'
-import { parseContentAddedAt } from '../services/license.js'
+import { mapUser } from '../mappers.js'
+import { createStudentFilmSubmission } from '../services/studentFilmSubmission.js'
 import type { UserRow } from '../types.js'
 
 const router = Router()
@@ -19,62 +19,6 @@ function isValidHttpUrl(value: string) {
   } catch {
     return false
   }
-}
-
-function createStudentFilmSubmission(input: {
-  creatorId: string
-  schoolId: string
-  title: string
-  description: string
-  filmLink: string
-  now: string
-}) {
-  let contentId = slugify(input.title)
-  let counter = 1
-  while (dbGet('SELECT id FROM content WHERE id = ?', [contentId])) {
-    contentId = `${slugify(input.title)}-${counter++}`
-  }
-
-  dbRun(
-    `INSERT INTO content (
-      id, title, description, year, duration, rating, type, genres, poster, backdrop,
-      video_url, source_video_url, stream_provider, trailer_url, video_format, is_new, new_until, featured,
-      subtitles_json, credits_json, content_added_at, license_expires_at, published_at,
-      creator_id, review_status, program, content_format, parent_content_id, school_id, school_review_status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      contentId,
-      input.title,
-      input.description,
-      new Date().getFullYear(),
-      '',
-      '13+',
-      'film',
-      '[]',
-      '',
-      '',
-      input.filmLink,
-      input.filmLink,
-      'custom',
-      '',
-      'standard',
-      0,
-      null,
-      0,
-      '[]',
-      '{}',
-      parseContentAddedAt(input.now),
-      null,
-      null,
-      input.creatorId,
-      'pending',
-      'student_cinema',
-      'main',
-      null,
-      input.schoolId,
-      'pending',
-    ],
-  )
 }
 
 function mapCreatorUser(user: UserRow) {
@@ -200,15 +144,19 @@ router.post('/signup', (req, res) => {
           .replace(/^\+90/, '0')
           .replace(/^0(\d{10})$/, '+90$1')
       : null
-  const registrationPaidAt =
-    creatorProgram === 'student_cinema' || !config.isPaymentConfigured() ? now : null
+  const paymentConfigured = config.isPaymentConfigured()
+  const registrationPaidAt = paymentConfigured ? null : now
+  const pendingFilmLink =
+    creatorProgram === 'student_cinema' && paymentConfigured
+      ? String(filmLink ?? '').trim()
+      : null
 
   dbRun(
     'INSERT INTO users (id, name, email, password_hash, role, created_at, phone) VALUES (?, ?, ?, ?, ?, ?, ?)',
     [userId, name.trim(), normalizedEmail, hash, 'creator', now, normalizedPhone],
   )
   dbRun(
-    'INSERT INTO creators (id, user_id, studio_name, bio, status, legal_accepted_at, created_at, program, school_id, project_crew, registration_paid_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO creators (id, user_id, studio_name, bio, status, legal_accepted_at, created_at, program, school_id, project_crew, registration_paid_at, pending_film_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [
       creatorId,
       userId,
@@ -221,6 +169,7 @@ router.post('/signup', (req, res) => {
       resolvedSchoolId,
       creatorProgram === 'student_cinema' ? String(projectCrew).trim() : '',
       registrationPaidAt,
+      pendingFilmLink,
     ],
   )
 
@@ -231,7 +180,7 @@ router.post('/signup', (req, res) => {
     )
   }
 
-  if (creatorProgram === 'student_cinema' && resolvedSchoolId) {
+  if (creatorProgram === 'student_cinema' && resolvedSchoolId && !paymentConfigured) {
     const normalizedFilmLink = String(filmLink ?? '').trim()
     createStudentFilmSubmission({
       creatorId,
