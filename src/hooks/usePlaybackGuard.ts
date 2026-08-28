@@ -2,12 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { getToken, heartbeatPlaybackSession, startPlaybackSession, stopPlaybackSession } from '../api/client'
 import type { PlaybackGuardMode } from '../components/PlaybackGuardOverlay'
 import { PLAYBACK_HEARTBEAT_MS, PLAYBACK_IDLE_CLOSE_MS, PLAYBACK_IDLE_MS } from '../constants/playbackGuard'
+import { isTvDevice } from '../utils/tvDevice'
 import { getSessionId } from '../utils/sessionId'
 
 interface UsePlaybackGuardOptions {
   enabled: boolean
   contentId?: string
   episodeId?: string
+  isVideoPlaying?: () => boolean
   onClose: () => void
   pauseVideo: () => void
   resumeVideo: () => void
@@ -22,6 +24,7 @@ export function usePlaybackGuard({
   enabled,
   contentId,
   episodeId,
+  isVideoPlaying,
   onClose,
   pauseVideo,
   resumeVideo,
@@ -119,6 +122,13 @@ export function usePlaybackGuard({
 
     const idleCheck = window.setInterval(() => {
       if (guardStateRef.current === 'other_device' || guardStateRef.current === 'daily_limit') return
+
+      // TV: video oynarken kumanda hareketi şart değil — gerçekten izleniyor say
+      if (isTvDevice() && isVideoPlaying?.()) {
+        lastActivityRef.current = Date.now()
+        return
+      }
+
       const idleFor = Date.now() - lastActivityRef.current
       if (idleFor >= PLAYBACK_IDLE_MS && guardStateRef.current === 'playing') {
         pauseVideo()
@@ -169,6 +179,7 @@ export function usePlaybackGuard({
     resumeVideo,
     collectWatchSeconds,
     flushWatchSeconds,
+    isVideoPlaying,
   ])
 
   return {
