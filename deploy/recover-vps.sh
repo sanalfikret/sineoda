@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# /opt/sineoda içinde: bash deploy/update-vps.sh
+# ACİL 502 kurtarma — /opt/sineoda içinde: bash deploy/recover-vps.sh
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -13,12 +13,6 @@ else
   exit 1
 fi
 
-echo ">>> git pull"
-git pull
-
-echo ">>> build (site birkaç dakika kapalı olabilir)"
-$DC build
-
 echo ">>> eski container temizle (KeyError ContainerConfig fix)"
 $DC down --remove-orphans 2>/dev/null || true
 docker rm -f $(docker ps -aq --filter "name=sineoda") 2>/dev/null || true
@@ -26,9 +20,9 @@ docker rm -f $(docker ps -aq --filter "name=sineoda") 2>/dev/null || true
 echo ">>> container başlat"
 $DC up -d
 
-echo ">>> sağlık kontrolü bekleniyor..."
+echo ">>> bekleniyor..."
 ok=0
-for i in $(seq 1 45); do
+for i in $(seq 1 30); do
   if curl -sf "http://127.0.0.1:${HOST_PORT:-3001}/api/health" >/dev/null 2>&1; then
     ok=1
     break
@@ -38,10 +32,11 @@ done
 
 if [ "$ok" -eq 1 ]; then
   echo "OK — site ayakta."
-  curl -sf "http://127.0.0.1:${HOST_PORT:-3001}/api/health" | head -c 120 || true
+  curl -sf "http://127.0.0.1:${HOST_PORT:-3001}/api/health" | head -c 150 || true
   echo ""
+  curl -sI "http://127.0.0.1/" | head -1 || true
 else
-  echo "HATA — container ayakta değil. Log:"
-  $DC logs --tail=40
+  echo "HATA — log:"
+  $DC logs --tail=50
   exit 1
 fi
