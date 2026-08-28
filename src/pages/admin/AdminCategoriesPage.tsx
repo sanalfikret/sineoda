@@ -9,6 +9,8 @@ import { useContent } from '../../context/ContentContext'
 export function AdminCategoriesPage() {
   const {
     catalog,
+    studentCinemaCatalog,
+    cekimNotlariSections,
     categories,
     hiddenNavIds,
     addCategory,
@@ -45,7 +47,20 @@ export function AdminCategoriesPage() {
     resetListFromServer,
   } = useAdminCategoryList({ categories: mainCategories, reorderCategories })
 
-  const catalogById = useMemo(() => new Map(catalog.map((item) => [item.id, item])), [catalog])
+  const adminPickerCatalog = useMemo(() => {
+    const cekimItems = cekimNotlariSections.flatMap((section) => section.items)
+    const seen = new Set<string>()
+    return [...catalog, ...studentCinemaCatalog, ...cekimItems].filter((item) => {
+      if (seen.has(item.id)) return false
+      seen.add(item.id)
+      return true
+    })
+  }, [catalog, studentCinemaCatalog, cekimNotlariSections])
+
+  const catalogById = useMemo(
+    () => new Map(adminPickerCatalog.map((item) => [item.id, item])),
+    [adminPickerCatalog],
+  )
 
   const handleAddCategory = async () => {
     if (!newTitle.trim()) return
@@ -186,7 +201,7 @@ export function AdminCategoriesPage() {
             dragging={draggingId === category.id}
             savingOrder={savingOrder}
             catalogById={catalogById}
-            catalog={catalog}
+            catalog={adminPickerCatalog}
             search={searchByCategory[category.id] ?? ''}
             onToggleExpanded={() => toggleExpanded(category.id)}
             onDelete={() => void handleDeleteCategory(category.id, category.title)}

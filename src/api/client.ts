@@ -192,6 +192,7 @@ export interface BootstrapResponse {
   trailers: ContentItem[]
   newReleases: ContentItem[]
   studentCinemaPicks?: ContentItem[]
+  studentCinemaCatalog?: ContentItem[]
   studentCinemaMonthlyWinners?: ContentItem[]
   siteNav?: SiteNavConfig
   landing?: LandingConfigResponse

@@ -24,6 +24,7 @@ import {
   saveLandingSectionsConfig,
   type LandingSectionsConfig,
 } from '../services/landingSections.js'
+import { filterContentIdsForPool, poolForShowcaseIcon } from '../services/contentPools.js'
 import type { ContentRow } from '../types.js'
 
 const router = Router()
@@ -267,9 +268,12 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
           [id, title, String(showcase.icon ?? 'film'), String(showcase.description ?? ''), index],
         )
 
-        ;(showcase.itemIds ?? [])
-          .filter((contentId) => catalogIds.has(contentId))
-          .forEach((contentId: string, itemIndex: number) => {
+        ;(filterContentIdsForPool(
+          poolForShowcaseIcon(String(showcase.icon ?? 'film')),
+          (showcase.itemIds ?? [])
+            .map(String)
+            .filter((contentId) => catalogIds.has(contentId)),
+        ) as string[]).forEach((contentId: string, itemIndex: number) => {
             dbRun(
               'INSERT INTO landing_showcase_items (showcase_id, content_id, sort_order) VALUES (?, ?, ?)',
               [id, contentId, itemIndex],
