@@ -87,6 +87,7 @@ export interface CreatorRow {
   school_id?: string | null
   project_crew?: string
   registration_paid_at?: string | null
+  pending_film_link?: string | null
 }
 
 export interface FilmSchoolRow {

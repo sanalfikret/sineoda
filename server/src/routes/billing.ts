@@ -6,7 +6,7 @@ import { config, publicAssetUrl } from '../config.js'
 import { dbGet, dbRun, uploadsDir } from '../db.js'
 import { createIyzicoCheckout, retrieveIyzicoCheckout } from '../services/iyzico.js'
 import { createPaytrToken, verifyPaytrCallback } from '../services/paytr.js'
-import { BILLING_PLANS, getPlan, isCreatorApplicationPlan, normalizePlanId, planRequiresStudentId } from '../services/plans.js'
+import { BILLING_PLANS, getCreatorRegistrationPlanId, getPlan, isCreatorApplicationPlan, normalizePlanId, planRequiresStudentId } from '../services/plans.js'
 import { activateCreatorRegistration } from '../services/creatorRegistration.js'
 import { canUserPlay, getUserSubscription, isSubscriptionRequired } from '../services/subscription.js'
 import { activateUserSubscription } from '../services/subscriptionActivation.js'
@@ -122,7 +122,18 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
       return
     }
     const creator = getCreatorForUser(user.id)
-    if (creator?.registration_paid_at) {
+    if (!creator) {
+      res.status(404).json({ error: 'Yapımcı profili bulunamadı.' })
+      return
+    }
+    const expectedPlanId = getCreatorRegistrationPlanId(
+      (creator.program ?? 'standard') as 'standard' | 'student_cinema',
+    )
+    if (normalizedPlanId !== expectedPlanId) {
+      res.status(400).json({ error: 'Bu başvuru ücreti hesap türünüz için geçerli değil.' })
+      return
+    }
+    if (creator.registration_paid_at) {
       res.status(400).json({ error: 'Yapımcı başvuru ücreti zaten ödendi.' })
       return
     }

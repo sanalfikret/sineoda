@@ -63,7 +63,7 @@ export const LANDING_BLOCK_HINTS: Partial<Record<BuiltInLandingBlockId, string>>
   manifesto: 'Üst metin bloğu',
   slider: 'Fragman ve poster satırı',
   studentMonthlyWinners: 'Admin seçimi ay birincileri — rozet ve ödül',
-  studentPicks: 'Onaylı genç sinema içerikleri — otomatik listelenir',
+  studentPicks: 'Genç Sinema seçkisi — manuel veya otomatik',
   showcases: 'Dizi, film, belgesel sekmeleri',
   journal: 'Dergi başlığı',
   features: 'Özellik kartları',

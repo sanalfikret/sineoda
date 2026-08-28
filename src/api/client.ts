@@ -237,6 +237,8 @@ export interface LandingConfigResponse {
   customBlocks?: LandingCustomBlock[]
   monthlyWinnerContentIds?: string[]
   monthlyWinners?: ContentItem[]
+  studentPickContentIds?: string[]
+  studentPicks?: ContentItem[]
 }
 
 export async function loginRequest(
@@ -444,6 +446,7 @@ export async function saveLandingPageConfig(payload: {
   }>
   customBlocks?: LandingCustomBlock[]
   monthlyWinnerIds?: string[]
+  studentPickIds?: string[]
 }): Promise<LandingConfigResponse> {
   let lastError: unknown
   for (let attempt = 0; attempt < 3; attempt += 1) {

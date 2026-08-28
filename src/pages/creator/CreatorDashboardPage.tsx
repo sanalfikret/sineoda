@@ -182,7 +182,7 @@ export function CreatorDashboardPage() {
   const canSubmitFilms =
     status !== 'rejected' &&
     status !== 'suspended' &&
-    (program === 'student_cinema' || registrationPaid)
+    registrationPaid
 
   const handleDocumentUpload = async (file: File) => {
     setDocUploading(true)
@@ -368,7 +368,7 @@ export function CreatorDashboardPage() {
             <img src="/icon.svg" alt="" className="h-9 w-9 rounded-lg" />
             <div>
               <p className="text-lg font-bold">{studioName}</p>
-              <p className="text-xs text-sineoda-muted">Sineoda Creator · {registrationPaid || program === 'student_cinema' ? 'Aktif' : 'Ödeme bekleniyor'}</p>
+              <p className="text-xs text-sineoda-muted">Sineoda Creator · {registrationPaid ? 'Aktif' : 'Ödeme bekleniyor'}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -393,10 +393,21 @@ export function CreatorDashboardPage() {
           </div>
         )}
 
-        {program === 'student_cinema' && (
+        {program === 'student_cinema' && registrationPaid && (
           <div className="mb-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 text-sm text-emerald-100">
             Genç Sinema programındasınız. Ana filminizi ve kamera arkası görüntülerinizi yükleyebilirsiniz.
             Okul onayından sonra Sineoda incelemesine alınır.
+          </div>
+        )}
+
+        {program === 'student_cinema' && !registrationPaid && status !== 'rejected' && status !== 'suspended' && (
+          <div className="mb-6 rounded-xl border border-sineoda-gold/30 bg-sineoda-gold/10 px-4 py-4 text-sm text-amber-100">
+            Film başvurunuzu tamamlamak için{' '}
+            <strong className="text-sineoda-gold">₺49 Genç Sinema başvuru ücreti</strong> ödemeniz gerekir.
+            Ödeme sonrası filminiz okul ve admin incelemesine alınır.{' '}
+            <Link to={creatorCheckoutPath()} className="font-semibold text-sineoda-gold underline">
+              Ödeme yap
+            </Link>
           </div>
         )}
 

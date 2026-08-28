@@ -304,6 +304,13 @@ function runMigrations() {
   `)
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS landing_student_picks (
+      content_id TEXT PRIMARY KEY,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    );
+  `)
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS journal_posts (
       id TEXT PRIMARY KEY,
       slug TEXT UNIQUE NOT NULL,
@@ -389,6 +396,7 @@ function runMigrations() {
   ensureColumn('creators', 'school_id', 'TEXT')
   ensureColumn('creators', 'project_crew', "TEXT NOT NULL DEFAULT ''")
   ensureColumn('creators', 'registration_paid_at', 'TEXT')
+  ensureColumn('creators', 'pending_film_link', 'TEXT')
 
   db.run(`
     UPDATE creators

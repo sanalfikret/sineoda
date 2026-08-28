@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type DragEvent } from 'react'
 import {
   resolveMediaUrl,
-  fetchBootstrap,
+  fetchAdminCatalog,
   fetchLandingConfig,
   saveLandingPageConfig,
   updateLandingLayoutConfig,
@@ -125,15 +125,16 @@ export function AdminLandingPage() {
   const [draggingBlockId, setDraggingBlockId] = useState<LandingLayoutBlockId | null>(null)
   const [sliderIds, setSliderIds] = useState<string[]>([])
   const [monthlyWinnerIds, setMonthlyWinnerIds] = useState<string[]>([])
+  const [studentPickIds, setStudentPickIds] = useState<string[]>([])
   const [showcases, setShowcases] = useState<ShowcaseDraft[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    Promise.all([fetchBootstrap(), fetchLandingConfig()])
-      .then(([bootstrap, data]) => {
-        setPickerCatalog(bootstrap.catalog)
+    Promise.all([fetchAdminCatalog(), fetchLandingConfig()])
+      .then(([adminCatalog, data]) => {
+        setPickerCatalog(adminCatalog.catalog)
         setHero(data.hero ?? DEFAULT_HERO)
         setSections(mergeLandingSections(data.sections))
         const loadedCustomBlocks = data.customBlocks ?? []
@@ -153,6 +154,11 @@ export function AdminLandingPage() {
           data.monthlyWinnerContentIds?.length
             ? data.monthlyWinnerContentIds
             : (data.monthlyWinners ?? []).map((item) => item.id),
+        )
+        setStudentPickIds(
+          data.studentPickContentIds?.length
+            ? data.studentPickContentIds
+            : (data.studentPicks ?? []).map((item) => item.id),
         )
         setShowcases(
           data.showcases.map((showcase) => ({
@@ -387,6 +393,7 @@ export function AdminLandingPage() {
     const builtInId = id as BuiltInLandingBlockId
     if (builtInId === 'slider') return `${sliderIds.length} içerik seçili`
     if (builtInId === 'studentMonthlyWinners') return `${monthlyWinnerIds.length} birinci seçili`
+    if (builtInId === 'studentPicks') return `${studentPickIds.length} film seçili`
     if (builtInId === 'showcases') return `${showcases.length} kategori şeridi`
     if (builtInId === 'faq') return `${sections.faq.items.length} soru`
     if (layout.hidden.includes(id)) return 'Misafir sayfasında gizli'
@@ -474,6 +481,7 @@ export function AdminLandingPage() {
         layout,
         sliderIds: persistedSliderIds,
         monthlyWinnerIds: monthlyWinnerIds.filter((id) => validIds.has(id)),
+        studentPickIds: studentPickIds.filter((id) => validIds.has(id)),
         showcases: persistedShowcases,
         customBlocks: persistedCustomBlocks,
       })
@@ -497,6 +505,11 @@ export function AdminLandingPage() {
         data.monthlyWinnerContentIds?.length
           ? data.monthlyWinnerContentIds
           : (data.monthlyWinners ?? []).map((item) => item.id),
+      )
+      setStudentPickIds(
+        data.studentPickContentIds?.length
+          ? data.studentPickContentIds
+          : (data.studentPicks ?? []).map((item) => item.id),
       )
       setShowcases(
         data.showcases.map((showcase) => ({
@@ -752,10 +765,80 @@ export function AdminLandingPage() {
         )
       case 'studentPicks':
         return (
-          <p className="text-sm text-sineoda-muted">
-            Onaylı Genç Sinema içerikleri otomatik listelenir. Bu bölümü gizleyebilir veya sayfadaki
-            konumunu değiştirebilirsiniz.
-          </p>
+          <>
+            <p className="text-sm text-sineoda-muted">
+              Genç Sinema seçkisini buradan düzenleyin. Liste boş bırakılırsa onaylı Genç Sinema
+              içerikleri otomatik gösterilir.
+            </p>
+            {studentPickIds.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {studentPickIds.map((contentId, index) => {
+                  const item = studentCinemaCatalog.find((entry) => entry.id === contentId)
+                  if (!item) return null
+                  return (
+                    <div
+                      key={contentId}
+                      className="flex items-center gap-2 rounded-lg border border-sineoda-gold/30 bg-sineoda-gold/10 px-2 py-1"
+                    >
+                      <img
+                        src={resolveMediaUrl(item.poster)}
+                        alt=""
+                        className="h-10 w-7 rounded object-cover"
+                      />
+                      <span className="max-w-[140px] truncate text-xs text-white">{item.title}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStudentPickIds((current) => {
+                            const next = [...current]
+                            if (index > 0) [next[index - 1], next[index]] = [next[index], next[index - 1]]
+                            return next
+                          })
+                        }}
+                        className="text-xs text-white/60 hover:text-white"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStudentPickIds((current) => {
+                            const next = [...current]
+                            if (index < next.length - 1) [next[index], next[index + 1]] = [next[index + 1], next[index]]
+                            return next
+                          })
+                        }}
+                        className="text-xs text-white/60 hover:text-white"
+                      >
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStudentPickIds((current) => current.filter((id) => id !== contentId))
+                        }
+                        className="text-xs text-red-300 hover:text-red-200"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            <ContentPicker
+              catalog={studentCinemaCatalog}
+              selectedIds={studentPickIds}
+              onToggle={(contentId) => {
+                setStudentPickIds((current) =>
+                  current.includes(contentId)
+                    ? current.filter((id) => id !== contentId)
+                    : [...current, contentId],
+                )
+              }}
+              searchPlaceholder="Genç Sinema filmi ara..."
+            />
+          </>
         )
       case 'studentMonthlyWinners':
         return (
