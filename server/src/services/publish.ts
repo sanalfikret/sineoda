@@ -43,5 +43,8 @@ export function parsePublishNowFlag(body: Record<string, unknown>): boolean | un
 /** ISO (`2026-08-26T12:00:00.000Z`) ve SQLite datetime karşılaştırması */
 export const PUBLISHED_CONTENT_SQL = `published_at IS NOT NULL AND datetime(substr(replace(published_at, 'T', ' '), 1, 19)) <= datetime('now')`
 
+/** JOIN sorgularında content alias (`c`) ile kullanın */
+export const PUBLISHED_CONTENT_SQL_C = `c.published_at IS NOT NULL AND datetime(substr(replace(c.published_at, 'T', ' '), 1, 19)) <= datetime('now')`
+
 /** journal_posts.published_at — NULL = tarihsiz yayın */
 export const JOURNAL_PUBLISHED_SQL = `status = 'published' AND (published_at IS NULL OR datetime(substr(replace(published_at, 'T', ' '), 1, 19)) <= datetime('now'))`

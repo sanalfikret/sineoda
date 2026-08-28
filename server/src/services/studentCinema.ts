@@ -8,6 +8,11 @@ export const MAIN_CATALOG_SQL = `COALESCE(content_format, 'main') = 'main'`
 
 export const STANDARD_PROGRAM_SQL = `COALESCE(program, 'standard') NOT IN ('student_cinema', 'shooting_notes')`
 
+/** JOIN sorgularında creators.program ile çakışmayı önler */
+export const MAIN_CATALOG_SQL_C = `COALESCE(c.content_format, 'main') = 'main'`
+
+export const STANDARD_PROGRAM_SQL_C = `COALESCE(c.program, 'standard') NOT IN ('student_cinema', 'shooting_notes')`
+
 export function isStudentMainRow(row: Pick<ContentRow, 'program' | 'content_format'>) {
   return (row.program ?? 'standard') === 'student_cinema' && (row.content_format ?? 'main') === 'main'
 }
