@@ -610,10 +610,42 @@ export interface BillingPlan {
   name: string
   price: number
   currency: string
-  interval: 'month' | 'year'
+  interval: 'month' | 'year' | 'once'
+  audience?: 'viewer' | 'creator'
   features: string[]
   popular?: boolean
   requiresStudentId?: boolean
+  enabled?: boolean
+}
+
+export type AdminBillingPlan = BillingPlan
+
+export async function fetchAdminBillingPlans(): Promise<{
+  plans: AdminBillingPlan[]
+  overrides: Record<string, unknown>
+}> {
+  return api('/api/admin/billing-plans')
+}
+
+export async function saveAdminBillingPlans(
+  plans: Record<
+    string,
+    {
+      name?: string
+      price?: number
+      features?: string[]
+      popular?: boolean
+      enabled?: boolean
+    }
+  >,
+) {
+  return api<{ plans: AdminBillingPlan[]; overrides: Record<string, unknown> }>(
+    '/api/admin/billing-plans',
+    {
+      method: 'PUT',
+      body: JSON.stringify({ plans }),
+    },
+  )
 }
 
 export interface BillingProviders {

@@ -13,10 +13,18 @@ interface Plan {
   id: string
   name: string
   price: number
-  interval: 'month' | 'year'
+  interval: 'month' | 'year' | 'once'
+  audience?: 'viewer' | 'creator'
   features: string[]
   popular?: boolean
   requiresStudentId?: boolean
+  enabled?: boolean
+}
+
+function planPriceSuffix(interval: Plan['interval']) {
+  if (interval === 'once') return 'tek seferlik'
+  if (interval === 'year') return '/yıl'
+  return '/ay'
 }
 
 export function PricingPage() {
@@ -51,7 +59,7 @@ export function PricingPage() {
       user ? fetchSubscription().catch(() => null) : Promise.resolve(null),
     ])
       .then(([billing, sub]) => {
-        setPlans(billing.plans)
+        setPlans(billing.plans.filter((plan) => plan.enabled !== false))
         setProviders(billing.providers)
         setProvider(billing.providers.default)
         if (sub) setSubscription({ status: sub.status, startedAt: sub.startedAt, expiresAt: sub.expiresAt })
@@ -213,7 +221,10 @@ export function PricingPage() {
                 <h2 className="text-lg font-semibold text-white">{plan.name}</h2>
                 <p className="mt-2 text-4xl font-bold text-white">
                   ₺{plan.price}
-                  <span className="text-sm font-normal text-sineoda-muted">/ay</span>
+                  <span className="text-sm font-normal text-sineoda-muted">
+                    {plan.interval === 'once' ? '' : ' '}
+                    {planPriceSuffix(plan.interval)}
+                  </span>
                 </p>
                 <ul className="mt-6 space-y-2 text-sm text-white/80">
                   {plan.features.map((feature) => (

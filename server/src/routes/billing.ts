@@ -6,7 +6,8 @@ import { config, publicAssetUrl } from '../config.js'
 import { dbGet, dbRun, uploadsDir } from '../db.js'
 import { createIyzicoCheckout, retrieveIyzicoCheckout } from '../services/iyzico.js'
 import { createPaytrToken, verifyPaytrCallback } from '../services/paytr.js'
-import { BILLING_PLANS, getCreatorRegistrationPlanId, getPlan, isCreatorApplicationPlan, normalizePlanId, planRequiresStudentId } from '../services/plans.js'
+import { getBillingPlans } from '../services/billingPlansConfig.js'
+import { getCreatorRegistrationPlanId, getPlan, isCreatorApplicationPlan, normalizePlanId, planRequiresStudentId } from '../services/plans.js'
 import { activateCreatorRegistration } from '../services/creatorRegistration.js'
 import { canUserPlay, getUserSubscription, isSubscriptionRequired } from '../services/subscription.js'
 import { activateUserSubscription } from '../services/subscriptionActivation.js'
@@ -41,7 +42,7 @@ function getClientIp(req: { headers: Record<string, unknown>; socket: { remoteAd
 
 router.get('/plans', (_req, res) => {
   res.json({
-    plans: BILLING_PLANS,
+    plans: getBillingPlans(),
     providers: {
       paytr: config.isPaytrConfigured(),
       iyzico: config.isIyzicoConfigured(),
@@ -105,7 +106,7 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
   const normalizedPlanId = normalizePlanId(planId)
   const plan = getPlan(planId)
 
-  if (!normalizedPlanId || !plan) {
+  if (!normalizedPlanId || !plan || plan.enabled === false) {
     res.status(400).json({ error: 'Geçersiz plan.' })
     return
   }
