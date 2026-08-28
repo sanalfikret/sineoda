@@ -33,8 +33,8 @@ import creatorUploadRoutes from './routes/creatorUpload.js'
 import adsRoutes from './routes/ads.js'
 import adminAdsRoutes from './routes/adminAds.js'
 import adminSiteNavRoutes from './routes/adminSiteNav.js'
-import { PUBLISHED_CONTENT_SQL } from './services/publish.js'
-import { STANDARD_PROGRAM_SQL, MAIN_CATALOG_SQL, ensureStudentCinemaCatalog } from './services/studentCinema.js'
+import { PUBLISHED_CONTENT_SQL_C } from './services/publish.js'
+import { STANDARD_PROGRAM_SQL_C, MAIN_CATALOG_SQL_C, ensureStudentCinemaCatalog } from './services/studentCinema.js'
 import { mapCategoriesResponse } from './services/categoryOrder.js'
 import { getMonthlyAwardWinnersSql } from './services/studentCinemaAwards.js'
 import { mapSiteNavResponse } from './services/siteNav.js'
@@ -135,13 +135,13 @@ app.get('/api/bootstrap', (_req, res) => {
       LEFT JOIN users u ON u.id = cr.user_id
     `
     const catalog = dbAll<ContentRow & { school_name: string | null; creator_name: string | null }>(
-      `${contentWithMetaSql} WHERE ${PUBLISHED_CONTENT_SQL} AND ${STANDARD_PROGRAM_SQL} AND ${MAIN_CATALOG_SQL} ORDER BY c.title`,
+      `${contentWithMetaSql} WHERE ${PUBLISHED_CONTENT_SQL_C} AND ${STANDARD_PROGRAM_SQL_C} AND ${MAIN_CATALOG_SQL_C} ORDER BY c.title`,
     ).map(mapContent)
     const studentCinemaCatalog = dbAll<ContentRow & { school_name: string | null; creator_name: string | null }>(
       `${contentWithMetaSql}
-       WHERE ${PUBLISHED_CONTENT_SQL}
+       WHERE ${PUBLISHED_CONTENT_SQL_C}
          AND c.program = 'student_cinema'
-         AND ${MAIN_CATALOG_SQL}
+         AND ${MAIN_CATALOG_SQL_C}
        ORDER BY c.title`,
     ).map(mapContent)
     const featured =
@@ -179,9 +179,9 @@ app.get('/api/bootstrap', (_req, res) => {
         ? landing.studentPicks
         : dbAll<ContentRow & { school_name: string | null; creator_name: string | null }>(
             `${contentWithMetaSql}
-       WHERE ${PUBLISHED_CONTENT_SQL}
+       WHERE ${PUBLISHED_CONTENT_SQL_C}
          AND c.program = 'student_cinema'
-         AND ${MAIN_CATALOG_SQL}
+         AND ${MAIN_CATALOG_SQL_C}
        ORDER BY c.published_at DESC
        LIMIT 12`,
           ).map(mapContent)
@@ -191,9 +191,9 @@ app.get('/api/bootstrap', (_req, res) => {
         ? landing.monthlyWinners
         : dbAll<ContentRow & { school_name: string | null; creator_name: string | null }>(
             `${contentWithMetaSql}
-       WHERE ${PUBLISHED_CONTENT_SQL}
+       WHERE ${PUBLISHED_CONTENT_SQL_C}
          AND c.program = 'student_cinema'
-         AND ${MAIN_CATALOG_SQL}
+         AND ${MAIN_CATALOG_SQL_C}
          AND ${getMonthlyAwardWinnersSql()}
        ORDER BY c.monthly_award_period DESC
        LIMIT 12`,
