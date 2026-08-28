@@ -14,6 +14,7 @@ export function MessagesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
 
   const viewerOnly = isAdmin || isCreator
 
@@ -48,6 +49,7 @@ export function MessagesPage() {
 
   const handleOpen = async (message: UserMessage) => {
     setSelectedId(message.id)
+    setMobileDetailOpen(true)
     if (!message.isRead) {
       try {
         await markUserMessageRead(message.id)
@@ -65,7 +67,7 @@ export function MessagesPage() {
   return (
     <div className="min-h-dvh bg-sineoda-bg text-white">
       <Header />
-      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <main className="mobile-page-bottom mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
         <div className="mb-6">
           <Link to="/" className="text-sm text-sineoda-muted hover:text-white">
             ← Ana sayfa
@@ -95,18 +97,22 @@ export function MessagesPage() {
           <p className="text-sm text-sineoda-muted">Yükleniyor...</p>
         ) : messages.length === 0 ? (
           <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-sineoda-muted">
-            Henüz mesajınız yok.
+            Henüz mesajınız yok. Admin panelinden size duyuru gönderildiğinde burada görünür.
           </p>
         ) : (
           <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
-            <div className="overflow-hidden rounded-xl border border-white/10 bg-[#11141c]">
+            <div
+              className={`overflow-hidden rounded-xl border border-white/10 bg-[#11141c] ${
+                mobileDetailOpen ? 'hidden lg:block' : 'block'
+              }`}
+            >
               <ul>
                 {messages.map((message) => (
                   <li key={message.id} className="border-b border-white/5 last:border-0">
                     <button
                       type="button"
                       onClick={() => void handleOpen(message)}
-                      className={`w-full px-4 py-3 text-left transition hover:bg-white/[0.03] ${
+                      className={`w-full px-4 py-3.5 text-left transition hover:bg-white/[0.03] ${
                         selectedId === message.id ? 'bg-white/[0.05]' : ''
                       }`}
                     >
@@ -118,6 +124,7 @@ export function MessagesPage() {
                           <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-sineoda-gold" />
                         )}
                       </div>
+                      <p className="mt-1 line-clamp-2 text-xs text-sineoda-muted">{message.body}</p>
                       <p className="mt-1 text-xs text-sineoda-muted">
                         {new Date(message.createdAt).toLocaleDateString('tr-TR')}
                       </p>
@@ -127,9 +134,20 @@ export function MessagesPage() {
               </ul>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-[#11141c] p-6">
+            <div
+              className={`rounded-xl border border-white/10 bg-[#11141c] p-5 sm:p-6 ${
+                mobileDetailOpen ? 'block' : 'hidden lg:block'
+              }`}
+            >
               {selected ? (
                 <>
+                  <button
+                    type="button"
+                    onClick={() => setMobileDetailOpen(false)}
+                    className="mb-4 text-sm text-sineoda-gold lg:hidden"
+                  >
+                    ← Mesaj listesi
+                  </button>
                   <h2 className="text-lg font-semibold text-white">{selected.subject}</h2>
                   <p className="mt-1 text-xs text-sineoda-muted">
                     {new Date(selected.createdAt).toLocaleString('tr-TR')}

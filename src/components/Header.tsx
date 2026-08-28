@@ -380,6 +380,22 @@ export function Header() {
                 </Link>
               </li>
             )}
+            {user && !isAdmin && !isCreator && (
+              <li>
+                <Link
+                  to="/mesajlar"
+                  className="flex items-center justify-between rounded-lg px-3 py-3.5 text-base font-medium text-white/90 hover:bg-white/5"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <span>Mesajlarım</span>
+                  {unreadMessages > 0 && (
+                    <span className="rounded-full bg-sineoda-gold px-2 py-0.5 text-xs font-semibold text-sineoda-bg">
+                      {unreadMessages}
+                    </span>
+                  )}
+                </Link>
+              </li>
+            )}
             {user && !isCreator && (
               <li>
                 <Link
@@ -399,7 +415,7 @@ export function Header() {
                     className="block w-full rounded-lg px-3 py-3.5 text-base font-medium text-white/90 hover:bg-white/5"
                     onClick={() => setMenuOpen(false)}
                   >
-                    İletişim
+                    Mesaj Gönder
                   </Link>
                 </li>
                 <li>
@@ -412,22 +428,6 @@ export function Header() {
                   </Link>
                 </li>
               </>
-            )}
-            {user && !isAdmin && !isCreator && (
-              <li>
-                <Link
-                  to="/mesajlar"
-                  className="flex items-center justify-between rounded-lg px-3 py-3 text-sm font-medium text-white/90 hover:bg-white/5"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  <span>Mesajlarım</span>
-                  {unreadMessages > 0 && (
-                    <span className="rounded-full bg-sineoda-gold px-2 py-0.5 text-xs font-semibold text-sineoda-bg">
-                      {unreadMessages}
-                    </span>
-                  )}
-                </Link>
-              </li>
             )}
             <li>
               <InstallAppMenuItem onNavigate={() => setMenuOpen(false)} />
