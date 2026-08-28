@@ -96,7 +96,7 @@ export function CreatorRegisterPage() {
         filmLink: isStudentProgram ? filmLink : undefined,
         studentIdFileUrl,
       })
-      navigate('/creator', { replace: true })
+      navigate(isStudentProgram ? '/creator' : '/creator/odeme?checkout=1', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kayıt başarısız.')
     } finally {
@@ -117,7 +117,7 @@ export function CreatorRegisterPage() {
             <p className="text-sm text-sineoda-muted">
               {isStudentProgram
                 ? 'Mezun veya öğrenci projenizi yüklemek için hesap oluşturun'
-                : 'Bağımsız sinemanızı Sineoda\'da yayınlayın'}
+                : 'Bağımsız sinemanızı Sineoda\'da yayınlayın — yapımcı üyeliği otomatik açılır, film onayı admin tarafından verilir'}
             </p>
           </div>
         </div>
@@ -282,6 +282,13 @@ export function CreatorRegisterPage() {
               className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-sineoda-gold"
             />
           </label>
+
+          {!isStudentProgram && (
+            <div className="rounded-xl border border-sineoda-gold/25 bg-sineoda-gold/5 px-4 py-4 text-sm text-white/85">
+              Kayıt sonrası <strong className="text-sineoda-gold">₺69</strong> yapımcı başvuru ücreti
+              ödenir. Üyeliğiniz otomatik onaylanır; filminizin yayına alınması admin incelemesine tabidir.
+            </div>
+          )}
 
           <div className="rounded-xl border border-white/10 bg-[#0d0f14] p-4">
             <p className="text-sm font-medium text-white">Yasal şartlar ve sorumluluk beyanı</p>

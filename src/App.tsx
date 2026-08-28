@@ -50,6 +50,7 @@ import { CreatorRoute } from './components/creator/CreatorRoute'
 import { CreatorLoginPage } from './pages/creator/CreatorLoginPage'
 import { CreatorRegisterPage } from './pages/creator/CreatorRegisterPage'
 import { CreatorDashboardPage } from './pages/creator/CreatorDashboardPage'
+import { CreatorPaymentPage } from './pages/creator/CreatorPaymentPage'
 
 function AuthenticatedProviders({ children }: { children: ReactNode }) {
   return (
@@ -266,6 +267,14 @@ function App() {
       <Route path="/admin/giris" element={<AdminLoginPage />} />
       <Route path="/creator/giris" element={<CreatorLoginPage />} />
       <Route path="/creator/kayit" element={<CreatorRegisterPage />} />
+      <Route
+        path="/creator/odeme"
+        element={
+          <CreatorRoute>
+            <CreatorPaymentPage />
+          </CreatorRoute>
+        }
+      />
       <Route
         path="/creator"
         element={
