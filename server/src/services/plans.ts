@@ -8,7 +8,12 @@ import {
 import { getBillingPlan, getBillingPlans } from './billingPlansConfig.js'
 
 export type { BillingPlanId, BillingPlanDefinition } from './billingPlanDefaults.js'
-export { DEFAULT_BILLING_PLANS, getCreatorRegistrationPlanId } from './billingPlanDefaults.js'
+export {
+  DEFAULT_BILLING_PLANS,
+  getCreatorRegistrationPlanId,
+  normalizePlanId,
+  isCreatorApplicationPlanId,
+} from './billingPlanDefaults.js'
 export { getBillingPlans, getBillingPlansConfig, saveBillingPlansConfig } from './billingPlansConfig.js'
 
 export function getPlan(planId: string) {
