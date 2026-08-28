@@ -1,0 +1,65 @@
+SINEODA — VERİ KALICILIĞI (VPS)
+================================
+
+Üyeler, admin ayarları, ana sayfa düzeni hepsi tek dosyada:
+  persistent/data/sineoda.db
+
+Yüklenen görseller:
+  persistent/uploads/
+
+Bu klasörler GIT'e girmez. Deploy kodu günceller; veriyi DOKUNMAZ.
+
+
+NEDEN VERİ GİDİYORDU?
+---------------------
+1. Docker "named volume" kullanılıyordu — klasör adı /opt/sinema -> /opt/sineoda
+   değişince YENİ BOŞ volume oluşuyordu.
+2. Bazen veritabanı /tmp'ye yazılıyordu — container restart = silindi.
+3. Deploy öncesi yedek yoktu.
+
+
+KALICI KURULUM (tek sefer)
+--------------------------
+cd /opt/sineoda
+git pull
+
+# Eski volume'dan veriyi kurtar (varsa)
+bash deploy/migrate-persistent.sh
+
+# .env içine ekle (deploy/env.production.example'a bak):
+# PERSIST_DIR=/opt/sineoda/persistent
+
+bash deploy/update-vps.sh
+
+
+HER DEPLOY
+----------
+cd /opt/sineoda && bash deploy/update-vps.sh
+
+Script otomatik yedek alır, sonra build eder.
+Deploy sonrası kontrol:
+  curl -s http://127.0.0.1:3001/api/health | jq .storage
+
+userCount ve dbSizeBytes sıfırlanmışsa bir şey yanlış — deploy'u durdur.
+
+
+GÜNLÜK YEDEK (cron — önerilir)
+-------------------------------
+crontab -e
+
+0 4 * * * cd /opt/sineoda && PERSIST_DIR=/opt/sineoda/persistent bash deploy/backup-vps.sh >> /var/log/sineoda-backup.log 2>&1
+
+
+ASLA YAPMA
+----------
+  docker-compose down -v          # volume siler!
+  rm -rf persistent/              # tüm veri gider!
+  /opt/sinema ile /opt/sineoda karıştırma
+
+
+SUNUCU KİRALARKEN
+-----------------
+- Minimum 20 GB disk
+- /opt/sineoda/persistent ayrı partition olabilir (en güvenlisi)
+- Haftalık yedeği bilgisayarına veya Google Drive'a indir:
+    scp root@SUNUCU:/opt/sineoda/persistent/backups/sineoda-*.db ./

@@ -5,6 +5,17 @@ alwaysApply: true
 
 # Deploy workflow (Sineoda)
 
+## Veri kalıcılığı (kritik)
+
+Canlı veri **git'te değil**, VPS'te `persistent/data/sineoda.db` dosyasında.
+
+- Deploy sadece kodu günceller; `persistent/` klasörüne dokunmaz.
+- **Asla** `docker-compose down -v` veya `rm -rf persistent/` çalıştırma.
+- Her deploy öncesi `deploy/backup-vps.sh` otomatik çalışır (`update-vps.sh` içinde).
+- Deploy sonrası `/api/health` → `storage.userCount` ve `dbSizeBytes` sıfırlanmışsa dur.
+
+Detay: `deploy/PERSISTENCE.txt`
+
 ## Push öncesi (zorunlu)
 
 Her backend değişikliğinden sonra push etmeden önce:
@@ -13,38 +24,27 @@ Her backend değişikliğinden sonra push etmeden önce:
 npm run check:deploy
 ```
 
-Bu komut sunucunun ayağa kalktığını ve frontend build'in geçtiğini doğrular. Başarısızsa **push etme**.
-
-Ek kurallar:
-- Bir modülü refactor ederken (`plans.ts` gibi), onu import eden tüm dosyaları `grep` ile kontrol et.
-- Export kaldırma/taşıma yapıldığında mutlaka `npm run check:server` çalıştır.
+Başarısızsa **push etme**.
 
 ## Commit ve push
 
-After completing user-requested feature fixes on a branch:
-
 1. Run `npm run check:deploy` — must pass.
-2. Commit all related changes on the feature branch.
-3. Merge into `main` and push `origin main` (user expects this by default for this project).
-4. Push the feature branch if it was used.
+2. Commit all related changes.
+3. Push `origin main`.
 
 ## VPS deploy (tek doğru komut)
-
-Sunucuda **her zaman**:
 
 ```bash
 cd /opt/sineoda && bash deploy/update-vps.sh
 ```
 
-`recover-vps.sh` acil durum içindir; git pull + build içerir ama `update-vps.sh` tercih edilir.
+İlk kurulum / volume taşıma: `bash deploy/migrate-persistent.sh`
 
-Doğru klasör: `/opt/sineoda` ( `/opt/sinema` değil ).
+`.env` içinde: `PERSIST_DIR=/opt/sineoda/persistent`
 
 ## Verify deploy
 
-- **Frontend**: Vercel auto-deploys from `main` (`sineoda.vercel.app`).
-- **VPS API**: `curl -sf http://127.0.0.1:3001/api/health` sunucuda OK dönmeli.
-- **Render API** (varsa): `sineoda-api.onrender.com/api/bootstrap` — yeni alanları kontrol et.
-- Tell the user when live; hard-refresh (`Ctrl+Shift+R`) if UI looks stale.
+- VPS: `curl -s http://127.0.0.1:3001/api/health` — `storage.dbExists: true`, `userCount` > 0
+- Frontend: hard-refresh (`Ctrl+Shift+R`) if UI looks stale.
 
 Do not leave fixes only on a feature branch when the user expects them live.

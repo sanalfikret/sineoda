@@ -13,9 +13,11 @@ services:
       WEB_DIST_DIR: /app/web-dist
       DATA_DIR: /app/server/data
       UPLOADS_DIR: /app/server/uploads
+      NODE_ENV: production
     volumes:
-      - sineoda-data:/app/server/data
-      - sineoda-uploads:/app/server/uploads
+      # Host disk — deploy/rebuild veriyi silmez (docker volume adı değişse bile)
+      - ${PERSIST_DIR:-./persistent}/data:/app/server/data
+      - ${PERSIST_DIR:-./persistent}/uploads:/app/server/uploads
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/api/health"]
@@ -23,7 +25,3 @@ services:
       timeout: 5s
       retries: 5
       start_period: 90s
-
-volumes:
-  sineoda-data:
-  sineoda-uploads:
