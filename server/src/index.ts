@@ -48,6 +48,7 @@ import { ensureJournalPosts } from './journalSeed.js'
 import { ensureCekimNotlariCategories } from './services/cekimNotlariCategories.js'
 import { ensureCekimNotlariDemoContent } from './services/cekimNotlariSeed.js'
 import adminCekimNotlariRoutes from './routes/adminCekimNotlari.js'
+import adminBillingPlansRoutes from './routes/adminBillingPlans.js'
 import cekimNotlariRoutes from './routes/cekimNotlari.js'
 import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureLandingShowcases, ensureFilmSchools, ensureStudentCinemaDemoFilms, ensureStudentCinemaDemoCredits, ensureCreatorDemoSeed } from './seed.js'
 import { ensureMonthlyRollover, seedDemoMonthlyIfEmpty } from './services/watchAccounting.js'
@@ -254,6 +255,7 @@ app.use('/api/messages', messagesRoutes)
 app.use('/api/ads', adsRoutes)
 app.use('/api/admin/ads', adminAdsRoutes)
 app.use('/api/admin/site-nav', adminSiteNavRoutes)
+app.use('/api/admin/billing-plans', adminBillingPlansRoutes)
 app.use('/api/admin/upload', uploadRoutes)
 
 if (config.webDistDir) {

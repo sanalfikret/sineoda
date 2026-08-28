@@ -1,15 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { fetchBillingPlans, startCheckout } from '../../api/client'
+import { fetchBillingPlans, startCheckout, type BillingPlan } from '../../api/client'
 import { CreatorAuthLayout } from '../../components/creator/CreatorAuthLayout'
 import { useAuth } from '../../context/AuthContext'
 
-function getCreatorRegistrationPlan(program?: 'standard' | 'student_cinema') {
+function getCreatorRegistrationPlanId(program?: 'standard' | 'student_cinema') {
   return program === 'student_cinema' ? 'student_cinema_application' : 'creator_application'
-}
-
-function getCreatorRegistrationPrice(program?: 'standard' | 'student_cinema') {
-  return program === 'student_cinema' ? 49 : 69
 }
 
 export function CreatorPaymentPage() {
@@ -17,6 +13,7 @@ export function CreatorPaymentPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [provider, setProvider] = useState<'paytr' | 'iyzico'>('paytr')
+  const [plan, setPlan] = useState<BillingPlan | null>(null)
   const [loading, setLoading] = useState(true)
   const [paying, setPaying] = useState(false)
   const [message, setMessage] = useState('')
@@ -24,22 +21,26 @@ export function CreatorPaymentPage() {
   const autoCheckout = searchParams.get('checkout') === '1'
 
   const program = user?.creator?.program ?? 'standard'
-  const planId = getCreatorRegistrationPlan(program)
-  const price = getCreatorRegistrationPrice(program)
+  const planId = getCreatorRegistrationPlanId(program)
   const isStudentProgram = program === 'student_cinema'
   const registrationPaid = Boolean(user?.creator?.registrationPaidAt)
 
   useEffect(() => {
     fetchBillingPlans()
-      .then((billing) => setProvider(billing.providers.default))
+      .then((billing) => {
+        setProvider(billing.providers.default)
+        const match = billing.plans.find((entry) => entry.id === planId) ?? null
+        setPlan(match)
+      })
       .finally(() => setLoading(false))
-  }, [])
+  }, [planId])
 
   const handleCheckout = useCallback(async () => {
+    if (!plan) return
     setPaying(true)
     setMessage('')
     try {
-      const result = await startCheckout(planId, provider)
+      const result = await startCheckout(plan.id, provider)
 
       if ('demoMode' in result && result.demoMode) {
         setMessage(result.message)
@@ -62,15 +63,15 @@ export function CreatorPaymentPage() {
     } finally {
       setPaying(false)
     }
-  }, [planId, provider, navigate, refreshUser, setSearchParams])
+  }, [plan, provider, navigate, refreshUser, setSearchParams])
 
   useEffect(() => {
-    if (loading || !user || !isCreator || registrationPaid || !autoCheckout || autoCheckoutStarted.current) {
+    if (loading || !user || !isCreator || registrationPaid || !autoCheckout || autoCheckoutStarted.current || !plan) {
       return
     }
     autoCheckoutStarted.current = true
     void handleCheckout()
-  }, [loading, user, isCreator, registrationPaid, autoCheckout, handleCheckout])
+  }, [loading, user, isCreator, registrationPaid, autoCheckout, handleCheckout, plan])
 
   if (!isLoading && !isCreator) {
     return null
@@ -81,13 +82,13 @@ export function CreatorPaymentPage() {
     return null
   }
 
+  const price = plan?.price ?? (isStudentProgram ? 49 : 69)
+
   return (
     <CreatorAuthLayout>
       <div className="mx-auto w-full max-w-lg px-4 py-10">
         <div className="rounded-2xl border border-white/10 bg-[#11141c] p-6 sm:p-8">
-          <h1 className="text-2xl font-bold text-white">
-            {isStudentProgram ? 'Genç Sinema Başvuru Ücreti' : 'Yapımcı Başvuru Ücreti'}
-          </h1>
+          <h1 className="text-2xl font-bold text-white">{plan?.name ?? (isStudentProgram ? 'Genç Sinema Başvuru Ücreti' : 'Yapımcı Başvuru Ücreti')}</h1>
           <p className="mt-2 text-sm text-sineoda-muted">
             {isStudentProgram
               ? 'Genç Sinema üyeliğiniz otomatik açılır. Film başvurunuzu göndermek için tek seferlik başvuru ücretini ödeyin; filminiz okul ve Sineoda incelemesine alınır.'
@@ -98,19 +99,9 @@ export function CreatorPaymentPage() {
             <p className="text-sm text-sineoda-muted">Başvuru ücreti</p>
             <p className="mt-1 text-3xl font-bold text-sineoda-gold">₺{price}</p>
             <ul className="mt-4 space-y-2 text-sm text-white/80">
-              {isStudentProgram ? (
-                <>
-                  <li>Genç Sinema paneli erişimi</li>
-                  <li>Film başvurusu gönderme</li>
-                  <li>Okul onayı ve Sineoda admin incelemesi</li>
-                </>
-              ) : (
-                <>
-                  <li>Yapımcı paneli erişimi</li>
-                  <li>Film başvurusu gönderme</li>
-                  <li>Film onayı yalnızca Sineoda admin ekibi tarafından</li>
-                </>
-              )}
+              {(plan?.features ?? []).map((feature) => (
+                <li key={feature}>{feature}</li>
+              ))}
             </ul>
           </div>
 
@@ -122,7 +113,7 @@ export function CreatorPaymentPage() {
 
           <button
             type="button"
-            disabled={paying || loading}
+            disabled={paying || loading || !plan}
             onClick={() => void handleCheckout()}
             className="mt-6 w-full rounded-lg bg-sineoda-gold py-3 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
           >
