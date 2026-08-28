@@ -1,0 +1,3 @@
+export const PLAYBACK_IDLE_MS = 15 * 60 * 1000
+export const PLAYBACK_IDLE_CLOSE_MS = 2 * 60 * 1000
+export const PLAYBACK_HEARTBEAT_MS = 15_000

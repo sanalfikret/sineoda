@@ -1,0 +1,30 @@
+---
+description: Test vs production phase — how to behave on deploy and data
+alwaysApply: true
+---
+
+# Sineoda — proje aşaması
+
+## Şu an: TEST aşaması (Fikret talimatı)
+
+- Eski veritabanı yedeklerini geri yüklemeyi **önerme veya zorlama**.
+- Kayıp eski üyelik/admin verisi için restore script'leri çalıştırma — kullanıcı bilinçli sıfırdan test ediyor.
+- Odak: **yeni kayıt + admin değişikliği deploy sonrası kalıyor mu?**
+- Günlük izleme kotası (3 film / 300 dk) **henüz yok** — kullanıcı isteyene kadar ekleme.
+- Tek cihaz + 15 dk idle koruması **aktif** (playback guard).
+- Deploy sonrası doğrulama: `curl -s http://127.0.0.1:3001/api/health` → `storage.dbExists: true`, `userCount` deploy öncesiyle aynı veya artmış olmalı (düşmemeli).
+
+## Gerçek yayın (production) — henüz değil
+
+Yayına geçmeden önce mutlaka gözden geçir:
+
+1. **Veri kalıcılığı** — `PERSIST_DIR=/opt/sineoda/persistent`, `persistent/data/sineoda.db` host diskte, bind mount aktif.
+2. **Yedek** — günlük cron `deploy/backup-vps.sh`; haftalık yedeği sunucu dışına indir.
+3. **Deploy güvenliği** — `npm run check:deploy` push öncesi; VPS'te `deploy/update-vps.sh` (asla `docker-compose down -v`).
+4. **Sağlık** — `/api/health` storage alanı; deploy sonrası `userCount` / `dbSizeBytes` kontrolü.
+5. **Ödeme / SMS / e-posta** — `.env` production değerleri; test modları kapatılmış.
+6. **Render / Vercel** — kullanılmıyorsa bağlantıları kes; tek kaynak VPS.
+7. **Rollback** — `deploy/restore-db.sh` yalnızca bilinçli acil durumda; otomatik deploy'a bağlama.
+8. **Seed davranışı** — boş DB'de demo seed OK; dolu DB'de admin/üye verisi ezilmemeli (mevcut kod buna göre).
+
+Kullanıcı "yayına geçiyoruz" dediğinde yukarıdaki maddelerin tamamını checklist olarak sun ve eksikleri kapat.

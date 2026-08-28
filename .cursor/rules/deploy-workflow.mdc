@@ -38,7 +38,7 @@ Başarısızsa **push etme**.
 cd /opt/sineoda && bash deploy/update-vps.sh
 ```
 
-İlk kurulum / volume taşıma: `bash deploy/migrate-persistent.sh`
+**Test aşaması:** Eski DB restore etme; deploy sonrası `userCount` düşmediyse OK.
 
 `.env` içinde: `PERSIST_DIR=/opt/sineoda/persistent`
 
