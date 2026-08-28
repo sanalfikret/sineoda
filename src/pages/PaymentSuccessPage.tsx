@@ -1,7 +1,15 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import { PageFooter } from '../components/PageFooter'
 
 export function PaymentSuccessPage() {
+  const { refreshUser } = useAuth()
+
+  useEffect(() => {
+    void refreshUser()
+  }, [refreshUser])
+
   return (
     <div className="min-h-dvh bg-sineoda-bg">
       <div className="flex min-h-[70dvh] items-center justify-center px-4">
@@ -9,13 +17,13 @@ export function PaymentSuccessPage() {
         <p className="text-4xl">✓</p>
         <h1 className="mt-4 text-2xl font-bold text-white">Ödeme başarılı</h1>
         <p className="mt-2 text-sm text-emerald-100">
-          Aboneliğin aktif edildi. Hemen izlemeye başlayabilirsin.
+          Aboneliğin aktif edildi. Profilini seçip hemen izlemeye başlayabilirsin.
         </p>
         <Link
-          to="/"
+          to="/profiller"
           className="mt-6 inline-block rounded-lg bg-sineoda-gold px-6 py-3 text-sm font-semibold text-sineoda-bg"
         >
-          İzlemeye Başla
+          Profil Seç ve İzle
         </Link>
       </div>
       </div>

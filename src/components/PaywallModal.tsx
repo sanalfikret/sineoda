@@ -23,8 +23,8 @@ export function PaywallModal({ open, onClose }: PaywallModalProps) {
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sineoda-gold">Abonelik gerekli</p>
         <h2 className="mt-2 text-2xl font-bold text-white">İzlemeye devam et</h2>
         <p className="mt-3 text-sm leading-relaxed text-sineoda-muted">
-          Bu içeriği izlemek için aktif bir Sineoda aboneliğine ihtiyacın var. Aylık veya yıllık plan
-          seçebilirsin.
+          Bu içeriği izlemek için aktif bir Sineoda aboneliğine ihtiyacın var. Öğrenci (₺49/ay) veya
+          standart (₺69/ay) plan seçip ödeme yapmalısın.
         </p>
         <div className="mt-6 flex flex-col gap-2">
           <Link

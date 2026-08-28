@@ -7,7 +7,7 @@ import { dbGet, dbRun, uploadsDir } from '../db.js'
 import { createIyzicoCheckout, retrieveIyzicoCheckout } from '../services/iyzico.js'
 import { createPaytrToken, verifyPaytrCallback } from '../services/paytr.js'
 import { BILLING_PLANS, getPlan, normalizePlanId, planRequiresStudentId } from '../services/plans.js'
-import { canUserPlay, getUserSubscription } from '../services/subscription.js'
+import { canUserPlay, getUserSubscription, isSubscriptionRequired } from '../services/subscription.js'
 import { activateUserSubscription } from '../services/subscriptionActivation.js'
 import { requireAuth, type AuthRequest } from '../middleware/auth.js'
 import type { UserRow } from '../types.js'
@@ -45,7 +45,7 @@ router.get('/plans', (_req, res) => {
       paytr: config.isPaytrConfigured(),
       iyzico: config.isIyzicoConfigured(),
       default: config.paymentProvider,
-      paymentRequired: config.isPaymentConfigured() && config.requireSubscription,
+      paymentRequired: isSubscriptionRequired(),
     },
   })
 })
@@ -54,7 +54,7 @@ router.get('/can-play', requireAuth, (req: AuthRequest, res) => {
   const user = getUserSubscription(req.auth!.userId)
   res.json({
     allowed: canUserPlay(user),
-    paymentRequired: config.isPaymentConfigured() && config.requireSubscription,
+    paymentRequired: isSubscriptionRequired(),
   })
 })
 
@@ -84,7 +84,7 @@ router.get('/subscription', requireAuth, (req: AuthRequest, res) => {
     startedAt,
     expiresAt,
     canPlay: canUserPlay(user),
-    paymentRequired: config.isPaymentConfigured() && config.requireSubscription,
+    paymentRequired: isSubscriptionRequired(),
   })
 })
 
