@@ -58,6 +58,9 @@ ASLA YAPMA
   rm -rf persistent/              # tüm veri gider!
   /opt/sinema ile /opt/sineoda karıştırma
 
+NOT: migrate-persistent.sh mevcut DB'yi ASLA ezmez.
+update-vps.sh artık her deploy'da migration çalıştırmaz.
+
 
 SUNUCU KİRALARKEN
 -----------------

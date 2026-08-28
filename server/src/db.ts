@@ -550,6 +550,10 @@ function persist() {
   fs.writeFileSync(dbPath, Buffer.from(data))
 }
 
+export function getDbPath() {
+  return dbPath
+}
+
 export function dbRun(sql: string, params: unknown[] = []) {
   db.run(sql, params as (string | number | null)[])
   persist()
