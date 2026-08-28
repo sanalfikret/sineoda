@@ -27,7 +27,12 @@ export function subscriptionCheckoutPath(user: User) {
 export function planDisplayName(planId: string | null | undefined) {
   if (planId === 'student') return 'Öğrenci Plan'
   if (planId === 'standard') return 'Standart Plan'
+  if (planId === 'creator_application') return 'Yapımcı Başvuru Ücreti'
   if (planId === 'monthly') return 'Standart Plan'
   if (planId === 'yearly') return 'Yıllık Plan'
   return planId ?? '—'
+}
+
+export function creatorCheckoutPath() {
+  return '/creator/odeme?checkout=1'
 }

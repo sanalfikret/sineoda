@@ -1,10 +1,12 @@
 import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { PageFooter } from '../components/PageFooter'
 
 export function PaymentSuccessPage() {
-  const { refreshUser } = useAuth()
+  const { refreshUser, user } = useAuth()
+  const [searchParams] = useSearchParams()
+  const isCreatorReturn = searchParams.get('return') === 'creator' || user?.role === 'creator'
 
   useEffect(() => {
     void refreshUser()
@@ -17,13 +19,15 @@ export function PaymentSuccessPage() {
         <p className="text-4xl">✓</p>
         <h1 className="mt-4 text-2xl font-bold text-white">Ödeme başarılı</h1>
         <p className="mt-2 text-sm text-emerald-100">
-          Aboneliğin aktif edildi. Profilini seçip hemen izlemeye başlayabilirsin.
+          {isCreatorReturn
+            ? 'Yapımcı başvuru ücretiniz alındı. Artık film başvurusu gönderebilirsiniz; filminizin yayına alınması admin incelemesine tabidir.'
+            : 'Aboneliğin aktif edildi. Profilini seçip hemen izlemeye başlayabilirsin.'}
         </p>
         <Link
-          to="/profiller"
+          to={isCreatorReturn ? '/creator' : '/profiller'}
           className="mt-6 inline-block rounded-lg bg-sineoda-gold px-6 py-3 text-sm font-semibold text-sineoda-bg"
         >
-          Profil Seç ve İzle
+          {isCreatorReturn ? 'Yapımcı Paneline Git' : 'Profil Seç ve İzle'}
         </Link>
       </div>
       </div>

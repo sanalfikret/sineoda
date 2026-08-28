@@ -381,6 +381,23 @@ function runMigrations() {
   ensureColumn('creators', 'program', "TEXT NOT NULL DEFAULT 'standard'")
   ensureColumn('creators', 'school_id', 'TEXT')
   ensureColumn('creators', 'project_crew', "TEXT NOT NULL DEFAULT ''")
+  ensureColumn('creators', 'registration_paid_at', 'TEXT')
+
+  db.run(`
+    UPDATE creators
+    SET status = 'approved'
+    WHERE status = 'pending' AND (program IS NULL OR program = 'standard')
+  `)
+  db.run(`
+    UPDATE creators
+    SET registration_paid_at = created_at
+    WHERE registration_paid_at IS NULL
+      AND (program IS NULL OR program = 'standard')
+      AND (
+        EXISTS (SELECT 1 FROM content c WHERE c.creator_id = creators.id)
+        OR EXISTS (SELECT 1 FROM creator_documents cd WHERE cd.creator_id = creators.id)
+      )
+  `)
   ensureColumn('content', 'program', "TEXT NOT NULL DEFAULT 'standard'")
   ensureColumn('content', 'content_format', "TEXT NOT NULL DEFAULT 'main'")
   ensureColumn('content', 'parent_content_id', 'TEXT')

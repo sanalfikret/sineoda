@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 import { config } from '../config.js'
 import { dbGet } from '../db.js'
 import type { CreatorRow, JwtPayload, UserRow } from '../types.js'
+import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
 
 export function signToken(payload: JwtPayload) {
   return jwt.sign(payload, config.jwtSecret, { expiresIn: '7d' })
@@ -70,8 +71,19 @@ export function requireApprovedCreator(req: AuthRequest, res: Response, next: Ne
       res.status(404).json({ error: 'Yapımcı profili bulunamadı.' })
       return
     }
-    if (creator.status !== 'approved') {
-      res.status(403).json({ error: 'Hesabınız henüz onaylanmadı.', status: creator.status })
+    if (creator.status === 'rejected') {
+      res.status(403).json({ error: 'Hesabınız reddedildi.', status: creator.status })
+      return
+    }
+    if (creator.status === 'suspended') {
+      res.status(403).json({ error: 'Hesabınız askıya alındı.', status: creator.status })
+      return
+    }
+    if (!isCreatorRegistrationPaid(creator)) {
+      res.status(402).json({
+        error: 'Film başvurusu için 69 TL yapımcı başvuru ücretini ödemelisiniz.',
+        code: 'CREATOR_PAYMENT_REQUIRED',
+      })
       return
     }
     ;(req as AuthRequest & { creator?: CreatorRow }).creator = creator

@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { creatorCheckoutPath } from '../../utils/billing'
 import {
   creatorAddDocument,
   creatorDeleteDocument,
   creatorFetchDashboard,
   creatorFetchMe,
+  creatorFetchMessages,
+  creatorMarkMessageRead,
   creatorSubmitContent,
   creatorUploadDocument,
   creatorUploadImage,
@@ -61,13 +64,6 @@ const SCHOOL_REVIEW_LABELS: Record<string, string> = {
   rejected: 'Okul reddi',
 }
 
-const STATUS_LABELS: Record<CreatorStatus, string> = {
-  pending: 'Onay bekliyor',
-  approved: 'Onaylandı',
-  rejected: 'Reddedildi',
-  suspended: 'Askıya alındı',
-}
-
 const REVIEW_LABELS: Record<string, string> = {
   draft: 'Taslak',
   pending: 'İncelemede',
@@ -93,6 +89,10 @@ export function CreatorDashboardPage() {
     pendingCount: 0,
   })
   const [status, setStatus] = useState<CreatorStatus>('pending')
+  const [registrationPaid, setRegistrationPaid] = useState(false)
+  const [messages, setMessages] = useState<
+    Array<{ id: string; subject: string; body: string; createdAt: string; isRead: boolean }>
+  >([])
   const [program, setProgram] = useState<'standard' | 'student_cinema'>('standard')
   const [documentCount, setDocumentCount] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -134,11 +134,17 @@ export function CreatorDashboardPage() {
     setLoading(true)
     setError('')
     try {
-      const [me, dashboard] = await Promise.all([creatorFetchMe(), creatorFetchDashboard()])
+      const [me, dashboard, inbox] = await Promise.all([
+        creatorFetchMe(),
+        creatorFetchDashboard(),
+        creatorFetchMessages().catch(() => ({ messages: [] })),
+      ])
       setDocuments(me.documents)
       setContent(dashboard.content as DashboardContent[])
       setTotals(dashboard.totals)
       setStatus(dashboard.creator.status as CreatorStatus)
+      setRegistrationPaid(Boolean(dashboard.creator.registrationPaid))
+      setMessages(inbox.messages)
       setProgram((dashboard.creator.program as 'standard' | 'student_cinema') ?? 'standard')
       setDocumentCount(dashboard.creator.documentCount)
     } catch (err) {
@@ -170,8 +176,13 @@ export function CreatorDashboardPage() {
   }, [])
 
   useEffect(() => {
-    if (status === 'approved') void loadAccounting()
-  }, [status, loadAccounting])
+    if (status === 'approved' && registrationPaid) void loadAccounting()
+  }, [status, registrationPaid, loadAccounting])
+
+  const canSubmitFilms =
+    status !== 'rejected' &&
+    status !== 'suspended' &&
+    (program === 'student_cinema' || registrationPaid)
 
   const handleDocumentUpload = async (file: File) => {
     setDocUploading(true)
@@ -357,7 +368,7 @@ export function CreatorDashboardPage() {
             <img src="/icon.svg" alt="" className="h-9 w-9 rounded-lg" />
             <div>
               <p className="text-lg font-bold">{studioName}</p>
-              <p className="text-xs text-sineoda-muted">Sineoda Creator · {STATUS_LABELS[status]}</p>
+              <p className="text-xs text-sineoda-muted">Sineoda Creator · {registrationPaid || program === 'student_cinema' ? 'Aktif' : 'Ödeme bekleniyor'}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -389,9 +400,65 @@ export function CreatorDashboardPage() {
           </div>
         )}
 
-        {status === 'pending' && (
+        {program === 'standard' && registrationPaid && status !== 'rejected' && status !== 'suspended' && (
+          <div className="mb-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 text-sm text-emerald-100">
+            Yapımcı üyeliğiniz aktiftir. Film başvurunuzu gönderin; yayına alma kararı yalnızca Sineoda
+            admin ekibi tarafından verilir.
+          </div>
+        )}
+
+        {program === 'standard' && !registrationPaid && status !== 'rejected' && status !== 'suspended' && (
+          <div className="mb-6 rounded-xl border border-sineoda-gold/30 bg-sineoda-gold/10 px-4 py-4 text-sm text-amber-100">
+            Film başvurusu göndermek için{' '}
+            <strong className="text-sineoda-gold">₺69 yapımcı başvuru ücreti</strong> ödemeniz gerekir. Yapımcı
+            üyeliğiniz otomatik açılır; filminizin onayı admin tarafından yapılır.{' '}
+            <Link to={creatorCheckoutPath()} className="font-semibold text-sineoda-gold underline">
+              Ödeme yap
+            </Link>
+          </div>
+        )}
+
+        {messages.length > 0 && (
+          <section className="mb-6 rounded-xl border border-white/10 bg-[#11141c] p-5">
+            <h2 className="text-lg font-semibold">Bildirimler</h2>
+            <ul className="mt-3 space-y-3">
+              {messages.slice(0, 5).map((message) => (
+                <li
+                  key={message.id}
+                  className={`rounded-lg border px-4 py-3 text-sm ${
+                    message.isRead
+                      ? 'border-white/5 bg-[#0d0f14] text-sineoda-muted'
+                      : 'border-sineoda-gold/30 bg-sineoda-gold/5 text-white'
+                  }`}
+                >
+                  <p className="font-medium">{message.subject}</p>
+                  <p className="mt-1 whitespace-pre-wrap text-white/80">{message.body}</p>
+                  {!message.isRead && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void creatorMarkMessageRead(message.id).then(() => {
+                          setMessages((current) =>
+                            current.map((entry) =>
+                              entry.id === message.id ? { ...entry, isRead: true } : entry,
+                            ),
+                          )
+                        })
+                      }}
+                      className="mt-2 text-xs text-sineoda-gold hover:underline"
+                    >
+                      Okundu işaretle
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {status === 'pending' && program === 'student_cinema' && (
           <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-4 text-sm text-amber-100">
-            Hesabınız inceleniyor. Onaylandıktan sonra film başvurusu yapabilirsiniz.
+            Hesabınız inceleniyor. Onaylandıktan sonra ek içerik gönderebilirsiniz.
           </div>
         )}
 
@@ -427,7 +494,7 @@ export function CreatorDashboardPage() {
           ))}
         </section>
 
-        {status === 'approved' && (
+        {status === 'approved' && registrationPaid && (
           <section className="mb-8 rounded-xl border border-sineoda-gold/20 bg-sineoda-gold/5 p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -575,7 +642,7 @@ export function CreatorDashboardPage() {
         <section className="mb-8">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-lg font-semibold">Film başvurularım</h2>
-            {status === 'approved' && (
+            {canSubmitFilms && (
               <button
                 type="button"
                 onClick={() => {
@@ -593,7 +660,7 @@ export function CreatorDashboardPage() {
             )}
           </div>
 
-          {showForm && status === 'approved' && (
+          {showForm && canSubmitFilms && (
             <form
               onSubmit={handleSubmitContent}
               className="mb-6 space-y-4 rounded-xl border border-sineoda-gold/20 bg-[#11141c] p-6"
@@ -872,7 +939,9 @@ export function CreatorDashboardPage() {
             <p className="text-sm text-sineoda-muted">Yükleniyor...</p>
           ) : content.length === 0 ? (
             <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-sineoda-muted">
-              Henüz film başvurunuz yok. Onaylı hesabınız varsa yukarıdaki düğmeden başvuru yapabilirsiniz.
+              {canSubmitFilms
+                ? 'Henüz film başvurunuz yok. Yukarıdaki düğmeden başvuru yapabilirsiniz.'
+                : 'Henüz film başvurunuz yok. Başvuru ücretini ödedikten sonra film gönderebilirsiniz.'}
             </p>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-white/10">

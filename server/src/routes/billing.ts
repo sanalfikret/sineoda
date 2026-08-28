@@ -6,10 +6,11 @@ import { config, publicAssetUrl } from '../config.js'
 import { dbGet, dbRun, uploadsDir } from '../db.js'
 import { createIyzicoCheckout, retrieveIyzicoCheckout } from '../services/iyzico.js'
 import { createPaytrToken, verifyPaytrCallback } from '../services/paytr.js'
-import { BILLING_PLANS, getPlan, normalizePlanId, planRequiresStudentId } from '../services/plans.js'
+import { BILLING_PLANS, getPlan, isCreatorApplicationPlan, normalizePlanId, planRequiresStudentId } from '../services/plans.js'
+import { activateCreatorRegistration } from '../services/creatorRegistration.js'
 import { canUserPlay, getUserSubscription, isSubscriptionRequired } from '../services/subscription.js'
 import { activateUserSubscription } from '../services/subscriptionActivation.js'
-import { requireAuth, type AuthRequest } from '../middleware/auth.js'
+import { requireAuth, getCreatorForUser, type AuthRequest } from '../middleware/auth.js'
 import type { UserRow } from '../types.js'
 
 const router = Router()
@@ -115,6 +116,21 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
     return
   }
 
+  if (isCreatorApplicationPlan(normalizedPlanId)) {
+    if (user.role !== 'creator') {
+      res.status(403).json({ error: 'Yapımcı başvuru ücreti yalnızca yapımcı hesapları için geçerlidir.' })
+      return
+    }
+    const creator = getCreatorForUser(user.id)
+    if (creator?.registration_paid_at) {
+      res.status(400).json({ error: 'Yapımcı başvuru ücreti zaten ödendi.' })
+      return
+    }
+  } else if (user.role === 'creator') {
+    res.status(403).json({ error: 'Yapımcı hesapları izleyici abonelik planı satın alamaz.' })
+    return
+  }
+
   if (planRequiresStudentId(normalizedPlanId) && !user.student_id_url) {
     res.status(400).json({
       error: 'Öğrenci planı için öğrenci kimliği yüklemeniz gerekir.',
@@ -126,6 +142,15 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
   dbRun('UPDATE users SET pending_plan_id = ? WHERE id = ?', [normalizedPlanId, user.id])
 
   if (!config.isPaymentConfigured()) {
+    if (isCreatorApplicationPlan(normalizedPlanId)) {
+      const { paidAt } = activateCreatorRegistration(user.id)
+      res.json({
+        message: 'Demo modu: yapımcı başvuru ücreti otomatik onaylandı.',
+        demoMode: true,
+        paidAt,
+      })
+      return
+    }
     const { startedAt, expiresAt } = activateUserSubscription(user.id, normalizedPlanId)
     res.json({
       message: 'Demo modu: ödeme sağlayıcısı yapılandırılmadı, abonelik otomatik aktif edildi.',
@@ -243,7 +268,11 @@ router.post('/callback/paytr', (req, res) => {
       new Date().toISOString(),
       order.id,
     ])
-    activateUserSubscription(order.user_id, order.plan_id)
+    if (isCreatorApplicationPlan(order.plan_id)) {
+      activateCreatorRegistration(order.user_id)
+    } else {
+      activateUserSubscription(order.user_id, order.plan_id)
+    }
   } else {
     dbRun("UPDATE payment_orders SET status = 'failed', completed_at = ? WHERE id = ?", [
       new Date().toISOString(),
@@ -272,7 +301,11 @@ router.post('/callback/iyzico', async (req, res) => {
       new Date().toISOString(),
       order.id,
     ])
-    activateUserSubscription(order.user_id, order.plan_id)
+    if (isCreatorApplicationPlan(order.plan_id)) {
+      activateCreatorRegistration(order.user_id)
+    } else {
+      activateUserSubscription(order.user_id, order.plan_id)
+    }
     res.redirect(`${config.frontendUrl}/odeme/basarili`)
     return
   }

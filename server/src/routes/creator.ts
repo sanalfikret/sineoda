@@ -22,6 +22,12 @@ import {
 } from '../services/filmApplication.js'
 import { getContentEngagementStats } from '../services/studentCinema.js'
 import { getMonthlyReport, monthKey } from '../services/watchAccounting.js'
+import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
+import {
+  countUnreadMessages,
+  listUserMessages,
+  markMessageRead,
+} from '../services/userMessages.js'
 import type { ContentRow, CreatorRow } from '../types.js'
 
 const router = Router()
@@ -55,6 +61,8 @@ function getCreatorProfile(userId: string) {
       createdAt: creator.created_at,
       program: creator.program ?? 'standard',
       schoolId: creator.school_id ?? null,
+      registrationPaidAt: creator.registration_paid_at ?? null,
+      registrationPaid: isCreatorRegistrationPaid(creator),
     },
     documents: documents.map((doc) => ({
       id: doc.id,
@@ -97,6 +105,8 @@ router.get('/dashboard', requireCreator, (req: AuthRequest, res) => {
       documentCount: documents.length,
       program: creator.program ?? 'standard',
       schoolId: creator.school_id ?? null,
+      registrationPaidAt: creator.registration_paid_at ?? null,
+      registrationPaid: isCreatorRegistrationPaid(creator),
     },
     payoutRules: {
       note: 'Kazançlar yapımcı anlaşmasında belirtilen adil paylaşım modeline göre hesaplanır.',
@@ -449,6 +459,23 @@ router.get('/accounting', requireCreator, (req: AuthRequest, res) => {
     })
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : 'Muhasebe verisi yüklenemedi.' })
+  }
+})
+
+router.get('/messages', requireCreator, (req: AuthRequest, res) => {
+  res.json({ messages: listUserMessages(req.auth!.userId) })
+})
+
+router.get('/messages/unread-count', requireCreator, (req: AuthRequest, res) => {
+  res.json({ count: countUnreadMessages(req.auth!.userId) })
+})
+
+router.patch('/messages/:id/read', requireCreator, (req: AuthRequest, res) => {
+  try {
+    const message = markMessageRead(req.auth!.userId, req.params.id)
+    res.json({ message })
+  } catch (err) {
+    res.status(404).json({ error: err instanceof Error ? err.message : 'Mesaj bulunamadı.' })
   }
 })
 

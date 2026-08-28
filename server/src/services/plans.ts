@@ -1,4 +1,4 @@
-export type BillingPlanId = 'standard' | 'student'
+export type BillingPlanId = 'standard' | 'student' | 'creator_application'
 
 const PLAN_ALIASES: Record<string, BillingPlanId> = {
   monthly: 'standard',
@@ -12,6 +12,7 @@ export const BILLING_PLANS = [
     price: 69,
     currency: 'TRY',
     interval: 'month' as const,
+    audience: 'viewer' as const,
     features: ['Tüm içerikler', '4 profil', 'HD yayın', 'Android TV desteği'],
   },
   {
@@ -20,9 +21,19 @@ export const BILLING_PLANS = [
     price: 49,
     currency: 'TRY',
     interval: 'month' as const,
+    audience: 'viewer' as const,
     popular: true,
     requiresStudentId: true,
     features: ['Tüm içerikler', '4 profil', 'HD yayın', 'Geçerli öğrenci kimliği gerekir'],
+  },
+  {
+    id: 'creator_application' as const,
+    name: 'Yapımcı Başvuru Ücreti',
+    price: 69,
+    currency: 'TRY',
+    interval: 'once' as const,
+    audience: 'creator' as const,
+    features: ['Yapımcı paneli erişimi', 'Film başvurusu gönderme', 'Gelir paylaşımı modeli'],
   },
 ]
 
@@ -43,8 +54,13 @@ export function planRequiresStudentId(planId: string) {
 
 export function planExpiry(planId: string) {
   const plan = getPlan(planId)
+  if (plan?.interval === 'once') return null
   const expires = new Date()
   if (plan?.interval === 'year') expires.setFullYear(expires.getFullYear() + 1)
   else expires.setMonth(expires.getMonth() + 1)
   return expires.toISOString()
+}
+
+export function isCreatorApplicationPlan(planId: string) {
+  return normalizePlanId(planId) === 'creator_application'
 }

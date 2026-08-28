@@ -12,6 +12,7 @@ import {
   updateCreatorContentFields,
 } from '../services/creatorContentAdmin.js'
 import { attachStats, getContentEngagementStats } from '../services/studentCinema.js'
+import { notifyCreatorFilmReview } from '../services/creatorNotifications.js'
 import type { ContentRow, CreatorRow } from '../types.js'
 
 const router = Router()
@@ -275,6 +276,14 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
   try {
     updateCreatorContentFields(existing, body)
     resolveCreatorPublishUpdate(existing, body, reviewStatus)
+    if (body.reviewStatus !== undefined || body.review_status !== undefined) {
+      notifyCreatorFilmReview({
+        content: existing,
+        reviewStatus,
+        previousStatus: existing.review_status ?? null,
+        adminUserId: req.auth!.userId,
+      })
+    }
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : 'Film güncellenemedi.' })
     return
@@ -305,6 +314,12 @@ router.patch('/content/:id/review', requireAdmin, (req: AuthRequest, res) => {
     } else {
       applyCreatorReviewStatus(existing, reviewStatus)
     }
+    notifyCreatorFilmReview({
+      content: existing,
+      reviewStatus,
+      previousStatus: existing.review_status ?? null,
+      adminUserId: req.auth!.userId,
+    })
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : 'İnceleme güncellenemedi.' })
     return

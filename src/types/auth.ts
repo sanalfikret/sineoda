@@ -18,6 +18,8 @@ export interface CreatorProfile {
   createdAt: string
   program?: 'standard' | 'student_cinema'
   schoolId?: string | null
+  registrationPaidAt?: string | null
+  registrationPaid?: boolean
 }
 
 export interface Subscription {

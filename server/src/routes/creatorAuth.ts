@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import { v4 as uuid } from 'uuid'
+import { config } from '../config.js'
 import { dbGet, dbRun } from '../db.js'
 import { signToken } from '../middleware/auth.js'
 import { mapUser, slugify } from '../mappers.js'
@@ -86,7 +87,8 @@ function mapCreatorUser(user: UserRow) {
     created_at: string
     program?: string
     school_id?: string | null
-  }>('SELECT id, studio_name, bio, status, legal_accepted_at, created_at, program, school_id FROM creators WHERE user_id = ?', [user.id])
+    registration_paid_at?: string | null
+  }>('SELECT id, studio_name, bio, status, legal_accepted_at, created_at, program, school_id, registration_paid_at FROM creators WHERE user_id = ?', [user.id])
 
   return {
     ...mapUser(user, []),
@@ -100,6 +102,7 @@ function mapCreatorUser(user: UserRow) {
           createdAt: creator.created_at,
           program: creator.program ?? 'standard',
           schoolId: creator.school_id ?? null,
+          registrationPaidAt: creator.registration_paid_at ?? null,
         }
       : null,
   }
@@ -197,24 +200,27 @@ router.post('/signup', (req, res) => {
           .replace(/^\+90/, '0')
           .replace(/^0(\d{10})$/, '+90$1')
       : null
+  const registrationPaidAt =
+    creatorProgram === 'student_cinema' || !config.isPaymentConfigured() ? now : null
 
   dbRun(
     'INSERT INTO users (id, name, email, password_hash, role, created_at, phone) VALUES (?, ?, ?, ?, ?, ?, ?)',
     [userId, name.trim(), normalizedEmail, hash, 'creator', now, normalizedPhone],
   )
   dbRun(
-    'INSERT INTO creators (id, user_id, studio_name, bio, status, legal_accepted_at, created_at, program, school_id, project_crew) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO creators (id, user_id, studio_name, bio, status, legal_accepted_at, created_at, program, school_id, project_crew, registration_paid_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [
       creatorId,
       userId,
       studioName.trim(),
       bio?.trim() ?? '',
-      'pending',
+      'approved',
       now,
       now,
       creatorProgram,
       resolvedSchoolId,
       creatorProgram === 'student_cinema' ? String(projectCrew).trim() : '',
+      registrationPaidAt,
     ],
   )
 

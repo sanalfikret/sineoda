@@ -626,7 +626,7 @@ export async function fetchBillingPlans(): Promise<{
 export type CheckoutResult =
   | { provider: 'paytr'; token: string; iframeUrl: string }
   | { provider: 'iyzico'; paymentPageUrl: string; token?: string }
-  | { demoMode: true; message: string; expiresAt: string }
+  | { demoMode: true; message: string; expiresAt?: string; paidAt?: string }
 
 export async function startCheckout(
   planId: string,
@@ -1106,11 +1106,38 @@ export async function creatorFetchMe() {
 
 export async function creatorFetchDashboard() {
   return api<{
-    creator: { id: string; studioName: string; status: string; documentCount: number; program?: string; schoolId?: string | null }
+    creator: {
+      id: string
+      studioName: string
+      status: string
+      documentCount: number
+      program?: string
+      schoolId?: string | null
+      registrationPaidAt?: string | null
+      registrationPaid?: boolean
+    }
     payoutRules: { note: string }
     content: Array<ContentItem & { reviewStatus: string; qualifiedMinutes: number; likes: number }>
     totals: { qualifiedMinutes: number; watchMinutes: number; likes: number; viewers: number; publishedCount: number; pendingCount: number }
   }>('/api/creator/dashboard')
+}
+
+export async function creatorFetchMessages() {
+  return api<{
+    messages: Array<{
+      id: string
+      subject: string
+      body: string
+      createdAt: string
+      isRead: boolean
+    }>
+  }>('/api/creator/messages')
+}
+
+export async function creatorMarkMessageRead(messageId: string) {
+  return api<{ message: { id: string; isRead: boolean } }>(`/api/creator/messages/${messageId}/read`, {
+    method: 'PATCH',
+  })
 }
 
 export async function creatorUploadDocument(file: File): Promise<string> {
