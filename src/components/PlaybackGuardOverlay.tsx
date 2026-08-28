@@ -1,25 +1,35 @@
+type PlaybackGuardMode = 'idle_prompt' | 'other_device' | 'daily_limit'
+
 interface PlaybackGuardOverlayProps {
-  mode: 'idle_prompt' | 'other_device'
+  mode: PlaybackGuardMode
+  message?: string
   onContinue: () => void
   onClose: () => void
 }
 
-export function PlaybackGuardOverlay({ mode, onContinue, onClose }: PlaybackGuardOverlayProps) {
-  const isIdle = mode === 'idle_prompt'
+export function PlaybackGuardOverlay({ mode, message, onContinue, onClose }: PlaybackGuardOverlayProps) {
+  const title =
+    mode === 'idle_prompt'
+      ? 'Hâlâ orada mısın?'
+      : mode === 'daily_limit'
+        ? 'Bugünlük hakkın doldu'
+        : 'Başka cihazda izleniyor'
+
+  const body =
+    message ??
+    (mode === 'idle_prompt'
+      ? 'Bir süredir hareket yok — içeriği durdurduk. Devam etmek ister misin?'
+      : mode === 'daily_limit'
+        ? 'Biraz dinlen; İstanbul saatiyle yarın yeni izleme hakkın açılacak.'
+        : 'Hesabın şu an başka bir cihazda izleniyor. Aynı anda yalnızca bir cihazdan devam edebilirsin.')
 
   return (
     <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/75 px-6 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-2xl border border-white/10 bg-sineoda-surface/95 p-6 text-center shadow-2xl">
-        <p className="text-lg font-semibold text-white">
-          {isIdle ? 'Hâlâ orada mısın?' : 'Başka cihazda izleniyor'}
-        </p>
-        <p className="mt-3 text-sm leading-relaxed text-sineoda-muted">
-          {isIdle
-            ? 'Bir süredir hareket yok — içeriği durdurduk. Devam etmek ister misin?'
-            : 'Hesabın başka bir cihazda izlemeye başladı. Buradaki oynatma durduruldu.'}
-        </p>
+        <p className="text-lg font-semibold text-white">{title}</p>
+        <p className="mt-3 text-sm leading-relaxed text-sineoda-muted">{body}</p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-          {isIdle ? (
+          {mode === 'idle_prompt' ? (
             <button
               type="button"
               onClick={onContinue}
@@ -40,3 +50,5 @@ export function PlaybackGuardOverlay({ mode, onContinue, onClose }: PlaybackGuar
     </div>
   )
 }
+
+export type { PlaybackGuardMode }

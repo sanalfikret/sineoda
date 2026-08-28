@@ -205,7 +205,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
     setPlaying(true)
   }, [])
 
-  const { guardState, confirmStillWatching } = usePlaybackGuard({
+  const { guardState, guardMessage, confirmStillWatching } = usePlaybackGuard({
     enabled: Boolean(target && canTrack),
     contentId: target?.item.id,
     episodeId: currentEpisode?.id ?? target?.episodeId,
@@ -322,6 +322,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
       {guardState !== 'playing' && (
         <PlaybackGuardOverlay
           mode={guardState}
+          message={guardMessage}
           onContinue={confirmStillWatching}
           onClose={handleClose}
         />

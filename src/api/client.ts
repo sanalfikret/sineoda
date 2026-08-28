@@ -783,32 +783,60 @@ export async function saveWatchProgress(data: {
   })
 }
 
+export type DailyWatchUsage = {
+  usageDate: string
+  titlesUsed: number
+  titleLimit: number
+  totalSeconds: number
+  minutesUsed: number
+  minuteLimit: number
+  titlesRemaining: number
+  minutesRemaining: number
+}
+
+export type PlaybackStartResult = {
+  ok: boolean
+  allowed?: boolean
+  active?: boolean
+  reason?: 'other_device' | 'daily_limit' | 'no_session'
+  limitType?: 'minutes' | 'titles'
+  message?: string
+  usage?: DailyWatchUsage
+}
+
 export async function startPlaybackSession(data: {
   sessionId: string
   contentId: string
   episodeId?: string
 }) {
-  return api<{ ok: boolean; active: boolean }>('/api/playback/start', {
+  return api<PlaybackStartResult>('/api/playback/start', {
     method: 'POST',
     body: JSON.stringify(data),
   })
 }
 
-export async function heartbeatPlaybackSession(sessionId: string) {
-  return api<{ ok: boolean; active: boolean; reason?: string; message?: string }>(
-    '/api/playback/heartbeat',
-    {
-      method: 'POST',
-      body: JSON.stringify({ sessionId }),
-    },
-  )
+export async function heartbeatPlaybackSession(sessionId: string, secondsDelta = 0) {
+  return api<{
+    ok: boolean
+    active: boolean
+    reason?: string
+    message?: string
+    usage?: DailyWatchUsage
+  }>('/api/playback/heartbeat', {
+    method: 'POST',
+    body: JSON.stringify({ sessionId, secondsDelta }),
+  })
 }
 
-export async function stopPlaybackSession(sessionId: string) {
-  return api<{ ok: boolean }>('/api/playback/stop', {
+export async function stopPlaybackSession(sessionId: string, secondsDelta = 0) {
+  return api<{ ok: boolean; usage?: DailyWatchUsage }>('/api/playback/stop', {
     method: 'POST',
-    body: JSON.stringify({ sessionId }),
+    body: JSON.stringify({ sessionId, secondsDelta }),
   })
+}
+
+export async function fetchDailyWatchUsage() {
+  return api<{ usage: DailyWatchUsage }>('/api/playback/usage')
 }
 
 export async function fetchAllWatchProgress() {

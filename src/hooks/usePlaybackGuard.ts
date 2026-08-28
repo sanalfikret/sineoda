@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getToken, heartbeatPlaybackSession, startPlaybackSession, stopPlaybackSession } from '../api/client'
+import type { PlaybackGuardMode } from '../components/PlaybackGuardOverlay'
 import { PLAYBACK_HEARTBEAT_MS, PLAYBACK_IDLE_CLOSE_MS, PLAYBACK_IDLE_MS } from '../constants/playbackGuard'
 import { getSessionId } from '../utils/sessionId'
-
-type GuardState = 'playing' | 'idle_prompt' | 'other_device'
 
 interface UsePlaybackGuardOptions {
   enabled: boolean
@@ -14,6 +13,11 @@ interface UsePlaybackGuardOptions {
   resumeVideo: () => void
 }
 
+function mapBlockReason(reason?: string): PlaybackGuardMode {
+  if (reason === 'daily_limit') return 'daily_limit'
+  return 'other_device'
+}
+
 export function usePlaybackGuard({
   enabled,
   contentId,
@@ -22,14 +26,19 @@ export function usePlaybackGuard({
   pauseVideo,
   resumeVideo,
 }: UsePlaybackGuardOptions) {
-  const [guardState, setGuardState] = useState<GuardState>('playing')
-  const guardStateRef = useRef<GuardState>('playing')
+  const [guardState, setGuardState] = useState<PlaybackGuardMode | 'playing'>('playing')
+  const [guardMessage, setGuardMessage] = useState<string | undefined>()
+  const guardStateRef = useRef<PlaybackGuardMode | 'playing'>('playing')
   const lastActivityRef = useRef(Date.now())
+  const lastWatchTickRef = useRef(Date.now())
+  const pendingSecondsRef = useRef(0)
   const idleCloseTimerRef = useRef<number | null>(null)
+  const sessionIdRef = useRef('')
 
-  const setGuard = useCallback((next: GuardState) => {
+  const setGuard = useCallback((next: PlaybackGuardMode | 'playing', message?: string) => {
     guardStateRef.current = next
     setGuardState(next)
+    setGuardMessage(message)
   }, [])
 
   const clearIdleCloseTimer = useCallback(() => {
@@ -39,7 +48,36 @@ export function usePlaybackGuard({
     }
   }, [])
 
-  const bumpActivity = useCallback(() => {
+  const collectWatchSeconds = useCallback(() => {
+    if (guardStateRef.current === 'other_device' || guardStateRef.current === 'daily_limit') {
+      lastWatchTickRef.current = Date.now()
+      return 0
+    }
+    const now = Date.now()
+    const delta = Math.max(0, Math.round((now - lastWatchTickRef.current) / 1000))
+    lastWatchTickRef.current = now
+    if (delta > 0) pendingSecondsRef.current += delta
+    return pendingSecondsRef.current
+  }, [])
+
+  const flushWatchSeconds = useCallback(async () => {
+    const seconds = collectWatchSeconds()
+    pendingSecondsRef.current = 0
+    if (!sessionIdRef.current || seconds <= 0) return seconds
+    await heartbeatPlaybackSession(sessionIdRef.current, seconds).catch(() => undefined)
+    return seconds
+  }, [collectWatchSeconds])
+
+  const blockPlayback = useCallback(
+    (reason: PlaybackGuardMode, message?: string) => {
+      pauseVideo()
+      setGuard(reason, message)
+      clearIdleCloseTimer()
+    },
+    [clearIdleCloseTimer, pauseVideo, setGuard],
+  )
+
+  const confirmStillWatching = useCallback(() => {
     lastActivityRef.current = Date.now()
     if (guardStateRef.current === 'idle_prompt') {
       clearIdleCloseTimer()
@@ -48,10 +86,6 @@ export function usePlaybackGuard({
     }
   }, [clearIdleCloseTimer, resumeVideo, setGuard])
 
-  const confirmStillWatching = useCallback(() => {
-    bumpActivity()
-  }, [bumpActivity])
-
   useEffect(() => {
     if (!enabled || !contentId || !getToken()) {
       setGuard('playing')
@@ -59,35 +93,39 @@ export function usePlaybackGuard({
     }
 
     const sessionId = getSessionId()
+    sessionIdRef.current = sessionId
     lastActivityRef.current = Date.now()
+    lastWatchTickRef.current = Date.now()
+    pendingSecondsRef.current = 0
     setGuard('playing')
 
-    void startPlaybackSession({
-      sessionId,
-      contentId,
-      episodeId,
-    }).catch(() => undefined)
+    void startPlaybackSession({ sessionId, contentId, episodeId }).then((result) => {
+      if (result.allowed === false) {
+        blockPlayback(mapBlockReason(result.reason), result.message)
+      }
+    })
 
     const heartbeat = window.setInterval(() => {
-      void heartbeatPlaybackSession(sessionId)
+      const seconds = collectWatchSeconds()
+      void heartbeatPlaybackSession(sessionId, seconds)
         .then((result) => {
-          if (!result.active && guardStateRef.current !== 'other_device') {
-            pauseVideo()
-            setGuard('other_device')
-            clearIdleCloseTimer()
+          pendingSecondsRef.current = 0
+          if (!result.active) {
+            blockPlayback(mapBlockReason(result.reason), result.message)
           }
         })
         .catch(() => undefined)
     }, PLAYBACK_HEARTBEAT_MS)
 
     const idleCheck = window.setInterval(() => {
-      if (guardStateRef.current === 'other_device') return
+      if (guardStateRef.current === 'other_device' || guardStateRef.current === 'daily_limit') return
       const idleFor = Date.now() - lastActivityRef.current
       if (idleFor >= PLAYBACK_IDLE_MS && guardStateRef.current === 'playing') {
         pauseVideo()
         setGuard('idle_prompt')
         clearIdleCloseTimer()
         idleCloseTimerRef.current = window.setTimeout(() => {
+          void flushWatchSeconds()
           onClose()
         }, PLAYBACK_IDLE_CLOSE_MS)
       }
@@ -115,13 +153,27 @@ export function usePlaybackGuard({
       window.removeEventListener('keydown', onActivity)
       window.removeEventListener('touchstart', onActivity)
       window.removeEventListener('click', onActivity)
-      void stopPlaybackSession(sessionId).catch(() => undefined)
+      const seconds = collectWatchSeconds()
+      void stopPlaybackSession(sessionId, seconds).catch(() => undefined)
+      sessionIdRef.current = ''
     }
-  }, [enabled, contentId, episodeId, onClose, pauseVideo, resumeVideo, clearIdleCloseTimer, setGuard])
+  }, [
+    enabled,
+    contentId,
+    episodeId,
+    onClose,
+    pauseVideo,
+    blockPlayback,
+    clearIdleCloseTimer,
+    setGuard,
+    resumeVideo,
+    collectWatchSeconds,
+    flushWatchSeconds,
+  ])
 
   return {
     guardState,
-    bumpActivity,
+    guardMessage,
     confirmStillWatching,
   }
 }

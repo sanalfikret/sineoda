@@ -239,6 +239,28 @@ function runMigrations() {
   `)
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS daily_watch_usage (
+      profile_id TEXT NOT NULL,
+      usage_date TEXT NOT NULL,
+      total_seconds REAL NOT NULL DEFAULT 0,
+      title_starts INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (profile_id, usage_date)
+    );
+  `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS daily_watch_titles (
+      id TEXT PRIMARY KEY,
+      profile_id TEXT NOT NULL,
+      usage_date TEXT NOT NULL,
+      content_id TEXT NOT NULL,
+      episode_id TEXT NOT NULL DEFAULT '',
+      started_at TEXT NOT NULL,
+      UNIQUE (profile_id, usage_date, content_id, episode_id)
+    );
+  `)
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS watch_activity (
       id TEXT PRIMARY KEY,
       profile_id TEXT NOT NULL,
