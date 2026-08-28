@@ -155,6 +155,7 @@ export function LandingPage() {
           layout,
           customBlocks,
           hiddenNavIds,
+          catalog: lookupCatalog,
         }}
       />
       <SiteFooter />

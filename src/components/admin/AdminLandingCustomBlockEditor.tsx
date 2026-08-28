@@ -1,6 +1,9 @@
 import { ImageUpload } from './ImageUpload'
+import type { ContentItem } from '../../types/content'
 import type { LandingCustomBlock, LandingCustomBlockType } from '../../constants/landingCustomBlocks'
 import { CUSTOM_BLOCK_TYPE_LABELS } from '../../constants/landingCustomBlocks'
+import { resolveMediaUrl } from '../../api/client'
+import { getContentDisplayLabel } from '../../constants/contentTypes'
 
 const inputClass =
   'w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold'
@@ -28,16 +31,157 @@ function Field({
   )
 }
 
+function ContentRowPicker({
+  catalog,
+  selectedIds,
+  onChange,
+}: {
+  catalog: ContentItem[]
+  selectedIds: string[]
+  onChange: (itemIds: string[]) => void
+}) {
+  const toggle = (contentId: string) => {
+    if (selectedIds.includes(contentId)) {
+      onChange(selectedIds.filter((id) => id !== contentId))
+      return
+    }
+    onChange([...selectedIds, contentId])
+  }
+
+  const move = (index: number, delta: number) => {
+    const next = [...selectedIds]
+    const target = index + delta
+    if (target < 0 || target >= next.length) return
+    ;[next[index], next[target]] = [next[target], next[index]]
+    onChange(next)
+  }
+
+  return (
+    <div className="space-y-4">
+      {selectedIds.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs text-sineoda-muted">Seçili içerikler (sıra önemli)</p>
+          {selectedIds.map((contentId, index) => {
+            const item = catalog.find((entry) => entry.id === contentId)
+            if (!item) return null
+            return (
+              <div
+                key={contentId}
+                className="flex items-center gap-3 rounded-lg border border-white/10 bg-[#11141c] p-2"
+              >
+                <img src={resolveMediaUrl(item.poster)} alt="" className="h-12 w-8 rounded object-cover" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-white">{item.title}</p>
+                  <p className="text-xs text-sineoda-muted">{getContentDisplayLabel(item)}</p>
+                </div>
+                <button type="button" onClick={() => move(index, -1)} className="text-xs text-white/60 hover:text-white">
+                  ↑
+                </button>
+                <button type="button" onClick={() => move(index, 1)} className="text-xs text-white/60 hover:text-white">
+                  ↓
+                </button>
+                <button type="button" onClick={() => toggle(contentId)} className="text-xs text-red-300 hover:text-red-200">
+                  ×
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      <div className="grid max-h-72 gap-2 overflow-y-auto sm:grid-cols-2">
+        {catalog.map((item) => {
+          const selected = selectedIds.includes(item.id)
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => toggle(item.id)}
+              className={`flex items-center gap-3 rounded-lg border p-2 text-left transition ${
+                selected ? 'border-sineoda-gold/50 bg-sineoda-gold/10' : 'border-white/10 hover:bg-white/5'
+              }`}
+            >
+              <img src={resolveMediaUrl(item.poster)} alt="" className="h-12 w-8 rounded object-cover" />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-white">{item.title}</p>
+                <p className="text-xs text-sineoda-muted">{getContentDisplayLabel(item)}</p>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export function AdminLandingCustomBlockEditor({
   block,
+  catalog,
   onChange,
   onRemove,
 }: {
   block: LandingCustomBlock
+  catalog: ContentItem[]
   onChange: (block: LandingCustomBlock) => void
   onRemove: () => void
 }) {
   const patch = (partial: Partial<LandingCustomBlock>) => onChange({ ...block, ...partial })
+
+  const handleTypeChange = (type: LandingCustomBlockType) => {
+    onChange({
+      ...block,
+      type,
+      itemIds: block.itemIds ?? [],
+      title: type === 'contentRow' && !block.title ? 'Öne çıkanlar' : block.title,
+      ctaLabel: type === 'contentRow' && !block.ctaLabel ? 'Tümünü gör' : block.ctaLabel,
+    })
+  }
+
+  if (block.type === 'contentRow') {
+    return (
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-sineoda-muted">Film/dizi poster satırı — misafir ana sayfada gösterilir</p>
+          <button
+            type="button"
+            onClick={onRemove}
+            className="rounded-lg bg-red-500/10 px-3 py-1.5 text-xs text-red-300 hover:bg-red-500/20"
+          >
+            Bölümü sil
+          </button>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Panel adı" value={block.adminLabel} onChange={(adminLabel) => patch({ adminLabel })} />
+          <label className="block space-y-2">
+            <span className="text-sm text-white/85">Bölüm tipi</span>
+            <select value={block.type} onChange={(event) => handleTypeChange(event.target.value as LandingCustomBlockType)} className={inputClass}>
+              {Object.entries(CUSTOM_BLOCK_TYPE_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <Field label="Satır başlığı" value={block.title} onChange={(title) => patch({ title })} />
+        <Field label="Etiket (opsiyonel)" value={block.eyebrow} onChange={(eyebrow) => patch({ eyebrow })} />
+        <Field label="Kısa açıklama (opsiyonel)" value={block.body} onChange={(body) => patch({ body })} multiline />
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Buton metni (opsiyonel)" value={block.ctaLabel} onChange={(ctaLabel) => patch({ ctaLabel })} />
+          <Field label="Buton linki" value={block.ctaLink} onChange={(ctaLink) => patch({ ctaLink })} />
+        </div>
+
+        <ContentRowPicker
+          catalog={catalog}
+          selectedIds={block.itemIds ?? []}
+          onChange={(itemIds) => patch({ itemIds })}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -56,11 +200,7 @@ export function AdminLandingCustomBlockEditor({
         <Field label="Panel adı" value={block.adminLabel} onChange={(adminLabel) => patch({ adminLabel })} />
         <label className="block space-y-2">
           <span className="text-sm text-white/85">Bölüm tipi</span>
-          <select
-            value={block.type}
-            onChange={(event) => patch({ type: event.target.value as LandingCustomBlockType })}
-            className={inputClass}
-          >
+          <select value={block.type} onChange={(event) => handleTypeChange(event.target.value as LandingCustomBlockType)} className={inputClass}>
             {Object.entries(CUSTOM_BLOCK_TYPE_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}

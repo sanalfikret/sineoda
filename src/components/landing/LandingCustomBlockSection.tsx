@@ -46,7 +46,61 @@ function CtaLink({
   )
 }
 
-export function LandingCustomBlockSection({ block }: { block: LandingCustomBlock }) {
+import type { ContentItem } from '../../types/content'
+
+export function LandingCustomBlockSection({
+  block,
+  catalog = [],
+}: {
+  block: LandingCustomBlock
+  catalog?: ContentItem[]
+}) {
+  if (block.type === 'contentRow') {
+    const items = (block.itemIds ?? [])
+      .map((id) => catalog.find((entry) => entry.id === id))
+      .filter((item): item is ContentItem => Boolean(item))
+
+    if (items.length === 0) return null
+
+    return (
+      <section className="border-y border-white/5 bg-sineoda-bg px-4 py-12 sm:px-6 sm:py-16">
+        <div className="mx-auto max-w-[1400px]">
+          {block.eyebrow && (
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sineoda-gold">{block.eyebrow}</p>
+          )}
+          <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
+            {block.title && <h2 className="text-2xl font-bold text-white sm:text-3xl">{block.title}</h2>}
+            {block.ctaLabel && <CtaLink label={block.ctaLabel} link={block.ctaLink} />}
+          </div>
+          {block.body && <p className="mt-3 max-w-3xl text-sm leading-relaxed text-sineoda-muted sm:text-base">{block.body}</p>}
+
+          <div className="hide-scrollbar mt-6 flex gap-3 overflow-x-auto pb-2 sm:gap-4">
+            {items.map((item) => (
+              <Link
+                key={item.id}
+                to="/kayit"
+                className="group shrink-0 overflow-hidden rounded-lg bg-white/5 transition hover:ring-2 hover:ring-sineoda-gold/40"
+              >
+                <img
+                  src={resolveMediaUrl(item.poster)}
+                  alt={item.title}
+                  className={
+                    item.videoFormat === 'vertical'
+                      ? 'h-[220px] w-[124px] object-cover sm:h-[280px] sm:w-[158px]'
+                      : 'h-[220px] w-[148px] object-cover sm:h-[280px] sm:w-[187px]'
+                  }
+                />
+                <p className="max-w-[148px] truncate px-2 py-2 text-xs font-medium text-white/90 group-hover:text-white">
+                  {item.title}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   if (block.type === 'ctaBanner') {
     return (
       <section className="border-y border-white/10 bg-gradient-to-br from-[#141824] to-black px-5 py-16 sm:px-8 sm:py-20">

@@ -35,6 +35,7 @@ export interface LandingPageBlockContext {
   layout?: LandingLayoutConfig | null
   customBlocks?: LandingCustomBlock[]
   hiddenNavIds?: SiteNavId[]
+  catalog?: ContentItem[]
 }
 
 function isLandingBlockHidden(id: string, hiddenNavIds: SiteNavId[]) {
@@ -52,7 +53,7 @@ function renderLandingBlock(id: string, ctx: LandingPageBlockContext): ReactNode
     const blockId = id.slice('custom:'.length)
     const block = ctx.customBlocks?.find((entry) => entry.id === blockId)
     if (!block) return null
-    return <LandingCustomBlockSection block={block} />
+    return <LandingCustomBlockSection block={block} catalog={ctx.catalog} />
   }
 
   switch (id) {
