@@ -14,8 +14,14 @@ KEEP="${BACKUP_KEEP:-30}"
 mkdir -p "$BACKUP_DIR"
 
 if [ ! -f "$DB" ]; then
-  echo "Yedeklenecek veritabanı yok: $DB"
-  exit 0
+  # Eski yanlış konum — migrate script taşıyana kadar yedekle
+  LEGACY="$PERSIST_DIR/sineoda.db"
+  if [ -f "$LEGACY" ]; then
+    DB="$LEGACY"
+  else
+    echo "Yedeklenecek veritabanı yok: $DATA_DIR/sineoda.db"
+    exit 0
+  fi
 fi
 
 STAMP=$(date +%Y%m%d-%H%M%S)
