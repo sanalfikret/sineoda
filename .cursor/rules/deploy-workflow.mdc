@@ -5,14 +5,46 @@ alwaysApply: true
 
 # Deploy workflow (Sineoda)
 
+## Push öncesi (zorunlu)
+
+Her backend değişikliğinden sonra push etmeden önce:
+
+```bash
+npm run check:deploy
+```
+
+Bu komut sunucunun ayağa kalktığını ve frontend build'in geçtiğini doğrular. Başarısızsa **push etme**.
+
+Ek kurallar:
+- Bir modülü refactor ederken (`plans.ts` gibi), onu import eden tüm dosyaları `grep` ile kontrol et.
+- Export kaldırma/taşıma yapıldığında mutlaka `npm run check:server` çalıştır.
+
+## Commit ve push
+
 After completing user-requested feature fixes on a branch:
 
-1. Commit all related changes on the feature branch.
-2. Merge into `main` and push `origin main` (user expects this by default for this project).
-3. Push the feature branch if it was used.
-4. Verify deploy:
-   - **Frontend**: Vercel auto-deploys from `main` (`sineoda.vercel.app`).
-   - **API**: Render service `sineoda-api` — confirm `/api/bootstrap` returns new fields after deploy; trigger redeploy if Git auto-deploy did not run.
-5. Tell the user when live, and remind them to hard-refresh (`Ctrl+Shift+R`) if UI looks stale.
+1. Run `npm run check:deploy` — must pass.
+2. Commit all related changes on the feature branch.
+3. Merge into `main` and push `origin main` (user expects this by default for this project).
+4. Push the feature branch if it was used.
+
+## VPS deploy (tek doğru komut)
+
+Sunucuda **her zaman**:
+
+```bash
+cd /opt/sineoda && bash deploy/update-vps.sh
+```
+
+`recover-vps.sh` acil durum içindir; git pull + build içerir ama `update-vps.sh` tercih edilir.
+
+Doğru klasör: `/opt/sineoda` ( `/opt/sinema` değil ).
+
+## Verify deploy
+
+- **Frontend**: Vercel auto-deploys from `main` (`sineoda.vercel.app`).
+- **VPS API**: `curl -sf http://127.0.0.1:3001/api/health` sunucuda OK dönmeli.
+- **Render API** (varsa): `sineoda-api.onrender.com/api/bootstrap` — yeni alanları kontrol et.
+- Tell the user when live; hard-refresh (`Ctrl+Shift+R`) if UI looks stale.
 
 Do not leave fixes only on a feature branch when the user expects them live.

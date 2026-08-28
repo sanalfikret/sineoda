@@ -16,6 +16,20 @@ fi
 echo ">>> git pull"
 git pull
 
+echo ">>> kaynak dosya kontrolü"
+required=(
+  server/src/index.ts
+  server/src/services/subscriptionActivation.ts
+  server/src/services/plans.ts
+  server/src/services/billingPlanDefaults.ts
+)
+for f in "${required[@]}"; do
+  if [ ! -f "$f" ]; then
+    echo "HATA: $f yok — git pull başarısız veya yanlış klasör (/opt/sineoda olmalı)."
+    exit 1
+  fi
+done
+
 echo ">>> build (site birkaç dakika kapalı olabilir)"
 $DC build
 
