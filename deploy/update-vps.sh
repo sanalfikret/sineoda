@@ -32,8 +32,18 @@ done
 
 mkdir -p "${PERSIST_DIR:-./persistent}/data" "${PERSIST_DIR:-./persistent}/uploads"
 
-echo ">>> eski docker volume varsa host diske taşı (tek seferlik)"
-bash deploy/migrate-persistent.sh || true
+DB_FILE="${PERSIST_DIR:-./persistent}/data/sineoda.db"
+db_size() {
+  if [ -f "$1" ]; then stat -c%s "$1" 2>/dev/null || stat -f%z "$1"; else echo 0; fi
+}
+DB_SIZE_BEFORE=$(db_size "$DB_FILE")
+
+echo ">>> DB boyutu (deploy öncesi): ${DB_SIZE_BEFORE} byte — $DB_FILE"
+
+# Yalnızca DB yoksa tek seferlik taşıma
+if [ ! -f "$DB_FILE" ]; then
+  bash deploy/migrate-persistent.sh || true
+fi
 
 echo ">>> yedek al"
 bash deploy/backup-vps.sh
@@ -65,6 +75,15 @@ if [ "$ok" -eq 1 ]; then
   echo ""
   if echo "$HEALTH" | grep -q '"dbExists":false'; then
     echo "UYARI: Veritabanı dosyası yok — persistent/data kontrol et!"
+    exit 1
+  fi
+  DB_SIZE_AFTER=$(db_size "$DB_FILE")
+  echo ">>> DB boyutu (deploy sonrası): ${DB_SIZE_AFTER} byte"
+  if [ "$DB_SIZE_BEFORE" -gt 50000 ] && [ "$DB_SIZE_AFTER" -lt $((DB_SIZE_BEFORE / 2)) ]; then
+    echo "HATA: Veritabanı deploy sonrası belirgin küçüldü!"
+    echo "Son yedek: ls -lt ${PERSIST_DIR:-./persistent}/backups/ | head -3"
+    ls -lt "${PERSIST_DIR:-./persistent}/backups/" 2>/dev/null | head -3 || true
+    echo "Geri yükleme: bash deploy/restore-db.sh <yedek-dosyasi>"
     exit 1
   fi
 else

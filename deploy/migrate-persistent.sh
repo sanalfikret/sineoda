@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Eski konumlardaki veritabanını doğru klasöre taşır / birleştirir.
+# Eski konumlardaki veritabanını doğru klasöre taşır — YALNIZCA ilk kurulumda.
+# Mevcut persistent/data/sineoda.db ASLA ezilmez.
 # /opt/sineoda içinde: bash deploy/migrate-persistent.sh
 set -euo pipefail
 
@@ -7,6 +8,7 @@ cd "$(dirname "$0")/.."
 
 PERSIST_DIR="${PERSIST_DIR:-./persistent}"
 TARGET="$PERSIST_DIR/data/sineoda.db"
+MARKER="$PERSIST_DIR/.migration-done"
 mkdir -p "$PERSIST_DIR/data" "$PERSIST_DIR/uploads" "$PERSIST_DIR/backups"
 
 size_of() {
@@ -17,33 +19,23 @@ size_of() {
   fi
 }
 
-pick_largest() {
-  local best="" best_size=0 size
-  for f in "$@"; do
-    [ -f "$f" ] || continue
-    size=$(size_of "$f")
-    if [ "$size" -gt "$best_size" ]; then
-      best="$f"
-      best_size=$size
-    fi
-  done
-  echo "$best"
-}
+if [ -f "$TARGET" ]; then
+  echo "Atlandı — aktif DB zaten var: $TARGET ($(du -h "$TARGET" | cut -f1))"
+  touch "$MARKER"
+  exit 0
+fi
 
-echo ">>> legacy dosya konumları kontrol"
+if [ -f "$MARKER" ]; then
+  echo "Atlandı — migration daha önce yapılmış, hedef DB yok (yeni kurulum bekleniyor)."
+  exit 0
+fi
 
-# 1) persistent/sineoda.db (eski yanlış konum)
+echo ">>> İlk kurulum: eski konumlardan DB aranıyor..."
+
 LEGACY_ROOT="$PERSIST_DIR/sineoda.db"
-
-# 2) persistent/sineoda_*.db (manuel yedekler)
 LEGACY_BACKUPS=()
 while IFS= read -r f; do LEGACY_BACKUPS+=("$f"); done < <(find "$PERSIST_DIR" -maxdepth 1 -name 'sineoda_*.db' -type f 2>/dev/null || true)
 
-# 3) persistent/backups/*
-NEW_BACKUPS=()
-while IFS= read -r f; do NEW_BACKUPS+=("$f"); done < <(find "$PERSIST_DIR/backups" -name 'sineoda*.db' -type f 2>/dev/null || true)
-
-# 4) Docker named volume
 VOL_DATA=""
 while IFS= read -r v; do
   case "$v" in
@@ -51,44 +43,44 @@ while IFS= read -r v; do
   esac
 done < <(docker volume ls -q 2>/dev/null || true)
 
-VOL_TMP=""
-if [ -n "$VOL_DATA" ]; then
-  VOL_TMP=$(mktemp)
-  docker run --rm -v "$VOL_DATA:/from:ro" -v "$VOL_TMP:/to" alpine sh -c 'cp -a /from/sineoda.db /to/sineoda.db 2>/dev/null || true'
-fi
+SOURCE=""
+SOURCE_SIZE=0
 
-CANDIDATES=()
-[ -f "$TARGET" ] && CANDIDATES+=("$TARGET")
-[ -f "$LEGACY_ROOT" ] && CANDIDATES+=("$LEGACY_ROOT")
-[ -n "$VOL_TMP" ] && [ -f "$VOL_TMP/sineoda.db" ] && CANDIDATES+=("$VOL_TMP/sineoda.db")
-for f in "${LEGACY_BACKUPS[@]}" "${NEW_BACKUPS[@]}"; do
-  CANDIDATES+=("$f")
+for candidate in "$LEGACY_ROOT" "${LEGACY_BACKUPS[@]}"; do
+  [ -f "$candidate" ] || continue
+  size=$(size_of "$candidate")
+  if [ "$size" -gt "$SOURCE_SIZE" ]; then
+    SOURCE="$candidate"
+    SOURCE_SIZE=$size
+  fi
 done
 
-BEST=$(pick_largest "${CANDIDATES[@]}")
-[ -n "$VOL_TMP" ] && rm -rf "$VOL_TMP"
+if [ -n "$VOL_DATA" ] && [ "$SOURCE_SIZE" -eq 0 ]; then
+  echo ">>> docker volume kontrol: $VOL_DATA"
+  docker run --rm \
+    -v "$VOL_DATA:/from:ro" \
+    -v "$(pwd)/$PERSIST_DIR/data:/to" \
+    alpine sh -c 'cp -a /from/sineoda.db /to/sineoda.db 2>/dev/null || true'
+  if [ -f "$TARGET" ]; then
+    SOURCE="$TARGET"
+    SOURCE_SIZE=$(size_of "$TARGET")
+  fi
+fi
 
-if [ -z "$BEST" ]; then
-  echo "Veritabanı bulunamadı — yeni kurulum."
+if [ -z "$SOURCE" ] || [ ! -f "$SOURCE" ]; then
+  echo "Eski DB bulunamadı — boş kurulum devam edecek."
+  touch "$MARKER"
   exit 0
 fi
 
-BEST_SIZE=$(size_of "$BEST")
-TARGET_SIZE=$(size_of "$TARGET")
-
-if [ ! -f "$TARGET" ] || [ "$BEST_SIZE" -gt "$TARGET_SIZE" ]; then
-  if [ -f "$TARGET" ] && [ "$TARGET" != "$BEST" ]; then
-    STAMP=$(date +%Y%m%d-%H%M%S)
-    cp "$TARGET" "$PERSIST_DIR/backups/sineoda-before-migrate-$STAMP.db"
-    echo "Mevcut küçük DB yedeklendi."
-  fi
-  cp "$BEST" "$TARGET"
-  echo "OK — aktif DB: $TARGET ($(du -h "$TARGET" | cut -f1)) kaynak: $BEST"
-else
-  echo "OK — aktif DB zaten güncel: $TARGET ($(du -h "$TARGET" | cut -f1))"
+if [ "$SOURCE" != "$TARGET" ]; then
+  cp "$SOURCE" "$TARGET"
 fi
 
-# uploads volume taşı
+touch "$MARKER"
+echo "OK — taşındı: $SOURCE -> $TARGET ($(du -h "$TARGET" | cut -f1))"
+
+# uploads volume taşı (yalnızca boşsa)
 if [ ! "$(ls -A "$PERSIST_DIR/uploads" 2>/dev/null)" ]; then
   VOL_UPLOADS=""
   while IFS= read -r v; do
@@ -105,5 +97,4 @@ if [ ! "$(ls -A "$PERSIST_DIR/uploads" 2>/dev/null)" ]; then
   fi
 fi
 
-echo ""
 echo "Doğrula: ls -la $TARGET"

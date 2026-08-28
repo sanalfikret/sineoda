@@ -4,7 +4,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { config } from './config.js'
-import { initDatabase, uploadsDir, dbAll, dbGet } from './db.js'
+import { initDatabase, uploadsDir, dbAll, dbGet, getDbPath } from './db.js'
 import { mapContent } from './mappers.js'
 import billingRoutes from './routes/billing.js'
 import episodeRoutes from './routes/episodes.js'
@@ -107,12 +107,12 @@ app.use(express.urlencoded({ extended: true }))
 app.use('/uploads', express.static(uploadsDir))
 
 app.get('/api/health', (_req, res) => {
-  const dbPath = path.join(config.dataDir, 'sineoda.db')
+  const dbFile = getDbPath()
   let dbSizeBytes = 0
   let dbExists = false
   try {
-    dbExists = fs.existsSync(dbPath)
-    if (dbExists) dbSizeBytes = fs.statSync(dbPath).size
+    dbExists = fs.existsSync(dbFile)
+    if (dbExists) dbSizeBytes = fs.statSync(dbFile).size
   } catch {
     dbExists = false
   }
@@ -125,6 +125,7 @@ app.get('/api/health', (_req, res) => {
     storage: {
       dataDir: config.dataDir,
       uploadsDir: config.uploadsDir,
+      dbPath: dbFile,
       dbExists,
       dbSizeBytes,
       userCount,

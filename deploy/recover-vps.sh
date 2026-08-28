@@ -17,9 +17,10 @@ fi
 echo ">>> git pull"
 git pull
 
-mkdir -p "${PERSIST_DIR:-./persistent}/data" "${PERSIST_DIR:-./persistent}/uploads"
-bash deploy/migrate-persistent.sh || true
+echo ">>> yedek al"
 bash deploy/backup-vps.sh || true
+
+mkdir -p "${PERSIST_DIR:-./persistent}/data" "${PERSIST_DIR:-./persistent}/uploads"
 
 echo ">>> build (kod güncellendi; birkaç dakika sürebilir)"
 $DC build
