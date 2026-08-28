@@ -297,6 +297,13 @@ function runMigrations() {
   `)
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS landing_monthly_winners (
+      content_id TEXT PRIMARY KEY,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    );
+  `)
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS journal_posts (
       id TEXT PRIMARY KEY,
       slug TEXT UNIQUE NOT NULL,

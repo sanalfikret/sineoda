@@ -75,7 +75,27 @@ export function getLandingConfig() {
   const sections = getLandingSectionsConfig()
   const layout = getLandingLayoutConfig(customBlockIds)
 
-  return { slider, sliderContentIds, showcases, hero, sections, layout, customBlocks }
+  const monthlyWinnerRows = dbAll<{ content_id: string; sort_order: number }>(
+    'SELECT content_id, sort_order FROM landing_monthly_winners ORDER BY sort_order',
+  )
+  const monthlyWinnerContentIds = monthlyWinnerRows
+    .map((row) => row.content_id)
+    .filter((contentId) => validContentIds.has(contentId))
+  const monthlyWinners = monthlyWinnerContentIds
+    .map((contentId) => catalogMap.get(contentId))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item))
+
+  return {
+    slider,
+    sliderContentIds,
+    showcases,
+    hero,
+    sections,
+    layout,
+    customBlocks,
+    monthlyWinnerContentIds,
+    monthlyWinners,
+  }
 }
 
 function contentExists(contentId: string | null) {
@@ -148,6 +168,7 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
     sliderIds?: unknown
     showcases?: unknown
     customBlocks?: unknown
+    monthlyWinnerIds?: unknown
   }
 
   let customBlocks: LandingCustomBlock[] | null = null
@@ -170,7 +191,22 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
 
   const sliderIds = Array.isArray(body.sliderIds) ? body.sliderIds.map(String) : null
   const showcases = Array.isArray(body.showcases) ? body.showcases : null
+  const monthlyWinnerIds = Array.isArray(body.monthlyWinnerIds)
+    ? body.monthlyWinnerIds.map(String)
+    : null
   const catalogIds = new Set(dbAll<{ id: string }>('SELECT id FROM content').map((row) => row.id))
+
+  if (monthlyWinnerIds) {
+    dbRun('DELETE FROM landing_monthly_winners')
+    monthlyWinnerIds
+      .filter((contentId) => catalogIds.has(contentId))
+      .forEach((contentId: string, index: number) => {
+        dbRun('INSERT INTO landing_monthly_winners (content_id, sort_order) VALUES (?, ?)', [
+          contentId,
+          index,
+        ])
+      })
+  }
 
   if (sliderIds && showcases) {
     dbRun('DELETE FROM landing_slider')
@@ -213,7 +249,13 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
           })
       },
     )
-  } else if (!body.hero && !body.sections && !body.layout && !body.customBlocks) {
+  } else if (
+    !body.hero &&
+    !body.sections &&
+    !body.layout &&
+    !body.customBlocks &&
+    !monthlyWinnerIds
+  ) {
     res.status(400).json({ error: 'Kaydedilecek ana sayfa verisi bulunamadı.' })
     return
   }

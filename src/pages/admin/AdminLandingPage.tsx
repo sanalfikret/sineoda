@@ -4,6 +4,7 @@ import {
   fetchBootstrap,
   fetchLandingConfig,
   saveLandingPageConfig,
+  updateLandingLayoutConfig,
   type LandingHeroConfig,
 } from '../../api/client'
 import { AdminLandingCustomBlockEditor } from '../../components/admin/AdminLandingCustomBlockEditor'
@@ -123,6 +124,7 @@ export function AdminLandingPage() {
   const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set(['hero']))
   const [draggingBlockId, setDraggingBlockId] = useState<LandingLayoutBlockId | null>(null)
   const [sliderIds, setSliderIds] = useState<string[]>([])
+  const [monthlyWinnerIds, setMonthlyWinnerIds] = useState<string[]>([])
   const [showcases, setShowcases] = useState<ShowcaseDraft[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -146,6 +148,11 @@ export function AdminLandingPage() {
           data.sliderContentIds?.length
             ? data.sliderContentIds
             : data.slider.map((item) => item.id),
+        )
+        setMonthlyWinnerIds(
+          data.monthlyWinnerContentIds?.length
+            ? data.monthlyWinnerContentIds
+            : (data.monthlyWinners ?? []).map((item) => item.id),
         )
         setShowcases(
           data.showcases.map((showcase) => ({
@@ -280,6 +287,25 @@ export function AdminLandingPage() {
     })
   }
 
+  const studentCinemaCatalog = useMemo(
+    () => pickerCatalog.filter((item) => item.program === 'student_cinema'),
+    [pickerCatalog],
+  )
+
+  const persistLayout = async (nextLayout: LandingLayoutConfig) => {
+    const normalized = normalizeLandingLayout(
+      nextLayout,
+      customBlocks.map((block) => block.id),
+    )
+    const { layout: saved } = await updateLandingLayoutConfig(normalized)
+    setLayout(
+      normalizeLandingLayout(
+        saved,
+        customBlocks.map((block) => block.id),
+      ),
+    )
+  }
+
   const toggleBlockHidden = (id: LandingLayoutBlockId) => {
     setLayout((current) => {
       const normalized = normalizeLandingLayout(
@@ -289,7 +315,11 @@ export function AdminLandingPage() {
       const hidden = normalized.hidden.includes(id)
         ? normalized.hidden.filter((entry) => entry !== id)
         : [...normalized.hidden, id]
-      return { ...normalized, hidden }
+      const nextLayout = { ...normalized, hidden }
+      void persistLayout(nextLayout).catch((err) => {
+        setMessage(err instanceof Error ? err.message : 'Gizleme ayarı kaydedilemedi.')
+      })
+      return nextLayout
     })
   }
 
@@ -356,6 +386,7 @@ export function AdminLandingPage() {
     }
     const builtInId = id as BuiltInLandingBlockId
     if (builtInId === 'slider') return `${sliderIds.length} içerik seçili`
+    if (builtInId === 'studentMonthlyWinners') return `${monthlyWinnerIds.length} birinci seçili`
     if (builtInId === 'showcases') return `${showcases.length} kategori şeridi`
     if (builtInId === 'faq') return `${sections.faq.items.length} soru`
     if (layout.hidden.includes(id)) return 'Misafir sayfasında gizli'
@@ -442,6 +473,7 @@ export function AdminLandingPage() {
         sections,
         layout,
         sliderIds: persistedSliderIds,
+        monthlyWinnerIds: monthlyWinnerIds.filter((id) => validIds.has(id)),
         showcases: persistedShowcases,
         customBlocks: persistedCustomBlocks,
       })
@@ -460,6 +492,11 @@ export function AdminLandingPage() {
         data.sliderContentIds?.length
           ? data.sliderContentIds
           : data.slider.map((item) => item.id),
+      )
+      setMonthlyWinnerIds(
+        data.monthlyWinnerContentIds?.length
+          ? data.monthlyWinnerContentIds
+          : (data.monthlyWinners ?? []).map((item) => item.id),
       )
       setShowcases(
         data.showcases.map((showcase) => ({
@@ -720,6 +757,83 @@ export function AdminLandingPage() {
             konumunu değiştirebilirsiniz.
           </p>
         )
+      case 'studentMonthlyWinners':
+        return (
+          <>
+            <p className="text-sm text-sineoda-muted">
+              Ayın birincilerini buradan seçin. Liste boş bırakılırsa Genç Sinema admin panelindeki
+              &quot;Ayın birincisi&quot; rozetli filmler otomatik gösterilir.
+            </p>
+            {monthlyWinnerIds.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {monthlyWinnerIds.map((contentId, index) => {
+                  const item = studentCinemaCatalog.find((entry) => entry.id === contentId)
+                  if (!item) return null
+                  return (
+                    <div
+                      key={contentId}
+                      className="flex items-center gap-2 rounded-lg border border-sineoda-gold/30 bg-sineoda-gold/10 px-2 py-1"
+                    >
+                      <img
+                        src={resolveMediaUrl(item.poster)}
+                        alt=""
+                        className="h-10 w-7 rounded object-cover"
+                      />
+                      <span className="max-w-[140px] truncate text-xs text-white">{item.title}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMonthlyWinnerIds((current) => {
+                            const next = [...current]
+                            if (index > 0) [next[index - 1], next[index]] = [next[index], next[index - 1]]
+                            return next
+                          })
+                        }}
+                        className="text-xs text-white/60 hover:text-white"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMonthlyWinnerIds((current) => {
+                            const next = [...current]
+                            if (index < next.length - 1) [next[index], next[index + 1]] = [next[index + 1], next[index]]
+                            return next
+                          })
+                        }}
+                        className="text-xs text-white/60 hover:text-white"
+                      >
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setMonthlyWinnerIds((current) => current.filter((id) => id !== contentId))
+                        }
+                        className="text-xs text-red-300 hover:text-red-200"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            <ContentPicker
+              catalog={studentCinemaCatalog}
+              selectedIds={monthlyWinnerIds}
+              onToggle={(contentId) => {
+                setMonthlyWinnerIds((current) =>
+                  current.includes(contentId)
+                    ? current.filter((id) => id !== contentId)
+                    : [...current, contentId],
+                )
+              }}
+              searchPlaceholder="Genç Sinema filmi ara..."
+            />
+          </>
+        )
       case 'showcases':
         return (
           <>
@@ -906,8 +1020,8 @@ export function AdminLandingPage() {
 
       <div className="rounded-2xl border border-dashed border-white/15 bg-[#11141c]/60 px-4 py-4">
         <p className="text-sm text-sineoda-muted">
-          Yeni bölüm ekleyin — tip seçin, içerik satırına film/dizi ekleyebilirsiniz. Gizlemek için bölüm panelindeki göz
-          simgesini kullanın.
+          Yeni bölüm ekleyin — tip seçin, içerik satırına film/dizi ekleyebilirsiniz. Gizle/Göster
+          anında kaydedilir; diğer değişiklikler için Kaydet&apos;e basın.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {(Object.entries(CUSTOM_BLOCK_TYPE_LABELS) as [LandingCustomBlockType, string][]).map(([type, label]) => (

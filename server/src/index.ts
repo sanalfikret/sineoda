@@ -158,24 +158,37 @@ app.get('/api/bootstrap', (_req, res) => {
        LIMIT 12`,
     ).map(mapContent)
 
-    const studentCinemaMonthlyWinners = dbAll<ContentRow & { school_name: string | null; creator_name: string | null }>(
-      `${contentWithMetaSql}
+    let landing
+    try {
+      landing = getLandingConfig()
+    } catch {
+      landing = {
+        slider: [],
+        sliderContentIds: [],
+        showcases: [],
+        hero: undefined,
+        sections: undefined,
+        layout: undefined,
+        customBlocks: [],
+        monthlyWinnerContentIds: [],
+        monthlyWinners: [],
+      }
+    }
+
+    const studentCinemaMonthlyWinners =
+      landing.monthlyWinners.length > 0
+        ? landing.monthlyWinners
+        : dbAll<ContentRow & { school_name: string | null; creator_name: string | null }>(
+            `${contentWithMetaSql}
        WHERE ${PUBLISHED_CONTENT_SQL}
          AND c.program = 'student_cinema'
          AND ${MAIN_CATALOG_SQL}
          AND ${getMonthlyAwardWinnersSql()}
        ORDER BY c.monthly_award_period DESC
        LIMIT 12`,
-    ).map(mapContent)
+          ).map(mapContent)
 
     const categories = mapCategoriesResponse()
-
-    let landing = { slider: [] as ReturnType<typeof mapContent>[], showcases: [] as Array<{ id: string; title: string; icon: string; description: string; items: ReturnType<typeof mapContent>[] }> }
-    try {
-      landing = getLandingConfig()
-    } catch {
-      // landing tabloları henüz yoksa bootstrap yine de çalışsın
-    }
 
     res.json({
       catalog,
