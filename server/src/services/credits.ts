@@ -33,6 +33,22 @@ export function parseCredits(value?: string | null): ContentCredits {
   }
 }
 
+export function validateApplicationCredits(credits: ContentCreditsInput | unknown) {
+  if (!credits || typeof credits !== 'object') {
+    throw new Error('Film künyesi (yönetmen, yapımcı, oyuncu kadrosu) zorunludur.')
+  }
+  const input = credits as ContentCreditsInput
+  if (!input.directors?.length) {
+    throw new Error('Yönetmen bilgisi zorunludur.')
+  }
+  if (!input.producers?.length) {
+    throw new Error('Yapımcı bilgisi zorunludur.')
+  }
+  if (!input.cast?.length) {
+    throw new Error('Oyuncu kadrosu zorunludur.')
+  }
+}
+
 export function serializeCredits(credits: ContentCreditsInput | unknown) {
   if (!credits || typeof credits !== 'object') return '{}'
   const input = credits as ContentCreditsInput

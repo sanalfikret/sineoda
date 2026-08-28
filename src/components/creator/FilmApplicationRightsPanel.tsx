@@ -36,10 +36,10 @@ export function FilmApplicationRightsPanel({
   return (
     <div className="space-y-6 rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
       <div>
-        <h3 className="text-base font-semibold text-amber-100">Hak beyanı ve belgeler</h3>
+        <h3 className="text-base font-semibold text-amber-100">Yönetmen ve yapımcı — hak beyanı</h3>
         <p className="mt-1 text-sm text-sineoda-muted">
-          Her hak kategorisi için beyan onayı verin ve destekleyici belge yükleyin (PDF veya görsel).
-          Tüm yasal sorumluluk size aittir.
+          Yönetmen ve yapımcı olarak telif haklarınızı beyan edin; her kategori için destekleyici belge
+          yükleyin (PDF veya görsel). Tüm yasal sorumluluk size aittir.
         </p>
       </div>
 

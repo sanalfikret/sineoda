@@ -25,13 +25,13 @@ Bu şartları kabul ederek Sineoda yapımcı programına katılırsınız.
 `.trim()
 
 export const CREATOR_DOC_TYPES = [
-  { value: 'ownership', label: 'Telif / mülkiyet belgesi' },
-  { value: 'film_rights', label: 'Film telif / yapım hakkı' },
+  { value: 'ownership', label: 'Yönetmen / yapımcı telif belgesi' },
+  { value: 'film_rights', label: 'Yönetmen / yapımcı — film hakları' },
   { value: 'music_rights', label: 'Müzik / ses hakları' },
   { value: 'performer_release', label: 'Oyuncu / performans izni' },
   { value: 'image_rights', label: 'Görüntü / fotoğraf / arşiv izni' },
   { value: 'license', label: 'Yayın lisans sözleşmesi' },
-  { value: 'producer', label: 'Yapımcı / stüdyo belgesi' },
+  { value: 'producer', label: 'Yapımcı belgesi' },
   { value: 'school_approval', label: 'Okul / mezuniyet projesi onayı' },
   { value: 'student_id', label: 'Öğrenci kimliği' },
   { value: 'other', label: 'Diğer destekleyici belge' },

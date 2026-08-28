@@ -11,7 +11,7 @@ import {
 import { mapContent, serializeSubtitles, slugify } from '../mappers.js'
 import { normalizeContentType } from '../constants/contentTypes.js'
 import { parseContentAddedAt } from '../services/license.js'
-import { serializeCredits } from '../services/credits.js'
+import { serializeCredits, validateApplicationCredits } from '../services/credits.js'
 import { parseFestivalsBody, serializeFestivals } from '../services/festivals.js'
 import { resolveDurationFields } from '../services/duration.js'
 import {
@@ -202,7 +202,7 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
     }
   } else if (!creatorHasBaseDocuments(creator.id)) {
     res.status(400).json({
-      error: 'Ek içerik göndermeden önce hesabınıza en az bir telif / mülkiyet belgesi eklemelisiniz.',
+      error: 'Ek içerik göndermeden önce hesabınıza yönetmen / yapımcı belgesi eklemelisiniz.',
     })
     return
   }
@@ -213,9 +213,30 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
     return
   }
 
-  const videoUrl = String(body.videoUrl ?? body.video_url ?? '').trim()
+  const downloadLink = String(
+    body.downloadLink ?? body.sourceVideoUrl ?? body.source_video_url ?? '',
+  ).trim()
+
+  if (isMainApplication && !downloadLink) {
+    res.status(400).json({ error: 'Film indirme linki zorunludur.' })
+    return
+  }
+
+  if (isMainApplication && body.credits !== undefined) {
+    try {
+      validateApplicationCredits(body.credits)
+    } catch (err) {
+      res.status(400).json({ error: err instanceof Error ? err.message : 'Film künyesi eksik.' })
+      return
+    }
+  } else if (isMainApplication) {
+    res.status(400).json({ error: 'Film künyesi (yönetmen, yapımcı, oyuncu kadrosu) zorunludur.' })
+    return
+  }
+
+  const videoUrl = String(body.videoUrl ?? body.video_url ?? '').trim() || downloadLink
   if (!videoUrl) {
-    res.status(400).json({ error: 'Video URL veya dosya zorunlu.' })
+    res.status(400).json({ error: 'Film indirme linki veya video dosyası zorunlu.' })
     return
   }
 
@@ -285,7 +306,7 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
       String(body.poster ?? '').trim(),
       String(body.backdrop ?? body.poster ?? '').trim(),
       videoUrl,
-      videoUrl,
+      downloadLink || videoUrl,
       String(body.streamProvider ?? body.stream_provider ?? 'custom'),
       String(body.trailerUrl ?? body.trailer_url ?? ''),
       String(body.videoFormat ?? body.video_format ?? 'standard'),

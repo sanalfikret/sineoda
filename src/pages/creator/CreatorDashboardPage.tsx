@@ -16,6 +16,7 @@ import {
 import { ShareButton } from '../../components/ShareButton'
 import { useAuth } from '../../context/AuthContext'
 import { CREATOR_DOC_TYPES } from '../../constants/creatorLegal'
+import { CREATOR_FILM_UPLOAD_REQUIREMENTS } from '../../constants/creatorUpload'
 import {
   FilmApplicationRightsPanel,
   isFilmApplicationReady,
@@ -100,7 +101,7 @@ export function CreatorDashboardPage() {
   const [accountingMonth, setAccountingMonth] = useState('')
   const [accounting, setAccounting] = useState<CreatorAccountingReport | null>(null)
 
-  const [docType, setDocType] = useState('ownership')
+  const [docType, setDocType] = useState('producer')
   const [docUploading, setDocUploading] = useState(false)
 
   const [showForm, setShowForm] = useState(false)
@@ -117,6 +118,7 @@ export function CreatorDashboardPage() {
     rating: '13+',
     type: 'film' as ContentItem['type'],
     genres: '',
+    downloadLink: '',
     videoUrl: '',
     poster: '',
     contentFormat: 'main' as 'main' | 'bts' | 'teacher_note',
@@ -224,6 +226,7 @@ export function CreatorDashboardPage() {
       rating: '13+',
       type: 'film',
       genres: '',
+      downloadLink: '',
       videoUrl: '',
       poster: '',
       contentFormat: 'main',
@@ -238,6 +241,12 @@ export function CreatorDashboardPage() {
 
   const openApplicationForm = () => {
     resetApplicationForm()
+    const studio = user?.creator?.studioName ?? ''
+    setForm((current) => ({
+      ...current,
+      producers: studio,
+      studio,
+    }))
     setShowForm(true)
   }
 
@@ -276,6 +285,22 @@ export function CreatorDashboardPage() {
     event.preventDefault()
     const isMainApplication = program !== 'student_cinema' || form.contentFormat === 'main'
     if (isMainApplication) {
+      if (!form.downloadLink.trim()) {
+        setError('Film indirme linki zorunludur.')
+        return
+      }
+      if (!form.directors.trim()) {
+        setError('Yönetmen bilgisi zorunludur.')
+        return
+      }
+      if (!form.producers.trim()) {
+        setError('Yapımcı bilgisi zorunludur.')
+        return
+      }
+      if (!form.cast.trim()) {
+        setError('Oyuncu kadrosu zorunludur.')
+        return
+      }
       const missing = missingApplicationMessage(rightsDeclaration, applicationDocs)
       if (missing) {
         setError(missing)
@@ -301,7 +326,8 @@ export function CreatorDashboardPage() {
         genres,
         poster: form.poster,
         backdrop: form.poster,
-        videoUrl: form.videoUrl,
+        downloadLink: form.downloadLink.trim(),
+        videoUrl: form.videoUrl.trim() || form.downloadLink.trim(),
         credits: buildCredits(form),
         festivals: buildFestivals(form.festivals),
         contentFormat: program === 'student_cinema' ? form.contentFormat : 'main',
@@ -480,9 +506,10 @@ export function CreatorDashboardPage() {
         <section className="mb-8 rounded-xl border border-white/10 bg-[#11141c] p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-semibold">Telif / mülkiyet belgeleri</h2>
+              <h2 className="text-lg font-semibold">Yönetmen ve yapımcı belgeleri</h2>
               <p className="mt-1 text-sm text-sineoda-muted">
-                İçeriğin size ait olduğunu kanıtlayan belgeler. Tüm yasal sorumluluk size aittir.
+                Yönetmen ve yapımcı olarak telif hakkının size ait olduğunu kanıtlayan belgeler.
+                Tüm yasal sorumluluk size aittir.
               </p>
             </div>
             <span className="text-sm text-sineoda-muted">{documentCount} belge</span>
@@ -574,8 +601,20 @@ export function CreatorDashboardPage() {
               <div>
                 <h3 className="text-lg font-semibold text-white">Film Başvurusu</h3>
                 <p className="mt-1 text-sm text-sineoda-muted">
-                  Filminizi ve hak belgelerinizi gönderin. İnceleme sonrası yayına alınır.
+                  Film indirme linki, künye, ödüller ve yönetmen/yapımcı belgelerinizi gönderin. İnceleme
+                  sonrası yayına alınır.
                 </p>
+              </div>
+
+              <div className="rounded-xl border border-sineoda-gold/25 bg-sineoda-gold/5 p-4">
+                <p className="text-sm font-semibold text-sineoda-gold">
+                  {CREATOR_FILM_UPLOAD_REQUIREMENTS.title}
+                </p>
+                <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-white/80">
+                  {CREATOR_FILM_UPLOAD_REQUIREMENTS.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 {program === 'student_cinema' && (
@@ -704,8 +743,9 @@ export function CreatorDashboardPage() {
                   />
                 </label>
                 <label className="block sm:col-span-2">
-                  <span className="mb-1 block text-sm">Yönetmen(ler)</span>
+                  <span className="mb-1 block text-sm">Yönetmen(ler) *</span>
                   <textarea
+                    required
                     rows={2}
                     value={form.directors}
                     onChange={(e) => setForm({ ...form, directors: e.target.value })}
@@ -713,37 +753,37 @@ export function CreatorDashboardPage() {
                     className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
                   />
                 </label>
-                {program === 'student_cinema' && (
-                  <>
-                    <label className="block">
-                      <span className="mb-1 block text-sm">Yapımcı(lar)</span>
-                      <textarea
-                        rows={2}
-                        value={form.producers}
-                        onChange={(e) => setForm({ ...form, producers: e.target.value })}
-                        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
-                      />
-                    </label>
-                    <label className="block">
-                      <span className="mb-1 block text-sm">Oyuncular / Ekip</span>
-                      <textarea
-                        rows={2}
-                        value={form.cast}
-                        onChange={(e) => setForm({ ...form, cast: e.target.value })}
-                        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
-                      />
-                    </label>
-                    <label className="block sm:col-span-2">
-                      <span className="mb-1 block text-sm">Yapım / Okul stüdyosu</span>
-                      <input
-                        value={form.studio}
-                        onChange={(e) => setForm({ ...form, studio: e.target.value })}
-                        placeholder="Örn: İstanbul Üniversitesi Sinema Kulübü"
-                        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
-                      />
-                    </label>
-                  </>
-                )}
+                <label className="block sm:col-span-2">
+                  <span className="mb-1 block text-sm">Yapımcı(lar) *</span>
+                  <textarea
+                    required
+                    rows={2}
+                    value={form.producers}
+                    onChange={(e) => setForm({ ...form, producers: e.target.value })}
+                    placeholder="Her satıra bir isim veya virgülle ayırın"
+                    className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
+                  />
+                </label>
+                <label className="block sm:col-span-2">
+                  <span className="mb-1 block text-sm">Oyuncu kadrosu / ekip *</span>
+                  <textarea
+                    required
+                    rows={3}
+                    value={form.cast}
+                    onChange={(e) => setForm({ ...form, cast: e.target.value })}
+                    placeholder="Başrol, yan rol ve önemli ekip üyeleri"
+                    className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
+                  />
+                </label>
+                <label className="block sm:col-span-2">
+                  <span className="mb-1 block text-sm">Yapım / stüdyo</span>
+                  <input
+                    value={form.studio}
+                    onChange={(e) => setForm({ ...form, studio: e.target.value })}
+                    placeholder="Örn: Bağımsız yapım, stüdyo adı"
+                    className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
+                  />
+                </label>
               </div>
 
               <FestivalCreditsEditor
@@ -753,6 +793,20 @@ export function CreatorDashboardPage() {
               />
 
               <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block sm:col-span-2">
+                  <span className="mb-1 block text-sm">Film indirme linki *</span>
+                  <input
+                    required
+                    type="url"
+                    value={form.downloadLink}
+                    onChange={(e) => setForm({ ...form, downloadLink: e.target.value })}
+                    placeholder="https://drive.google.com/... (H.265, Full HD)"
+                    className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
+                  />
+                  <p className="mt-1 text-xs text-sineoda-muted">
+                    Filmin tam dosyası — H.265 codec, kaliteden ödün vermeden Full HD (1080p+)
+                  </p>
+                </label>
                 <label className="block">
                   <span className="mb-1 block text-sm">Poster</span>
                   <input
@@ -766,7 +820,7 @@ export function CreatorDashboardPage() {
                   />
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-sm">Video</span>
+                  <span className="mb-1 block text-sm">Video (isteğe bağlı — önizleme)</span>
                   <input
                     type="file"
                     accept="video/*"
@@ -777,15 +831,16 @@ export function CreatorDashboardPage() {
                     className="text-sm text-sineoda-muted"
                   />
                 </label>
-                <label className="block sm:col-span-2">
-                  <span className="mb-1 block text-sm">Video URL (veya yüklenen dosya)</span>
-                  <input
-                    required
-                    value={form.videoUrl}
-                    onChange={(e) => setForm({ ...form, videoUrl: e.target.value })}
-                    className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
-                  />
-                </label>
+                {form.videoUrl && form.videoUrl !== form.downloadLink && (
+                  <label className="block sm:col-span-2">
+                    <span className="mb-1 block text-sm">Yüklenen video URL</span>
+                    <input
+                      readOnly
+                      value={form.videoUrl}
+                      className="w-full rounded-lg border border-white/10 bg-[#0d0f14]/50 px-3 py-2 text-sm text-sineoda-muted"
+                    />
+                  </label>
+                )}
               </div>
 
               {(program !== 'student_cinema' || form.contentFormat === 'main') && (
