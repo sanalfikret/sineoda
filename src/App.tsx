@@ -45,6 +45,7 @@ import { VerifyEmailPage } from './pages/VerifyEmailPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { ContentDetailPage } from './pages/ContentDetailPage'
 import { SignupPage } from './pages/SignupPage'
+import { needsSubscriptionPayment, postLoginPath } from './utils/billing'
 import { CreatorRoute } from './components/creator/CreatorRoute'
 import { CreatorLoginPage } from './pages/creator/CreatorLoginPage'
 import { CreatorRegisterPage } from './pages/creator/CreatorRegisterPage'
@@ -85,6 +86,10 @@ function HomeRoute() {
 
   if (user && isCreator) {
     return <Navigate to="/creator" replace />
+  }
+
+  if (user && needsSubscriptionPayment(user)) {
+    return <Navigate to={postLoginPath(user)} replace />
   }
 
   if (user && activeProfile) {
@@ -138,7 +143,7 @@ function App() {
       <Route
         path="/profiller"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requireSubscription>
             <ProfilesPage />
           </ProtectedRoute>
         }
@@ -156,7 +161,7 @@ function App() {
       <Route
         path="/listem"
         element={
-          <ProtectedRoute requireProfile>
+          <ProtectedRoute requireProfile requireSubscription>
             <AuthenticatedProviders>
               <NavRouteGuard>
                 <MyListPage />
@@ -168,7 +173,7 @@ function App() {
       <Route
         path="/icerik/:id"
         element={
-          <ProtectedRoute requireProfile>
+          <ProtectedRoute requireProfile requireSubscription>
             <AuthenticatedProviders>
               <ContentDetailPage />
             </AuthenticatedProviders>
@@ -178,7 +183,7 @@ function App() {
       <Route
         path="/diziler"
         element={
-          <ProtectedRoute requireProfile>
+          <ProtectedRoute requireProfile requireSubscription>
             <AuthenticatedProviders>
               <NavRouteGuard contentType="dizi">
                 <BrowsePage contentType="dizi" pageTitle="Diziler" />
@@ -190,7 +195,7 @@ function App() {
       <Route
         path="/filmler"
         element={
-          <ProtectedRoute requireProfile>
+          <ProtectedRoute requireProfile requireSubscription>
             <AuthenticatedProviders>
               <NavRouteGuard contentType="film">
                 <BrowsePage contentType="film" pageTitle="Filmler" />
@@ -202,7 +207,7 @@ function App() {
       <Route
         path="/belgeseller"
         element={
-          <ProtectedRoute requireProfile>
+          <ProtectedRoute requireProfile requireSubscription>
             <AuthenticatedProviders>
               <NavRouteGuard contentType="belgesel">
                 <BrowsePage contentType="belgesel" pageTitle="Belgeseller" />
@@ -214,7 +219,7 @@ function App() {
       <Route
         path="/dikey-diziler"
         element={
-          <ProtectedRoute requireProfile>
+          <ProtectedRoute requireProfile requireSubscription>
             <AuthenticatedProviders>
               <NavRouteGuard verticalOnly>
                 <BrowsePage verticalOnly pageTitle="Dikey Diziler" />
@@ -226,7 +231,7 @@ function App() {
       <Route
         path="/genc-sinema"
         element={
-          <ProtectedRoute requireProfile>
+          <ProtectedRoute requireProfile requireSubscription>
             <AuthenticatedProviders>
               <NavRouteGuard studentCinemaOnly>
                 <BrowsePage studentCinemaOnly pageTitle="Genç Sinema" />
@@ -238,7 +243,7 @@ function App() {
       <Route
         path="/cekim-notlari"
         element={
-          <ProtectedRoute requireProfile>
+          <ProtectedRoute requireProfile requireSubscription>
             <AuthenticatedProviders>
               <NavRouteGuard cekimNotlariOnly>
                 <CekimNotlariPage />
@@ -250,7 +255,7 @@ function App() {
       <Route
         path="/kisa-filmler"
         element={
-          <ProtectedRoute requireProfile>
+          <ProtectedRoute requireProfile requireSubscription>
             <AuthenticatedProviders>
               <BrowsePage contentType="kisa-film" pageTitle="Kısa Filmler" />
             </AuthenticatedProviders>

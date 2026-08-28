@@ -4,7 +4,7 @@ import { sendSmsCode, uploadStudentId } from '../api/client'
 import { AuthLayout } from '../components/AuthLayout'
 import { LEGAL_LINKS } from '../constants/legal'
 import { useAuth } from '../context/AuthContext'
-import { planDisplayName } from '../utils/billing'
+import { planDisplayName, postLoginPath } from '../utils/billing'
 
 type SignupPlanId = 'standard' | 'student'
 
@@ -53,7 +53,7 @@ export function SignupPage() {
   const [sendingCode, setSendingCode] = useState(false)
 
   if (user) {
-    return <Navigate to="/profiller" replace />
+    return <Navigate to={postLoginPath(user)} replace />
   }
 
   const handleSendCode = async () => {

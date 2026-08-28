@@ -2,13 +2,19 @@ import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { getToken } from '../api/client'
 import { useAuth } from '../context/AuthContext'
+import { needsSubscriptionPayment, subscriptionCheckoutPath } from '../utils/billing'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
   requireProfile?: boolean
+  requireSubscription?: boolean
 }
 
-export function ProtectedRoute({ children, requireProfile = false }: ProtectedRouteProps) {
+export function ProtectedRoute({
+  children,
+  requireProfile = false,
+  requireSubscription = false,
+}: ProtectedRouteProps) {
   const { user, activeProfile, isLoading, refreshUser } = useAuth()
   const [recovering, setRecovering] = useState(false)
   const token = getToken()
@@ -32,6 +38,10 @@ export function ProtectedRoute({ children, requireProfile = false }: ProtectedRo
 
   if (!token || !user) {
     return <Navigate to="/giris" replace />
+  }
+
+  if (requireSubscription && needsSubscriptionPayment(user)) {
+    return <Navigate to={subscriptionCheckoutPath(user)} replace />
   }
 
   if (requireProfile && !activeProfile) {

@@ -20,7 +20,7 @@ interface Plan {
 }
 
 export function PricingPage() {
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [plans, setPlans] = useState<Plan[]>([])
@@ -91,6 +91,7 @@ export function PricingPage() {
 
         if ('demoMode' in result && result.demoMode) {
           setMessage(result.message)
+          await refreshUser()
           const sub = await fetchSubscription()
           setSubscription({ status: sub.status, startedAt: sub.startedAt, expiresAt: sub.expiresAt })
           setSearchParams({}, { replace: true })
@@ -111,7 +112,7 @@ export function PricingPage() {
         setCheckoutPlan(null)
       }
     },
-    [user, plans, studentIdReady, studentIdFile, provider, navigate, setSearchParams],
+    [user, plans, studentIdReady, studentIdFile, provider, navigate, setSearchParams, refreshUser],
   )
 
   useEffect(() => {
