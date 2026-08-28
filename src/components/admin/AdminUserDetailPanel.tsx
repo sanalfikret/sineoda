@@ -4,12 +4,14 @@ import {
   sendAdminUserMessage,
   type AdminUser,
 } from '../../api/client'
+import { planDisplayName } from '../../utils/billing'
 
 function subscriptionLabel(user: AdminUser) {
   const status = user.subscription?.status ?? 'free'
   const plan = user.subscription?.plan
   if (status === 'active') {
-    return plan === 'yearly' ? 'Yıllık aktif' : plan === 'monthly' ? 'Aylık aktif' : 'Aktif'
+    const label = planDisplayName(plan)
+    return label === '—' ? 'Aktif' : `${label} · aktif`
   }
   if (status === 'expired') return 'Süresi dolmuş'
   return 'Ücretsiz'

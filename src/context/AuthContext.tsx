@@ -36,14 +36,15 @@ interface AuthContextValue {
   isLoading: boolean
   isAdmin: boolean
   isCreator: boolean
-  login: (email: string, password: string, options?: { requireAdmin?: boolean }) => Promise<void>
+  login: (email: string, password: string, options?: { requireAdmin?: boolean }) => Promise<User>
   signup: (
     name: string,
     email: string,
     password: string,
     phone: string,
     smsCode: string,
-  ) => Promise<{ message: string; email: string; devVerifyUrl?: string }>
+    options?: { planId?: string; studentIdUrl?: string },
+  ) => Promise<{ message: string; email: string; planId?: string; devVerifyUrl?: string }>
   creatorLogin: (email: string, password: string) => Promise<void>
   creatorSignup: (data: {
     name: string
@@ -147,13 +148,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfileId(null)
       setActiveProfile(null)
       applyUser(loggedInUser)
+      return loggedInUser
     },
     [applyUser],
   )
 
-  const signup = useCallback(async (name: string, email: string, password: string, phone: string, smsCode: string) => {
-    return signupRequest(name, email, password, phone, smsCode)
-  }, [])
+  const signup = useCallback(
+    async (
+      name: string,
+      email: string,
+      password: string,
+      phone: string,
+      smsCode: string,
+      options?: { planId?: string; studentIdUrl?: string },
+    ) => {
+      return signupRequest(name, email, password, phone, smsCode, options)
+    },
+    [],
+  )
 
   const creatorLogin = useCallback(async (email: string, password: string) => {
     const { token, user: loggedInUser } = await creatorLoginRequest(email, password)

@@ -28,7 +28,7 @@ export function giftSubscriptionMonths(userId: string, months: number) {
   dbRun(
     `UPDATE users
      SET subscription_status = 'active',
-         subscription_plan = COALESCE(subscription_plan, 'monthly'),
+         subscription_plan = COALESCE(subscription_plan, 'standard'),
          subscription_started_at = ?,
          subscription_expires_at = ?
      WHERE id = ?`,
@@ -38,6 +38,6 @@ export function giftSubscriptionMonths(userId: string, months: number) {
   return {
     months,
     expiresAt: newExpiry.toISOString(),
-    plan: user.subscription_plan ?? 'monthly',
+    plan: user.subscription_plan ?? 'standard',
   }
 }

@@ -8,6 +8,7 @@ import { dbAll, dbGet, dbRun, uploadsDir } from '../db.js'
 import { getProfileId, requireAuth, signToken, type AuthRequest } from '../middleware/auth.js'
 import { mapProfile, mapUser } from '../mappers.js'
 import { sendPasswordResetEmail, sendEmailVerificationEmail } from '../services/email.js'
+import { getPlan, normalizePlanId, planRequiresStudentId } from '../services/plans.js'
 import { isValidTurkishMobile, normalizePhone, sendVerificationSms } from '../services/sms.js'
 import type { ProfileRow, UserRow } from '../types.js'
 
@@ -89,16 +90,31 @@ router.post('/sms/send', async (req, res) => {
 })
 
 router.post('/signup', async (req, res) => {
-  const { name, email, password, phone, smsCode } = req.body as {
+  const { name, email, password, phone, smsCode, planId, studentIdUrl } = req.body as {
     name?: string
     email?: string
     password?: string
     phone?: string
     smsCode?: string
+    planId?: string
+    studentIdUrl?: string
   }
 
   if (!name?.trim() || !email?.trim() || !password || password.length < 6) {
     res.status(400).json({ error: 'Geçerli ad, e-posta ve en az 6 karakterli şifre gerekli.' })
+    return
+  }
+
+  const selectedPlanId = normalizePlanId(String(planId ?? 'standard')) ?? 'standard'
+  const plan = getPlan(selectedPlanId)
+  if (!plan) {
+    res.status(400).json({ error: 'Geçersiz abonelik planı.' })
+    return
+  }
+
+  const studentId = studentIdUrl?.trim() || null
+  if (planRequiresStudentId(selectedPlanId) && !studentId) {
+    res.status(400).json({ error: 'Öğrenci planı için öğrenci kimliği yüklemeniz gerekir.' })
     return
   }
 
@@ -147,8 +163,20 @@ router.post('/signup', async (req, res) => {
   const userId = uuid()
   const hash = bcrypt.hashSync(password, 10)
   dbRun(
-    'INSERT INTO users (id, name, email, password_hash, role, created_at, phone, phone_verified, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [userId, name.trim(), normalizedEmail, hash, 'user', new Date().toISOString(), normalizedPhone, phoneVerified, 0],
+    'INSERT INTO users (id, name, email, password_hash, role, created_at, phone, phone_verified, email_verified, pending_plan_id, student_id_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [
+      userId,
+      name.trim(),
+      normalizedEmail,
+      hash,
+      'user',
+      new Date().toISOString(),
+      normalizedPhone,
+      phoneVerified,
+      0,
+      selectedPlanId,
+      studentId,
+    ],
   )
   dbRun('INSERT INTO profiles (id, user_id, name, avatar, is_kids) VALUES (?, ?, ?, ?, ?)', [
     uuid(), userId, 'Ana Profil', '🎬', 0,
@@ -160,8 +188,10 @@ router.post('/signup', async (req, res) => {
   const emailResult = await createEmailVerificationToken(userId, normalizedEmail)
 
   res.status(201).json({
-    message: 'Kayıt alındı. Üyeliğini tamamlamak için e-posta adresine gönderilen doğrulama bağlantısına tıkla.',
+    message:
+      'Kayıt alındı. E-postanı doğrula, ardından giriş yap — seçtiğin plan için ödeme adımına yönlendirileceksin.',
     email: normalizedEmail,
+    planId: selectedPlanId,
     ...(emailResult.devMode ? { devVerifyUrl: emailResult.verifyUrl } : {}),
   })
 })

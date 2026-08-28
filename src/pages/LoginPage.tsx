@@ -1,10 +1,11 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom'
+import { useState, type FormEvent } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../components/AuthLayout'
 import { useAuth } from '../context/AuthContext'
+import { postLoginPath } from '../utils/billing'
 
 export function LoginPage() {
-  const { login, user } = useAuth()
+  const { login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [email, setEmail] = useState('')
@@ -15,24 +16,14 @@ export function LoginPage() {
 
   const from = (location.state as { from?: string } | null)?.from ?? '/'
 
-  useEffect(() => {
-    if (user) {
-      navigate('/profiller', { replace: true })
-    }
-  }, [user, navigate])
-
-  if (user) {
-    return <Navigate to="/profiller" replace />
-  }
-
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     setError('')
     setLoading(true)
 
     try {
-      await login(email, password)
-      navigate('/profiller', { replace: true })
+      const loggedInUser = await login(email, password)
+      navigate(postLoginPath(loggedInUser), { replace: true })
     } catch (err) {
       const authError = err as Error & { code?: string; email?: string }
       if (authError.code === 'EMAIL_NOT_VERIFIED') {
@@ -112,7 +103,7 @@ export function LoginPage() {
 
       {from !== '/' && (
         <p className="mt-2 text-center text-xs text-sineoda-muted">
-          Giriş yaptıktan sonra kaldığın yere döneceksin.
+          Giriş yaptıktan sonra ödeme adımına yönlendirileceksin.
         </p>
       )}
     </AuthLayout>

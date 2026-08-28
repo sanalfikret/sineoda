@@ -10,6 +10,7 @@ import {
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { AdminUserDetailPanel } from '../../components/admin/AdminUserDetailPanel'
 import { fuzzySearchMatch, sortByTurkishTitle } from '../../utils/search'
+import { planDisplayName } from '../../utils/billing'
 
 type TabId = 'members' | 'staff'
 
@@ -17,7 +18,8 @@ function subscriptionLabel(user: AdminUser) {
   const status = user.subscription?.status ?? 'free'
   const plan = user.subscription?.plan
   if (status === 'active') {
-    return plan === 'yearly' ? 'Yıllık aktif' : plan === 'monthly' ? 'Aylık aktif' : 'Aktif'
+    const label = planDisplayName(plan)
+    return label === '—' ? 'Aktif' : `${label} · aktif`
   }
   if (status === 'expired') return 'Süresi dolmuş'
   return 'Ücretsiz'

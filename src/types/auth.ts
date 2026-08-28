@@ -38,6 +38,8 @@ export interface User {
   emailVerified?: boolean
   createdAt?: string
   subscription?: Subscription
+  pendingPlanId?: string | null
+  studentIdUrl?: string | null
   creator?: CreatorProfile | null
 }
 

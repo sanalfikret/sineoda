@@ -57,6 +57,8 @@ export function mapUser(row: UserRow, profiles: ProfileRow[] = []) {
       startedAt: row.subscription_started_at ?? null,
       expiresAt: row.subscription_expires_at ?? null,
     },
+    pendingPlanId: row.pending_plan_id ?? null,
+    studentIdUrl: row.student_id_url ?? null,
   }
 }
 
