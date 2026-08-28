@@ -88,4 +88,16 @@
       transform: scale(1.05);
     }
   }
+
+  html[data-tv='true'] .focus-ring,
+  html[data-tv='true'] a:focus-visible,
+  html[data-tv='true'] button:focus-visible {
+    outline: 3px solid var(--color-sineoda-gold);
+    outline-offset: 3px;
+  }
+
+  html[data-tv='true'] .tv-player button {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
 }

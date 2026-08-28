@@ -9,6 +9,8 @@ import { AgeRatingOverlay } from './AgeRatingOverlay'
 import { PlaybackGuardOverlay } from './PlaybackGuardOverlay'
 import { PlayerFullscreenButton } from './PlayerFullscreenButton'
 import { usePlaybackGuard } from '../hooks/usePlaybackGuard'
+import { useTvRemoteKeys } from '../hooks/useTvRemoteKeys'
+import { useTvMode } from '../hooks/useTvMode'
 
 interface VideoPlayerProps {
   target: PlayTarget | null
@@ -61,6 +63,7 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
   const hasCaptions = subtitles.length > 0 && !youtubeEmbedUrl
   const isVertical = target?.item.videoFormat === 'vertical'
   const canTrack = Boolean(getToken() && getProfileId() && target)
+  const isTv = useTvMode()
 
   const clearNextCountdown = useCallback(() => {
     if (countdownRef.current) {
@@ -130,13 +133,51 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
     setPlaying(true)
   }, [])
 
+  const handleSeek = useCallback((value: number) => {
+    const video = videoRef.current
+    if (!video) return
+    video.currentTime = value
+    setCurrentTime(value)
+  }, [])
+
+  const togglePlay = useCallback(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    if (video.paused) {
+      void video.play()
+      setPlaying(true)
+    } else {
+      video.pause()
+      setPlaying(false)
+      persistProgress(video.currentTime, video.duration || duration)
+    }
+  }, [duration, persistProgress])
+
   const { guardState, guardMessage, confirmStillWatching } = usePlaybackGuard({
     enabled: Boolean(target && canTrack),
     contentId: target?.item.id,
     episodeId: target?.episodeId,
+    isVideoPlaying: () => Boolean(videoRef.current && !videoRef.current.paused),
     onClose: handleClose,
     pauseVideo,
     resumeVideo,
+  })
+
+  useTvRemoteKeys({
+    enabled: Boolean(target),
+    onBack: handleClose,
+    onPlayPause: togglePlay,
+    onSeekBack: () => {
+      const video = videoRef.current
+      if (!video) return
+      handleSeek(Math.max(0, video.currentTime - 10))
+    },
+    onSeekForward: () => {
+      const video = videoRef.current
+      if (!video) return
+      handleSeek(Math.min(video.duration || duration, video.currentTime + 10))
+    },
   })
 
   useEffect(() => {
@@ -264,27 +305,6 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
 
   if (!target) return null
 
-  const togglePlay = () => {
-    const video = videoRef.current
-    if (!video) return
-
-    if (video.paused) {
-      void video.play()
-      setPlaying(true)
-    } else {
-      video.pause()
-      setPlaying(false)
-      persistProgress(video.currentTime, video.duration || duration)
-    }
-  }
-
-  const handleSeek = (value: number) => {
-    const video = videoRef.current
-    if (!video) return
-    video.currentTime = value
-    setCurrentTime(value)
-  }
-
   const scheduleHideControls = () => {
     if (hideTimerRef.current) window.clearTimeout(hideTimerRef.current)
     setShowControls(true)
@@ -301,7 +321,7 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
       ref={playerRef}
       className={`safe-top safe-bottom fixed inset-0 z-[60] flex items-center justify-center bg-black ${
         isVertical ? 'px-4' : ''
-      }`}
+      } ${isTv ? 'tv-player' : ''}`}
       onMouseMove={scheduleHideControls}
       onTouchStart={scheduleHideControls}
     >

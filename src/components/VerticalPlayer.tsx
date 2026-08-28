@@ -10,6 +10,8 @@ import { AgeRatingOverlay } from './AgeRatingOverlay'
 import { PlaybackGuardOverlay } from './PlaybackGuardOverlay'
 import { PlayerFullscreenButton } from './PlayerFullscreenButton'
 import { usePlaybackGuard } from '../hooks/usePlaybackGuard'
+import { useTvRemoteKeys } from '../hooks/useTvRemoteKeys'
+import { useTvMode } from '../hooks/useTvMode'
 
 interface VerticalPlayerProps {
   target: PlayTarget | null
@@ -53,6 +55,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
   const fullscreenSupported = isFullscreenSupported()
 
   const canTrack = Boolean(getToken() && getProfileId() && target)
+  const isTv = useTvMode()
 
   const sortedEpisodes = useMemo(
     () => [...episodes].sort((a, b) => a.season - b.season || a.episode - b.episode),
@@ -205,13 +208,33 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
     setPlaying(true)
   }, [])
 
+  const togglePlay = useCallback(() => {
+    const video = videoRef.current
+    if (!video) return
+    if (video.paused) {
+      void video.play()
+      setPlaying(true)
+    } else {
+      video.pause()
+      setPlaying(false)
+      persistProgress(video.currentTime, video.duration || duration)
+    }
+  }, [duration, persistProgress])
+
   const { guardState, guardMessage, confirmStillWatching } = usePlaybackGuard({
     enabled: Boolean(target && canTrack),
     contentId: target?.item.id,
     episodeId: currentEpisode?.id ?? target?.episodeId,
+    isVideoPlaying: () => Boolean(videoRef.current && !videoRef.current.paused),
     onClose: handleClose,
     pauseVideo,
     resumeVideo,
+  })
+
+  useTvRemoteKeys({
+    enabled: Boolean(target),
+    onBack: handleClose,
+    onPlayPause: togglePlay,
   })
 
   useEffect(() => {
@@ -265,19 +288,6 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
     }
   }
 
-  const togglePlay = () => {
-    const video = videoRef.current
-    if (!video) return
-    if (video.paused) {
-      void video.play()
-      setPlaying(true)
-    } else {
-      video.pause()
-      setPlaying(false)
-      persistProgress(video.currentTime, video.duration || duration)
-    }
-  }
-
   const handleSeek = (value: number) => {
     const video = videoRef.current
     if (!video) return
@@ -314,7 +324,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
   return (
     <div
       ref={playerRef}
-      className="safe-top safe-bottom fixed inset-0 z-[60] flex items-center justify-center bg-black"
+      className={`safe-top safe-bottom fixed inset-0 z-[60] flex items-center justify-center bg-black${isTv ? ' tv-player' : ''}`}
       onMouseMove={scheduleHideControls}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
