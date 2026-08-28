@@ -227,6 +227,18 @@ function runMigrations() {
   `)
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS playback_sessions (
+      user_id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      profile_id TEXT,
+      content_id TEXT NOT NULL,
+      episode_id TEXT NOT NULL DEFAULT '',
+      started_at TEXT NOT NULL,
+      last_seen_at TEXT NOT NULL
+    );
+  `)
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS watch_activity (
       id TEXT PRIMARY KEY,
       profile_id TEXT NOT NULL,

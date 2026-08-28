@@ -7,7 +7,9 @@ import { resolvePlayVideoUrl } from '../utils/playVideo'
 import { getActiveFullscreenElement, isFullscreenSupported, useFullscreen } from '../hooks/useFullscreen'
 import { ContentActionButtons } from './ContentActionButtons'
 import { AgeRatingOverlay } from './AgeRatingOverlay'
+import { PlaybackGuardOverlay } from './PlaybackGuardOverlay'
 import { PlayerFullscreenButton } from './PlayerFullscreenButton'
+import { usePlaybackGuard } from '../hooks/usePlaybackGuard'
 
 interface VerticalPlayerProps {
   target: PlayTarget | null
@@ -180,6 +182,38 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
     return () => window.clearInterval(interval)
   }, [target, duration, persistProgress])
 
+  const handleClose = useCallback(() => {
+    const video = videoRef.current
+    if (video && canTrack) {
+      persistProgress(video.currentTime, video.duration || duration)
+    }
+    onClose()
+  }, [canTrack, duration, onClose, persistProgress])
+
+  const pauseVideo = useCallback(() => {
+    const video = videoRef.current
+    if (!video) return
+    video.pause()
+    setPlaying(false)
+    persistProgress(video.currentTime, video.duration || duration)
+  }, [duration, persistProgress, canTrack])
+
+  const resumeVideo = useCallback(() => {
+    const video = videoRef.current
+    if (!video) return
+    void video.play().catch(() => setPlaying(false))
+    setPlaying(true)
+  }, [])
+
+  const { guardState, confirmStillWatching } = usePlaybackGuard({
+    enabled: Boolean(target && canTrack),
+    contentId: target?.item.id,
+    episodeId: currentEpisode?.id ?? target?.episodeId,
+    onClose: handleClose,
+    pauseVideo,
+    resumeVideo,
+  })
+
   useEffect(() => {
     if (!target) return
 
@@ -204,17 +238,9 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
       window.clearTimeout(hintTimer)
       if (hideTimerRef.current) window.clearTimeout(hideTimerRef.current)
     }
-  }, [target, episodeIndex, toggleFullscreen])
+  }, [target, episodeIndex, toggleFullscreen, handleClose])
 
   if (!target) return null
-
-  const handleClose = () => {
-    const video = videoRef.current
-    if (video && canTrack) {
-      persistProgress(video.currentTime, video.duration || duration)
-    }
-    onClose()
-  }
 
   const goToEpisode = (index: number) => {
     if (!hasEpisodes) return
@@ -293,6 +319,14 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
+      {guardState !== 'playing' && (
+        <PlaybackGuardOverlay
+          mode={guardState}
+          onContinue={confirmStillWatching}
+          onClose={handleClose}
+        />
+      )}
+
       <AgeRatingOverlay rating={target.item.rating} playbackKey={ratingPlaybackKey} />
 
       <video

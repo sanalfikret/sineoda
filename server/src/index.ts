@@ -16,6 +16,7 @@ import uploadRoutes from './routes/upload.js'
 import userRoutes from './routes/users.js'
 import watchlistRoutes from './routes/watchlist.js'
 import watchProgressRoutes from './routes/watchProgress.js'
+import playbackRoutes from './routes/playback.js'
 import analyticsRoutes from './routes/analytics.js'
 import adminContentRoutes from './routes/adminContent.js'
 import analyticsPublicRoutes from './routes/analyticsPublic.js'
@@ -139,6 +140,7 @@ app.get('/api/health', (_req, res) => {
       qualifiedWatch: true,
       studentCinema: true,
       adCampaigns: true,
+      playbackGuard: true,
     },
     email: config.isEmailConfigured(),
   })
@@ -254,6 +256,7 @@ app.use('/api/episodes', episodeRoutes)
 app.use('/api/content', contentRoutes)
 app.use('/api/categories', categoryRoutes)
 app.use('/api/watch-progress', watchProgressRoutes)
+app.use('/api/playback', playbackRoutes)
 app.use('/api/admin/analytics', analyticsRoutes)
 app.use('/api/admin/content', adminContentRoutes)
 app.use('/api/admin/journal', adminJournalRoutes)

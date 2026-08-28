@@ -6,7 +6,9 @@ import { getYoutubeEmbedUrl, isYoutubeUrl } from '../utils/media'
 import { getActiveFullscreenElement, isFullscreenSupported, useFullscreen } from '../hooks/useFullscreen'
 import { ContentActionButtons } from './ContentActionButtons'
 import { AgeRatingOverlay } from './AgeRatingOverlay'
+import { PlaybackGuardOverlay } from './PlaybackGuardOverlay'
 import { PlayerFullscreenButton } from './PlayerFullscreenButton'
+import { usePlaybackGuard } from '../hooks/usePlaybackGuard'
 
 interface VideoPlayerProps {
   target: PlayTarget | null
@@ -112,6 +114,30 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
     }
     onClose()
   }, [canTrack, duration, onClose, target])
+
+  const pauseVideo = useCallback(() => {
+    const video = videoRef.current
+    if (!video) return
+    video.pause()
+    setPlaying(false)
+    persistProgress(video.currentTime, video.duration || duration)
+  }, [duration, target, canTrack])
+
+  const resumeVideo = useCallback(() => {
+    const video = videoRef.current
+    if (!video) return
+    void video.play().catch(() => setPlaying(false))
+    setPlaying(true)
+  }, [])
+
+  const { guardState, confirmStillWatching } = usePlaybackGuard({
+    enabled: Boolean(target && canTrack),
+    contentId: target?.item.id,
+    episodeId: target?.episodeId,
+    onClose: handleClose,
+    pauseVideo,
+    resumeVideo,
+  })
 
   useEffect(() => {
     if (!target || !mediaUrl || youtubeEmbedUrl) return
@@ -279,6 +305,14 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
       onMouseMove={scheduleHideControls}
       onTouchStart={scheduleHideControls}
     >
+      {guardState !== 'playing' && (
+        <PlaybackGuardOverlay
+          mode={guardState}
+          onContinue={confirmStillWatching}
+          onClose={handleClose}
+        />
+      )}
+
       <AgeRatingOverlay rating={target.item.rating} playbackKey={ratingPlaybackKey} />
 
       <video

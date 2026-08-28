@@ -783,6 +783,34 @@ export async function saveWatchProgress(data: {
   })
 }
 
+export async function startPlaybackSession(data: {
+  sessionId: string
+  contentId: string
+  episodeId?: string
+}) {
+  return api<{ ok: boolean; active: boolean }>('/api/playback/start', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function heartbeatPlaybackSession(sessionId: string) {
+  return api<{ ok: boolean; active: boolean; reason?: string; message?: string }>(
+    '/api/playback/heartbeat',
+    {
+      method: 'POST',
+      body: JSON.stringify({ sessionId }),
+    },
+  )
+}
+
+export async function stopPlaybackSession(sessionId: string) {
+  return api<{ ok: boolean }>('/api/playback/stop', {
+    method: 'POST',
+    body: JSON.stringify({ sessionId }),
+  })
+}
+
 export async function fetchAllWatchProgress() {
   return api<{
     items: Array<{
