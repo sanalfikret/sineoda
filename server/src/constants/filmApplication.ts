@@ -4,8 +4,8 @@ export const FILM_RIGHTS_CATEGORIES = [
     id: 'film_rights',
     docType: 'film_rights',
     declaration:
-      'Filmin telif ve yayın hakları tarafımda veya geçerli yazılı lisans/devir sözleşmesi altındadır.',
-    docLabel: 'Film telif / yapım hakkı belgesi',
+      'Filmin telif ve yayın hakları yönetmen ve yapımcı olarak bende veya geçerli yazılı lisans/devir sözleşmesi altındadır.',
+    docLabel: 'Yönetmen / yapımcı — telif ve yapım hakkı belgesi',
   },
   {
     id: 'music_rights',
