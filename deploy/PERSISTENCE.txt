@@ -2,7 +2,9 @@ SINEODA — VERİ KALICILIĞI (VPS)
 ================================
 
 Üyeler, admin ayarları, ana sayfa düzeni hepsi tek dosyada:
-  persistent/data/sineoda.db
+  persistent/data/sineoda.db    ← DOĞRU KONUM (container bunu kullanır)
+
+YANLIŞ (eski): persistent/sineoda.db — kökte duran dosya container tarafından OKUNMAZ!
 
 Yüklenen görseller:
   persistent/uploads/
