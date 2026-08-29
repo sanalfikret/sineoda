@@ -22,7 +22,7 @@ export function readCachedAuthUser(): User | null {
 
 export function isAuthSessionError(error: unknown) {
   const status = (error as Error & { status?: number }).status
-  return status === 401
+  return status === 401 || status === 403
 }
 
 export function isTransientApiError(error: unknown) {

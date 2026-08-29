@@ -25,7 +25,6 @@ import {
 import type { Profile, User } from '../types/auth'
 import {
   cacheAuthUser,
-  isAuthSessionError,
   readCachedAuthUser,
   sleep,
 } from '../utils/authSession'
@@ -120,31 +119,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         applyUser(cached)
       }
 
-      let sessionInvalid = false
       for (let attempt = 0; attempt < 3; attempt += 1) {
         try {
           const { user: me } = await fetchMe()
           applyUser(me)
           break
-        } catch (error) {
-          if (isAuthSessionError(error)) {
-            sessionInvalid = true
-            break
-          }
+        } catch {
           if (attempt === 2) break
           await sleep(700 * (attempt + 1))
         }
-      }
-
-      if (sessionInvalid && !readCachedAuthUser()) {
-        clearSession()
       }
 
       setIsLoading(false)
     }
 
     void init()
-  }, [applyUser, clearSession])
+  }, [applyUser])
 
   const login = useCallback(
     async (email: string, password: string, options?: { requireAdmin?: boolean }) => {
@@ -214,24 +204,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const refreshUser = useCallback(async () => {
-    try {
-      const { user: me } = await fetchMe()
-      applyUser(me)
-    } catch (error) {
-      if (isAuthSessionError(error) && !readCachedAuthUser()) {
-        clearSession()
-      }
-      throw error
-    }
-  }, [applyUser, clearSession])
-
-  useEffect(() => {
-    if (!user) return
-    const keepAlive = window.setInterval(() => {
-      void refreshUser().catch(() => undefined)
-    }, 15 * 60 * 1000)
-    return () => window.clearInterval(keepAlive)
-  }, [user, refreshUser])
+    const { user: me } = await fetchMe()
+    applyUser(me)
+  }, [applyUser])
 
   const selectProfile = useCallback(
     (profileId: string) => {
