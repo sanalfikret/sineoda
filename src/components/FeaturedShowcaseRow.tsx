@@ -43,7 +43,7 @@ export function FeaturedShowcaseRow({
     <section className={`px-4 py-4 sm:px-6 lg:px-8 ${className}`}>
       <div className="mx-auto max-w-5xl">
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-white sm:text-xl">{title}</h2>
+          <h2 className="whitespace-pre-line text-lg font-semibold text-white sm:text-xl">{title}</h2>
           {loginHref && (guestMode || hasMore) && (
             <Link to={loginHref} className="shrink-0 text-sm font-medium text-sineoda-gold hover:underline">
               Tümünü gör

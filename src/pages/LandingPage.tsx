@@ -45,6 +45,7 @@ export function LandingPage() {
   const [showcases, setShowcases] = useState(DEMO_LANDING_SHOWCASES)
   const [studentPicks, setStudentPicks] = useState<ContentItem[]>([])
   const [studentMonthlyWinners, setStudentMonthlyWinners] = useState<ContentItem[]>([])
+  const [blockTitles, setBlockTitles] = useState<Record<string, string>>({})
   const [hiddenNavIds, setHiddenNavIds] = useState<SiteNavId[]>([])
   const [scrolled, setScrolled] = useState(false)
   const [ready, setReady] = useState(false)
@@ -105,6 +106,7 @@ export function LandingPage() {
         hidden,
       ),
     )
+    setBlockTitles(landing.blockTitles ?? bootstrap.landing?.blockTitles ?? {})
     setReady(true)
   }, [])
 
@@ -160,6 +162,7 @@ export function LandingPage() {
           featuredItem,
           fallbackImage: FALLBACK_HERO,
           sections,
+          blockTitles,
           sliderItems,
           studentPicks,
           studentMonthlyWinners,

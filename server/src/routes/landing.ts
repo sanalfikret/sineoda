@@ -26,9 +26,9 @@ import {
 } from '../services/landingSections.js'
 import { filterContentIdsForPool, poolForShowcaseIcon } from '../services/contentPools.js'
 import {
-  fetchStudentCinemaMonthlyWinnersFallback,
-  fetchStudentCinemaPicksFallback,
-} from '../services/landingStudentRows.js'
+  getLandingBlockTitlesConfig,
+  saveLandingBlockTitlesConfig,
+} from '../services/landingBlockTitles.js'
 import type { ContentRow } from '../types.js'
 
 const router = Router()
@@ -79,6 +79,7 @@ export function getLandingConfig() {
   const hero = getLandingHeroConfig()
   const sections = getLandingSectionsConfig()
   const layout = getLandingLayoutConfig(customBlockIds)
+  const blockTitles = getLandingBlockTitlesConfig()
 
   const monthlyWinnerRows = dbAll<{ content_id: string; sort_order: number }>(
     'SELECT content_id, sort_order FROM landing_monthly_winners ORDER BY sort_order',
@@ -124,6 +125,7 @@ export function getLandingConfig() {
     monthlyWinners,
     studentPickContentIds,
     studentPicks,
+    blockTitles,
   }
 }
 
@@ -199,6 +201,7 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
     customBlocks?: unknown
     monthlyWinnerIds?: unknown
     studentPickIds?: unknown
+    blockTitles?: unknown
   }
 
   let customBlocks: LandingCustomBlock[] | null = null
@@ -214,6 +217,9 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
   }
   if (body.sections) {
     saveLandingSectionsConfig(body.sections)
+  }
+  if (body.blockTitles) {
+    saveLandingBlockTitlesConfig(body.blockTitles as Record<string, string>)
   }
   if (body.layout) {
     saveLandingLayoutConfig(sanitizeLayout(body.layout, customBlockIds), customBlockIds)

@@ -250,6 +250,7 @@ export interface LandingConfigResponse {
   monthlyWinners?: ContentItem[]
   studentPickContentIds?: string[]
   studentPicks?: ContentItem[]
+  blockTitles?: Partial<Record<string, string>>
 }
 
 export async function loginRequest(
@@ -458,6 +459,7 @@ export async function saveLandingPageConfig(payload: {
   customBlocks?: LandingCustomBlock[]
   monthlyWinnerIds?: string[]
   studentPickIds?: string[]
+  blockTitles?: Partial<Record<string, string>>
 }): Promise<LandingConfigResponse> {
   let lastError: unknown
   for (let attempt = 0; attempt < 3; attempt += 1) {
