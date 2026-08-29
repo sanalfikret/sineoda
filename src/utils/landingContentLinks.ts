@@ -1,3 +1,4 @@
+import type { LandingCustomBlock } from '../constants/landingCustomBlocks'
 import type { ContentItem } from '../types/content'
 import type { ContentPoolId } from './contentPools'
 import { isShootingNotesContent, isStudentMainContent } from './contentPools'
@@ -21,6 +22,15 @@ export function viewAllHrefForPool(pool?: ContentPoolId) {
     default:
       return '/kayit'
   }
+}
+
+export function viewAllHrefForBlock(
+  block: Pick<LandingCustomBlock, 'contentPool' | 'sourceCategoryId' | 'ctaLink'>,
+) {
+  if (block.contentPool === 'shooting_notes' && block.sourceCategoryId) {
+    return `/cekim-notlari?kategori=${encodeURIComponent(block.sourceCategoryId)}`
+  }
+  return viewAllHrefForPool(block.contentPool)
 }
 
 /** Misafir ana sayfa — poster tıklanınca ilgili bölüme yönlendir */

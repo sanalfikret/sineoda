@@ -1,15 +1,16 @@
 import { ImageUpload } from './ImageUpload'
 import type { ContentItem } from '../../types/content'
+import { resolveMediaUrl, type CekimNotlariSection } from '../../api/client'
 import type { LandingCustomBlock, LandingCustomBlockType } from '../../constants/landingCustomBlocks'
 import { CUSTOM_BLOCK_TYPE_LABELS } from '../../constants/landingCustomBlocks'
-import { resolveMediaUrl } from '../../api/client'
 import { getContentDisplayLabel } from '../../constants/contentTypes'
 import {
   filterCatalogByPool,
   LANDING_CONTENT_POOL_FILTERS,
   type ContentPoolId,
 } from '../../utils/contentPools'
-import { viewAllHrefForPool } from '../../utils/landingContentLinks'
+import { viewAllHrefForBlock, viewAllHrefForPool } from '../../utils/landingContentLinks'
+import { normalizeLandingLink } from '../../utils/landingContentRow'
 
 const inputClass =
   'w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold'
@@ -98,6 +99,12 @@ function ContentRowPicker({
         </div>
       )}
 
+      {filteredCatalog.length === 0 && (
+        <p className="text-xs text-amber-200/90">
+          Bu havuzda içerik yok. Çekim Notları için admin → Çekim Notları; diğerleri için İçerikler sayfasına bakın.
+        </p>
+      )}
+
       <div className="grid max-h-72 gap-2 overflow-y-auto sm:grid-cols-2">
         {filteredCatalog.map((item) => {
           const selected = selectedIds.includes(item.id)
@@ -126,11 +133,13 @@ function ContentRowPicker({
 export function AdminLandingCustomBlockEditor({
   block,
   catalog,
+  cekimCategories = [],
   onChange,
   onRemove,
 }: {
   block: LandingCustomBlock
   catalog: ContentItem[]
+  cekimCategories?: CekimNotlariSection[]
   onChange: (block: LandingCustomBlock) => void
   onRemove: () => void
 }) {
@@ -155,8 +164,25 @@ export function AdminLandingCustomBlockEditor({
       onChange({
         ...block,
         contentPool,
-        ctaLink: block.ctaLink === '/kayit' || !block.ctaLink ? viewAllHrefForPool(contentPool) : block.ctaLink,
+        sourceCategoryId: contentPool === 'shooting_notes' ? block.sourceCategoryId : undefined,
+        ctaLink: viewAllHrefForPool(contentPool),
         itemIds: (block.itemIds ?? []).filter((id) => allowed.has(id)),
+      })
+    }
+
+    const handleCategoryChange = (sourceCategoryId: string) => {
+      if (!sourceCategoryId) {
+        patch({ sourceCategoryId: undefined })
+        return
+      }
+      const section = cekimCategories.find((entry) => entry.id === sourceCategoryId)
+      patch({
+        sourceCategoryId,
+        contentPool: 'shooting_notes',
+        itemIds: section?.items.map((item) => item.id) ?? [],
+        title: block.title.trim() ? block.title : section?.title ?? block.title,
+        ctaLink: viewAllHrefForBlock({ contentPool: 'shooting_notes', sourceCategoryId, ctaLink: '' }),
+        adminLabel: block.adminLabel === 'İçerik satırı' ? (section?.title ?? 'Çekim Notları') : block.adminLabel,
       })
     }
 
@@ -202,12 +228,38 @@ export function AdminLandingCustomBlockEditor({
             ))}
           </select>
         </label>
+        {pool === 'shooting_notes' && cekimCategories.length === 0 && (
+          <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+            Çekim Notları kategorisi bulunamadı. Admin → Çekim Notları sayfasından video ekleyin; sayfayı yenileyin.
+          </p>
+        )}
+        {pool === 'shooting_notes' && cekimCategories.length > 0 && (
+          <label className="block space-y-2">
+            <span className="text-sm text-white/85">Çekim Notları kategorisi</span>
+            <select
+              value={block.sourceCategoryId ?? ''}
+              onChange={(event) => handleCategoryChange(event.target.value)}
+              className={inputClass}
+            >
+              <option value="">Kategori seçin (videolar otomatik gelir)</option>
+              {cekimCategories.map((section) => (
+                <option key={section.id} value={section.id}>
+                  {section.title} ({section.items.length} video)
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <Field label="Etiket (opsiyonel)" value={block.eyebrow} onChange={(eyebrow) => patch({ eyebrow })} />
         <Field label="Kısa açıklama (opsiyonel)" value={block.body} onChange={(body) => patch({ body })} multiline />
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Buton metni (opsiyonel)" value={block.ctaLabel} onChange={(ctaLabel) => patch({ ctaLabel })} />
-          <Field label="Buton linki" value={block.ctaLink} onChange={(ctaLink) => patch({ ctaLink })} />
+          <Field
+            label="Buton linki"
+            value={block.ctaLink}
+            onChange={(ctaLink) => patch({ ctaLink: normalizeLandingLink(ctaLink) })}
+          />
         </div>
 
         <ContentRowPicker

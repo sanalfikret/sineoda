@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { AppShell, useContentUI } from '../components/AppShell'
 import { fetchCekimNotlariSections } from '../api/client'
 import { useContent } from '../context/ContentContext'
@@ -11,18 +12,37 @@ const PREVIEW_COUNT = 3
 const SKELETON_SECTIONS = 4
 
 function CekimNotlariContent() {
+  const [searchParams] = useSearchParams()
+  const focusCategoryId = searchParams.get('kategori')?.trim() || ''
   const { openDetail, openPlayer } = useContentUI()
   const { cekimNotlariSections, isLoading: bootstrapLoading, refresh } = useContent()
   const [sections, setSections] = useState(cekimNotlariSections)
   const [loadingFallback, setLoadingFallback] = useState(false)
   const [error, setError] = useState('')
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() =>
+    focusCategoryId ? new Set([focusCategoryId]) : new Set(),
+  )
 
   useEffect(() => {
     if (cekimNotlariSections.length > 0) {
       setSections(cekimNotlariSections)
     }
   }, [cekimNotlariSections])
+
+  useEffect(() => {
+    if (!focusCategoryId || sections.length === 0) return
+    if (!sections.some((section) => section.id === focusCategoryId)) return
+    setExpandedIds((current) => {
+      if (current.has(focusCategoryId)) return current
+      return new Set([...current, focusCategoryId])
+    })
+    requestAnimationFrame(() => {
+      document.getElementById(`cekim-section-${focusCategoryId}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    })
+  }, [focusCategoryId, sections])
 
   useEffect(() => {
     if (bootstrapLoading || sections.length > 0) return
@@ -109,7 +129,11 @@ function CekimNotlariContent() {
             const visibleItems = expanded ? section.items : section.items.slice(0, PREVIEW_COUNT)
 
             return (
-              <section key={section.id} className="border-t border-white/5 pt-6 first:border-t-0 first:pt-0">
+              <section
+                key={section.id}
+                id={`cekim-section-${section.id}`}
+                className="border-t border-white/5 pt-6 first:border-t-0 first:pt-0"
+              >
                 <button
                   type="button"
                   onClick={() => toggleSection(section.id)}

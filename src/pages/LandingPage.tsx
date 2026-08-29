@@ -7,7 +7,7 @@ import {
   getDemoCatalog,
   resolveLandingShowcases,
 } from '../data/demoLandingPosters'
-import { fetchBootstrap, fetchLandingConfig } from '../api/client'
+import { fetchBootstrap, fetchLandingConfig, type CekimNotlariSection } from '../api/client'
 import type { LandingHeroConfig } from '../api/client'
 import {
   DEFAULT_LANDING_HERO,
@@ -46,6 +46,7 @@ export function LandingPage() {
   const [studentPicks, setStudentPicks] = useState<ContentItem[]>([])
   const [studentMonthlyWinners, setStudentMonthlyWinners] = useState<ContentItem[]>([])
   const [cekimCatalog, setCekimCatalog] = useState<ContentItem[]>([])
+  const [cekimSections, setCekimSections] = useState<CekimNotlariSection[]>([])
   const [blockTitles, setBlockTitles] = useState<Record<string, string>>({})
   const [hiddenNavIds, setHiddenNavIds] = useState<SiteNavId[]>([])
   const [scrolled, setScrolled] = useState(false)
@@ -113,6 +114,12 @@ export function LandingPage() {
         hidden,
       ),
     )
+    setCekimSections(
+      (bootstrap.cekimNotlari?.sections ?? []).map((section) => ({
+        ...section,
+        items: filterCatalogByNavVisibility(section.items, hidden),
+      })),
+    )
     setBlockTitles(landing.blockTitles ?? bootstrap.landing?.blockTitles ?? {})
     setReady(true)
   }, [])
@@ -178,6 +185,7 @@ export function LandingPage() {
           customBlocks,
           hiddenNavIds,
           catalog: lookupCatalog,
+          cekimSections,
         }}
       />
       <SiteFooter />

@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
+import type { CekimNotlariSection } from '../../api/client'
 import {
   resolveMediaUrl,
   fetchAdminCatalog,
   fetchAdminStudentCinemaContent,
+  fetchAdminCekimNotlari,
   fetchBootstrap,
   fetchLandingConfig,
   normalizeStoredMediaPath,
@@ -58,6 +60,7 @@ import {
   catalogItemsFromLanding,
   mergeAdminPickerCatalog,
 } from '../../utils/adminPickerCatalog'
+import { resolveContentRowItemIds } from '../../utils/landingContentRow'
 import { fuzzySearchMatch } from '../../utils/search'
 
 interface ShowcaseDraft {
@@ -130,6 +133,7 @@ export function AdminLandingPage() {
   const { refreshUser } = useAuth()
   const [adminCatalog, setAdminCatalog] = useState<ContentItem[]>([])
   const [adminStudentItems, setAdminStudentItems] = useState<ContentItem[]>([])
+  const [adminCekimSections, setAdminCekimSections] = useState<CekimNotlariSection[]>([])
   const [loadedCatalogItems, setLoadedCatalogItems] = useState<ContentItem[]>([])
   const [hero, setHero] = useState<LandingHeroConfig>(DEFAULT_HERO)
   const [sections, setSections] = useState(DEFAULT_LANDING_SECTIONS)
@@ -151,7 +155,10 @@ export function AdminLandingPage() {
   const [message, setMessage] = useState('')
 
   const pickerCatalog = useMemo(() => {
-    const cekimItems = cekimNotlariSections.flatMap((section) => section.items)
+    const cekimItems = [
+      ...cekimNotlariSections.flatMap((section) => section.items),
+      ...adminCekimSections.flatMap((section) => section.items),
+    ]
     return mergeAdminPickerCatalog([
       loadedCatalogItems,
       platformCatalog,
@@ -165,22 +172,33 @@ export function AdminLandingPage() {
     platformCatalog,
     bootstrapStudentCatalog,
     cekimNotlariSections,
+    adminCekimSections,
     adminStudentItems,
     adminCatalog,
   ])
+
+  const cekimCategoryOptions = useMemo(() => {
+    const byId = new Map<string, CekimNotlariSection>()
+    for (const section of [...cekimNotlariSections, ...adminCekimSections]) {
+      byId.set(section.id, section)
+    }
+    return Array.from(byId.values())
+  }, [cekimNotlariSections, adminCekimSections])
 
   useEffect(() => {
     let cancelled = false
     Promise.all([
       fetchAdminCatalog().catch(() => ({ catalog: [] as ContentItem[] })),
       fetchAdminStudentCinemaContent().catch(() => ({ items: [] as ContentItem[] })),
+      fetchAdminCekimNotlari().catch(() => ({ sections: [] as CekimNotlariSection[] })),
       fetchBootstrap().catch(() => null),
       fetchLandingConfig(),
     ])
-      .then(([adminCatalogResult, studentCinemaResult, bootstrap, data]) => {
+      .then(([adminCatalogResult, studentCinemaResult, cekimResult, bootstrap, data]) => {
         if (cancelled) return
         setAdminCatalog(adminCatalogResult.catalog)
         setAdminStudentItems(studentCinemaResult.items)
+        setAdminCekimSections(cekimResult.sections)
         setLoadedCatalogItems(
           mergeAdminPickerCatalog([
             bootstrap ? catalogItemsFromBootstrap(bootstrap) : [],
@@ -554,7 +572,7 @@ export function AdminLandingPage() {
         ...block,
         itemIds:
           block.type === 'contentRow'
-            ? (block.itemIds ?? []).filter((id) => validIds.has(id))
+            ? resolveContentRowItemIds(block, cekimCategoryOptions).filter((id) => validIds.has(id))
             : block.itemIds ?? [],
       }))
 
@@ -671,6 +689,7 @@ export function AdminLandingPage() {
         <AdminLandingCustomBlockEditor
           block={block}
           catalog={pickerCatalog}
+          cekimCategories={cekimCategoryOptions}
           onChange={(next) => updateCustomBlock(id, next)}
           onRemove={() => removeCustomBlock(id)}
         />

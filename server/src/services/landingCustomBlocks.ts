@@ -9,6 +9,7 @@ export interface LandingCustomBlock {
   adminLabel: string
   type: LandingCustomBlockType
   contentPool?: ContentPoolId
+  sourceCategoryId?: string
   eyebrow: string
   title: string
   body: string
@@ -37,6 +38,13 @@ function trim(value: unknown) {
   return String(value ?? '').trim()
 }
 
+function normalizeLandingLink(link: string) {
+  const trimmed = trim(link)
+  if (!trimmed) return '/kayit'
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed
+  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+}
+
 function parseBlock(raw: unknown): LandingCustomBlock | null {
   if (!raw || typeof raw !== 'object') return null
   const source = raw as Partial<LandingCustomBlock>
@@ -53,12 +61,13 @@ function parseBlock(raw: unknown): LandingCustomBlock | null {
     contentPool: VALID_POOLS.includes(source.contentPool as ContentPoolId)
       ? (source.contentPool as ContentPoolId)
       : undefined,
+    sourceCategoryId: trim(source.sourceCategoryId) || undefined,
     eyebrow: trim(source.eyebrow),
     title: trim(source.title),
     body: trim(source.body),
     image: trim(source.image),
     ctaLabel: trim(source.ctaLabel),
-    ctaLink: trim(source.ctaLink) || '/kayit',
+    ctaLink: normalizeLandingLink(trim(source.ctaLink) || '/kayit'),
     ctaSecondaryLabel: trim(source.ctaSecondaryLabel),
     ctaSecondaryLink: trim(source.ctaSecondaryLink),
     itemIds: Array.isArray(source.itemIds)
