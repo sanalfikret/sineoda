@@ -11,23 +11,28 @@ export type { LandingSectionsConfig } from '../constants/landingDefaults'
 
 const TOKEN_KEY = 'sineoda_token'
 const PROFILE_KEY = 'sineoda_profile_id'
+const RENDER_API_FALLBACK = 'https://sineoda-api.onrender.com'
 
+function isStaticFrontendHost(host: string) {
+  return (
+    host.endsWith('.vercel.app') ||
+    host === 'sineoda.vercel.app' ||
+    host === 'sineoda.web.app'
+  )
+}
+
+/** API kökü — VPS/tek domain: her zaman aynı origin (/api proxy). Vite build'deki Render URL yok sayılır. */
 export function getApiBase() {
-  const base = import.meta.env.VITE_API_URL ?? ''
-  if (base) return base.replace(/\/$/, '')
-
-  if (import.meta.env.PROD && typeof window !== 'undefined') {
+  if (typeof window !== 'undefined') {
     const host = window.location.hostname
-    if (
-      host.endsWith('.vercel.app') ||
-      host === 'sineoda.vercel.app' ||
-      host === 'sineoda.web.app'
-    ) {
-      return 'https://sineoda-api.onrender.com'
+    if (!isStaticFrontendHost(host)) {
+      return ''
     }
+    const configured = String(import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
+    return configured || RENDER_API_FALLBACK
   }
 
-  return ''
+  return String(import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
 }
 
 export function resolveMediaUrl(url: string) {
@@ -187,6 +192,7 @@ export interface AuthResponse {
 export interface BootstrapResponse {
   catalog: ContentItem[]
   categories: ContentCategory[]
+  categoryOrder?: string[]
   featuredContent: ContentItem | null
   trailers: ContentItem[]
   newReleases: ContentItem[]

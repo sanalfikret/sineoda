@@ -35,7 +35,7 @@ function BrowseContent({
   const { openDetail, openPlayer } = useContentUI()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { visibleCategories, featuredContent, visibleCatalog, getContentById, isLoading, refresh, studentCinemaPicks, studentCinemaCatalog, studentCinemaMonthlyWinners, hiddenNavIds } = useContent()
+  const { visibleCategories, featuredContent, visibleCatalog, getContentById, isLoading, refresh, studentCinemaPicks, studentCinemaCatalog, studentCinemaMonthlyWinners, hiddenNavIds, categoryOrder } = useContent()
   const { watchlistItems } = useWatchlist()
   const { activeProfile } = useAuth()
   const activeGenre = searchParams.get('tur')
@@ -140,6 +140,7 @@ function BrowseContent({
     return buildBrowseRows(source, browseOptions, visibleCategories, getContentById, {
       studentCinemaPicks,
       studentCinemaMonthlyWinners,
+      categoryOrder,
     })
   }, [
     studentCinemaOnly,
@@ -150,6 +151,7 @@ function BrowseContent({
     getContentById,
     studentCinemaPicks,
     studentCinemaMonthlyWinners,
+    categoryOrder,
   ])
 
   const heroItem = useMemo(() => {

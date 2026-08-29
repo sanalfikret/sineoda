@@ -37,7 +37,7 @@ import adminAdsRoutes from './routes/adminAds.js'
 import adminSiteNavRoutes from './routes/adminSiteNav.js'
 import { PUBLISHED_CONTENT_SQL_C } from './services/publish.js'
 import { STANDARD_PROGRAM_SQL_C, MAIN_CATALOG_SQL_C, ensureStudentCinemaCatalog } from './services/studentCinema.js'
-import { mapCategoriesResponse } from './services/categoryOrder.js'
+import { mapCategoriesResponse, getCategoryOrderForBrowse } from './services/categoryOrder.js'
 import { getMonthlyAwardWinnersSql } from './services/studentCinemaAwards.js'
 import { mapSiteNavResponse } from './services/siteNav.js'
 import { listCekimNotlariSections } from './services/cekimNotlari.js'
@@ -223,10 +223,12 @@ app.get('/api/bootstrap', (_req, res) => {
           ).map(mapContent)
 
     const categories = mapCategoriesResponse()
+    const categoryOrder = getCategoryOrderForBrowse()
 
     res.json({
       catalog,
       categories,
+      categoryOrder,
       featuredContent: featured,
       trailers,
       newReleases,

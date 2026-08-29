@@ -2,6 +2,11 @@ import { dbAll, dbGet, dbRun } from '../db.js'
 import { isCekimCategoryId } from '../constants/cekimNotlari.js'
 
 const SETTINGS_KEY = 'category_order'
+export const STUDENT_MONTHLY_WINNERS_ROW_ID = 'student-monthly-winners'
+
+function isVirtualBrowseRowId(categoryId: string) {
+  return categoryId === STUDENT_MONTHLY_WINNERS_ROW_ID
+}
 
 function isMainCategoryId(categoryId: string) {
   return !isCekimCategoryId(categoryId)
@@ -50,9 +55,12 @@ export function removeCategoryFromOrder(categoryId: string) {
 export function saveCategoryOrder(orderedIds: string[]) {
   const uniqueIds = normalizeCategoryOrder(orderedIds)
 
-  uniqueIds.forEach((id, index) => {
-    dbRun('UPDATE categories SET sort_order = ? WHERE id = ?', [index, id])
-  })
+  let sortIndex = 0
+  for (const id of uniqueIds) {
+    if (isVirtualBrowseRowId(id)) continue
+    dbRun('UPDATE categories SET sort_order = ? WHERE id = ?', [sortIndex, id])
+    sortIndex += 1
+  }
 
   dbRun('INSERT OR REPLACE INTO site_settings (key, value) VALUES (?, ?)', [
     SETTINGS_KEY,
@@ -96,6 +104,13 @@ export function mapCategoriesResponse() {
 }
 
 /** Eski site_settings kaydı ile sort_order çelişirse DB sırasını esas al. */
+export function getCategoryOrderForBrowse(): string[] {
+  const saved = loadCategoryOrder()
+  const fromDb = listCategoriesOrdered().map((row) => row.id)
+  if (!saved || saved.length === 0) return fromDb
+  return normalizeCategoryOrder(saved)
+}
+
 export function reconcileCategoryOrder() {
   const rows = listCategoriesOrdered()
   if (rows.length === 0) return

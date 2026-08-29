@@ -28,6 +28,95 @@ export type BrowseRow = {
 export type BrowseRowExtras = {
   studentCinemaPicks?: ContentItem[]
   studentCinemaMonthlyWinners?: ContentItem[]
+  categoryOrder?: string[]
+}
+
+export function isVirtualBrowseCategoryId(id: string) {
+  return id === STUDENT_MONTHLY_WINNERS_ROW_ID
+}
+
+export function virtualMonthlyWinnersCategory(): ContentCategory {
+  return {
+    id: STUDENT_MONTHLY_WINNERS_ROW_ID,
+    title: STUDENT_MONTHLY_WINNERS_ROW_TITLE,
+    itemIds: [],
+    hidden: false,
+  }
+}
+
+export function mergeCategoriesForAdminOrder(
+  categories: ContentCategory[],
+  categoryOrder: string[],
+): ContentCategory[] {
+  const byId = new Map(categories.map((category) => [category.id, category]))
+  byId.set(STUDENT_MONTHLY_WINNERS_ROW_ID, virtualMonthlyWinnersCategory())
+
+  const merged: ContentCategory[] = []
+  const seen = new Set<string>()
+
+  for (const id of categoryOrder) {
+    const category = byId.get(id)
+    if (category && !seen.has(id)) {
+      merged.push(category)
+      seen.add(id)
+    }
+  }
+
+  for (const category of categories) {
+    if (!seen.has(category.id)) {
+      merged.push(category)
+      seen.add(category.id)
+    }
+  }
+
+  if (!seen.has(STUDENT_MONTHLY_WINNERS_ROW_ID)) {
+    const gencIndex = merged.findIndex((category) => category.id === BRAND_STUDENT_CINEMA.id)
+    if (gencIndex >= 0) merged.splice(gencIndex + 1, 0, virtualMonthlyWinnersCategory())
+    else merged.unshift(virtualMonthlyWinnersCategory())
+  }
+
+  return merged
+}
+
+function orderBrowseRows(
+  rows: BrowseRow[],
+  categoryOrder: string[] | undefined,
+  monthlyRow: BrowseRow | null,
+): BrowseRow[] {
+  if (!monthlyRow) return rows
+
+  const rowById = new Map(rows.map((row) => [row.id, row]))
+  const order =
+    categoryOrder && categoryOrder.length > 0
+      ? categoryOrder
+      : rows.map((row) => row.id)
+
+  const ordered: BrowseRow[] = []
+  const seen = new Set<string>()
+
+  for (const id of order) {
+    if (id === STUDENT_MONTHLY_WINNERS_ROW_ID) {
+      if (!seen.has(monthlyRow.id)) {
+        ordered.push(monthlyRow)
+        seen.add(monthlyRow.id)
+      }
+      continue
+    }
+    const row = rowById.get(id)
+    if (row && !seen.has(row.id)) {
+      ordered.push(row)
+      seen.add(row.id)
+    }
+  }
+
+  for (const row of rows) {
+    if (!seen.has(row.id)) {
+      ordered.push(row)
+      seen.add(row.id)
+    }
+  }
+
+  return ordered
 }
 
 function categoryFilterOptions(category: ContentCategory, options: BrowseFilterOptions): BrowseFilterOptions {
@@ -246,7 +335,7 @@ export function buildBrowseRows(
       !options.verticalOnly
     const monthlyRow = isMainHome ? buildMonthlyWinnersBrowseRow(extras) : null
     if (monthlyRow) {
-      return [monthlyRow, ...rows.filter((row) => row.id !== STUDENT_MONTHLY_WINNERS_ROW_ID)]
+      return orderBrowseRows(rows, extras?.categoryOrder, monthlyRow)
     }
     return rows
   }

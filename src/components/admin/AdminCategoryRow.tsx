@@ -17,6 +17,7 @@ interface AdminCategoryRowProps {
   expanded: boolean
   dragging: boolean
   savingOrder: boolean
+  readOnly?: boolean
   catalogById: Map<string, ContentItem>
   catalog: ContentItem[]
   search: string
@@ -41,6 +42,7 @@ export function AdminCategoryRow({
   expanded,
   dragging,
   savingOrder,
+  readOnly = false,
   catalogById,
   catalog,
   search,
@@ -147,48 +149,54 @@ export function AdminCategoryRow({
               ) : null}
             </div>
             <p className="text-xs text-sineoda-muted">
-              {selectedItems.length} içerik · {category.id}
-              {linkedNavLabel ? (
+              {readOnly
+                ? 'İçerikler Tanıtım sayfası admininden seçilir · otomatik satır'
+                : `${selectedItems.length} içerik · ${category.id}`}
+              {!readOnly && linkedNavLabel ? (
                 <span className="text-emerald-300/80"> · Menü: {linkedNavLabel}</span>
-              ) : isStandalone ? (
+              ) : !readOnly && isStandalone ? (
                 <span> · Bağımsız satır</span>
               ) : null}
             </p>
           </div>
         </button>
 
-        <button
-          type="button"
-          disabled={savingOrder}
-          aria-pressed={!category.hidden}
-          onClick={() => void onToggleHidden(!category.hidden)}
-          className={`flex shrink-0 items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition disabled:opacity-50 ${
-            category.hidden
-              ? 'border-white/10 text-sineoda-muted hover:bg-white/5'
-              : 'border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10'
-          }`}
-        >
-          <span
-            className={`inline-flex h-4 w-4 items-center justify-center rounded border ${
-              category.hidden ? 'border-white/20 bg-transparent' : 'border-emerald-400 bg-emerald-500/30'
-            }`}
-            aria-hidden="true"
-          >
-            {!category.hidden && '✓'}
-          </span>
-          {category.hidden ? 'Kapalı' : 'Açık'}
-        </button>
+        {!readOnly ? (
+          <>
+            <button
+              type="button"
+              disabled={savingOrder}
+              aria-pressed={!category.hidden}
+              onClick={() => void onToggleHidden(!category.hidden)}
+              className={`flex shrink-0 items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition disabled:opacity-50 ${
+                category.hidden
+                  ? 'border-white/10 text-sineoda-muted hover:bg-white/5'
+                  : 'border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10'
+              }`}
+            >
+              <span
+                className={`inline-flex h-4 w-4 items-center justify-center rounded border ${
+                  category.hidden ? 'border-white/20 bg-transparent' : 'border-emerald-400 bg-emerald-500/30'
+                }`}
+                aria-hidden="true"
+              >
+                {!category.hidden && '✓'}
+              </span>
+              {category.hidden ? 'Kapalı' : 'Açık'}
+            </button>
 
-        <button
-          type="button"
-          onClick={onDelete}
-          className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-300 hover:bg-red-500/20"
-        >
-          Sil
-        </button>
+            <button
+              type="button"
+              onClick={onDelete}
+              className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-300 hover:bg-red-500/20"
+            >
+              Sil
+            </button>
+          </>
+        ) : null}
       </div>
 
-      {expanded && (
+      {expanded && !readOnly && (
         <div className="border-t border-white/10 p-4 pt-3">
           <AdminCategoryTitleField
             categoryId={category.id}

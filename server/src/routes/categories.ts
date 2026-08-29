@@ -6,7 +6,7 @@ import { slugify } from '../mappers.js'
 import { resetContent } from '../seed.js'
 import { dedupeAllCategories } from '../services/categoryDedup.js'
 import { fillCategoriesToTarget } from '../services/categoryFill.js'
-import { mapCategoriesResponse, removeCategoryFromOrder, saveCategoryOrder, appendCategoryToOrder } from '../services/categoryOrder.js'
+import { mapCategoriesResponse, saveCategoryOrder, getCategoryOrderForBrowse, appendCategoryToOrder, removeCategoryFromOrder } from '../services/categoryOrder.js'
 import { isCekimCategoryId } from '../services/cekimNotlari.js'
 import { filterContentIdsForCategory } from '../services/contentPools.js'
 import { mapSiteNavResponse, syncLinkedNavForCategory } from '../services/siteNav.js'
@@ -42,7 +42,11 @@ function reorderCategories(req: AuthRequest, res: Response) {
   }
 
   saveCategoryOrder(orderedIds.map(String))
-  res.json({ ok: true, categories: mapCategoriesResponse() })
+  res.json({
+    ok: true,
+    categories: mapCategoriesResponse(),
+    categoryOrder: getCategoryOrderForBrowse(),
+  })
 }
 
 router.put('/reorder', requireAdmin, reorderCategories)
