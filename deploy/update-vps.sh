@@ -52,7 +52,10 @@ echo ">>> build (site birkaç dakika kapalı olabilir)"
 if grep -qE '^VITE_API_URL=.*onrender' .env 2>/dev/null; then
   echo "UYARI: .env VITE_API_URL Render'a işaret ediyor — VPS build same-origin kullanacak (boş)."
 fi
-VITE_API_URL= $DC build --build-arg VITE_API_URL=
+GIT_SHA="$(git rev-parse --short HEAD)"
+export GIT_SHA
+echo ">>> build git: $GIT_SHA"
+VITE_API_URL= $DC build --no-cache --build-arg VITE_API_URL= --build-arg "GIT_SHA=${GIT_SHA}"
 
 echo ">>> eski container temizle (KeyError ContainerConfig fix)"
 $DC down --remove-orphans 2>/dev/null || true
@@ -74,8 +77,13 @@ done
 if [ "$ok" -eq 1 ]; then
   echo "OK — site ayakta."
   HEALTH=$(curl -sf "http://127.0.0.1:${HOST_PORT:-3001}/api/health" || true)
-  echo "$HEALTH" | head -c 300 || true
+  echo "$HEALTH" | head -c 400 || true
   echo ""
+  if ! echo "$HEALTH" | grep -q 'jwtExpiresIn'; then
+    echo "HATA: /api/health auth.jwtExpiresIn yok — container eski imaj olabilir."
+    echo "Deneyin: docker compose build --no-cache && docker compose up -d"
+    exit 1
+  fi
   if echo "$HEALTH" | grep -q '"dbExists":false'; then
     echo "UYARI: Veritabanı dosyası yok — persistent/data kontrol et!"
     exit 1
