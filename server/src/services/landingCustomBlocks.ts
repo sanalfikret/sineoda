@@ -1,11 +1,14 @@
 import { dbGet, dbRun } from '../db.js'
 
+import type { ContentPoolId } from '../services/contentPools.js'
+
 export type LandingCustomBlockType = 'richText' | 'ctaBanner' | 'imageText' | 'contentRow'
 
 export interface LandingCustomBlock {
   id: string
   adminLabel: string
   type: LandingCustomBlockType
+  contentPool?: ContentPoolId
   eyebrow: string
   title: string
   body: string
@@ -19,6 +22,16 @@ export interface LandingCustomBlock {
 
 const SETTINGS_KEY = 'landing_custom_blocks'
 const VALID_TYPES: LandingCustomBlockType[] = ['richText', 'ctaBanner', 'imageText', 'contentRow']
+const VALID_POOLS: ContentPoolId[] = [
+  'platform',
+  'film',
+  'dizi',
+  'belgesel',
+  'kisa-film',
+  'vertical',
+  'student_cinema',
+  'shooting_notes',
+]
 
 function trim(value: unknown) {
   return String(value ?? '').trim()
@@ -37,6 +50,9 @@ function parseBlock(raw: unknown): LandingCustomBlock | null {
     id,
     adminLabel: trim(source.adminLabel) || 'Özel bölüm',
     type,
+    contentPool: VALID_POOLS.includes(source.contentPool as ContentPoolId)
+      ? (source.contentPool as ContentPoolId)
+      : undefined,
     eyebrow: trim(source.eyebrow),
     title: trim(source.title),
     body: trim(source.body),

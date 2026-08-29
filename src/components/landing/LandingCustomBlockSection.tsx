@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { resolveMediaUrl } from '../../api/client'
 import type { LandingCustomBlock } from '../../constants/landingCustomBlocks'
+import type { ContentItem } from '../../types/content'
+import { guestItemHref, viewAllHrefForPool } from '../../utils/landingContentLinks'
 
 function CtaLink({
   label,
@@ -46,8 +48,6 @@ function CtaLink({
   )
 }
 
-import type { ContentItem } from '../../types/content'
-
 export function LandingCustomBlockSection({
   block,
   catalog = [],
@@ -62,6 +62,8 @@ export function LandingCustomBlockSection({
 
     if (items.length === 0) return null
 
+    const viewAllLink = block.ctaLink.trim() || viewAllHrefForPool(block.contentPool)
+
     return (
       <section className="border-y border-white/5 bg-sineoda-bg px-4 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-[1400px]">
@@ -70,7 +72,7 @@ export function LandingCustomBlockSection({
           )}
           <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
             {block.title && <h2 className="text-2xl font-bold text-white sm:text-3xl">{block.title}</h2>}
-            {block.ctaLabel && <CtaLink label={block.ctaLabel} link={block.ctaLink} />}
+            {block.ctaLabel && <CtaLink label={block.ctaLabel} link={viewAllLink} />}
           </div>
           {block.body && <p className="mt-3 max-w-3xl text-sm leading-relaxed text-sineoda-muted sm:text-base">{block.body}</p>}
 
@@ -78,7 +80,7 @@ export function LandingCustomBlockSection({
             {items.map((item) => (
               <Link
                 key={item.id}
-                to="/kayit"
+                to={guestItemHref(item)}
                 className="group shrink-0 overflow-hidden rounded-lg bg-white/5 transition hover:ring-2 hover:ring-sineoda-gold/40"
               >
                 <img

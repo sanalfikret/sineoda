@@ -1,5 +1,7 @@
 import { createRandomId } from '../utils/id'
 
+import type { ContentPoolId } from '../utils/contentPools'
+
 export type LandingCustomBlockType = 'richText' | 'ctaBanner' | 'imageText' | 'contentRow'
 
 export interface LandingCustomBlock {
@@ -7,6 +9,8 @@ export interface LandingCustomBlock {
   id: string
   adminLabel: string
   type: LandingCustomBlockType
+  /** contentRow: hangi içerik havuzundan seçim yapılır */
+  contentPool?: ContentPoolId
   eyebrow: string
   title: string
   body: string
