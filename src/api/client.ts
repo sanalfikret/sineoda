@@ -94,6 +94,12 @@ export async function refreshSessionToken() {
 
     if (!response.ok) return false
 
+    const headerToken = response.headers.get('X-Sineoda-Token')
+    if (headerToken) {
+      setToken(headerToken)
+      return true
+    }
+
     const body = (await response.json()) as { token?: string }
     if (body.token) {
       setToken(body.token)

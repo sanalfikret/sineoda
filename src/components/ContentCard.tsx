@@ -16,6 +16,8 @@ interface ContentCardProps {
   /** Kategori sayfalarında sabit kart genişliği + Netflix hover */
   gridFixedWidth?: boolean
   guestHref?: string
+  /** Vitrin satırlarında dikey format etiketini yok say — yatay grid bozulmasın */
+  forceLandscape?: boolean
 }
 
 const HOVER_SCALE = 1.2
@@ -48,10 +50,11 @@ export function ContentCard({
   variant = 'carousel',
   gridFixedWidth = false,
   guestHref,
+  forceLandscape = false,
 }: ContentCardProps) {
   const isGrid = variant === 'grid'
   const isBrowseGrid = isGrid && gridFixedWidth
-  const isPortrait = layout === 'portrait' || item.videoFormat === 'vertical'
+  const isPortrait = !forceLandscape && (layout === 'portrait' || item.videoFormat === 'vertical')
   const enriched = enrichContentImages(item)
   const imageUrl = resolveMediaUrl(
     isPortrait ? enriched.poster : enriched.backdrop || enriched.poster,
@@ -160,7 +163,7 @@ export function ContentCard({
         hidden ? 'opacity-0' : 'opacity-100'
       }`}
     >
-      <p className="line-clamp-2 text-lg font-semibold leading-snug text-white">{item.title}</p>
+      <p className="line-clamp-2 text-sm font-semibold leading-snug text-white sm:text-lg">{item.title}</p>
       {item.monthlyAward?.enabled && item.monthlyAward.prize && (
         <p className="mt-0.5 line-clamp-1 text-sm font-medium text-emerald-300">{item.monthlyAward.prize}</p>
       )}
@@ -317,7 +320,7 @@ export function ContentCard({
           {posterImage}
           {badges}
           {isGrid ? posterTitleOverlay(false) : null}
-          {guestHref && legacyOverlay}
+          {guestHref && !isGrid ? legacyOverlay : null}
         </div>
       </div>
     </div>

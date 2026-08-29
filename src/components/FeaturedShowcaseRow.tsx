@@ -23,6 +23,32 @@ interface FeaturedShowcaseRowProps {
   progressMap?: Record<string, number>
 }
 
+function ShowcaseCard({
+  item,
+  onSelect,
+  guestMode,
+  progressMap,
+  variant,
+}: {
+  item: ContentItem
+  onSelect?: (item: ContentItem) => void
+  guestMode: boolean
+  progressMap?: Record<string, number>
+  variant: 'carousel' | 'grid'
+}) {
+  return (
+    <ContentCard
+      item={item}
+      onSelect={onSelect ?? (() => undefined)}
+      progressPercent={progressMap?.[item.id]}
+      layout="landscape"
+      forceLandscape
+      variant={variant}
+      guestHref={guestMode ? '/giris' : undefined}
+    />
+  )
+}
+
 export function FeaturedShowcaseRow({
   title,
   items,
@@ -40,7 +66,7 @@ export function FeaturedShowcaseRow({
   const showMoreLink = guestMode || Boolean(viewAllHref && hasMore)
 
   return (
-    <section className={`px-4 py-4 sm:px-6 lg:px-8 ${className}`}>
+    <section className={`overflow-hidden px-4 py-4 sm:px-6 lg:px-8 ${className}`}>
       <div className="mx-auto max-w-5xl">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="whitespace-pre-line text-lg font-semibold text-white sm:text-xl">{title}</h2>
@@ -51,16 +77,30 @@ export function FeaturedShowcaseRow({
           )}
         </div>
 
-        <div className="grid grid-cols-3 gap-2 sm:gap-5">
+        {/* Mobil: yatay kaydırma — 3 sütun grid dar ekranda iç içe biniyordu */}
+        <div className="hide-scrollbar -mx-4 flex items-start gap-3 overflow-x-auto px-4 pb-2 sm:hidden">
           {visible.map((item) => (
-            <ContentCard
+            <ShowcaseCard
               key={item.id}
               item={item}
-              onSelect={onSelect ?? (() => undefined)}
-              progressPercent={progressMap?.[item.id]}
-              layout="landscape"
+              onSelect={onSelect}
+              guestMode={guestMode}
+              progressMap={progressMap}
+              variant="carousel"
+            />
+          ))}
+        </div>
+
+        {/* Tablet+ : 2 sütun, geniş ekranda 3 sütun vitrin */}
+        <div className="hidden gap-3 sm:grid sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-5">
+          {visible.map((item) => (
+            <ShowcaseCard
+              key={item.id}
+              item={item}
+              onSelect={onSelect}
+              guestMode={guestMode}
+              progressMap={progressMap}
               variant="grid"
-              guestHref={guestMode ? '/giris' : undefined}
             />
           ))}
         </div>
