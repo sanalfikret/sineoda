@@ -629,7 +629,9 @@ export function AdminLandingPage() {
     } catch (err) {
       const status = (err as Error & { status?: number }).status
       if (status === 401) {
-        setMessage('Oturum süresi doldu. Lütfen admin panelinden çıkış yapıp tekrar giriş yapın.')
+        setMessage(
+          'Oturum yenilenemedi. Admin → Çıkış Yap → tekrar giriş yapın. Sorun sürerse VPS\'te git pull + docker rebuild yapın (jwtExpiresIn: 30d olmalı).',
+        )
       } else if (status === 403) {
         setMessage(err instanceof Error ? err.message : 'Admin yetkisi gerekli.')
       } else {
