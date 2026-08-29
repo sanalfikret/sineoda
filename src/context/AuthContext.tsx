@@ -149,7 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       void syncAuthSession().catch(() => undefined)
     }
 
-    const interval = window.setInterval(refresh, 20 * 60 * 1000)
+    const interval = window.setInterval(refresh, 3 * 60 * 1000)
 
     const onVisible = () => {
       if (document.visibilityState === 'visible') refresh()

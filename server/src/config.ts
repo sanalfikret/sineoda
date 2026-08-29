@@ -61,7 +61,27 @@ export const config = {
   },
 }
 
+export function normalizeUploadPath(url: string) {
+  const trimmed = String(url ?? '').trim()
+  if (!trimmed) return ''
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    const match = trimmed.match(/\/uploads\/[^\s?#]+/i)
+    if (match) return match[0]
+    return trimmed
+  }
+  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+}
+
+/** Upload yanıtları — same-origin relative path (PUBLIC_URL domain hatasına dayanıklı). */
 export function publicAssetUrl(relativePath: string) {
-  if (relativePath.startsWith('http')) return relativePath
-  return `${config.publicUrl}${relativePath}`
+  if (relativePath.startsWith('http')) return normalizeUploadPath(relativePath)
+  const path = relativePath.startsWith('/') ? relativePath : `/${relativePath}`
+  return path
+}
+
+/** E-posta vb. mutlak URL gereken yerler. */
+export function publicAssetUrlAbsolute(relativePath: string) {
+  const path = publicAssetUrl(relativePath)
+  if (path.startsWith('http')) return path
+  return `${config.publicUrl}${path}`
 }

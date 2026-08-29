@@ -1,4 +1,5 @@
 import { dbGet, dbRun } from '../db.js'
+import { normalizeUploadPath } from '../config.js'
 
 export interface LandingHeroConfig {
   line1: string
@@ -63,9 +64,11 @@ export function parseLandingHero(input: Partial<LandingHeroConfig> | null | unde
   }
 
   if (backgroundImage) {
+    backgroundImage = normalizeUploadPath(backgroundImage)
     backgroundVideo = ''
     backgroundContentId = null
   } else if (isEmbeddableVideoUrl(backgroundVideo)) {
+    backgroundVideo = normalizeUploadPath(backgroundVideo)
     backgroundImage = ''
     backgroundContentId = null
   } else if (backgroundContentId) {

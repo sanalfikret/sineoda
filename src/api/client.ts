@@ -33,10 +33,16 @@ export function getApiBase() {
 
 export function resolveMediaUrl(url: string) {
   if (!url) return url
-  if (url.startsWith('http://') || url.startsWith('https://')) return url
+
+  // Yanlış PUBLIC_URL ile kaydedilmiş upload URL'lerini düzelt
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    const match = url.match(/\/uploads\/[^\s?#]+/i)
+    if (match) url = match[0]
+    else return url
+  }
 
   const base = getApiBase()
-  if (!base) return url
+  if (!base) return url.startsWith('/') ? url : `/${url}`
 
   return `${base}${url.startsWith('/') ? url : `/${url}`}`
 }
@@ -59,7 +65,31 @@ export function setProfileId(profileId: string | null) {
   else localStorage.removeItem(PROFILE_KEY)
 }
 
-export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function tryRefreshSessionToken() {
+  const token = getToken()
+  if (!token) return false
+
+  try {
+    const headers = new Headers({ Authorization: `Bearer ${token}` })
+    const profileId = getProfileId()
+    if (profileId) headers.set('X-Profile-Id', profileId)
+
+    const response = await fetch(`${getApiBase()}/api/auth/me`, { headers, cache: 'no-store' })
+    if (!response.ok) return false
+
+    const body = (await response.json()) as { token?: string }
+    if (body.token) {
+      setToken(body.token)
+      return true
+    }
+  } catch {
+    return false
+  }
+
+  return false
+}
+
+export async function api<T>(path: string, options: RequestInit = {}, retried = false): Promise<T> {
   const headers = new Headers(options.headers)
 
   if (
@@ -81,6 +111,11 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     response = await fetch(`${getApiBase()}${path}`, { ...options, headers, cache: 'no-store' })
   } catch {
     throw new Error('Sunucuya bağlanılamıyor. baslat.bat ile projeyi yeniden başlatın (API port 3001).')
+  }
+
+  if (response.status === 401 && !retried && path !== '/api/auth/me' && path !== '/api/auth/login') {
+    const refreshed = await tryRefreshSessionToken()
+    if (refreshed) return api<T>(path, options, true)
   }
 
   if (!response.ok) {
@@ -121,7 +156,15 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     throw err
   }
 
-  if (response.status === 204) return undefined as T
+  if (response.status === 204) {
+    const refreshed = response.headers.get('X-Sineoda-Token')
+    if (refreshed) setToken(refreshed)
+    return undefined as T
+  }
+
+  const refreshed = response.headers.get('X-Sineoda-Token')
+  if (refreshed) setToken(refreshed)
+
   return response.json() as Promise<T>
 }
 

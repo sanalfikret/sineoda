@@ -312,10 +312,7 @@ app.listen(config.port, () => {
     console.warn('[auth] UYARI: JWT_SECRET varsayılan değerde — .env içinde güçlü bir secret tanımlayın.')
   }
   const jwtExpiresIn = resolveJwtExpiresIn()
-  console.log(`[auth] JWT süresi: ${jwtExpiresIn}`)
-  if (process.env.NODE_ENV === 'production' && process.env.JWT_EXPIRES_IN?.trim()) {
-    console.warn('[auth] UYARI: JWT_EXPIRES_IN env yok sayıldı — production her zaman 30d kullanır.')
-  }
+  console.log(`[auth] JWT süresi: ${jwtExpiresIn} (env JWT_EXPIRES_IN yok sayılır)`)
 
   try {
     ensureMonthlyRollover()
