@@ -8,12 +8,12 @@ import {
   fetchBootstrap,
   fetchLandingConfig,
   normalizeStoredMediaPath,
+  refreshSessionToken,
   saveLandingPageConfig,
   updateLandingLayoutConfig,
   type LandingHeroConfig,
 } from '../../api/client'
 import { useContent } from '../../context/ContentContext'
-import { useAuth } from '../../context/AuthContext'
 import { AdminLandingCustomBlockEditor } from '../../components/admin/AdminLandingCustomBlockEditor'
 import {
   AdminLandingSectionBlock,
@@ -125,12 +125,8 @@ function filterPickerCatalog(
 }
 
 export function AdminLandingPage() {
-  const {
-    catalog: platformCatalog,
-    studentCinemaCatalog: bootstrapStudentCatalog,
-    cekimNotlariSections,
-  } = useContent()
-  const { refreshUser } = useAuth()
+  const { catalog: platformCatalog, studentCinemaCatalog: bootstrapStudentCatalog, cekimNotlariSections } =
+    useContent()
   const [adminCatalog, setAdminCatalog] = useState<ContentItem[]>([])
   const [adminStudentItems, setAdminStudentItems] = useState<ContentItem[]>([])
   const [adminCekimSections, setAdminCekimSections] = useState<CekimNotlariSection[]>([])
@@ -559,7 +555,7 @@ export function AdminLandingPage() {
     setSaving(true)
     setMessage('')
     try {
-      await refreshUser().catch(() => undefined)
+      await refreshSessionToken().catch(() => undefined)
       const validIds = new Set(pickerCatalog.map((item) => item.id))
       const persistedSliderIds = sliderIds.filter((id) => validIds.has(id))
       const persistedShowcases = showcases.map((showcase) => ({

@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom'
 import { resolveMediaUrl, type CekimNotlariSection } from '../../api/client'
 import type { LandingCustomBlock } from '../../constants/landingCustomBlocks'
 import type { ContentItem } from '../../types/content'
+import type { ContentPoolId } from '../../utils/contentPools'
+import { isShootingNotesContent } from '../../utils/contentPools'
 import { guestItemHref, viewAllHrefForBlock } from '../../utils/landingContentLinks'
 import { normalizeLandingLink, resolveContentRowItems } from '../../utils/landingContentRow'
 
@@ -49,6 +51,32 @@ function CtaLink({
   )
 }
 
+function contentRowPoster(
+  item: ContentItem,
+  pool?: ContentPoolId,
+): { src: string; imageClass: string; titleClass: string } {
+  const useHorizontal = pool === 'shooting_notes' || isShootingNotesContent(item)
+  if (useHorizontal) {
+    return {
+      src: item.backdrop || item.poster,
+      imageClass: 'h-[124px] w-[176px] object-cover sm:h-[158px] sm:w-[224px]',
+      titleClass: 'max-w-[224px] truncate px-2 py-2 text-xs font-medium text-white/90 group-hover:text-white',
+    }
+  }
+  if (item.videoFormat === 'vertical') {
+    return {
+      src: item.poster,
+      imageClass: 'h-[220px] w-[124px] object-cover sm:h-[280px] sm:w-[158px]',
+      titleClass: 'max-w-[148px] truncate px-2 py-2 text-xs font-medium text-white/90 group-hover:text-white',
+    }
+  }
+  return {
+    src: item.poster,
+    imageClass: 'h-[220px] w-[148px] object-cover sm:h-[280px] sm:w-[187px]',
+    titleClass: 'max-w-[148px] truncate px-2 py-2 text-xs font-medium text-white/90 group-hover:text-white',
+  }
+}
+
 export function LandingCustomBlockSection({
   block,
   catalog = [],
@@ -78,26 +106,25 @@ export function LandingCustomBlockSection({
           {block.body && <p className="mt-3 max-w-3xl text-sm leading-relaxed text-sineoda-muted sm:text-base">{block.body}</p>}
 
           <div className="hide-scrollbar mt-6 flex gap-3 overflow-x-auto pb-2 sm:gap-4">
-            {items.map((item) => (
+            {items.map((item) => {
+              const poster = contentRowPoster(item, block.contentPool)
+              return (
               <Link
                 key={item.id}
                 to={guestItemHref(item)}
                 className="group shrink-0 overflow-hidden rounded-lg bg-white/5 transition hover:ring-2 hover:ring-sineoda-gold/40"
               >
                 <img
-                  src={resolveMediaUrl(item.poster)}
+                  src={resolveMediaUrl(poster.src)}
                   alt={item.title}
-                  className={
-                    item.videoFormat === 'vertical'
-                      ? 'h-[220px] w-[124px] object-cover sm:h-[280px] sm:w-[158px]'
-                      : 'h-[220px] w-[148px] object-cover sm:h-[280px] sm:w-[187px]'
-                  }
+                  className={poster.imageClass}
                 />
-                <p className="max-w-[148px] truncate px-2 py-2 text-xs font-medium text-white/90 group-hover:text-white">
+                <p className={poster.titleClass}>
                   {item.title}
                 </p>
               </Link>
-            ))}
+              )
+            })}
           </div>
         </div>
       </section>

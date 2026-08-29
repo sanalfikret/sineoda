@@ -16,6 +16,7 @@ import {
   getProfileId,
   getToken,
   loginRequest,
+  refreshSessionToken,
   setProfileId,
   setToken,
   signupRequest,
@@ -146,10 +147,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!getToken()) return
 
     const refresh = () => {
-      void syncAuthSession().catch(() => undefined)
+      void refreshSessionToken().catch(() => undefined)
     }
 
-    const interval = window.setInterval(refresh, 3 * 60 * 1000)
+    const interval = window.setInterval(refresh, 60 * 1000)
 
     const onVisible = () => {
       if (document.visibilityState === 'visible') refresh()
