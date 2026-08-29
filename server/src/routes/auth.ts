@@ -1,17 +1,18 @@
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
 import multer from 'multer'
 import path from 'node:path'
 import { v4 as uuid } from 'uuid'
 import { config, publicAssetUrl } from '../config.js'
 import { dbAll, dbGet, dbRun, uploadsDir } from '../db.js'
-import { getProfileId, requireAuth, signToken, type AuthRequest } from '../middleware/auth.js'
+import { getProfileId, requireAuth, signToken, verifyToken, type AuthRequest } from '../middleware/auth.js'
 import { mapProfile, mapUser } from '../mappers.js'
 import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
 import { sendPasswordResetEmail, sendEmailVerificationEmail } from '../services/email.js'
 import { getPlan, normalizePlanId, planRequiresStudentId } from '../services/plans.js'
 import { isValidTurkishMobile, normalizePhone, sendVerificationSms } from '../services/sms.js'
-import type { ProfileRow, UserRow } from '../types.js'
+import type { JwtPayload, ProfileRow, UserRow } from '../types.js'
 
 const router = Router()
 
@@ -281,6 +282,41 @@ router.get('/me', requireAuth, (req: AuthRequest, res) => {
   }
 
   res.json({ user, token: signToken({ userId: user.id, role: user.role }) })
+})
+
+/** Süresi dolmuş ama imzası geçerli token ile yeni oturum (admin kaydet 401 önlemi). */
+router.post('/refresh', (req, res) => {
+  const header = req.headers.authorization
+  if (!header?.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'Oturum gerekli.' })
+    return
+  }
+
+  const raw = header.slice(7)
+  let payload: JwtPayload
+  try {
+    payload = verifyToken(raw)
+  } catch (err) {
+    if (err instanceof jwt.TokenExpiredError) {
+      try {
+        payload = jwt.verify(raw, config.jwtSecret, { ignoreExpiration: true }) as JwtPayload
+      } catch {
+        res.status(401).json({ error: 'Geçersiz oturum.' })
+        return
+      }
+    } else {
+      res.status(401).json({ error: 'Geçersiz oturum.' })
+      return
+    }
+  }
+
+  const user = dbGet<UserRow>('SELECT id, role FROM users WHERE id = ?', [payload.userId])
+  if (!user) {
+    res.status(401).json({ error: 'Kullanıcı bulunamadı.' })
+    return
+  }
+
+  res.json({ token: signToken({ userId: user.id, role: user.role }) })
 })
 
 const MAX_PROFILES = 4

@@ -5,7 +5,7 @@ import { deriveHiddenNavFromCategories } from '../utils/navVisibility'
 import type { AdminContentItem, AdminContentMeta, ContentCategory, ContentItem, Episode } from '../types/content'
 import type { LandingSectionsConfig } from '../constants/landingDefaults'
 import type { LandingCustomBlock } from '../constants/landingCustomBlocks'
-import { isTransientApiError, sleep } from '../utils/authSession'
+import { isAuthSessionError, isTransientApiError, sleep } from '../utils/authSession'
 
 export type { LandingSectionsConfig } from '../constants/landingDefaults'
 
@@ -82,7 +82,16 @@ async function tryRefreshSessionToken() {
     const profileId = getProfileId()
     if (profileId) headers.set('X-Profile-Id', profileId)
 
-    const response = await fetch(`${getApiBase()}/api/auth/me`, { headers, cache: 'no-store' })
+    let response = await fetch(`${getApiBase()}/api/auth/refresh`, {
+      method: 'POST',
+      headers,
+      cache: 'no-store',
+    })
+
+    if (response.status === 404) {
+      response = await fetch(`${getApiBase()}/api/auth/me`, { headers, cache: 'no-store' })
+    }
+
     if (!response.ok) return false
 
     const body = (await response.json()) as { token?: string }
@@ -121,7 +130,13 @@ export async function api<T>(path: string, options: RequestInit = {}, retried = 
     throw new Error('Sunucuya bağlanılamıyor. baslat.bat ile projeyi yeniden başlatın (API port 3001).')
   }
 
-  if (response.status === 401 && !retried && path !== '/api/auth/me' && path !== '/api/auth/login') {
+  if (
+    response.status === 401 &&
+    !retried &&
+    path !== '/api/auth/me' &&
+    path !== '/api/auth/refresh' &&
+    path !== '/api/auth/login'
+  ) {
     const refreshed = await tryRefreshSessionToken()
     if (refreshed) return api<T>(path, options, true)
   }
@@ -512,6 +527,10 @@ export async function saveLandingPageConfig(payload: {
       })
     } catch (error) {
       lastError = error
+      if (isAuthSessionError(error) && attempt < 2) {
+        const refreshed = await tryRefreshSessionToken()
+        if (refreshed) continue
+      }
       if (!isTransientApiError(error) || attempt === 2) throw error
       await sleep(900 * (attempt + 1))
     }
