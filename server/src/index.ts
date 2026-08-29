@@ -8,6 +8,7 @@ import { initDatabase, uploadsDir, dbAll, dbGet, getDbPath } from './db.js'
 import { mapContent } from './mappers.js'
 import billingRoutes from './routes/billing.js'
 import episodeRoutes from './routes/episodes.js'
+import { resolveJwtExpiresIn } from './middleware/auth.js'
 import authRoutes from './routes/auth.js'
 import categoryRoutes from './routes/categories.js'
 import contentRoutes from './routes/content.js'
@@ -147,6 +148,9 @@ app.get('/api/health', (_req, res) => {
       playbackGuard: true,
     },
     email: config.isEmailConfigured(),
+    auth: {
+      jwtExpiresIn: resolveJwtExpiresIn(),
+    },
   })
 })
 
@@ -303,6 +307,11 @@ app.listen(config.port, () => {
   console.log(`Email: ${config.isEmailConfigured() ? 'configured' : 'dev mode (console log)'}`)
   if (process.env.NODE_ENV === 'production' && config.jwtSecret === 'sineoda-dev-secret-change-in-production') {
     console.warn('[auth] UYARI: JWT_SECRET varsayılan değerde — .env içinde güçlü bir secret tanımlayın.')
+  }
+  const jwtExpiresIn = resolveJwtExpiresIn()
+  console.log(`[auth] JWT süresi: ${jwtExpiresIn}`)
+  if (process.env.NODE_ENV === 'production' && process.env.JWT_EXPIRES_IN?.trim()) {
+    console.warn('[auth] UYARI: JWT_EXPIRES_IN env yok sayıldı — production her zaman 30d kullanır.')
   }
 
   try {

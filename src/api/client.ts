@@ -330,8 +330,8 @@ export async function resetPasswordRequest(token: string, password: string): Pro
   })
 }
 
-export async function fetchMe(): Promise<{ user: User }> {
-  return api<{ user: User }>('/api/auth/me')
+export async function fetchMe(): Promise<{ user: User; token?: string }> {
+  return api<{ user: User; token?: string }>('/api/auth/me')
 }
 
 export async function createProfileRequest(

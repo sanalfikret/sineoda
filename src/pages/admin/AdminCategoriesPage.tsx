@@ -5,6 +5,7 @@ import { AdminSiteNavPanel } from '../../components/admin/AdminSiteNavPanel'
 import { isCekimCategoryId } from '../../constants/cekimNotlari'
 import type { SiteNavId } from '../../constants/siteNav'
 import { mergeCategoriesForAdminOrder, isVirtualBrowseCategoryId } from '../../utils/browse'
+import { mergeAdminPickerCatalog } from '../../utils/adminPickerCatalog'
 import { useContent } from '../../context/ContentContext'
 
 export function AdminCategoriesPage() {
@@ -55,12 +56,7 @@ export function AdminCategoriesPage() {
 
   const adminPickerCatalog = useMemo(() => {
     const cekimItems = cekimNotlariSections.flatMap((section) => section.items)
-    const seen = new Set<string>()
-    return [...catalog, ...studentCinemaCatalog, ...cekimItems].filter((item) => {
-      if (seen.has(item.id)) return false
-      seen.add(item.id)
-      return true
-    })
+    return mergeAdminPickerCatalog([catalog, studentCinemaCatalog, cekimItems])
   }, [catalog, studentCinemaCatalog, cekimNotlariSections])
 
   const catalogById = useMemo(

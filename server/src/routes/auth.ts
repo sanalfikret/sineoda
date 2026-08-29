@@ -275,11 +275,12 @@ router.get('/me', requireAuth, (req: AuthRequest, res) => {
             }
           : null,
       },
+      token,
     })
     return
   }
 
-  res.json({ user })
+  res.json({ user, token: signToken({ userId: user.id, role: user.role }) })
 })
 
 const MAX_PROFILES = 4

@@ -2,11 +2,14 @@ import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import {
   resolveMediaUrl,
   fetchAdminCatalog,
+  fetchAdminStudentCinemaContent,
+  fetchBootstrap,
   fetchLandingConfig,
   saveLandingPageConfig,
   updateLandingLayoutConfig,
   type LandingHeroConfig,
 } from '../../api/client'
+import { useContent } from '../../context/ContentContext'
 import { AdminLandingCustomBlockEditor } from '../../components/admin/AdminLandingCustomBlockEditor'
 import {
   AdminLandingSectionBlock,
@@ -43,6 +46,11 @@ import {
   poolForShowcaseIcon,
   type ContentPoolId,
 } from '../../utils/contentPools'
+import {
+  catalogItemsFromBootstrap,
+  catalogItemsFromLanding,
+  mergeAdminPickerCatalog,
+} from '../../utils/adminPickerCatalog'
 import { fuzzySearchMatch } from '../../utils/search'
 
 interface ShowcaseDraft {
@@ -107,7 +115,14 @@ function filterPickerCatalog(
 }
 
 export function AdminLandingPage() {
-  const [pickerCatalog, setPickerCatalog] = useState<ContentItem[]>([])
+  const {
+    catalog: platformCatalog,
+    studentCinemaCatalog: bootstrapStudentCatalog,
+    cekimNotlariSections,
+  } = useContent()
+  const [adminCatalog, setAdminCatalog] = useState<ContentItem[]>([])
+  const [adminStudentItems, setAdminStudentItems] = useState<ContentItem[]>([])
+  const [loadedCatalogItems, setLoadedCatalogItems] = useState<ContentItem[]>([])
   const [hero, setHero] = useState<LandingHeroConfig>(DEFAULT_HERO)
   const [sections, setSections] = useState(DEFAULT_LANDING_SECTIONS)
   const [customBlocks, setCustomBlocks] = useState<LandingCustomBlock[]>([])
@@ -126,10 +141,45 @@ export function AdminLandingPage() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
 
+  const pickerCatalog = useMemo(() => {
+    const cekimItems = cekimNotlariSections.flatMap((section) => section.items)
+    return mergeAdminPickerCatalog([
+      loadedCatalogItems,
+      platformCatalog,
+      bootstrapStudentCatalog,
+      cekimItems,
+      adminStudentItems,
+      adminCatalog,
+    ])
+  }, [
+    loadedCatalogItems,
+    platformCatalog,
+    bootstrapStudentCatalog,
+    cekimNotlariSections,
+    adminStudentItems,
+    adminCatalog,
+  ])
+
   useEffect(() => {
-    Promise.all([fetchAdminCatalog(), fetchLandingConfig()])
-      .then(([adminCatalog, data]) => {
-        setPickerCatalog(adminCatalog.catalog)
+    let cancelled = false
+    Promise.all([
+      fetchAdminCatalog().catch(() => ({ catalog: [] as ContentItem[] })),
+      fetchAdminStudentCinemaContent().catch(() => ({ items: [] as ContentItem[] })),
+      fetchBootstrap().catch(() => null),
+      fetchLandingConfig(),
+    ])
+      .then(([adminCatalogResult, studentCinemaResult, bootstrap, data]) => {
+        if (cancelled) return
+        setAdminCatalog(adminCatalogResult.catalog)
+        setAdminStudentItems(studentCinemaResult.items)
+        setLoadedCatalogItems(
+          mergeAdminPickerCatalog([
+            bootstrap ? catalogItemsFromBootstrap(bootstrap) : [],
+            catalogItemsFromLanding(data),
+            studentCinemaResult.items,
+            adminCatalogResult.catalog,
+          ]),
+        )
         setHero(data.hero ?? DEFAULT_HERO)
         setSections(mergeLandingSections(data.sections))
         const loadedCustomBlocks = data.customBlocks ?? []
@@ -165,7 +215,17 @@ export function AdminLandingPage() {
           })),
         )
       })
-      .finally(() => setLoading(false))
+      .catch((err) => {
+        if (!cancelled) {
+          setMessage(err instanceof Error ? err.message : 'Ana sayfa ayarları yüklenemedi.')
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const toggleSliderItem = (contentId: string) => {
@@ -289,7 +349,7 @@ export function AdminLandingPage() {
   }
 
   const studentCinemaCatalog = useMemo(
-    () => pickerCatalog.filter((item) => item.program === 'student_cinema'),
+    () => filterCatalogByPool(pickerCatalog, 'student_cinema'),
     [pickerCatalog],
   )
 
@@ -781,6 +841,18 @@ export function AdminLandingPage() {
               Genç Sinema seçkisini buradan düzenleyin. Liste boş bırakılırsa onaylı Genç Sinema
               içerikleri otomatik gösterilir.
             </p>
+            {!loading && studentCinemaCatalog.length === 0 && (
+              <p className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+                Genç Sinema kataloğu yüklenemedi veya henüz yayınlanmış film yok. Genç Sinema
+                panelinden film ekleyip yayınlayın; sayfayı yenileyin.
+                {pickerCatalog.length > 0 && ` (Toplam ${pickerCatalog.length} içerik yüklendi.)`}
+              </p>
+            )}
+            {!loading && studentCinemaCatalog.length > 0 && (
+              <p className="mt-2 text-xs text-sineoda-muted">
+                {studentCinemaCatalog.length} Genç Sinema filmi seçilebilir.
+              </p>
+            )}
             {studentPickIds.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {studentPickIds.map((contentId, index) => {
@@ -858,6 +930,18 @@ export function AdminLandingPage() {
               Ayın birincilerini buradan seçin. Liste boş bırakılırsa Genç Sinema admin panelindeki
               &quot;Ayın birincisi&quot; rozetli filmler otomatik gösterilir.
             </p>
+            {!loading && studentCinemaCatalog.length === 0 && (
+              <p className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+                Genç Sinema kataloğu yüklenemedi veya henüz yayınlanmış film yok. Genç Sinema
+                panelinden film ekleyip yayınlayın; sayfayı yenileyin.
+                {pickerCatalog.length > 0 && ` (Toplam ${pickerCatalog.length} içerik yüklendi.)`}
+              </p>
+            )}
+            {!loading && studentCinemaCatalog.length > 0 && (
+              <p className="mt-2 text-xs text-sineoda-muted">
+                {studentCinemaCatalog.length} Genç Sinema filmi seçilebilir.
+              </p>
+            )}
             {monthlyWinnerIds.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {monthlyWinnerIds.map((contentId, index) => {

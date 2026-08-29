@@ -17,7 +17,7 @@ export function isPlatformMainContent(item: Pick<ContentItem, 'program' | 'conte
 }
 
 export function isStudentMainContent(item: Pick<ContentItem, 'program' | 'contentFormat'>) {
-  return item.program === 'student_cinema' && (item.contentFormat ?? 'main') === 'main'
+  return (item.program ?? 'standard') === 'student_cinema' && (item.contentFormat ?? 'main') === 'main'
 }
 
 export function isShootingNotesContent(item: Pick<ContentItem, 'program'>) {
