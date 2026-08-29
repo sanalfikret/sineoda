@@ -45,6 +45,7 @@ export function LandingPage() {
   const [showcases, setShowcases] = useState(DEMO_LANDING_SHOWCASES)
   const [studentPicks, setStudentPicks] = useState<ContentItem[]>([])
   const [studentMonthlyWinners, setStudentMonthlyWinners] = useState<ContentItem[]>([])
+  const [cekimCatalog, setCekimCatalog] = useState<ContentItem[]>([])
   const [blockTitles, setBlockTitles] = useState<Record<string, string>>({})
   const [hiddenNavIds, setHiddenNavIds] = useState<SiteNavId[]>([])
   const [scrolled, setScrolled] = useState(false)
@@ -106,6 +107,12 @@ export function LandingPage() {
         hidden,
       ),
     )
+    setCekimCatalog(
+      filterCatalogByNavVisibility(
+        bootstrap.cekimNotlari?.sections?.flatMap((section) => section.items) ?? [],
+        hidden,
+      ),
+    )
     setBlockTitles(landing.blockTitles ?? bootstrap.landing?.blockTitles ?? {})
     setReady(true)
   }, [])
@@ -122,12 +129,12 @@ export function LandingPage() {
 
   const lookupCatalog = useMemo(() => {
     const seen = new Set<string>()
-    return [...catalog, ...studentPicks, ...studentMonthlyWinners, ...sliderItems].filter((item) => {
+    return [...catalog, ...studentPicks, ...studentMonthlyWinners, ...sliderItems, ...cekimCatalog].filter((item) => {
       if (seen.has(item.id)) return false
       seen.add(item.id)
       return true
     })
-  }, [catalog, studentPicks, studentMonthlyWinners, sliderItems])
+  }, [catalog, studentPicks, studentMonthlyWinners, sliderItems, cekimCatalog])
 
   const backgroundContent = useMemo(
     () => findContent(lookupCatalog, heroConfig?.backgroundContentId),

@@ -4,6 +4,12 @@ import type { LandingCustomBlock, LandingCustomBlockType } from '../../constants
 import { CUSTOM_BLOCK_TYPE_LABELS } from '../../constants/landingCustomBlocks'
 import { resolveMediaUrl } from '../../api/client'
 import { getContentDisplayLabel } from '../../constants/contentTypes'
+import {
+  filterCatalogByPool,
+  LANDING_CONTENT_POOL_FILTERS,
+  type ContentPoolId,
+} from '../../utils/contentPools'
+import { viewAllHrefForPool } from '../../utils/landingContentLinks'
 
 const inputClass =
   'w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold'
@@ -35,11 +41,14 @@ function ContentRowPicker({
   catalog,
   selectedIds,
   onChange,
+  poolFilter = 'platform',
 }: {
   catalog: ContentItem[]
   selectedIds: string[]
   onChange: (itemIds: string[]) => void
+  poolFilter?: ContentPoolId
 }) {
+  const filteredCatalog = filterCatalogByPool(catalog, poolFilter)
   const toggle = (contentId: string) => {
     if (selectedIds.includes(contentId)) {
       onChange(selectedIds.filter((id) => id !== contentId))
@@ -90,7 +99,7 @@ function ContentRowPicker({
       )}
 
       <div className="grid max-h-72 gap-2 overflow-y-auto sm:grid-cols-2">
-        {catalog.map((item) => {
+        {filteredCatalog.map((item) => {
           const selected = selectedIds.includes(item.id)
           return (
             <button
@@ -138,6 +147,19 @@ export function AdminLandingCustomBlockEditor({
   }
 
   if (block.type === 'contentRow') {
+    const pool = block.contentPool ?? 'platform'
+
+    const handlePoolChange = (contentPool: ContentPoolId) => {
+      const filtered = filterCatalogByPool(catalog, contentPool)
+      const allowed = new Set(filtered.map((item) => item.id))
+      onChange({
+        ...block,
+        contentPool,
+        ctaLink: block.ctaLink === '/kayit' || !block.ctaLink ? viewAllHrefForPool(contentPool) : block.ctaLink,
+        itemIds: (block.itemIds ?? []).filter((id) => allowed.has(id)),
+      })
+    }
+
     return (
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -166,6 +188,20 @@ export function AdminLandingCustomBlockEditor({
         </div>
 
         <Field label="Satır başlığı" value={block.title} onChange={(title) => patch({ title })} />
+        <label className="block space-y-2">
+          <span className="text-sm text-white/85">İçerik havuzu</span>
+          <select
+            value={pool}
+            onChange={(event) => handlePoolChange(event.target.value as ContentPoolId)}
+            className={inputClass}
+          >
+            {LANDING_CONTENT_POOL_FILTERS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <Field label="Etiket (opsiyonel)" value={block.eyebrow} onChange={(eyebrow) => patch({ eyebrow })} />
         <Field label="Kısa açıklama (opsiyonel)" value={block.body} onChange={(body) => patch({ body })} multiline />
 
@@ -178,6 +214,7 @@ export function AdminLandingCustomBlockEditor({
           catalog={catalog}
           selectedIds={block.itemIds ?? []}
           onChange={(itemIds) => patch({ itemIds })}
+          poolFilter={pool}
         />
       </div>
     )
