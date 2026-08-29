@@ -11,6 +11,7 @@ import { useContent } from '../context/ContentContext'
 import { useWatchlist } from '../context/WatchlistContext'
 import { buildBrowseRows, filterCatalog, genresForCatalog, pickFeatured, STUDENT_MONTHLY_WINNERS_ROW_ID } from '../utils/browse'
 import { BRAND_STUDENT_CINEMA } from '../constants/brand'
+import { FeaturedShowcaseRow, usesFeaturedShowcaseRow } from '../components/FeaturedShowcaseRow'
 import { restoreBrowseScroll } from '../utils/browseState'
 import { isVerticalContent } from '../utils/vertical'
 import { getContentTypeLabel } from '../constants/contentTypes'
@@ -313,37 +314,53 @@ function BrowseContent({
             Bu filtrede içerik bulunamadı.
           </p>
         ) : (
-          rows.map((row) => (
+          rows.map((row) => {
+            const viewAllHref =
+              !activeGenre &&
+              !contentType &&
+              row.id === BRAND_STUDENT_CINEMA.id &&
+              !hiddenNavIds.includes('gencSinema')
+                ? '/genc-sinema'
+                : !activeGenre &&
+                    !contentType &&
+                    row.id === STUDENT_MONTHLY_WINNERS_ROW_ID &&
+                    !hiddenNavIds.includes('gencSinema')
+                  ? '/genc-sinema'
+                  : !activeGenre &&
+                      !contentType &&
+                      row.title === 'Dikey Diziler' &&
+                      !hiddenNavIds.includes('dikey')
+                    ? '/dikey-diziler'
+                    : undefined
+
+            if (!isBrowseList && usesFeaturedShowcaseRow(row.title, row.id)) {
+              return (
+                <FeaturedShowcaseRow
+                  key={row.id}
+                  title={row.title}
+                  items={row.items}
+                  onSelect={rowSelect(row.title)}
+                  progressMap={progressMap}
+                  viewAllHref={viewAllHref}
+                />
+              )
+            }
+
+            return (
             <ContentRow
               key={row.id}
               title={row.title}
               items={row.items}
               onSelect={rowSelect(row.title)}
               progressMap={progressMap}
-              viewAllHref={
-                !activeGenre &&
-                !contentType &&
-                row.id === BRAND_STUDENT_CINEMA.id &&
-                !hiddenNavIds.includes('gencSinema')
-                  ? '/genc-sinema'
-                  : !activeGenre &&
-                      !contentType &&
-                      row.id === STUDENT_MONTHLY_WINNERS_ROW_ID &&
-                      !hiddenNavIds.includes('gencSinema')
-                    ? '/genc-sinema'
-                    : !activeGenre &&
-                        !contentType &&
-                        row.title === 'Dikey Diziler' &&
-                        !hiddenNavIds.includes('dikey')
-                      ? '/dikey-diziler'
-                      : undefined
-              }
+              viewAllHref={viewAllHref}
               prominent={false}
               layout={rowLayout(row.id, row.title, row.items)}
               variant={isBrowseList ? 'grid' : 'carousel'}
               gridFixedWidth={isBrowseList}
             />
-          ))
+            )
+          })
         )}
 
         {showSectionExtras && !activeGenre && !contentType && !hiddenNavIds.includes('listem') && filteredWatchlist.length > 0 && (

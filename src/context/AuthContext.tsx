@@ -100,6 +100,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  const syncAuthSession = useCallback(async () => {
+    const { user: me, token: refreshedToken } = await fetchMe()
+    if (refreshedToken) setToken(refreshedToken)
+    applyUser(me)
+    return me
+  }, [applyUser])
+
   useEffect(() => {
     if (activeProfile && !getProfileId()) {
       setProfileId(activeProfile.id)
@@ -121,8 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       for (let attempt = 0; attempt < 3; attempt += 1) {
         try {
-          const { user: me } = await fetchMe()
-          applyUser(me)
+          await syncAuthSession()
           break
         } catch {
           if (attempt === 2) break
@@ -134,7 +140,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     void init()
-  }, [applyUser])
+  }, [syncAuthSession])
+
+  useEffect(() => {
+    if (!getToken()) return
+
+    const refresh = () => {
+      void syncAuthSession().catch(() => undefined)
+    }
+
+    const interval = window.setInterval(refresh, 20 * 60 * 1000)
+
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refresh()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      window.clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [syncAuthSession])
 
   const login = useCallback(
     async (email: string, password: string, options?: { requireAdmin?: boolean }) => {
@@ -204,9 +230,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const refreshUser = useCallback(async () => {
-    const { user: me } = await fetchMe()
-    applyUser(me)
-  }, [applyUser])
+    await syncAuthSession()
+  }, [syncAuthSession])
 
   const selectProfile = useCallback(
     (profileId: string) => {

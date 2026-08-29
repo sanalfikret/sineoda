@@ -7,10 +7,30 @@ import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
 
 const JWT_EXPIRES_IN = '30d'
 
-function resolveJwtExpiresIn() {
+function parseDurationSeconds(raw: string): number | null {
+  const match = raw.match(/^(\d+)([smhdw])$/i)
+  if (!match) return null
+  const n = Number.parseInt(match[1], 10)
+  const unit = match[2].toLowerCase()
+  if (unit === 's') return n
+  if (unit === 'm') return n * 60
+  if (unit === 'h') return n * 3600
+  if (unit === 'd') return n * 86_400
+  return n * 604_800
+}
+
+export function resolveJwtExpiresIn() {
+  if (process.env.NODE_ENV === 'production') {
+    return JWT_EXPIRES_IN
+  }
+
   const raw = process.env.JWT_EXPIRES_IN?.trim()
   if (!raw) return JWT_EXPIRES_IN
-  if (/^\d+[smhdw]$/i.test(raw)) return raw
+  if (/^\d+[smhdw]$/i.test(raw)) {
+    const seconds = parseDurationSeconds(raw)
+    if (seconds !== null && seconds >= 86_400) return raw
+    return JWT_EXPIRES_IN
+  }
   if (/^\d+$/.test(raw)) {
     const seconds = Number.parseInt(raw, 10)
     return seconds >= 86_400 ? seconds : JWT_EXPIRES_IN

@@ -1,5 +1,5 @@
 import type { ContentItem } from '../types/content'
-import { ContentRow } from './ContentRow'
+import { FeaturedShowcaseRow } from './FeaturedShowcaseRow'
 
 interface StudentCinemaMonthlyWinnersRowProps {
   items: ContentItem[]
@@ -14,18 +14,14 @@ export function StudentCinemaMonthlyWinnersRow({
   guestMode = false,
   className = '',
 }: StudentCinemaMonthlyWinnersRowProps) {
-  if (items.length === 0) return null
-
   return (
-    <div className={className}>
-      <ContentRow
-        title="Ayın Genç Sinema Birincileri"
-        items={items}
-        onSelect={onSelect ?? (() => undefined)}
-        layout="landscape"
-        viewAllHref={guestMode ? '/giris' : '/genc-sinema'}
-        guestMode={guestMode}
-      />
-    </div>
+    <FeaturedShowcaseRow
+      title="Ayın Genç Sinema Birincileri"
+      items={items}
+      onSelect={onSelect}
+      guestMode={guestMode}
+      viewAllHref={guestMode ? '/giris' : '/genc-sinema'}
+      className={className}
+    />
   )
 }
