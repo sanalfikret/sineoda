@@ -112,10 +112,12 @@ export function normalizeLandingLayout(
   }
 
   const hiddenInput = Array.isArray(raw?.hidden) ? raw.hidden : []
-  const hidden = hiddenInput.filter(
-    (id): id is LandingLayoutBlockId =>
-      isKnownLayoutBlockId(id, customBlockIds) && !hidden.includes(id as LandingLayoutBlockId),
-  )
+  const hidden: LandingLayoutBlockId[] = []
+  for (const id of hiddenInput) {
+    if (isKnownLayoutBlockId(id, customBlockIds) && !hidden.includes(id as LandingLayoutBlockId)) {
+      hidden.push(id as LandingLayoutBlockId)
+    }
+  }
 
   return { order, hidden }
 }
