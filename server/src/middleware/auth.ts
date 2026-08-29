@@ -6,7 +6,8 @@ import type { CreatorRow, JwtPayload, UserRow } from '../types.js'
 import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
 
 export function signToken(payload: JwtPayload) {
-  return jwt.sign(payload, config.jwtSecret, { expiresIn: '7d' })
+  const expiresIn = process.env.JWT_EXPIRES_IN ?? '30d'
+  return jwt.sign(payload, config.jwtSecret, { expiresIn })
 }
 
 export function verifyToken(token: string) {

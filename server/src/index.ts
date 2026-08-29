@@ -301,6 +301,9 @@ app.listen(config.port, () => {
   console.log(`Database: ${path.join(config.dataDir, 'sineoda.db')}`)
   console.log(`Frontend: ${config.frontendUrl}`)
   console.log(`Email: ${config.isEmailConfigured() ? 'configured' : 'dev mode (console log)'}`)
+  if (process.env.NODE_ENV === 'production' && config.jwtSecret === 'sineoda-dev-secret-change-in-production') {
+    console.warn('[auth] UYARI: JWT_SECRET varsayılan değerde — .env içinde güçlü bir secret tanımlayın.')
+  }
 
   try {
     ensureMonthlyRollover()

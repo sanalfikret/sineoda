@@ -256,7 +256,9 @@ router.get('/me', requireAuth, (req: AuthRequest, res) => {
       'SELECT id, studio_name, bio, status, legal_accepted_at, created_at, program, school_id, registration_paid_at FROM creators WHERE user_id = ?',
       [req.auth!.userId],
     )
+    const token = signToken({ userId: user.id, role: user.role })
     res.json({
+      token,
       user: {
         ...user,
         creator: creator
@@ -278,7 +280,8 @@ router.get('/me', requireAuth, (req: AuthRequest, res) => {
     return
   }
 
-  res.json({ user })
+  const token = signToken({ userId: user.id, role: user.role })
+  res.json({ token, user })
 })
 
 const MAX_PROFILES = 4

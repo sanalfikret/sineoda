@@ -225,6 +225,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [applyUser, clearSession])
 
+  useEffect(() => {
+    if (!user) return
+    const keepAlive = window.setInterval(() => {
+      void refreshUser().catch(() => undefined)
+    }, 15 * 60 * 1000)
+    return () => window.clearInterval(keepAlive)
+  }, [user, refreshUser])
+
   const selectProfile = useCallback(
     (profileId: string) => {
       if (!user) return

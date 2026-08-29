@@ -537,8 +537,10 @@ export function AdminLandingPage() {
       )
     } catch (err) {
       const status = (err as Error & { status?: number }).status
-      if (status === 401 || status === 403) {
-        setMessage('Oturum süresi doldu veya yetki yok. Lütfen tekrar giriş yapın.')
+      if (status === 401) {
+        setMessage('Oturum süresi doldu. Lütfen admin panelinden çıkış yapıp tekrar giriş yapın.')
+      } else if (status === 403) {
+        setMessage(err instanceof Error ? err.message : 'Admin yetkisi gerekli.')
       } else {
         setMessage(err instanceof Error ? err.message : 'Kayıt başarısız.')
       }
