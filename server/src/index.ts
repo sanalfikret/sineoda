@@ -148,6 +148,9 @@ app.get('/api/health', (_req, res) => {
       playbackGuard: true,
     },
     email: config.isEmailConfigured(),
+    build: {
+      gitSha: process.env.GIT_SHA ?? 'unknown',
+    },
     auth: {
       jwtExpiresIn: resolveJwtExpiresIn(),
     },
