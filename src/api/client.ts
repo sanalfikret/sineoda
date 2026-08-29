@@ -11,30 +11,21 @@ export type { LandingSectionsConfig } from '../constants/landingDefaults'
 
 const TOKEN_KEY = 'sineoda_token'
 const PROFILE_KEY = 'sineoda_profile_id'
-const RENDER_API_FALLBACK = 'https://sineoda-api.onrender.com'
 
-function isStaticFrontendHost(host: string) {
-  return (
-    host.endsWith('.vercel.app') ||
-    host === 'sineoda.vercel.app' ||
-    host === 'sineoda.web.app'
-  )
-}
-
-/** API kökü — VPS/tek domain: aynı origin. Sunucunun enjekte ettiği runtime değeri önceliklidir. */
+/**
+ * API kökü — production VPS: aynı origin (/api).
+ * Sunucunun index.html'e enjekte ettiği __SINEODA_API_BASE__ önceliklidir.
+ * VITE_API_URL yalnızca bilinçli ayrı API domain kurulumunda kullanılır.
+ */
 export function getApiBase() {
   if (typeof window !== 'undefined') {
     const runtime = (window as Window & { __SINEODA_API_BASE__?: string }).__SINEODA_API_BASE__
     if (runtime !== undefined) {
       return runtime.replace(/\/$/, '')
     }
-
-    const host = window.location.hostname
-    if (!isStaticFrontendHost(host)) {
-      return ''
-    }
     const configured = String(import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
-    return configured || RENDER_API_FALLBACK
+    if (configured) return configured
+    return ''
   }
 
   return String(import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
@@ -107,7 +98,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
       } else if (response.status === 404) {
         message =
           path.includes('/categories/reorder') || path.includes('/reactions/')
-            ? 'API güncel değil. Render panelinde sineoda-api servisini Manual Deploy ile yeniden yayınlayın.'
+            ? 'API güncel değil. VPS\'te bash deploy/rebuild-vps.sh çalıştırın.'
             : 'Bu özellik sunucuda henüz aktif değil. API güncellenmeli.'
       } else {
         await response.text()
@@ -121,7 +112,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
       } else if (response.status === 404) {
         message =
           path.includes('/categories/reorder') || path.includes('/reactions/')
-            ? 'API güncel değil. Render panelinde sineoda-api servisini Manual Deploy ile yeniden yayınlayın.'
+            ? 'API güncel değil. VPS\'te bash deploy/rebuild-vps.sh çalıştırın.'
             : 'Bu özellik sunucuda henüz aktif değil. API güncellenmeli.'
       }
     }

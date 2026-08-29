@@ -5,46 +5,57 @@ alwaysApply: true
 
 # Deploy workflow (Sineoda)
 
+## Tek kaynak: VPS (kiralık sunucu)
+
+Site + API + DB tek makinede. Render/Vercel/GitHub **runtime'da kullanılmaz**.
+
+Detay: `deploy/PRODUCTION-VPS.txt`
+
 ## Veri kalıcılığı (kritik)
 
 Canlı veri **git'te değil**, VPS'te `persistent/data/sineoda.db` dosyasında.
 
 - Deploy sadece kodu günceller; `persistent/` klasörüne dokunmaz.
 - **Asla** `docker-compose down -v` veya `rm -rf persistent/` çalıştırma.
-- Her deploy öncesi `deploy/backup-vps.sh` otomatik çalışır (`update-vps.sh` içinde).
-- Deploy sonrası `/api/health` → `storage.userCount` ve `dbSizeBytes` sıfırlanmışsa dur.
-
-Detay: `deploy/PERSISTENCE.txt`
+- Her deploy öncesi `deploy/backup-vps.sh` otomatik çalışır.
+- Deploy sonrası `/api/health` → `storage.userCount` düşmemeli.
 
 ## Push öncesi (zorunlu)
-
-Her backend değişikliğinden sonra push etmeden önce:
 
 ```bash
 npm run check:deploy
 ```
 
-Başarısızsa **push etme**.
+## Deploy — iki yol
 
-## Commit ve push
+### A) GitHub'sız (tam kontrol, önerilen)
 
-1. Run `npm run check:deploy` — must pass.
-2. Commit all related changes.
-3. Push `origin main`.
+Bilgisayardan direkt VPS'e:
 
-## VPS deploy (tek doğru komut)
+```powershell
+npm run check:deploy
+powershell -File deploy/sync-to-vps.ps1
+```
+
+### B) VPS'te git pull
 
 ```bash
 cd /opt/sineoda && bash deploy/update-vps.sh
 ```
 
-**Test aşaması:** Eski DB restore etme; deploy sonrası `userCount` düşmediyse OK.
+Sadece rebuild (kod zaten güncel):
 
-`.env` içinde: `PERSIST_DIR=/opt/sineoda/persistent`
+```bash
+cd /opt/sineoda && bash deploy/rebuild-vps.sh
+```
+
+## .env (VPS)
+
+- `PERSIST_DIR=/opt/sineoda/persistent`
+- `VITE_API_URL=` boş (same-origin)
+- `JWT_SECRET` deploy sonrası değiştirme
 
 ## Verify deploy
 
-- VPS: `curl -s http://127.0.0.1:3001/api/health` — `storage.dbExists: true`, `userCount` > 0
-- Frontend: hard-refresh (`Ctrl+Shift+R`) if UI looks stale.
-
-Do not leave fixes only on a feature branch when the user expects them live.
+- `curl -s http://127.0.0.1:3001/api/health` → `dbExists: true`, `jwtExpiresIn: "30d"`
+- Tarayıcı hard-refresh (`Ctrl+Shift+R`)

@@ -12,6 +12,7 @@
     "build:server": "npm run build --prefix server",
     "check:server": "node scripts/check-server-boot.mjs",
     "check:deploy": "npm run check:server && npm run build:cpanel",
+    "deploy:vps": "powershell -File deploy/sync-to-vps.ps1",
     "icons": "node scripts/generate-pwa-icons.mjs",
     "lint": "oxlint",
     "preview": "vite preview"

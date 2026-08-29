@@ -65,7 +65,7 @@ export function AdminDashboardPage() {
 
       {overviewError && (
         <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          Canlı özet yüklenemedi. API güncel değilse Render&apos;dan yeniden deploy edin.
+          Canlı özet yüklenemedi. VPS&apos;te deploy/rebuild-vps.sh çalıştırın.
         </p>
       )}
 
