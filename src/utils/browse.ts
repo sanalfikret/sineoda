@@ -88,6 +88,18 @@ export function pickCategoryRow(
   }
 }
 
+function buildMonthlyWinnersBrowseRow(extras?: BrowseRowExtras): BrowseRow | null {
+  const winners = extras?.studentCinemaMonthlyWinners?.slice(0, BROWSE_ITEMS_PER_ROW) ?? []
+  if (winners.length === 0) return null
+
+  return {
+    id: STUDENT_MONTHLY_WINNERS_ROW_ID,
+    title: STUDENT_MONTHLY_WINNERS_ROW_TITLE,
+    itemIds: winners.map((item) => item.id),
+    items: winners,
+  }
+}
+
 export function buildCategoryBrowseRows(
   categories: ContentCategory[],
   _catalog: ContentItem[],
@@ -121,20 +133,6 @@ export function buildCategoryBrowseRows(
       itemIds: items.map((item) => item.id),
       items,
     })
-
-    if (category.id === BRAND_STUDENT_CINEMA.id && extras?.studentCinemaMonthlyWinners?.length) {
-      const winners = extras.studentCinemaMonthlyWinners
-        .filter((item) => item.monthlyAward?.enabled)
-        .slice(0, BROWSE_ITEMS_PER_ROW)
-      if (winners.length > 0) {
-        rows.push({
-          id: STUDENT_MONTHLY_WINNERS_ROW_ID,
-          title: STUDENT_MONTHLY_WINNERS_ROW_TITLE,
-          itemIds: winners.map((item) => item.id),
-          items: winners,
-        })
-      }
-    }
   }
 
   return rows
@@ -239,7 +237,18 @@ export function buildBrowseRows(
   }
 
   if (categories.length > 0 && getContentById) {
-    return buildCategoryBrowseRows(categories, catalog, getContentById, options, extras)
+    const rows = buildCategoryBrowseRows(categories, catalog, getContentById, options, extras)
+    const isMainHome =
+      !options.studentOnly &&
+      !options.cekimNotlariOnly &&
+      !options.genre &&
+      !options.type &&
+      !options.verticalOnly
+    const monthlyRow = isMainHome ? buildMonthlyWinnersBrowseRow(extras) : null
+    if (monthlyRow) {
+      return [monthlyRow, ...rows.filter((row) => row.id !== STUDENT_MONTHLY_WINNERS_ROW_ID)]
+    }
+    return rows
   }
 
   return buildGenreBrowseRows(catalog, options)

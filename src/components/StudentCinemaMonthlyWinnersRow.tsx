@@ -14,14 +14,13 @@ export function StudentCinemaMonthlyWinnersRow({
   guestMode = false,
   className = '',
 }: StudentCinemaMonthlyWinnersRowProps) {
-  const winners = items.filter((item) => item.monthlyAward?.enabled)
-  if (winners.length === 0) return null
+  if (items.length === 0) return null
 
   return (
     <div className={className}>
       <ContentRow
         title="Ayın Genç Sinema Birincileri"
-        items={winners}
+        items={items}
         onSelect={onSelect ?? (() => undefined)}
         layout="landscape"
         viewAllHref={guestMode ? '/giris' : '/genc-sinema'}
