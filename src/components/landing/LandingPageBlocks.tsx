@@ -21,7 +21,7 @@ import { LandingHero } from './LandingHero'
 import { StudentCinemaPicksRow } from '../StudentCinemaPicksRow'
 import { StudentCinemaMonthlyWinnersRow } from '../StudentCinemaMonthlyWinnersRow'
 import type { ContentItem } from '../../types/content'
-import type { LandingShowcaseResponse } from '../../api/client'
+import type { CekimNotlariSection, LandingShowcaseResponse } from '../../api/client'
 import type { SiteNavId } from '../../constants/siteNav'
 
 export interface LandingPageBlockContext {
@@ -39,6 +39,7 @@ export interface LandingPageBlockContext {
   customBlocks?: LandingCustomBlock[]
   hiddenNavIds?: SiteNavId[]
   catalog?: ContentItem[]
+  cekimSections?: CekimNotlariSection[]
 }
 
 function isLandingBlockHidden(id: string, hiddenNavIds: SiteNavId[]) {
@@ -56,7 +57,13 @@ function renderLandingBlock(id: string, ctx: LandingPageBlockContext): ReactNode
     const blockId = id.slice('custom:'.length)
     const block = ctx.customBlocks?.find((entry) => entry.id === blockId)
     if (!block) return null
-    return <LandingCustomBlockSection block={block} catalog={ctx.catalog} />
+    return (
+      <LandingCustomBlockSection
+        block={block}
+        catalog={ctx.catalog}
+        cekimSections={ctx.cekimSections}
+      />
+    )
   }
 
   switch (id) {

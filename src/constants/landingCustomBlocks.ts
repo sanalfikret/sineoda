@@ -11,6 +11,8 @@ export interface LandingCustomBlock {
   type: LandingCustomBlockType
   /** contentRow: hangi içerik havuzundan seçim yapılır */
   contentPool?: ContentPoolId
+  /** contentRow: çekim notları kategorisi — seçilince videolar otomatik gelir */
+  sourceCategoryId?: string
   eyebrow: string
   title: string
   body: string

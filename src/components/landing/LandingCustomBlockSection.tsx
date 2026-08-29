@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
-import { resolveMediaUrl } from '../../api/client'
+import { resolveMediaUrl, type CekimNotlariSection } from '../../api/client'
 import type { LandingCustomBlock } from '../../constants/landingCustomBlocks'
 import type { ContentItem } from '../../types/content'
-import { guestItemHref, viewAllHrefForPool } from '../../utils/landingContentLinks'
+import { guestItemHref, viewAllHrefForBlock } from '../../utils/landingContentLinks'
+import { normalizeLandingLink, resolveContentRowItems } from '../../utils/landingContentRow'
 
 function CtaLink({
   label,
@@ -14,7 +15,7 @@ function CtaLink({
   primary?: boolean
 }) {
   if (!label.trim()) return null
-  const href = link.trim() || '/kayit'
+  const href = normalizeLandingLink(link) || '/kayit'
   const isExternal = href.startsWith('http://') || href.startsWith('https://')
 
   if (isExternal) {
@@ -51,18 +52,18 @@ function CtaLink({
 export function LandingCustomBlockSection({
   block,
   catalog = [],
+  cekimSections = [],
 }: {
   block: LandingCustomBlock
   catalog?: ContentItem[]
+  cekimSections?: CekimNotlariSection[]
 }) {
   if (block.type === 'contentRow') {
-    const items = (block.itemIds ?? [])
-      .map((id) => catalog.find((entry) => entry.id === id))
-      .filter((item): item is ContentItem => Boolean(item))
+    const items = resolveContentRowItems(block, catalog, cekimSections)
 
     if (items.length === 0) return null
 
-    const viewAllLink = block.ctaLink.trim() || viewAllHrefForPool(block.contentPool)
+    const viewAllLink = normalizeLandingLink(block.ctaLink) || viewAllHrefForBlock(block)
 
     return (
       <section className="border-y border-white/5 bg-sineoda-bg px-4 py-12 sm:px-6 sm:py-16">
