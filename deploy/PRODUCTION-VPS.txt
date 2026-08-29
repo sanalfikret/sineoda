@@ -1,0 +1,64 @@
+Sineoda — tek sunucu (VPS) production rehberi
+=============================================
+
+Amaç: Site + API + veritabanı + yüklemeler TEK kiralık sunucuda.
+Render, Vercel, GitHub runtime'da kullanılmaz.
+
+Mimari
+------
+  İnternet → nginx (443) → Docker :3001 → Node API + statik React
+  Veri     → /opt/sineoda/persistent/data/sineoda.db (host disk)
+  Upload   → /opt/sineoda/persistent/uploads/
+
+Zorunlu .env (/opt/sineoda/.env)
+--------------------------------
+  PERSIST_DIR=/opt/sineoda/persistent
+  JWT_SECRET=<uzun rastgele, deploy sonrası değiştirmeyin>
+  FRONTEND_URL=https://sizin-domain.com
+  PUBLIC_URL=https://sizin-domain.com
+  VITE_API_URL=                    (BOŞ — same-origin /api)
+  NODE_ENV=production
+
+  JWT_EXPIRES_IN kullanmayın — production otomatik 30 gün.
+
+Deploy yöntemleri (ikisi de OK)
+-------------------------------
+
+A) GitHub ile (VPS'te git clone varsa):
+   cd /opt/sineoda && bash deploy/update-vps.sh
+
+B) GitHub'sız — bilgisayardan direkt aktarım (ÖNERİLEN tam kontrol):
+   npm run check:deploy
+   powershell -File deploy/sync-to-vps.ps1
+
+   Kod SCP ile gider, VPS'te docker rebuild olur. GitHub'a ihtiyaç yok.
+
+Sadece rebuild (kod zaten VPS'te güncelse):
+   cd /opt/sineoda && bash deploy/rebuild-vps.sh
+
+Deploy sonrası doğrulama
+------------------------
+  curl -s http://127.0.0.1:3001/api/health
+  → storage.dbExists: true
+  → storage.userCount deploy öncesiyle aynı veya artmış
+  → auth.jwtExpiresIn: "30d"
+  → build.gitSha: son commit veya unknown
+
+  Tarayıcı: Ctrl+Shift+R
+
+Asla yapma
+----------
+  docker compose down -v
+  rm -rf persistent/
+  .env içinde VITE_API_URL=https://...onrender.com
+
+Yedek
+-----
+  Otomatik: her deploy öncesi deploy/backup-vps.sh
+  Cron: deploy/PERSISTENCE.txt
+
+İlk kurulum
+-----------
+  bash deploy/install-vps.sh
+  cp deploy/env.production.example .env  → düzenle
+  nginx: deploy/nginx-sineoda.conf

@@ -96,7 +96,7 @@ const allowedOrigins = [
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true)
       } else {
         callback(null, true) // geliştirme kolaylığı; production'da sıkılaştırılabilir
