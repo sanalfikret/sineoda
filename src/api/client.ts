@@ -31,18 +31,26 @@ export function getApiBase() {
   return String(import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
 }
 
+/** DB'ye kaydedilecek yol — domain yok, sunucu taşınsa da çalışır (/uploads/...). */
+export function normalizeStoredMediaPath(url: string) {
+  const trimmed = String(url ?? '').trim()
+  if (!trimmed) return ''
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    const match = trimmed.match(/\/uploads\/[^\s?#]+/i)
+    if (match) return match[0]
+    return trimmed
+  }
+  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+}
+
 export function resolveMediaUrl(url: string) {
   if (!url) return url
+  url = normalizeStoredMediaPath(url)
 
-  // Yanlış PUBLIC_URL ile kaydedilmiş upload URL'lerini düzelt
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    const match = url.match(/\/uploads\/[^\s?#]+/i)
-    if (match) url = match[0]
-    else return url
-  }
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
 
   const base = getApiBase()
-  if (!base) return url.startsWith('/') ? url : `/${url}`
+  if (!base) return url
 
   return `${base}${url.startsWith('/') ? url : `/${url}`}`
 }
@@ -175,7 +183,7 @@ export async function uploadImage(file: File): Promise<string> {
     method: 'POST',
     body: formData,
   })
-  return result.url
+  return normalizeStoredMediaPath(result.url)
 }
 
 export async function uploadProfileAvatar(file: File): Promise<string> {
@@ -185,7 +193,7 @@ export async function uploadProfileAvatar(file: File): Promise<string> {
     method: 'POST',
     body: formData,
   })
-  return result.url
+  return normalizeStoredMediaPath(result.url)
 }
 
 export interface ProfileWatchStats {
@@ -210,7 +218,7 @@ export async function uploadVideo(file: File): Promise<string> {
     method: 'POST',
     body: formData,
   })
-  return result.url
+  return normalizeStoredMediaPath(result.url)
 }
 
 export async function uploadSubtitle(file: File): Promise<string> {
@@ -220,7 +228,7 @@ export async function uploadSubtitle(file: File): Promise<string> {
     method: 'POST',
     body: formData,
   })
-  return result.url
+  return normalizeStoredMediaPath(result.url)
 }
 
 export interface AuthResponse {
