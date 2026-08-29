@@ -25,6 +25,10 @@ import {
   type LandingSectionsConfig,
 } from '../services/landingSections.js'
 import { filterContentIdsForPool, poolForShowcaseIcon } from '../services/contentPools.js'
+import {
+  fetchStudentCinemaMonthlyWinnersFallback,
+  fetchStudentCinemaPicksFallback,
+} from '../services/landingStudentRows.js'
 import type { ContentRow } from '../types.js'
 
 const router = Router()
@@ -82,9 +86,12 @@ export function getLandingConfig() {
   const monthlyWinnerContentIds = monthlyWinnerRows
     .map((row) => row.content_id)
     .filter((contentId) => validContentIds.has(contentId))
-  const monthlyWinners = monthlyWinnerContentIds
+  let monthlyWinners = monthlyWinnerContentIds
     .map((contentId) => catalogMap.get(contentId))
     .filter((item): item is NonNullable<typeof item> => Boolean(item))
+  if (monthlyWinners.length === 0) {
+    monthlyWinners = fetchStudentCinemaMonthlyWinnersFallback()
+  }
 
   const studentPickRows = dbAll<{ content_id: string; sort_order: number }>(
     'SELECT content_id, sort_order FROM landing_student_picks ORDER BY sort_order',
@@ -92,9 +99,18 @@ export function getLandingConfig() {
   const studentPickContentIds = studentPickRows
     .map((row) => row.content_id)
     .filter((contentId) => validContentIds.has(contentId))
-  const studentPicks = studentPickContentIds
+  let studentPicks = studentPickContentIds
     .map((contentId) => catalogMap.get(contentId))
     .filter((item): item is NonNullable<typeof item> => Boolean(item))
+  if (studentPicks.length === 0) {
+    studentPicks = fetchStudentCinemaPicksFallback()
+  }
+
+  // Birinciler seçkide tekrar etmesin
+  if (monthlyWinners.length > 0) {
+    const winnerIds = new Set(monthlyWinners.map((item) => item.id))
+    studentPicks = studentPicks.filter((item) => !winnerIds.has(item.id))
+  }
 
   return {
     slider,

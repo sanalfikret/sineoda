@@ -38,7 +38,10 @@ import adminSiteNavRoutes from './routes/adminSiteNav.js'
 import { PUBLISHED_CONTENT_SQL_C } from './services/publish.js'
 import { STANDARD_PROGRAM_SQL_C, MAIN_CATALOG_SQL_C, ensureStudentCinemaCatalog } from './services/studentCinema.js'
 import { mapCategoriesResponse, getCategoryOrderForBrowse } from './services/categoryOrder.js'
-import { getMonthlyAwardWinnersSql } from './services/studentCinemaAwards.js'
+import {
+  fetchStudentCinemaMonthlyWinnersFallback,
+  fetchStudentCinemaPicksFallback,
+} from './services/landingStudentRows.js'
 import { mapSiteNavResponse } from './services/siteNav.js'
 import { listCekimNotlariSections } from './services/cekimNotlari.js'
 import { runStartupCategoryMaintenance } from './services/categoryMaintenance.js'
@@ -198,29 +201,12 @@ app.get('/api/bootstrap', (_req, res) => {
     }
 
     const studentCinemaPicks =
-      landing.studentPicks.length > 0
-        ? landing.studentPicks
-        : dbAll<ContentRow & { school_name: string | null; creator_name: string | null }>(
-            `${contentWithMetaSql}
-       WHERE ${PUBLISHED_CONTENT_SQL_C}
-         AND c.program = 'student_cinema'
-         AND ${MAIN_CATALOG_SQL_C}
-       ORDER BY c.published_at DESC
-       LIMIT 12`,
-          ).map(mapContent)
+      landing.studentPicks.length > 0 ? landing.studentPicks : fetchStudentCinemaPicksFallback()
 
     const studentCinemaMonthlyWinners =
       landing.monthlyWinners.length > 0
         ? landing.monthlyWinners
-        : dbAll<ContentRow & { school_name: string | null; creator_name: string | null }>(
-            `${contentWithMetaSql}
-       WHERE ${PUBLISHED_CONTENT_SQL_C}
-         AND c.program = 'student_cinema'
-         AND ${MAIN_CATALOG_SQL_C}
-         AND ${getMonthlyAwardWinnersSql()}
-       ORDER BY c.monthly_award_period DESC
-       LIMIT 12`,
-          ).map(mapContent)
+        : fetchStudentCinemaMonthlyWinnersFallback()
 
     const categories = mapCategoriesResponse()
     const categoryOrder = getCategoryOrderForBrowse()
@@ -285,9 +271,22 @@ app.use('/api/admin/upload', uploadRoutes)
 
 if (config.webDistDir) {
   const distPath = path.resolve(config.webDistDir)
+  const indexPath = path.join(distPath, 'index.html')
+  const indexHtmlRaw = fs.existsSync(indexPath) ? fs.readFileSync(indexPath, 'utf8') : ''
+  const indexHtml = indexHtmlRaw.includes('__SINEODA_API_BASE__')
+    ? indexHtmlRaw
+    : indexHtmlRaw.replace(
+        '<head>',
+        "<head><script>window.__SINEODA_API_BASE__='';</script>",
+      )
+
   app.use(express.static(distPath, { index: false }))
   app.get(/^(?!\/api\/|\/uploads\/).*/, (_req, res) => {
-    res.sendFile(path.join(distPath, 'index.html'))
+    if (indexHtml) {
+      res.type('html').send(indexHtml)
+      return
+    }
+    res.sendFile(indexPath)
   })
   console.log(`Web UI: ${distPath}`)
 }

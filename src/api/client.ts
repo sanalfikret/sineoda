@@ -21,9 +21,14 @@ function isStaticFrontendHost(host: string) {
   )
 }
 
-/** API kökü — VPS/tek domain: her zaman aynı origin (/api proxy). Vite build'deki Render URL yok sayılır. */
+/** API kökü — VPS/tek domain: aynı origin. Sunucunun enjekte ettiği runtime değeri önceliklidir. */
 export function getApiBase() {
   if (typeof window !== 'undefined') {
+    const runtime = (window as Window & { __SINEODA_API_BASE__?: string }).__SINEODA_API_BASE__
+    if (runtime !== undefined) {
+      return runtime.replace(/\/$/, '')
+    }
+
     const host = window.location.hostname
     if (!isStaticFrontendHost(host)) {
       return ''

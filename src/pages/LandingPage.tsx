@@ -89,7 +89,14 @@ export function LandingPage() {
         hidden,
       ),
     )
-    setStudentPicks(filterCatalogByNavVisibility(bootstrap.studentCinemaPicks ?? [], hidden))
+    setStudentPicks(
+      filterCatalogByNavVisibility(
+        landing.studentPicks?.length
+          ? landing.studentPicks
+          : bootstrap.studentCinemaPicks ?? [],
+        hidden,
+      ),
+    )
     setStudentMonthlyWinners(
       filterCatalogByNavVisibility(
         landing.monthlyWinners?.length
