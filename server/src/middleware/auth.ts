@@ -5,9 +5,21 @@ import { dbGet } from '../db.js'
 import type { CreatorRow, JwtPayload, UserRow } from '../types.js'
 import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
 
+const JWT_EXPIRES_IN = '30d'
+
+function resolveJwtExpiresIn() {
+  const raw = process.env.JWT_EXPIRES_IN?.trim()
+  if (!raw) return JWT_EXPIRES_IN
+  if (/^\d+[smhdw]$/i.test(raw)) return raw
+  if (/^\d+$/.test(raw)) {
+    const seconds = Number.parseInt(raw, 10)
+    return seconds >= 86_400 ? seconds : JWT_EXPIRES_IN
+  }
+  return JWT_EXPIRES_IN
+}
+
 export function signToken(payload: JwtPayload) {
-  const expiresIn = process.env.JWT_EXPIRES_IN ?? '30d'
-  return jwt.sign(payload, config.jwtSecret, { expiresIn })
+  return jwt.sign(payload, config.jwtSecret, { expiresIn: resolveJwtExpiresIn() })
 }
 
 export function verifyToken(token: string) {

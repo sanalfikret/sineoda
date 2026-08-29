@@ -258,7 +258,6 @@ router.get('/me', requireAuth, (req: AuthRequest, res) => {
     )
     const token = signToken({ userId: user.id, role: user.role })
     res.json({
-      token,
       user: {
         ...user,
         creator: creator
@@ -280,8 +279,7 @@ router.get('/me', requireAuth, (req: AuthRequest, res) => {
     return
   }
 
-  const token = signToken({ userId: user.id, role: user.role })
-  res.json({ token, user })
+  res.json({ user })
 })
 
 const MAX_PROFILES = 4

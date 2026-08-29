@@ -68,14 +68,6 @@ export function setProfileId(profileId: string | null) {
   else localStorage.removeItem(PROFILE_KEY)
 }
 
-function applyAuthTokenFromResponse(data: unknown) {
-  if (!data || typeof data !== 'object' || !('token' in data)) return
-  const token = (data as { token?: unknown }).token
-  if (typeof token === 'string' && token.length > 0) {
-    setToken(token)
-  }
-}
-
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers)
 
@@ -139,9 +131,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   }
 
   if (response.status === 204) return undefined as T
-  const data = (await response.json()) as T
-  applyAuthTokenFromResponse(data)
-  return data
+  return response.json() as Promise<T>
 }
 
 export async function uploadImage(file: File): Promise<string> {
@@ -340,8 +330,8 @@ export async function resetPasswordRequest(token: string, password: string): Pro
   })
 }
 
-export async function fetchMe(): Promise<{ user: User; token?: string }> {
-  return api<{ user: User; token?: string }>('/api/auth/me')
+export async function fetchMe(): Promise<{ user: User }> {
+  return api<{ user: User }>('/api/auth/me')
 }
 
 export async function createProfileRequest(
