@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type DragEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import {
   resolveMediaUrl,
   fetchAdminCatalog,
@@ -114,6 +114,8 @@ export function AdminLandingPage() {
   const [layout, setLayout] = useState<LandingLayoutConfig>(() =>
     normalizeLandingLayout({ order: DEFAULT_LANDING_BLOCK_ORDER, hidden: [] }),
   )
+  const layoutRef = useRef(layout)
+  layoutRef.current = layout
   const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set(['hero']))
   const [draggingBlockId, setDraggingBlockId] = useState<LandingLayoutBlockId | null>(null)
   const [sliderIds, setSliderIds] = useState<string[]>([])
@@ -332,7 +334,11 @@ export function AdminLandingPage() {
       const target = index + direction
       if (target < 0 || target >= nextOrder.length) return normalized
       ;[nextOrder[index], nextOrder[target]] = [nextOrder[target], nextOrder[index]]
-      return { ...normalized, order: nextOrder }
+      const nextLayout = { ...normalized, order: nextOrder }
+      void persistLayout(nextLayout).catch((err) => {
+        setMessage(err instanceof Error ? err.message : 'Sıralama kaydedilemedi.')
+      })
+      return nextLayout
     })
   }
 
@@ -371,6 +377,15 @@ export function AdminLandingPage() {
   }
 
   const handleBlockDragEnd = () => {
+    if (draggingBlockId) {
+      const normalized = normalizeLandingLayout(
+        layoutRef.current,
+        customBlocks.map((block) => block.id),
+      )
+      void persistLayout(normalized).catch((err) => {
+        setMessage(err instanceof Error ? err.message : 'Sıralama kaydedilemedi.')
+      })
+    }
     setDraggingBlockId(null)
   }
 
@@ -1097,8 +1112,8 @@ export function AdminLandingPage() {
 
       <div className="rounded-2xl border border-dashed border-white/15 bg-[#11141c]/60 px-4 py-4">
         <p className="text-sm text-sineoda-muted">
-          Yeni bölüm ekleyin — tip seçin, içerik satırına film/dizi ekleyebilirsiniz. Gizle/Göster
-          anında kaydedilir; diğer değişiklikler için Kaydet&apos;e basın.
+          Yeni bölüm ekleyin — tip seçin, içerik satırına film/dizi ekleyebilirsiniz. Sıralama ve
+          gizle/göster anında kaydedilir; diğer değişiklikler için Kaydet&apos;e basın.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {(Object.entries(CUSTOM_BLOCK_TYPE_LABELS) as [LandingCustomBlockType, string][]).map(([type, label]) => (

@@ -120,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         applyUser(cached)
       }
 
+      let sessionInvalid = false
       for (let attempt = 0; attempt < 3; attempt += 1) {
         try {
           const { user: me } = await fetchMe()
@@ -127,12 +128,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           break
         } catch (error) {
           if (isAuthSessionError(error)) {
-            clearSession()
+            sessionInvalid = true
             break
           }
           if (attempt === 2) break
           await sleep(700 * (attempt + 1))
         }
+      }
+
+      if (sessionInvalid && !readCachedAuthUser()) {
+        clearSession()
       }
 
       setIsLoading(false)
@@ -213,7 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { user: me } = await fetchMe()
       applyUser(me)
     } catch (error) {
-      if (isAuthSessionError(error)) {
+      if (isAuthSessionError(error) && !readCachedAuthUser()) {
         clearSession()
       }
       throw error

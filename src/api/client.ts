@@ -21,8 +21,7 @@ export function getApiBase() {
     if (
       host.endsWith('.vercel.app') ||
       host === 'sineoda.vercel.app' ||
-      host === 'sineoda.web.app' ||
-      (host !== 'localhost' && host !== '127.0.0.1')
+      host === 'sineoda.web.app'
     ) {
       return 'https://sineoda-api.onrender.com'
     }
