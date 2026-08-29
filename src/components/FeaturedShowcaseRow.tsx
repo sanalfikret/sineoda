@@ -77,8 +77,8 @@ export function FeaturedShowcaseRow({
           )}
         </div>
 
-        {/* Mobil: yatay kaydırma — 3 sütun grid dar ekranda iç içe biniyordu */}
-        <div className="hide-scrollbar -mx-4 flex items-start gap-3 overflow-x-auto px-4 pb-2 sm:hidden">
+        {/* Mobil: alt alta tam genişlik kartlar */}
+        <div className="grid grid-cols-1 gap-3 sm:hidden">
           {visible.map((item) => (
             <ShowcaseCard
               key={item.id}
@@ -86,7 +86,7 @@ export function FeaturedShowcaseRow({
               onSelect={onSelect}
               guestMode={guestMode}
               progressMap={progressMap}
-              variant="carousel"
+              variant="grid"
             />
           ))}
         </div>
