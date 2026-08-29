@@ -26,27 +26,30 @@ Canlı veri **git'te değil**, VPS'te `persistent/data/sineoda.db` dosyasında.
 npm run check:deploy
 ```
 
-## Deploy — iki yol
+## Deploy — GitHub + VPS (önerilen)
 
-### A) GitHub'sız (tam kontrol, önerilen)
+### PC'de (kod değişince)
+```bash
+git add .
+git commit -m "açıklama"
+git push origin main
+```
 
-Bilgisayardan direkt VPS'e:
+GitHub şifresi kabul etmez — **Personal Access Token** kullan (Settings → Developer settings → Tokens).
+
+### VPS'te (PuTTY)
+```bash
+cd /opt/sineoda
+git pull
+bash deploy/rebuild-vps.sh
+```
+
+`rebuild-vps.sh` yoksa: `bash deploy/rebuild-vps.sh` veya kökte `bash rebuild-vps.sh`
+
+### Yedek: GitHub'sız aktarım
 
 ```powershell
-npm run check:deploy
-powershell -File deploy/sync-to-vps.ps1
-```
-
-### B) VPS'te git pull
-
-```bash
-cd /opt/sineoda && bash deploy/update-vps.sh
-```
-
-Sadece rebuild (kod zaten güncel):
-
-```bash
-cd /opt/sineoda && bash deploy/rebuild-vps.sh
+npm run deploy:vps
 ```
 
 ## .env (VPS)

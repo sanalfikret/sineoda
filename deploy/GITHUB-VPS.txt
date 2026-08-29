@@ -1,0 +1,76 @@
+Sineoda — GitHub + VPS kurulumu (Netflix/Mubi modeli)
+=====================================================
+
+GitHub  = kod deposu, yedek, versiyon geçmişi
+VPS     = canlı site + API + veritabanı
+
+Site ziyaretçileri GitHub'a gitmez; sadece sizin sunucunuz çalışır.
+
+---
+
+1) GitHub Personal Access Token (bir kez)
+-----------------------------------------
+GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+→ Generate new token (classic)
+→ Scope: repo (tam erişim)
+→ Token'ı kopyala (bir daha gösterilmez)
+
+PC'de push veya VPS'te pull şifre sorunca:
+  Username: github kullanıcı adın (sanalfikret)
+  Password: token'ı yapıştır (hesap şifresi DEĞİL)
+
+---
+
+2) PC'den push (her kod değişikliğinde)
+---------------------------------------
+cd C:\Users\PC\Projects\sineoda
+npm run check:deploy
+git add .
+git commit -m "ne yaptığın"
+git push origin main
+
+---
+
+3) VPS'te pull + deploy (PuTTY)
+-------------------------------
+cd /opt/sineoda
+git pull
+bash deploy/rebuild-vps.sh
+
+rebuild-vps.sh yoksa:
+  docker-compose build --no-cache --build-arg VITE_API_URL=
+  docker rm -f sineoda
+  docker run -d --name sineoda --restart unless-stopped -p 3001:3001 \
+    --env-file .env \
+    -e WEB_DIST_DIR=/app/web-dist \
+    -e DATA_DIR=/app/server/data \
+    -e UPLOADS_DIR=/app/server/uploads \
+    -e NODE_ENV=production \
+    -v /opt/sineoda/persistent/data:/app/server/data \
+    -v /opt/sineoda/persistent/uploads:/app/server/uploads \
+    sineoda_sineoda:latest
+
+curl -s http://127.0.0.1:3001/api/health
+
+---
+
+4) VPS'te ilk kez git clone (henüz yoksa)
+-----------------------------------------
+cd /opt
+git clone https://github.com/sanalfikret/sineoda.git
+cd sineoda
+cp deploy/env.production.example .env
+nano .env   # JWT_SECRET, PUBLIC_URL, FRONTEND_URL
+bash deploy/install-vps.sh
+
+---
+
+5) Deploy sonrası
+-----------------
+- curl health → jwtExpiresIn: "30d", dbExists: true
+- Tarayıcı Ctrl+Shift+R
+- Admin çıkış + tekrar giriş (eski kısa token temizlenir)
+
+---
+
+Repo: https://github.com/sanalfikret/sineoda

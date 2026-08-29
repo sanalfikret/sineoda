@@ -64,7 +64,30 @@ $DC down --remove-orphans 2>/dev/null || true
 docker rm -f $(docker ps -aq --filter "name=sineoda") 2>/dev/null || true
 
 echo ">>> container başlat"
-$DC up -d
+if ! $DC up -d 2>/dev/null; then
+  echo ">>> docker-compose up başarısız — docker run ile deneniyor"
+  docker rm -f sineoda 2>/dev/null || true
+  IMAGE="$($DC images -q sineoda_sineoda 2>/dev/null | head -1)"
+  if [ -z "$IMAGE" ]; then
+    IMAGE="$(docker images --format '{{.Repository}}:{{.Tag}}' | grep -i sineoda | head -1)"
+  fi
+  if [ -z "$IMAGE" ]; then
+    echo "HATA: sineoda imajı bulunamadı."
+    exit 1
+  fi
+  docker run -d \
+    --name sineoda \
+    --restart unless-stopped \
+    -p "${HOST_PORT:-3001}:3001" \
+    --env-file .env \
+    -e WEB_DIST_DIR=/app/web-dist \
+    -e DATA_DIR=/app/server/data \
+    -e UPLOADS_DIR=/app/server/uploads \
+    -e NODE_ENV=production \
+    -v "${PERSIST_DIR:-./persistent}/data:/app/server/data" \
+    -v "${PERSIST_DIR:-./persistent}/uploads:/app/server/uploads" \
+    "$IMAGE"
+fi
 
 echo ">>> sağlık kontrolü bekleniyor..."
 ok=0

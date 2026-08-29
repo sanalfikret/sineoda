@@ -21,17 +21,20 @@ Zorunlu .env (/opt/sineoda/.env)
 
   JWT_EXPIRES_IN kullanmayın — production otomatik 30 gün.
 
-Deploy yöntemleri (ikisi de OK)
--------------------------------
+Deploy yöntemleri
+-----------------
 
-A) GitHub ile (VPS'te git clone varsa):
-   cd /opt/sineoda && bash deploy/update-vps.sh
+A) GitHub + VPS (önerilen — Netflix/Mubi modeli):
+   PC: git push origin main
+   VPS (PuTTY):
+     cd /opt/sineoda
+     git pull
+     bash deploy/rebuild-vps.sh
+   GitHub = kod deposu. Canlı site = VPS.
 
-B) GitHub'sız — bilgisayardan direkt aktarım (ÖNERİLEN tam kontrol):
+B) GitHub'sız yedek — bilgisayardan direkt aktarım:
    npm run check:deploy
    powershell -File deploy/sync-to-vps.ps1
-
-   Kod SCP ile gider, VPS'te docker rebuild olur. GitHub'a ihtiyaç yok.
 
 Sadece rebuild (kod zaten VPS'te güncelse):
    cd /opt/sineoda && bash deploy/rebuild-vps.sh
