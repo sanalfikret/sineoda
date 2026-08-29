@@ -20,6 +20,22 @@ export function verifyToken(token: string) {
   return jwt.verify(token, config.jwtSecret) as JwtPayload
 }
 
+/** Süresi dolmuş ama imzası geçerli token — admin kaydet 401 önlemi. */
+export function readAuthPayload(token: string): JwtPayload | null {
+  try {
+    return verifyToken(token)
+  } catch (err) {
+    if (err instanceof jwt.TokenExpiredError) {
+      try {
+        return jwt.verify(token, config.jwtSecret, { ignoreExpiration: true }) as JwtPayload
+      } catch {
+        return null
+      }
+    }
+    return null
+  }
+}
+
 export interface AuthRequest extends Request {
   auth?: JwtPayload
 }
@@ -31,15 +47,22 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
     return
   }
 
-  try {
-    const payload = verifyToken(header.slice(7))
-    req.auth = payload
-    // Her istekte oturumu 30 güne uzat (admin 2dk logout önlemi)
-    res.setHeader('X-Sineoda-Token', signToken({ userId: payload.userId, role: payload.role }))
-    next()
-  } catch {
+  const payload = readAuthPayload(header.slice(7))
+  if (!payload) {
     res.status(401).json({ error: 'Geçersiz oturum.' })
+    return
   }
+
+  const user = dbGet<UserRow>('SELECT id FROM users WHERE id = ?', [payload.userId])
+  if (!user) {
+    res.status(401).json({ error: 'Kullanıcı bulunamadı.' })
+    return
+  }
+
+  req.auth = payload
+  // Her istekte oturumu 30 güne uzat (süresi dolmuş token da yenilenir)
+  res.setHeader('X-Sineoda-Token', signToken({ userId: payload.userId, role: payload.role }))
+  next()
 }
 
 export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {

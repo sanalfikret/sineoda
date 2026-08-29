@@ -73,7 +73,7 @@ export function setProfileId(profileId: string | null) {
   else localStorage.removeItem(PROFILE_KEY)
 }
 
-async function tryRefreshSessionToken() {
+export async function refreshSessionToken() {
   const token = getToken()
   if (!token) return false
 
@@ -133,11 +133,10 @@ export async function api<T>(path: string, options: RequestInit = {}, retried = 
   if (
     response.status === 401 &&
     !retried &&
-    path !== '/api/auth/me' &&
     path !== '/api/auth/refresh' &&
     path !== '/api/auth/login'
   ) {
-    const refreshed = await tryRefreshSessionToken()
+    const refreshed = await refreshSessionToken()
     if (refreshed) return api<T>(path, options, true)
   }
 
@@ -495,10 +494,24 @@ export async function updateLandingSectionsConfig(
 export async function updateLandingLayoutConfig(
   layout: LandingLayoutConfig,
 ): Promise<{ layout: LandingLayoutConfig }> {
-  return api<{ layout: LandingLayoutConfig }>('/api/admin/landing/layout', {
-    method: 'PATCH',
-    body: JSON.stringify(layout),
-  })
+  let lastError: unknown
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await api<{ layout: LandingLayoutConfig }>('/api/admin/landing/layout', {
+        method: 'PATCH',
+        body: JSON.stringify(layout),
+      })
+    } catch (error) {
+      lastError = error
+      if (isAuthSessionError(error) && attempt < 2) {
+        const refreshed = await refreshSessionToken()
+        if (refreshed) continue
+      }
+      if (!isTransientApiError(error) || attempt === 2) throw error
+      await sleep(900 * (attempt + 1))
+    }
+  }
+  throw lastError
 }
 
 export async function saveLandingPageConfig(payload: {
@@ -528,7 +541,7 @@ export async function saveLandingPageConfig(payload: {
     } catch (error) {
       lastError = error
       if (isAuthSessionError(error) && attempt < 2) {
-        const refreshed = await tryRefreshSessionToken()
+        const refreshed = await refreshSessionToken()
         if (refreshed) continue
       }
       if (!isTransientApiError(error) || attempt === 2) throw error

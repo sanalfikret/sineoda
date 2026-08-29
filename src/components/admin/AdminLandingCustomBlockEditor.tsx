@@ -6,6 +6,7 @@ import { CUSTOM_BLOCK_TYPE_LABELS } from '../../constants/landingCustomBlocks'
 import { getContentDisplayLabel } from '../../constants/contentTypes'
 import {
   filterCatalogByPool,
+  isShootingNotesContent,
   LANDING_CONTENT_POOL_FILTERS,
   type ContentPoolId,
 } from '../../utils/contentPools'
@@ -14,6 +15,14 @@ import { normalizeLandingLink } from '../../utils/landingContentRow'
 
 const inputClass =
   'w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold'
+
+function pickerThumb(item: ContentItem, poolFilter: ContentPoolId) {
+  const horizontal = poolFilter === 'shooting_notes' || isShootingNotesContent(item)
+  return {
+    src: horizontal ? item.backdrop || item.poster : item.poster,
+    className: horizontal ? 'h-10 w-16 rounded object-cover' : 'h-12 w-8 rounded object-cover',
+  }
+}
 
 function Field({
   label,
@@ -74,12 +83,13 @@ function ContentRowPicker({
           {selectedIds.map((contentId, index) => {
             const item = catalog.find((entry) => entry.id === contentId)
             if (!item) return null
+            const thumb = pickerThumb(item, poolFilter)
             return (
               <div
                 key={contentId}
                 className="flex items-center gap-3 rounded-lg border border-white/10 bg-[#11141c] p-2"
               >
-                <img src={resolveMediaUrl(item.poster)} alt="" className="h-12 w-8 rounded object-cover" />
+                <img src={resolveMediaUrl(thumb.src)} alt="" className={thumb.className} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-white">{item.title}</p>
                   <p className="text-xs text-sineoda-muted">{getContentDisplayLabel(item)}</p>
@@ -108,6 +118,7 @@ function ContentRowPicker({
       <div className="grid max-h-72 gap-2 overflow-y-auto sm:grid-cols-2">
         {filteredCatalog.map((item) => {
           const selected = selectedIds.includes(item.id)
+          const thumb = pickerThumb(item, poolFilter)
           return (
             <button
               key={item.id}
@@ -117,7 +128,7 @@ function ContentRowPicker({
                 selected ? 'border-sineoda-gold/50 bg-sineoda-gold/10' : 'border-white/10 hover:bg-white/5'
               }`}
             >
-              <img src={resolveMediaUrl(item.poster)} alt="" className="h-12 w-8 rounded object-cover" />
+              <img src={resolveMediaUrl(thumb.src)} alt="" className={thumb.className} />
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-white">{item.title}</p>
                 <p className="text-xs text-sineoda-muted">{getContentDisplayLabel(item)}</p>
