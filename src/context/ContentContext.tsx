@@ -24,6 +24,7 @@ interface ContentContextValue {
   visibleCatalog: ContentItem[]
   categories: ContentCategory[]
   visibleCategories: ContentCategory[]
+  categoryOrder: string[]
   hiddenNavIds: SiteNavId[]
   featuredContent: ContentItem | null
   trailers: ContentItem[]
@@ -56,6 +57,7 @@ const ContentContext = createContext<ContentContextValue | null>(null)
 export function ContentProvider({ children }: { children: ReactNode }) {
   const [catalog, setCatalog] = useState<ContentItem[]>([])
   const [categories, setCategories] = useState<ContentCategory[]>([])
+  const [categoryOrder, setCategoryOrder] = useState<string[]>([])
   const [hiddenNavIds, setHiddenNavIds] = useState<SiteNavId[]>(DEFAULT_SITE_NAV.hidden)
   const [featuredContent, setFeaturedContent] = useState<ContentItem | null>(null)
   const [trailers, setTrailers] = useState<ContentItem[]>([])
@@ -70,6 +72,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     const data = await fetchBootstrap()
     setCatalog(mergeWithDemoCatalog(data.catalog))
     setCategories(data.categories)
+    setCategoryOrder(data.categoryOrder ?? data.categories.map((category) => category.id))
     setHiddenNavIds(data.siteNav?.hidden ?? deriveHiddenNavFromCategories(data.categories))
     setFeaturedContent(data.featuredContent)
     setTrailers(data.trailers ?? [])
@@ -265,11 +268,15 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   )
 
   const reorderCategories = useCallback(async (orderedIds: string[]) => {
-    const result = await api<{ categories: ContentCategory[] }>('/api/categories/reorder', {
-      method: 'PUT',
-      body: JSON.stringify({ orderedIds }),
-    })
+    const result = await api<{ categories: ContentCategory[]; categoryOrder?: string[] }>(
+      '/api/categories/reorder',
+      {
+        method: 'PUT',
+        body: JSON.stringify({ orderedIds }),
+      },
+    )
     setCategories(result.categories)
+    setCategoryOrder(result.categoryOrder ?? orderedIds)
     return result.categories
   }, [])
 
@@ -300,6 +307,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       visibleCatalog,
       categories,
       visibleCategories,
+      categoryOrder,
       hiddenNavIds,
       featuredContent,
       trailers,
@@ -328,6 +336,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       visibleCatalog,
       categories,
       visibleCategories,
+      categoryOrder,
       hiddenNavIds,
       featuredContent,
       trailers,

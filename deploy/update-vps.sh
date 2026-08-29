@@ -49,7 +49,10 @@ echo ">>> yedek al"
 bash deploy/backup-vps.sh
 
 echo ">>> build (site birkaç dakika kapalı olabilir)"
-$DC build
+if grep -qE '^VITE_API_URL=.*onrender' .env 2>/dev/null; then
+  echo "UYARI: .env VITE_API_URL Render'a işaret ediyor — VPS build same-origin kullanacak (boş)."
+fi
+VITE_API_URL= $DC build --build-arg VITE_API_URL=
 
 echo ">>> eski container temizle (KeyError ContainerConfig fix)"
 $DC down --remove-orphans 2>/dev/null || true

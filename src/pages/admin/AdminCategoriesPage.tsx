@@ -4,6 +4,7 @@ import { AdminCategoryRow } from '../../components/admin/AdminCategoryRow'
 import { AdminSiteNavPanel } from '../../components/admin/AdminSiteNavPanel'
 import { isCekimCategoryId } from '../../constants/cekimNotlari'
 import type { SiteNavId } from '../../constants/siteNav'
+import { mergeCategoriesForAdminOrder, isVirtualBrowseCategoryId } from '../../utils/browse'
 import { useContent } from '../../context/ContentContext'
 
 export function AdminCategoriesPage() {
@@ -12,6 +13,7 @@ export function AdminCategoriesPage() {
     studentCinemaCatalog,
     cekimNotlariSections,
     categories,
+    categoryOrder,
     hiddenNavIds,
     addCategory,
     updateCategory,
@@ -23,6 +25,10 @@ export function AdminCategoriesPage() {
   const mainCategories = useMemo(
     () => categories.filter((category) => !isCekimCategoryId(category.id)),
     [categories],
+  )
+  const adminCategoryList = useMemo(
+    () => mergeCategoriesForAdminOrder(mainCategories, categoryOrder),
+    [mainCategories, categoryOrder],
   )
   const [newTitle, setNewTitle] = useState('')
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
@@ -45,7 +51,7 @@ export function AdminCategoriesPage() {
     handleDragEnd,
     nudgeCategory,
     resetListFromServer,
-  } = useAdminCategoryList({ categories: mainCategories, reorderCategories })
+  } = useAdminCategoryList({ categories: adminCategoryList, reorderCategories })
 
   const adminPickerCatalog = useMemo(() => {
     const cekimItems = cekimNotlariSections.flatMap((section) => section.items)
@@ -191,7 +197,9 @@ export function AdminCategoriesPage() {
       </div>
 
       <div className="space-y-3">
-        {orderedCategories.map((category, index) => (
+        {orderedCategories.map((category, index) => {
+          const virtualRow = isVirtualBrowseCategoryId(category.id)
+          return (
           <AdminCategoryRow
             key={category.id}
             category={category}
@@ -200,6 +208,7 @@ export function AdminCategoriesPage() {
             expanded={expandedIds.has(category.id)}
             dragging={draggingId === category.id}
             savingOrder={savingOrder}
+            readOnly={virtualRow}
             catalogById={catalogById}
             catalog={adminPickerCatalog}
             search={searchByCategory[category.id] ?? ''}
@@ -218,7 +227,8 @@ export function AdminCategoriesPage() {
             onDrop={handleDrop}
             onDragEnd={handleDragEnd}
           />
-        ))}
+          )
+        })}
       </div>
     </div>
   )
