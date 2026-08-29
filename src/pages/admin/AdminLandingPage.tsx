@@ -5,6 +5,7 @@ import {
   fetchAdminStudentCinemaContent,
   fetchBootstrap,
   fetchLandingConfig,
+  normalizeStoredMediaPath,
   saveLandingPageConfig,
   updateLandingLayoutConfig,
   type LandingHeroConfig,
@@ -188,7 +189,11 @@ export function AdminLandingPage() {
             adminCatalogResult.catalog,
           ]),
         )
-        setHero(data.hero ?? DEFAULT_HERO)
+        setHero({
+          ...(data.hero ?? DEFAULT_HERO),
+          backgroundImage: normalizeStoredMediaPath(data.hero?.backgroundImage ?? ''),
+          backgroundVideo: normalizeStoredMediaPath(data.hero?.backgroundVideo ?? ''),
+        })
         setSections(mergeLandingSections(data.sections))
         const loadedCustomBlocks = data.customBlocks ?? []
         setCustomBlocks(loadedCustomBlocks)
@@ -320,7 +325,7 @@ export function AdminLandingPage() {
   const setHeroImage = (url: string) => {
     setHero((current) => ({
       ...current,
-      backgroundImage: url,
+      backgroundImage: normalizeStoredMediaPath(url),
       backgroundVideo: '',
       backgroundContentId: null,
     }))

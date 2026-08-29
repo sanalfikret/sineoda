@@ -104,7 +104,15 @@ export function getLandingHeroConfig(): LandingHeroConfig {
   if (!row?.value) return { ...DEFAULT_LANDING_HERO }
 
   try {
-    return parseLandingHero(JSON.parse(row.value) as Partial<LandingHeroConfig>)
+    const raw = JSON.parse(row.value) as Partial<LandingHeroConfig>
+    const hero = parseLandingHero(raw)
+    if (
+      String(raw.backgroundImage ?? '').trim() !== hero.backgroundImage ||
+      String(raw.backgroundVideo ?? '').trim() !== hero.backgroundVideo
+    ) {
+      saveLandingHeroConfig(hero)
+    }
+    return hero
   } catch {
     return { ...DEFAULT_LANDING_HERO }
   }

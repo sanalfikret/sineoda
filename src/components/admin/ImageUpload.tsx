@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { resolveMediaUrl, uploadImage } from '../../api/client'
+import { normalizeStoredMediaPath, resolveMediaUrl, uploadImage } from '../../api/client'
 
 interface ImageUploadProps {
   label: string
@@ -11,13 +11,14 @@ export function ImageUpload({ label, value, onChange }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+  const storedPath = normalizeStoredMediaPath(value)
 
   const handleFile = async (file: File) => {
     setError('')
     setUploading(true)
     try {
-      const url = await uploadImage(file)
-      onChange(url)
+      const path = await uploadImage(file)
+      onChange(path)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Yükleme başarısız.')
     } finally {
@@ -29,8 +30,11 @@ export function ImageUpload({ label, value, onChange }: ImageUploadProps) {
     <div className="space-y-2">
       <span className="block text-sm text-white/85">{label}</span>
 
-      {value && (
-        <img src={resolveMediaUrl(value)} alt="" className="h-32 w-full max-w-xs rounded-lg object-cover" />
+      {storedPath && (
+        <>
+          <img src={resolveMediaUrl(storedPath)} alt="" className="h-32 w-full max-w-xs rounded-lg object-cover" />
+          <p className="font-mono text-xs text-white/45">{storedPath}</p>
+        </>
       )}
 
       <div className="flex flex-wrap gap-2">
@@ -40,7 +44,7 @@ export function ImageUpload({ label, value, onChange }: ImageUploadProps) {
           onClick={() => inputRef.current?.click()}
           className="rounded-lg bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/15 disabled:opacity-60"
         >
-          {uploading ? 'Yükleniyor...' : 'Dosya Yükle'}
+          {uploading ? 'Yükleniyor...' : storedPath ? 'Başka Görsel Yükle' : 'Dosya Yükle'}
         </button>
         <input
           ref={inputRef}
@@ -53,14 +57,6 @@ export function ImageUpload({ label, value, onChange }: ImageUploadProps) {
           }}
         />
       </div>
-
-      <input
-        type="url"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder="veya URL yapıştır"
-        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
-      />
 
       {error && <p className="text-xs text-red-300">{error}</p>}
     </div>

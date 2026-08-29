@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { resolveMediaUrl, uploadVideo } from '../../api/client'
+import { normalizeStoredMediaPath, resolveMediaUrl, uploadVideo } from '../../api/client'
 
 interface VideoUploadProps {
   label: string
@@ -20,8 +20,8 @@ export function VideoUpload({ label, value, onChange }: VideoUploadProps) {
 
     try {
       setProgress(`${(file.size / (1024 * 1024)).toFixed(1)} MB yükleniyor...`)
-      const url = await uploadVideo(file)
-      onChange(url)
+      const path = await uploadVideo(file)
+      onChange(path)
       setProgress('Yükleme tamamlandı.')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Yükleme başarısız.')
@@ -30,7 +30,9 @@ export function VideoUpload({ label, value, onChange }: VideoUploadProps) {
     }
   }
 
-  const previewUrl = value ? resolveMediaUrl(value) : ''
+  const storedPath = value ? normalizeStoredMediaPath(value) : ''
+  const previewUrl = storedPath ? resolveMediaUrl(storedPath) : ''
+  const isUploadedFile = storedPath.startsWith('/uploads/')
 
   return (
     <div className="space-y-2">
@@ -65,10 +67,14 @@ export function VideoUpload({ label, value, onChange }: VideoUploadProps) {
         />
       </div>
 
+      {isUploadedFile && storedPath && (
+        <p className="font-mono text-xs text-white/45">{storedPath}</p>
+      )}
+
       <input
         type="url"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
+        value={isUploadedFile ? '' : value}
+        onChange={(event) => onChange(normalizeStoredMediaPath(event.target.value))}
         placeholder="Bunny CDN HLS (.m3u8) veya MP4 URL yapıştır"
         className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
       />
