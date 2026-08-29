@@ -23,6 +23,7 @@ import { DEFAULT_LANDING_SECTIONS, mergeLandingSections } from '../../constants/
 import {
   DEFAULT_LANDING_BLOCK_ORDER,
   LANDING_BLOCK_HINTS,
+  LANDING_BLOCK_LABELS,
   getLayoutBlockLabel,
   isCustomLandingBlockId,
   normalizeLandingLayout,
@@ -30,6 +31,10 @@ import {
   type LandingLayoutBlockId,
   type LandingLayoutConfig,
 } from '../../constants/landingLayout'
+import {
+  LANDING_BLOCKS_WITH_PUBLIC_ROW_TITLE,
+  type LandingBlockTitlesConfig,
+} from '../../constants/landingBlockTitles'
 import {
   createEmptyCustomBlock,
   customBlockLayoutId,
@@ -137,6 +142,7 @@ export function AdminLandingPage() {
   const [monthlyWinnerIds, setMonthlyWinnerIds] = useState<string[]>([])
   const [studentPickIds, setStudentPickIds] = useState<string[]>([])
   const [showcases, setShowcases] = useState<ShowcaseDraft[]>([])
+  const [blockTitles, setBlockTitles] = useState<LandingBlockTitlesConfig>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -214,6 +220,7 @@ export function AdminLandingPage() {
             itemIds: showcase.items.map((item) => item.id),
           })),
         )
+        setBlockTitles(data.blockTitles ?? {})
       })
       .catch((err) => {
         if (!cancelled) {
@@ -552,6 +559,7 @@ export function AdminLandingPage() {
         studentPickIds: studentPickIds.filter((id) => validIds.has(id)),
         showcases: persistedShowcases,
         customBlocks: persistedCustomBlocks,
+        blockTitles,
       })
 
       setHero(data.hero ?? hero)
@@ -588,6 +596,7 @@ export function AdminLandingPage() {
           itemIds: showcase.items.map((item) => item.id),
         })),
       )
+      setBlockTitles(data.blockTitles ?? blockTitles)
       setMessage(
         skipped > 0
           ? `Kaydedildi. ${skipped} demo içerik slider'a eklenemedi — yalnızca veritabanındaki içerikler kullanılır.`
@@ -607,6 +616,40 @@ export function AdminLandingPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  const updateBlockTitle = (id: BuiltInLandingBlockId, title: string) => {
+    setBlockTitles((current) => {
+      const next = { ...current }
+      const trimmed = title.trim()
+      if (!trimmed) {
+        delete next[id]
+        return next
+      }
+      next[id] = title.replace(/\r\n/g, '\n')
+      return next
+    })
+  }
+
+  const renderBlockTitleField = (builtInId: BuiltInLandingBlockId) => {
+    const showsOnSite = LANDING_BLOCKS_WITH_PUBLIC_ROW_TITLE.includes(builtInId)
+    return (
+      <label className="mb-4 block space-y-2 border-b border-white/10 pb-4">
+        <span className="text-sm font-medium text-white/90">Bölüm başlığı</span>
+        <textarea
+          value={blockTitles[builtInId] ?? ''}
+          onChange={(event) => updateBlockTitle(builtInId, event.target.value)}
+          rows={showsOnSite ? 2 : 1}
+          placeholder={LANDING_BLOCK_LABELS[builtInId]}
+          className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-sm text-white outline-none focus:border-sineoda-gold"
+        />
+        <p className="text-xs text-sineoda-muted">
+          {showsOnSite
+            ? 'Admin listesinde ve misafir ana sayfada görünür. Alt satır için Enter kullanın.'
+            : 'Admin listesinde görünen ad. Metin bölümlerinin site başlığı aşağıdaki alanlardan düzenlenir.'}
+        </p>
+      </label>
+    )
   }
 
   const renderBlockEditor = (blockId: LandingLayoutBlockId) => {
@@ -1220,7 +1263,7 @@ export function AdminLandingPage() {
           <CollapsibleAdminPanel
             key={blockId}
             panelId={`landing-block-${blockId}`}
-            title={getLayoutBlockLabel(blockId, customBlocks)}
+            title={getLayoutBlockLabel(blockId, customBlocks, blockTitles)}
             subtitle={blockSubtitle(blockId)}
             expanded={expandedBlocks.has(blockId)}
             onToggle={() => toggleExpanded(blockId)}
@@ -1237,6 +1280,8 @@ export function AdminLandingPage() {
             onDrop={handleBlockDrop}
             onDragEnd={handleBlockDragEnd}
           >
+            {!isCustomLandingBlockId(blockId) &&
+              renderBlockTitleField(blockId as BuiltInLandingBlockId)}
             {renderBlockEditor(blockId)}
           </CollapsibleAdminPanel>
         ))}

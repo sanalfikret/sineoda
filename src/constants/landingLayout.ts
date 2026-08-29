@@ -123,8 +123,9 @@ export function normalizeLandingLayout(
 export function getLayoutBlockLabel(
   id: LandingLayoutBlockId,
   customBlocks: Array<{ id: string; adminLabel: string }>,
+  blockTitles: Partial<Record<BuiltInLandingBlockId, string>> = {},
 ): string {
-  if (isBuiltInBlockId(id)) return LANDING_BLOCK_LABELS[id]
+  if (isBuiltInBlockId(id)) return blockTitles[id]?.trim() || LANDING_BLOCK_LABELS[id]
   if (isCustomLandingBlockId(id)) {
     const blockId = id.slice(CUSTOM_BLOCK_PREFIX.length)
     return customBlocks.find((block) => block.id === blockId)?.adminLabel ?? 'Özel bölüm'

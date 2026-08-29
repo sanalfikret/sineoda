@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 import type { LandingHeroConfig } from '../../api/client'
 import type { LandingSectionsConfig } from '../../constants/landingDefaults'
+import type { LandingBlockTitlesConfig } from '../../constants/landingBlockTitles'
+import { resolvePublicRowTitle } from '../../constants/landingBlockTitles'
 import type { LandingCustomBlock } from '../../constants/landingCustomBlocks'
 import type { LandingLayoutConfig } from '../../constants/landingLayout'
 import { isCustomLandingBlockId, normalizeLandingLayout } from '../../constants/landingLayout'
@@ -28,6 +30,7 @@ export interface LandingPageBlockContext {
   featuredItem: ContentItem | null
   fallbackImage: string
   sections: LandingSectionsConfig
+  blockTitles?: LandingBlockTitlesConfig
   sliderItems: ContentItem[]
   studentPicks: ContentItem[]
   studentMonthlyWinners: ContentItem[]
@@ -72,10 +75,22 @@ function renderLandingBlock(id: string, ctx: LandingPageBlockContext): ReactNode
       return <LandingSlider items={ctx.sliderItems} />
     case 'studentMonthlyWinners':
       return (
-        <StudentCinemaMonthlyWinnersRow items={ctx.studentMonthlyWinners} guestMode className="pt-4" />
+        <StudentCinemaMonthlyWinnersRow
+          items={ctx.studentMonthlyWinners}
+          title={resolvePublicRowTitle('studentMonthlyWinners', ctx.blockTitles ?? {})}
+          guestMode
+          className="pt-4"
+        />
       )
     case 'studentPicks':
-      return <StudentCinemaPicksRow items={ctx.studentPicks} guestMode className="pt-4" />
+      return (
+        <StudentCinemaPicksRow
+          items={ctx.studentPicks}
+          title={resolvePublicRowTitle('studentPicks', ctx.blockTitles ?? {})}
+          guestMode
+          className="pt-4"
+        />
+      )
     case 'showcases':
       return ctx.showcases.length > 0 ? <LandingCategoryShowcase showcases={ctx.showcases} /> : null
     case 'journal':

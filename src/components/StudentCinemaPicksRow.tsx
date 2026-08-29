@@ -3,6 +3,7 @@ import { FeaturedShowcaseRow } from './FeaturedShowcaseRow'
 
 interface StudentCinemaPicksRowProps {
   items: ContentItem[]
+  title?: string
   onSelect?: (item: ContentItem) => void
   guestMode?: boolean
   className?: string
@@ -10,13 +11,14 @@ interface StudentCinemaPicksRowProps {
 
 export function StudentCinemaPicksRow({
   items,
+  title = 'Ayın Genç Sinema Seçkileri',
   onSelect,
   guestMode = false,
   className = '',
 }: StudentCinemaPicksRowProps) {
   return (
     <FeaturedShowcaseRow
-      title="Ayın Genç Sinema Seçkileri"
+      title={title}
       items={items}
       onSelect={onSelect}
       guestMode={guestMode}
