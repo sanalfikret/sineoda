@@ -19,6 +19,7 @@ const LEGACY_AUTH_TOKEN_HEADER = 'X-Sineoda-Token'
 
 /**
  * API kökü — production VPS: aynı origin (/api).
+ * Yapılandırma: config/env.example + config/AYARLAR.txt
  * Sunucunun index.html'e enjekte ettiği __PLOOY_API_BASE__ önceliklidir.
  */
 export function getApiBase() {

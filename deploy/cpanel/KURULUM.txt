@@ -68,7 +68,7 @@ Sık sorunlar
      (http:// adresinde bazı tarayıcı özellikleri çalışmaz)
   2) Eski dosyaları sil, yeni Plooy-site.zip yükle
   3) Ctrl+Shift+R ile hard refresh
-  4) Render → FRONTEND_URL = https://birtakimislerdizi.com
+  4) Render → FRONTEND_URL = https://senindomain.com
 
 • Beyaz sayfa / 404: .htaccess eksik veya public_html yanlış
 • API bağlanmıyor: VITE_API_URL build'de yanlış; yeniden build + yükle

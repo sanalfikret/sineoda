@@ -9,7 +9,7 @@ if ! command -v docker >/dev/null 2>&1; then
 fi
 
 if [ ! -f .env ]; then
-  cp deploy/env.production.example .env
+  cp config/env.example .env
   echo ""
   echo ">>> .env oluşturuldu. JWT_SECRET, FRONTEND_URL ve PUBLIC_URL değerlerini düzenle:"
   echo "    nano .env"

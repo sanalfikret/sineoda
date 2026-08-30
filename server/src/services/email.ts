@@ -90,7 +90,7 @@ export async function sendContactEmail(payload: {
 }) {
   const transport = getTransporter()
   const subjectLabel = CONTACT_SUBJECT_LABELS[payload.subject] ?? payload.subject
-  const to = process.env.CONTACT_EMAIL ?? config.smtp.user ?? 'destek@plooy.com'
+  const to = process.env.CONTACT_EMAIL ?? config.smtp.user ?? config.contactEmails.support
   const subject = `${BRAND_NAME} İletişim — ${subjectLabel}`
   const html = `
     <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px">

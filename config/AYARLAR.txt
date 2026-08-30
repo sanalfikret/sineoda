@@ -1,0 +1,59 @@
+Plooy — yapılandırma rehberi (geliştirici)
+==========================================
+
+TEK KAYNAK
+----------
+  config/env.example   → şablon (tüm değişkenler)
+  .env (proje kökü)    → canlı değerler (git'e GİTMEZ)
+
+Kod içinde domain veya sunucu IP YAZMA. Her şey .env üzerinden gelir.
+
+
+Yerel geliştirme (PC)
+----------------------
+  1. cp config/env.example .env
+  2. baslat.bat  →  http://localhost:5173
+
+VPS production (tek domain — önerilen)
+--------------------------------------
+  .env örneği:
+
+    FRONTEND_URL=https://ornek.com
+    PUBLIC_URL=https://ornek.com
+    VITE_API_URL=                    ← BOŞ (same-origin /api)
+    JWT_SECRET=<uzun-random>
+    PERSIST_DIR=/opt/sineoda/persistent
+
+  Deploy:
+    git pull
+    bash deploy/rebuild-vps.sh
+
+  nginx: deploy/nginx-Plooy.conf (YOUR_DOMAIN değiştir)
+
+
+Sunucu taşıma (yeni VPS / yeni domain)
+--------------------------------------
+  1. persistent/ klasörünü kopyala (data/sineoda.db + uploads/)
+  2. Yeni sunucuda repo clone + cp config/env.example .env
+  3. .env içinde güncelle:
+       FRONTEND_URL, PUBLIC_URL  → yeni domain
+       JWT_SECRET                → ESKİYLE AYNI (DB'deki oturumlar için)
+       PERSIST_DIR               → yeni sunucudaki persistent yolu
+  4. bash deploy/rebuild-vps.sh
+  5. curl http://127.0.0.1:3001/api/health  → dbExists: true
+
+
+Kodda nereye bakılır
+--------------------
+  Sunucu ayarları     server/src/config.ts
+  İletişim e-postaları server/src/constants/contact.ts
+  Frontend ayarları src/config/appConfig.ts
+  Marka adı           src/constants/brand.ts (+ server/src/constants/brand.ts)
+  API istekleri       src/api/client.ts  (getApiBase — .env + same-origin)
+
+
+Sık hatalar
+-----------
+  • VITE_API_URL dolu + VPS same-origin → API yanlış sunucuya gider. VPS'te BOŞ bırak.
+  • JWT_SECRET deploy sonrası değişti → herkes çıkış yapar.
+  • persistent/ silindi → tüm üyeler gider (ASLA docker-compose down -v).

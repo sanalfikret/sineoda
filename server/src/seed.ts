@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import { v4 as uuid } from 'uuid'
 import { TURKEY_FILM_SCHOOLS } from './turkeyFilmSchools.js'
 import { BRAND_NAME, BRAND_STUDIOS } from './constants/brand.js'
+import { contactEmails } from './constants/contact.js'
 import { dbAll, dbExec, dbGet, dbRun } from './db.js'
 import { parseCredits, serializeCredits } from './services/credits.js'
 import type { UserRow } from './types.js'
@@ -280,13 +281,13 @@ export function seedEpisodes() {
   }
 }
 
-const DEFAULT_ADMIN_EMAIL = 'admin@plooy.com'
+const DEFAULT_ADMIN_EMAIL = contactEmails.admin
 const LEGACY_ADMIN_EMAIL = 'admin@sineoda.com'
 const DEFAULT_ADMIN_ID = 'plooy-admin'
 
 export function migrateLegacyBrandAccounts() {
   dbRun('UPDATE users SET email = ? WHERE email = ?', [DEFAULT_ADMIN_EMAIL, LEGACY_ADMIN_EMAIL])
-  dbRun('UPDATE users SET email = ? WHERE email = ?', ['demo@plooy.com', 'demo@sineoda.com'])
+  dbRun('UPDATE users SET email = ? WHERE email = ?', [contactEmails.demo, 'demo@sineoda.com'])
   dbRun("UPDATE users SET name = ? WHERE name = 'Sineoda Admin'", [`${BRAND_NAME} Admin`])
 }
 
@@ -322,7 +323,7 @@ export function seedDatabase() {
     const demoId = uuid()
     dbRun(
       'INSERT INTO users (id, name, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-      [demoId, 'Demo Kullanıcı', 'demo@plooy.com', demoHash, 'user', new Date().toISOString()],
+      [demoId, 'Demo Kullanıcı', contactEmails.demo, demoHash, 'user', new Date().toISOString()],
     )
     dbRun('INSERT INTO profiles (id, user_id, name, avatar, is_kids) VALUES (?, ?, ?, ?, ?)', [
       uuid(), demoId, 'Ana Profil', '🎬', 0,

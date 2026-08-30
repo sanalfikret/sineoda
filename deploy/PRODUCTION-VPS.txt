@@ -1,6 +1,8 @@
 Plooy — tek sunucu (VPS) production rehberi
 =============================================
 
+Yapılandırma tek kaynak: config/env.example  |  Rehber: config/AYARLAR.txt
+
 Amaç: Site + API + veritabanı + yüklemeler TEK kiralık sunucuda.
 Render, Vercel, GitHub runtime'da kullanılmaz.
 
