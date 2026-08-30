@@ -87,7 +87,7 @@ export const LEGAL_DOCUMENTS: Record<LegalSlug, LegalDocument> = {
     sections: [
       {
         heading: 'Veri Sorumlusu',
-        body: `6698 sayılı KVKK uyarınca veri sorumlusu ${BRAND_NAME}'dur. İletişim: kvkk@sineoda.com`,
+        body: `6698 sayılı KVKK uyarınca veri sorumlusu ${BRAND_NAME}'dur. İletişim: kvkk@plooy.com`,
       },
       {
         heading: 'İşlenen Kişisel Veri Kategorileri',
