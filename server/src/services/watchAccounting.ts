@@ -1,4 +1,5 @@
 import { dbAll, dbGet, dbRun } from '../db.js'
+import { BRAND_NAME } from '../constants/brand.js'
 
 export interface MonthlyContentStat {
   contentId: string
@@ -455,7 +456,7 @@ export function getMonthlyReport(month: string, options?: { creatorId?: string; 
       title: row.title,
       type: row.type,
       creator_name: null,
-      studio_name: 'Sineoda',
+      studio_name: BRAND_NAME,
       watch_seconds: row.watch_seconds,
     }))
     .filter((row) => matchesSegmentFilter(row.program, programFilter))

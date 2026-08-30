@@ -7,6 +7,7 @@ import {
   uploadBillingStudentId,
 } from '../api/client'
 import { PageFooter } from '../components/PageFooter'
+import { PlooyLogo } from '../components/PlooyLogo'
 import { useAuth } from '../context/AuthContext'
 
 interface Plan {
@@ -134,12 +135,7 @@ export function PricingPage() {
     <div className="min-h-dvh bg-sineoda-bg">
       <header className="safe-top border-b border-white/5 px-4 py-5 sm:px-6">
         <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <img src="/icon.svg" alt="" className="h-9 w-9 rounded-lg" />
-            <span className="text-2xl font-bold text-white">
-              Sine<span className="text-sineoda-gold">oda</span>
-            </span>
-          </Link>
+          <PlooyLogo variant="wordmark" tone="on-dark" linked linkTo="/" className="h-8" />
           <Link to={user ? '/hesap' : '/giris'} className="text-sm text-sineoda-gold hover:underline">
             {user ? 'Hesabım' : 'Giriş Yap'}
           </Link>

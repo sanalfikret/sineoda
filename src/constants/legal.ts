@@ -1,3 +1,5 @@
+import { BRAND_NAME } from './brand'
+
 export type LegalSlug =
   | 'kullanim-kosullari'
   | 'gizlilik-politikasi'
@@ -19,11 +21,11 @@ export const LEGAL_DOCUMENTS: Record<LegalSlug, LegalDocument> = {
     sections: [
       {
         heading: '1. Taraflar ve Kabul',
-        body: 'Bu Kullanım Koşulları, Sineoda platformunu (“Platform”) kullanan gerçek veya tüzel kişiler ile Platform işletmecisi arasındaki hukuki ilişkiyi düzenler. Platforma üye olarak veya ziyaret ederek bu koşulları kabul etmiş sayılırsınız.',
+        body: `Bu Kullanım Koşulları, ${BRAND_NAME} platformunu (“Platform”) kullanan gerçek veya tüzel kişiler ile Platform işletmecisi arasındaki hukuki ilişkiyi düzenler. Platforma üye olarak veya ziyaret ederek bu koşulları kabul etmiş sayılırsınız.`,
       },
       {
         heading: '2. Hizmet Kapsamı',
-        body: 'Sineoda; film, dizi ve diğer görsel-işitsel içeriklerin abonelik veya lisans modeliyle çevrimiçi izlenmesini sağlayan bir dijital yayın hizmetidir. İçerik kataloğu, bölge, cihaz ve lisans anlaşmalarına bağlı olarak değişebilir.',
+        body: `${BRAND_NAME}; film, dizi ve diğer görsel-işitsel içeriklerin abonelik veya lisans modeliyle çevrimiçi izlenmesini sağlayan bir dijital yayın hizmetidir. İçerik kataloğu, bölge, cihaz ve lisans anlaşmalarına bağlı olarak değişebilir.`,
       },
       {
         heading: '3. Üyelik ve Hesap Güvenliği',
@@ -54,7 +56,7 @@ export const LEGAL_DOCUMENTS: Record<LegalSlug, LegalDocument> = {
     sections: [
       {
         heading: '1. Genel İlkeler',
-        body: 'Sineoda, kişisel verilerinizi 6698 sayılı Kişisel Verilerin Korunması Kanunu (“KVKK”) ve ilgili mevzuata uygun şekilde işler. Bu politika, hangi verileri topladığımızı ve nasıl kullandığımızı açıklar.',
+        body: `${BRAND_NAME}, kişisel verilerinizi 6698 sayılı Kişisel Verilerin Korunması Kanunu (“KVKK”) ve ilgili mevzuata uygun şekilde işler. Bu politika, hangi verileri topladığımızı ve nasıl kullandığımızı açıklar.`,
       },
       {
         heading: '2. Toplanan Veriler',
@@ -85,7 +87,7 @@ export const LEGAL_DOCUMENTS: Record<LegalSlug, LegalDocument> = {
     sections: [
       {
         heading: 'Veri Sorumlusu',
-        body: '6698 sayılı KVKK uyarınca veri sorumlusu Sineoda’dır. İletişim: kvkk@sineoda.com',
+        body: `6698 sayılı KVKK uyarınca veri sorumlusu ${BRAND_NAME}'dur. İletişim: kvkk@sineoda.com`,
       },
       {
         heading: 'İşlenen Kişisel Veri Kategorileri',

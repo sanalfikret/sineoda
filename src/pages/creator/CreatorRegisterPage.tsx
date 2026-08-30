@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from '
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { fetchFilmSchools, uploadStudentId } from '../../api/client'
 import { CreatorAuthLayout } from '../../components/creator/CreatorAuthLayout'
+import { PlooyLogo } from '../../components/PlooyLogo'
 import { useAuth } from '../../context/AuthContext'
-import { BRAND_STUDENT_CINEMA } from '../../constants/brand'
+import { BRAND_STUDENT_CINEMA, BRAND_NAME } from '../../constants/brand'
 import { CREATOR_LEGAL_TERMS } from '../../constants/creatorLegal'
 import { groupSchoolsByUniversity, splitSchoolName } from '../../utils/filmSchools'
 
@@ -109,7 +110,7 @@ export function CreatorRegisterPage() {
       <div className="px-4 py-10">
       <div className="mx-auto w-full max-w-2xl">
         <div className="mb-8 flex items-center gap-3">
-          <img src="/icon.svg" alt="" className="h-10 w-10 rounded-lg" />
+          <PlooyLogo variant="mark" tone="on-dark" className="h-10" />
           <div>
             <h1 className="text-2xl font-bold text-white">
               {isStudentProgram ? 'Genç Sinema Başvurusu' : 'Yapımcı Kaydı'}
@@ -117,7 +118,7 @@ export function CreatorRegisterPage() {
             <p className="text-sm text-sineoda-muted">
               {isStudentProgram
                 ? 'Mezun veya öğrenci projenizi yüklemek için hesap oluşturun'
-                : 'Bağımsız sinemanızı Sineoda\'da yayınlayın — yapımcı üyeliği otomatik açılır, film onayı admin tarafından verilir'}
+                : `Bağımsız sinemanızı ${BRAND_NAME}'da yayınlayın — yapımcı üyeliği otomatik açılır, film onayı admin tarafından verilir`}
             </p>
           </div>
         </div>

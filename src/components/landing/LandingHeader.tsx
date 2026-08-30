@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { InstallAppButton } from '../InstallAppButton'
+import { PlooyLogo } from '../PlooyLogo'
 import { SITE_NAV_ITEMS, type SiteNavId } from '../../constants/siteNav'
 
 interface LandingHeaderProps {
@@ -32,10 +33,8 @@ export function LandingHeader({ scrolled, hiddenNavIds = [] }: LandingHeaderProp
     >
       <div className="mx-auto flex max-w-[1400px] items-center justify-between px-5 py-4 sm:px-8">
         <Link to="/" className="flex items-center gap-2.5">
-          <img src="/icon.svg" alt="" className="h-8 w-8 rounded-md sm:h-9 sm:w-9" />
-          <span className="text-xl font-bold tracking-tight sm:text-2xl">
-            Sine<span className="text-sineoda-gold">oda</span>
-          </span>
+          <PlooyLogo variant="mark" tone="on-dark" className="h-8 sm:hidden" />
+          <PlooyLogo variant="wordmark" tone="on-dark" className="hidden h-7 sm:block sm:h-8" />
         </Link>
 
         <nav className="hidden items-center gap-6 lg:gap-8 md:flex">

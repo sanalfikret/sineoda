@@ -2,6 +2,7 @@ import { EDITORIAL_CATEGORY_ROWS } from './editorialCategories.js'
 import bcrypt from 'bcryptjs'
 import { v4 as uuid } from 'uuid'
 import { TURKEY_FILM_SCHOOLS } from './turkeyFilmSchools.js'
+import { BRAND_NAME, BRAND_STUDIOS } from './constants/brand.js'
 import { dbAll, dbExec, dbGet, dbRun } from './db.js'
 import { parseCredits, serializeCredits } from './services/credits.js'
 import type { UserRow } from './types.js'
@@ -204,9 +205,9 @@ function ensureContentTypes() {
 const SEED_CREDITS: Record<string, string> = {
   'aurora-dreams': JSON.stringify({
     directors: ['Elif Yılmaz'],
-    producers: ['Sineoda Originals'],
+    producers: [`${BRAND_NAME} Originals`],
     cast: ['Deniz Aksoy', 'Merve Çelik', 'Burak Kaya'],
-    studio: 'Sineoda Studios',
+    studio: BRAND_STUDIOS,
     audioLanguages: ['Türkçe'],
     subtitleLanguages: ['Türkçe', 'Türkçe [CC]', 'English'],
   }),
@@ -222,7 +223,7 @@ const SEED_CREDITS: Record<string, string> = {
     directors: ['Mert Şahin', 'Zeynep Koç'],
     producers: ['Cyber Films'],
     cast: ['Emre Yıldız', 'Cansu Polat', 'Onur Tekin'],
-    studio: 'Sineoda Originals',
+    studio: `${BRAND_NAME} Originals`,
     audioLanguages: ['Türkçe'],
     subtitleLanguages: ['Türkçe', 'Türkçe [CC]'],
   }),
@@ -288,7 +289,7 @@ export function ensureDefaultAdmin() {
     const adminHash = bcrypt.hashSync('admin123', 10)
     dbRun(
       'INSERT INTO users (id, name, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-      [DEFAULT_ADMIN_ID, 'Sineoda Admin', DEFAULT_ADMIN_EMAIL, adminHash, 'admin', new Date().toISOString()],
+      [DEFAULT_ADMIN_ID, `${BRAND_NAME} Admin`, DEFAULT_ADMIN_EMAIL, adminHash, 'admin', new Date().toISOString()],
     )
     return
   }

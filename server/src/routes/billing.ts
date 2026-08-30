@@ -7,6 +7,7 @@ import { dbGet, dbRun, uploadsDir } from '../db.js'
 import { createIyzicoCheckout, retrieveIyzicoCheckout } from '../services/iyzico.js'
 import { createPaytrToken, verifyPaytrCallback } from '../services/paytr.js'
 import { getBillingPlans } from '../services/billingPlansConfig.js'
+import { BRAND_NAME } from '../constants/brand.js'
 import { getCreatorRegistrationPlanId, getPlan, isCreatorApplicationPlan, normalizePlanId, planRequiresStudentId } from '../services/plans.js'
 import { activateCreatorRegistration } from '../services/creatorRegistration.js'
 import { canUserPlay, getUserSubscription, isSubscriptionRequired } from '../services/subscription.js'
@@ -196,7 +197,7 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
       userAddress: 'Turkiye',
       merchantOid,
       amountKurus,
-      basket: [[`Sineoda ${plan.name}`, plan.price.toFixed(2), 1]],
+      basket: [[`${BRAND_NAME} ${plan.name}`, plan.price.toFixed(2), 1]],
       userIp: getClientIp(req),
     })
 
@@ -223,7 +224,7 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
     userId: user.id,
     planName: plan.name,
     price: plan.price.toFixed(2),
-    buyerName: firstName || 'Sineoda',
+    buyerName: firstName || BRAND_NAME,
     buyerSurname: rest.join(' ') || 'Uye',
     email: user.email,
     merchantOid,

@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
 import { useSearchUI } from '../context/SearchContext'
 import { ProfileAvatar } from './ProfileAvatar'
+import { PlooyLogo } from './PlooyLogo'
 import { InstallAppMenuItem } from './InstallAppButton'
 import { PROFILE_AVATARS } from '../types/auth'
 
@@ -116,10 +117,8 @@ export function Header() {
             to={isCreator ? '/creator' : '/'}
             className="flex shrink-0 items-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sineoda-gold"
           >
-            <img src="/icon.svg" alt="" className="h-8 w-8 rounded-lg sm:h-9 sm:w-9 tv:h-11 tv:w-11" />
-            <span className="hidden text-lg font-bold tracking-tight text-white sm:inline sm:text-2xl tv:text-3xl">
-              Sine<span className="text-sineoda-gold">oda</span>
-            </span>
+            <PlooyLogo variant="mark" tone="on-dark" className="h-8 sm:hidden" />
+            <PlooyLogo variant="wordmark" tone="on-dark" className="hidden h-7 sm:block sm:h-8 tv:h-9" />
           </Link>
 
           <nav className="hidden min-w-0 flex-nowrap items-center gap-0.5 md:flex lg:gap-1">

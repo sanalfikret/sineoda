@@ -1,4 +1,5 @@
 import { resolveMediaUrl } from '../../api/client'
+import { BRAND_EDUCATION } from '../../constants/brand'
 import type { ContentItem } from '../../types/content'
 
 interface CekimNotlariCardProps {
@@ -8,7 +9,7 @@ interface CekimNotlariCardProps {
 
 function expertName(item: ContentItem) {
   const director = item.credits?.directors?.[0]
-  return director?.trim() || 'Sineoda Eğitim'
+  return director?.trim() || BRAND_EDUCATION
 }
 
 export function CekimNotlariCard({ item, onSelect }: CekimNotlariCardProps) {

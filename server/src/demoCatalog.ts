@@ -1,4 +1,5 @@
 import { v4 as uuid } from 'uuid'
+import { BRAND_NAME } from './constants/brand.js'
 import { dbAll, dbGet, dbRun } from './db.js'
 
 const V = {
@@ -229,7 +230,7 @@ function upsertDemoContent(item: DemoItem, index: number) {
     [
       item.id,
       item.title,
-      `${item.title} — Sineoda demo kataloğu.`,
+      `${item.title} — ${BRAND_NAME} demo kataloğu.`,
       2023 + (index % 3),
       item.duration,
       item.rating,

@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { v4 as uuid } from 'uuid'
+import { BRAND_NAME } from '../constants/brand.js'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import {
   getCreatorForUser,
@@ -353,7 +354,7 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
     contentFormat,
     schoolReviewStatus,
     message: isStudentProgram
-      ? 'Film başvurunuz okul onayına gönderildi. Okul onayından sonra Sineoda incelemesine alınır.'
+      ? `Film başvurunuz okul onayına gönderildi. Okul onayından sonra ${BRAND_NAME} incelemesine alınır.`
       : 'Film başvurunuz incelemeye gönderildi. Onaylandıktan sonra yayınlanacaktır.',
   })
 })

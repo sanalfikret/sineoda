@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
 import type { JournalPost } from '../types/journal'
 import { formatJournalDate, journalBodyParagraphs } from '../utils/journal'
+import { BRAND_NAME } from '../constants/brand'
 
 export function JournalPostPage() {
   const { slug = '' } = useParams()
@@ -54,7 +55,7 @@ export function JournalPostPage() {
               ← Dergi
             </Link>
             <Link to="/" className="text-sm font-medium text-sineoda-accent">
-              Sineoda
+              {BRAND_NAME}
             </Link>
           </div>
         </header>

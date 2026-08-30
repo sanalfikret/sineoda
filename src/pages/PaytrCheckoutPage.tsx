@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { PlooyLogo } from '../components/PlooyLogo'
 
 export function PaytrCheckoutPage() {
   const [params] = useSearchParams()
@@ -33,9 +34,10 @@ export function PaytrCheckoutPage() {
     <div className="min-h-dvh bg-sineoda-bg">
       <header className="safe-top border-b border-white/10 px-4 py-4 sm:px-6">
         <div className="mx-auto flex max-w-4xl items-center justify-between">
-          <span className="text-lg font-bold text-white">
-            Sine<span className="text-sineoda-gold">oda</span> · PayTR
-          </span>
+          <div className="flex items-center gap-2">
+            <PlooyLogo variant="wordmark" tone="on-dark" className="h-6" />
+            <span className="text-sm text-sineoda-muted">· PayTR</span>
+          </div>
           <Link to="/planlar" className="text-sm text-sineoda-muted hover:text-white">
             İptal
           </Link>

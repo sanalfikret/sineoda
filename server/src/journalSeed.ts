@@ -1,4 +1,5 @@
 import { v4 as uuid } from 'uuid'
+import { BRAND_NAME, BRAND_EDITOR } from './constants/brand.js'
 import { dbGet, dbRun } from './db.js'
 import { slugify } from './mappers.js'
 
@@ -12,10 +13,10 @@ const SEED_POSTS = [
 
 Özellikle Asya ve Latin Amerika coğrafyalarından gelen yapımlar, festivalin en çok konuşulan işleri arasındaydı. Küçük bütçeli filmlerin büyük duygular taşıyabileceğini bir kez daha gördük.
 
-Sineoda seçkisinde bu festivalden iz bırakan yapımları yakında katalogda bulabileceksiniz.`,
+${BRAND_NAME} seçkisinde bu festivalden iz bırakan yapımları yakında katalogda bulabileceksiniz.`,
     cover_image:
       'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&h=675&fit=crop&q=80',
-    author: 'Sineoda Editör',
+    author: BRAND_EDITOR,
   },
   {
     slug: 'bagimsiz-dizi-yapimi-neden-yukseliyor',
@@ -26,24 +27,24 @@ Sineoda seçkisinde bu festivalden iz bırakan yapımları yakında katalogda bu
 
 Avrupa ve Orta Doğu'dan gelen bağımsız diziler, geleneksel yayıncılık modellerinin dışında doğrudan izleyiciye ulaşmayı başarıyor. Bu da küratörlü platformlar için büyük bir fırsat.
 
-Sineoda'da bağımsız dizi yapımlarına ayrılmış bir seçki bulacaksınız — Hollywood dizileri değil, özgün sesler.`,
+${BRAND_NAME}'da bağımsız dizi yapımlarına ayrılmış bir seçki bulacaksınız — Hollywood dizileri değil, özgün sesler.`,
     cover_image:
       'https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=1200&h=675&fit=crop&q=80',
-    author: 'Sineoda Editör',
+    author: BRAND_EDITOR,
   },
   {
     slug: 'turkiyeden-bagimsiz-sesler',
     title: 'Türkiye\'den bağımsız sesler',
     excerpt:
-      'Yerli bağımsız sinemacıların festival yolculuğu ve Sineoda kataloğuna yansıyan seçkiler.',
+      `Yerli bağımsız sinemacıların festival yolculuğu ve ${BRAND_NAME} kataloğuna yansıyan seçkiler.`,
     body: `Türk bağımsız sineması son yıllarda uluslararası festivallerde güçlü bir varlık gösteriyor. Antalya'dan İstanbul'a, yerel hikâyeler evrensel temalarla buluşuyor.
 
-Bağımsız yapımcıların en büyük zorluğu görünürlük. Sineoda, bu yapımlara dünya izleyicisine ulaşacak bir vitrin sunmayı hedefliyor.
+Bağımsız yapımcıların en büyük zorluğu görünürlük. ${BRAND_NAME}, bu yapımlara dünya izleyicisine ulaşacak bir vitrin sunmayı hedefliyor.
 
 Katalogdaki yerli bağımsız filmler ve diziler düzenli olarak güncelleniyor. Her hafta yeni bir keşif için bizi takip edin.`,
     cover_image:
       'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=1200&h=675&fit=crop&q=80',
-    author: 'Sineoda Editör',
+    author: BRAND_EDITOR,
   },
 ] as const
 

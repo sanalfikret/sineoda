@@ -38,7 +38,7 @@ export function CreatorLoginPage() {
         <div className="rounded-2xl border border-white/10 bg-[#11141c] p-6 sm:p-8">
           <div className="mb-6 text-center">
             <h1 className="text-xl font-bold text-white">Yapımcı Girişi</h1>
-            <p className="mt-1 text-sm text-sineoda-muted">Sineoda Creator Paneli</p>
+            <p className="mt-1 text-sm text-sineoda-muted">Plooy Creator Paneli</p>
           </div>
 
           {error && (

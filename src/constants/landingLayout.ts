@@ -50,7 +50,7 @@ export const LANDING_BLOCK_LABELS: Record<BuiltInLandingBlockId, string> = {
   studentPicks: 'Genç Sinema seçkisi',
   showcases: 'Kategori şeritleri',
   journal: 'Dergi',
-  features: 'Neden Sineoda',
+  features: 'Neden Plooy',
   campaign: 'Kampanya / Abonelik',
   studentCinema: 'Genç Sinema bölümü',
   faq: 'SSS',

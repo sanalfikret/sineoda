@@ -7,6 +7,7 @@ import {
 } from '../../api/client'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { fuzzySearchMatch } from '../../utils/search'
+import { BRAND_NAME } from '../../constants/brand'
 
 const PROGRAM_FILTERS = [
   { id: 'all', label: 'Tümü' },
@@ -196,7 +197,7 @@ export function AdminWatchAccountingPage() {
                     <td className="px-4 py-3 text-sineoda-muted">
                       <p>
                         {item.program === 'platform'
-                          ? 'Sineoda'
+                          ? BRAND_NAME
                           : item.creatorName ?? item.studioName ?? '—'}
                       </p>
                       {item.studioName && item.creatorName && item.program !== 'platform' ? (

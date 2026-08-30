@@ -1,4 +1,5 @@
 import { dbGet, dbRun } from '../db.js'
+import { BRAND_NAME } from '../constants/brand.js'
 
 export interface LandingTextItem {
   title: string
@@ -94,14 +95,14 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
         text: 'Festival ödüllü filmler ve bağımsız diziler — dilediğin cihazdan, kaldığın yerden devam ederek.',
       },
     ],
-    eyebrow: 'Sineoda nedir?',
+    eyebrow: `${BRAND_NAME} nedir?`,
     title: 'Dünyanın bağımsız sinemacılarına açılan kapı.',
     body: 'Hollywood ve ticari yapımların ötesinde; Cannes, Berlin, Sundance, Rotterdam ve yerli festivallerden bağımsız filmler, diziler, belgeseller ve kısa metrajlar.',
     ctaLabel: 'Kataloğu keşfet',
     ctaLink: '/kayit',
   },
   features: {
-    eyebrow: 'Neden Sineoda',
+    eyebrow: `Neden ${BRAND_NAME}`,
     title: 'Dünya bağımsız sineması için tasarlandı.\nGöz yormaz.',
     items: [
       { title: 'Dünya bağımsız sineması', text: 'Kıtalar arası bağımsız yapımcıların filmleri ve dizileri.' },
@@ -132,17 +133,17 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
     steps: [
       { title: 'Filmini ve kamera arkasını yükle', text: 'Kısa film veya belgesel — yanında set görüntüleri.' },
       { title: 'Okulun onaylasın', text: 'Hocanız veya okul temsilcisi projeyi okul adına önerir.' },
-      { title: 'Sineoda yayınlasın', text: 'Genç Sinema seçkisinde yerini alır.' },
+      { title: `${BRAND_NAME} yayınlasın`, text: 'Genç Sinema seçkisinde yerini alır.' },
     ],
     ctaPrimary: 'Film Başvurusu Yap',
     ctaPrimaryLink: '/creator/kayit?program=genc-sinema',
     ctaSecondary: 'Nasıl Çalışır?',
-    footnote: 'Okulunuz seçer · Sineoda son onayı verir · Film + kamera arkası birlikte yayınlanır',
+    footnote: `Okulunuz seçer · ${BRAND_NAME} son onayı verir · Film + kamera arkası birlikte yayınlanır`,
   },
   creator: {
     eyebrow: 'Bağımsız yapımcılar için',
     title: 'Filmini yükle, adil paylaşımdan kazanç elde et',
-    subtitle: 'Sineoda bağımsız sinemacılar için de tasarlandı.',
+    subtitle: `${BRAND_NAME} bağımsız sinemacılar için de tasarlandı.`,
     perks: [
       { title: 'Gerçek izleyici kitlesi', text: 'Bağımsız sinema meraklılarından oluşan odaklı bir topluluk.' },
       { title: 'Adil gelir modeli', text: 'Şeffaf paylaşım koşulları.' },
@@ -159,30 +160,30 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
     title: 'Sıkça Sorulan Sorular',
     items: [
       {
-        question: 'Sineoda nedir?',
+        question: `${BRAND_NAME} nedir?`,
         answer:
-          'Sineoda; dünyanın dört bir yanından bağımsız sinemacıların filmlerini, dizilerini ve belgesellerini izleyebileceğiniz küratörlü bir dijital yayın platformudur.',
+          `${BRAND_NAME}; dünyanın dört bir yanından bağımsız sinemacıların filmlerini, dizilerini ve belgesellerini izleyebileceğiniz küratörlü bir dijital yayın platformudur.`,
       },
       {
-        question: "Sineoda'nın maliyeti nedir?",
+        question: `${BRAND_NAME}'nın maliyeti nedir?`,
         answer:
           'Öğrenci planı aylık ₺49 (geçerli öğrenci kimliği gerekir), standart plan aylık ₺69’dur.',
       },
       {
         question: 'Nerede izleyebilirim?',
         answer:
-          "Sineoda'yı web tarayıcısı, Android, iOS ve Android TV üzerinden izleyebilirsiniz.",
+          `${BRAND_NAME}'yu web tarayıcısı, Android, iOS ve Android TV üzerinden izleyebilirsiniz.`,
       },
       {
         question: 'Nasıl iptal ederim?',
         answer: 'Hesabınızdan Abonelik bölümünden planınızı istediğiniz zaman iptal edebilirsiniz.',
       },
       {
-        question: "Sineoda'da ne izleyebilirim?",
+        question: `${BRAND_NAME}'da ne izleyebilirim?`,
         answer: 'Dünya bağımsız sinemasından filmler, diziler, belgeseller ve kısa metrajlar.',
       },
       {
-        question: 'Sineoda çocuklar için uygun mudur?',
+        question: `${BRAND_NAME} çocuklar için uygun mudur?`,
         answer: 'Evet. Çocuk profili ile yaşa uygun içerikler sunulur.',
       },
     ],
@@ -196,7 +197,7 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
     buttonLabel: 'Başla',
   },
   journal: {
-    eyebrow: 'Sineoda Dergi',
+    eyebrow: `${BRAND_NAME} Dergi`,
     title: 'Bağımsız sinema üzerine yazılar',
     description: 'Festival notları, küratör seçkileri ve dünya bağımsız sinemasından haberler.',
   },
