@@ -5,6 +5,7 @@ import { AuthLayout } from '../components/AuthLayout'
 import { LegalDocumentModal } from '../components/LegalDocumentModal'
 import { LEGAL_LINKS, type LegalSlug } from '../constants/legal'
 import { useAuth } from '../context/AuthContext'
+import { useLegalDocuments } from '../hooks/useLegalDocuments'
 import { planDisplayName, postLoginPath } from '../utils/billing'
 
 function LegalReadButton({
@@ -53,6 +54,7 @@ const SIGNUP_PLANS: {
 
 export function SignupPage() {
   const { signup, user } = useAuth()
+  const { documents } = useLegalDocuments()
   const [searchParams] = useSearchParams()
   const initialPlan = searchParams.get('plan') === 'student' ? 'student' : 'standard'
   const [selectedPlan, setSelectedPlan] = useState<SignupPlanId>(initialPlan)
@@ -426,6 +428,7 @@ export function SignupPage() {
       {legalModalSlug && (
         <LegalDocumentModal
           slug={legalModalSlug}
+          document={documents[legalModalSlug]}
           open
           onClose={() => setLegalModalSlug(null)}
           closeLabel="Kayda dön"

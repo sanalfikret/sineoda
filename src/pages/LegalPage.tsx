@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { LEGAL_DOCUMENTS, type LegalSlug } from '../constants/legal'
+import { fetchLegalDocuments } from '../api/client'
+import { LEGAL_DOCUMENTS, type LegalDocument, type LegalSlug } from '../constants/legal'
 import { PageFooter } from '../components/PageFooter'
 import { PlooyLogo } from '../components/PlooyLogo'
 
@@ -18,9 +20,19 @@ export function LegalPage() {
   const [searchParams] = useSearchParams()
   const returnTo = searchParams.get('geri')
   const key = slug && SLUGS.has(slug) ? (slug as LegalSlug) : null
-  const doc = key ? LEGAL_DOCUMENTS[key] : null
+  const [doc, setDoc] = useState<LegalDocument | null>(key ? LEGAL_DOCUMENTS[key] : null)
+  const [loading, setLoading] = useState(Boolean(key))
 
-  if (!doc) {
+  useEffect(() => {
+    if (!key) return
+    setLoading(true)
+    void fetchLegalDocuments()
+      .then((data) => setDoc(data.documents[key]))
+      .catch(() => setDoc(LEGAL_DOCUMENTS[key]))
+      .finally(() => setLoading(false))
+  }, [key])
+
+  if (!key || !doc) {
     return (
       <div className="min-h-dvh bg-plooy-bg px-4 py-24 text-center text-white sm:px-6">
         <h1 className="text-2xl font-bold">Sayfa bulunamadı</h1>
@@ -67,14 +79,18 @@ export function LegalPage() {
         <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">{doc.title}</h1>
         <p className="mt-2 text-sm text-plooy-muted">Son güncelleme: {doc.updatedAt}</p>
 
-        <div className="mt-10 space-y-8">
-          {doc.sections.map((section) => (
-            <section key={section.heading}>
-              <h2 className="text-lg font-semibold text-white">{section.heading}</h2>
-              <p className="mt-3 text-sm leading-relaxed text-white/80">{section.body}</p>
-            </section>
-          ))}
-        </div>
+        {loading ? (
+          <p className="mt-10 text-sm text-plooy-muted">Yükleniyor...</p>
+        ) : (
+          <div className="mt-10 space-y-8">
+            {doc.sections.map((section) => (
+              <section key={section.heading}>
+                <h2 className="text-lg font-semibold text-white">{section.heading}</h2>
+                <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-white/80">{section.body}</p>
+              </section>
+            ))}
+          </div>
+        )}
 
         {returnTo && (
           <div className="mt-10 border-t border-white/10 pt-8">

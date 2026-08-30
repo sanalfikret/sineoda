@@ -1,15 +1,34 @@
-import { useEffect } from 'react'
-import { LEGAL_DOCUMENTS, type LegalSlug } from '../constants/legal'
+import { useEffect, useState } from 'react'
+import { fetchLegalDocuments } from '../api/client'
+import { LEGAL_DOCUMENTS, type LegalDocument, type LegalSlug } from '../constants/legal'
 
 interface LegalDocumentModalProps {
   slug: LegalSlug
   open: boolean
   onClose: () => void
   closeLabel?: string
+  document?: LegalDocument
 }
 
-export function LegalDocumentModal({ slug, open, onClose, closeLabel = 'Kapat' }: LegalDocumentModalProps) {
-  const doc = LEGAL_DOCUMENTS[slug]
+export function LegalDocumentModal({
+  slug,
+  open,
+  onClose,
+  closeLabel = 'Kapat',
+  document,
+}: LegalDocumentModalProps) {
+  const [doc, setDoc] = useState<LegalDocument>(document ?? LEGAL_DOCUMENTS[slug])
+
+  useEffect(() => {
+    if (!open) return
+    if (document) {
+      setDoc(document)
+      return
+    }
+    void fetchLegalDocuments()
+      .then((data) => setDoc(data.documents[slug]))
+      .catch(() => setDoc(LEGAL_DOCUMENTS[slug]))
+  }, [document, open, slug])
 
   useEffect(() => {
     if (!open) return
@@ -57,7 +76,7 @@ export function LegalDocumentModal({ slug, open, onClose, closeLabel = 'Kapat' }
             {doc.sections.map((section) => (
               <section key={section.heading}>
                 <h3 className="text-base font-semibold text-white">{section.heading}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/80">{section.body}</p>
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-white/80">{section.body}</p>
               </section>
             ))}
           </div>

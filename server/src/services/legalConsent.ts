@@ -2,9 +2,9 @@ import { v4 as uuid } from 'uuid'
 import {
   buildConsentText,
   CONSENT_DOCUMENTS,
-  LEGAL_VERSION,
   type ConsentType,
 } from '../constants/legal.js'
+import { getLegalVersion } from '../services/legalDocuments.js'
 import { dbAll, dbGet, dbRun } from '../db.js'
 
 export interface LegalConsentRow {
@@ -97,7 +97,7 @@ export function recordLegalConsent(input: {
       input.sessionId ?? null,
       input.type,
       meta.slug,
-      LEGAL_VERSION,
+      getLegalVersion(),
       input.userName.trim(),
       input.userEmail?.trim().toLowerCase() ?? null,
       input.ipAddress,

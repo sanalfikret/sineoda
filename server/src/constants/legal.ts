@@ -1,4 +1,5 @@
 import { BRAND_NAME } from './brand.js'
+import { getLegalVersion } from '../services/legalDocuments.js'
 
 export const LEGAL_VERSION = '2026-08-30'
 
@@ -32,7 +33,7 @@ export function buildConsentText(input: {
 İşlem yapan: ${userName}
 ${emailLine}IP adresi: ${ipAddress}
 Tarih/saat (İstanbul): ${timestamp}
-Belge sürümü: ${LEGAL_VERSION}
+Belge sürümü: ${getLegalVersion()}
 `
 
   if (type === 'terms') {
