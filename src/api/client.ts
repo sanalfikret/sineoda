@@ -1098,6 +1098,9 @@ export interface MonthlyAccountingItem {
   watchMinutes: number
   viewerCount: number
   sharePercent: number
+  avgCompletionPercent: number
+  qualifiedViewerPercent: number
+  completionViewerCount: number
 }
 
 export interface MonthlyAccountingReport {

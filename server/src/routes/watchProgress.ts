@@ -169,8 +169,8 @@ router.post('/', requireAuth, (req: AuthRequest, res) => {
     return
   }
 
-  const content = dbGet<{ type: string; creator_id: string | null }>(
-    'SELECT type, creator_id FROM content WHERE id = ?',
+  const content = dbGet<{ type: string; creator_id: string | null; program: string | null }>(
+    'SELECT type, creator_id, program FROM content WHERE id = ?',
     [contentId],
   )
 
@@ -189,7 +189,8 @@ router.post('/', requireAuth, (req: AuthRequest, res) => {
 
   const contentType = content ? normalizeContentType(content.type) : 'film'
   const wasQualified = existing?.qualified === 1
-  const nowQualified = wasQualified || isQualifiedWatch(contentType, position, duration)
+  const nowQualified =
+    wasQualified || isQualifiedWatch(contentType, position, duration, content?.program)
   const qualifiedDelta = nowQualified && delta > 0 ? delta : 0
   const qualifiedSeconds = (existing?.qualified_seconds ?? 0) + qualifiedDelta
 
