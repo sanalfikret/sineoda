@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { fetchBillingPlans, startCheckout, type BillingPlan } from '../../api/client'
 import { CreatorAuthLayout } from '../../components/creator/CreatorAuthLayout'
 import { useAuth } from '../../context/AuthContext'
+import { BRAND_NAME } from '../../constants/brand'
 
 function getCreatorRegistrationPlanId(program?: 'standard' | 'student_cinema') {
   return program === 'student_cinema' ? 'student_cinema_application' : 'creator_application'
@@ -91,7 +92,7 @@ export function CreatorPaymentPage() {
           <h1 className="text-2xl font-bold text-white">{plan?.name ?? (isStudentProgram ? 'Genç Sinema Başvuru Ücreti' : 'Yapımcı Başvuru Ücreti')}</h1>
           <p className="mt-2 text-sm text-sineoda-muted">
             {isStudentProgram
-              ? 'Genç Sinema üyeliğiniz otomatik açılır. Film başvurunuzu göndermek için tek seferlik başvuru ücretini ödeyin; filminiz okul ve Sineoda incelemesine alınır.'
+              ? `Genç Sinema üyeliğiniz otomatik açılır. Film başvurunuzu göndermek için tek seferlik başvuru ücretini ödeyin; filminiz okul ve ${BRAND_NAME} incelemesine alınır.`
               : 'Yapımcı üyeliğiniz otomatik açılır. Film başvurusu göndermek için tek seferlik başvuru ücretini ödeyin; filminizin yayına alınması admin incelemesine tabidir.'}
           </p>
 

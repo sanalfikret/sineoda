@@ -1,9 +1,11 @@
+import { BRAND_NAME } from '../constants/brand'
+
 export function buildShareUrl(contentId: string) {
   return `${window.location.origin}/icerik/${encodeURIComponent(contentId)}`
 }
 
 export function buildShareMessage(title: string, url: string) {
-  return `${title} — Sineoda'da izle\n${url}`
+  return `${title} — ${BRAND_NAME}'da izle\n${url}`
 }
 
 export async function copyShareLink(url: string) {

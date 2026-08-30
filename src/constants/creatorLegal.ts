@@ -2,10 +2,10 @@ export const CREATOR_LEGAL_TERMS = `
 YAPIMCI / CREATOR SÖZLEŞMESİ VE SORUMLULUK BEYANI
 
 1. Mülkiyet ve Telif Hakkı
-Yüklediğiniz her içeriğin telif hakkı veya yayın hakkının size ait olduğunu veya size devredildiğini beyan edersiniz. Sineoda'ya yüklediğiniz belgeler (sözleşme, lisans, yapımcı belgesi vb.) bu iddiayı desteklemelidir.
+Yüklediğiniz her içeriğin telif hakkı veya yayın hakkının size ait olduğunu veya size devredildiğini beyan edersiniz. Plooy'ya yüklediğiniz belgeler (sözleşme, lisans, yapımcı belgesi vb.) bu iddiayı desteklemelidir.
 
 2. Yasal Sorumluluk
-İçeriğinizden doğabilecek tüm yasal talepler, telif ihlali iddiaları, kişilik hakları ihlalleri ve üçüncü taraf haklarına ilişkin sorumluluk tamamen size aittir. Sineoda, içeriğinizin yasal uygunluğunu garanti etmez; yalnızca platform sağlayıcısıdır.
+İçeriğinizden doğabilecek tüm yasal talepler, telif ihlali iddiaları, kişilik hakları ihlalleri ve üçüncü taraf haklarına ilişkin sorumluluk tamamen size aittir. Plooy, içeriğinizin yasal uygunluğunu garanti etmez; yalnızca platform sağlayıcısıdır.
 
 3. Gelir Paylaşımı
 Gelir paylaşımı, yapımcı anlaşmasında belirtilen koşullara göre hesaplanır. İzlenme süreleri,
@@ -13,7 +13,7 @@ paylaşım oranları ve ödeme takvimi bu anlaşmada ayrıntılı olarak yer al�
 hükümlerine uygun şekilde adil bir paylaşım modeli uygular.
 
 4. İçerik İncelemesi
-Gönderdiğiniz içerikler Sineoda editöryal incelemesinden geçer. Onaylanmadan yayınlanmaz. Sineoda, platform standartlarına uymayan içerikleri reddetme hakkını saklı tutar.
+Gönderdiğiniz içerikler Plooy editöryal incelemesinden geçer. Onaylanmadan yayınlanmaz. Plooy, platform standartlarına uymayan içerikleri reddetme hakkını saklı tutar.
 
 5. Platform Kuralları
 Yasadışı, nefret söylemi, şiddet glorifikasyonu veya telif ihlali içeren materyaller yasaktır. İhlal halinde hesabınız askıya alınabilir.
@@ -21,7 +21,7 @@ Yasadışı, nefret söylemi, şiddet glorifikasyonu veya telif ihlali içeren m
 6. Veri Doğruluğu
 Stüdyo adı, iletişim bilgileri ve yüklediğiniz belgelerin doğruluğundan siz sorumlusunuz.
 
-Bu şartları kabul ederek Sineoda yapımcı programına katılırsınız.
+Bu şartları kabul ederek Plooy yapımcı programına katılırsınız.
 `.trim()
 
 export const CREATOR_DOC_TYPES = [

@@ -1,4 +1,5 @@
 import { GENRE_CATALOG_ITEMS } from './genreCatalog'
+import { BRAND_NAME } from '../constants/brand'
 import { enrichContentImages } from '../utils/contentImages'
 import type { ContentItem } from '../types/content'
 import type { LandingShowcase } from '../components/landing/LandingCategoryShowcase'
@@ -88,7 +89,7 @@ function makeItem(
   return {
     id,
     title,
-    description: `${title} — Sineoda'da izle.`,
+    description: `${title} — ${BRAND_NAME}'da izle.`,
     year: 2022 + (index % 4),
     duration: type === 'dizi' ? `${8 + (index % 6)} bölüm` : `${90 + (index % 30)} dk`,
     rating: options.rating ?? (index % 3 === 0 ? '16+' : '13+'),

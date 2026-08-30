@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { AdminContentActions } from './AdminContentActions'
+import { PlooyLogo } from '../PlooyLogo'
 import { useAuth } from '../../context/AuthContext'
 import { refreshSessionToken } from '../../api/client'
 
@@ -55,11 +56,9 @@ export function AdminLayout() {
       >
         <div className="border-b border-white/10 px-5 py-5">
           <Link to="/admin" className="flex items-center gap-2">
-            <img src="/icon.svg" alt="" className="h-8 w-8 rounded-lg" />
+            <PlooyLogo variant="mark" tone="on-dark" className="h-8 w-auto shrink-0" />
             <div>
-              <p className="font-bold leading-tight">
-                Sine<span className="text-sineoda-gold">oda</span>
-              </p>
+              <PlooyLogo variant="wordmark" tone="on-dark" className="h-5" />
               <p className="text-xs text-sineoda-muted">Admin Panel</p>
             </div>
           </Link>

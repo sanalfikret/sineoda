@@ -4,6 +4,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { config } from './config.js'
+import { BRAND_NAME } from './constants/brand.js'
 import { initDatabase, uploadsDir, dbAll, dbGet, getDbPath } from './db.js'
 import { mapContent } from './mappers.js'
 import billingRoutes from './routes/billing.js'
@@ -303,7 +304,7 @@ app.use((error: Error, _req: express.Request, res: express.Response, _next: expr
 })
 
 app.listen(config.port, () => {
-  console.log(`Sineoda API http://localhost:${config.port}`)
+  console.log(`${BRAND_NAME} API http://localhost:${config.port}`)
   console.log(`Uploads: ${uploadsDir}`)
   console.log(`Database: ${path.join(config.dataDir, 'sineoda.db')}`)
   console.log(`Frontend: ${config.frontendUrl}`)

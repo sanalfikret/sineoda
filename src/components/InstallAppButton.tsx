@@ -65,12 +65,12 @@ export function InstallAppStatusCard() {
       <h2 className="text-lg font-semibold text-white">Mobil uygulama</h2>
       {isStandalone ? (
         <p className="mt-2 text-sm text-emerald-300">
-          Sineoda telefonunuza yüklü. Ana ekrandan uygulama gibi açılır.
+          Plooy telefonunuza yüklü. Ana ekrandan uygulama gibi açılır.
         </p>
       ) : (
         <>
           <p className="mt-2 text-sm text-sineoda-muted">
-            Sineoda&apos;yı telefona uygulama olarak yükleyin — mağaza veya APK gerekmez.
+            Plooy&apos;yu telefona uygulama olarak yükleyin — mağaza veya APK gerekmez.
           </p>
           <button
             type="button"

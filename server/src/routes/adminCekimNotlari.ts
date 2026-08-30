@@ -6,6 +6,7 @@ import { serializeCredits } from '../services/credits.js'
 import { resolveDurationFields } from '../services/duration.js'
 import { parseContentAddedAt, parseLicenseDate } from '../services/license.js'
 import { parsePublishedAt, parsePublishNowFlag } from '../services/publish.js'
+import { BRAND_EDUCATION } from '../constants/brand.js'
 import {
   addToCekimCategory,
   createCekimNotlariCategory,
@@ -177,7 +178,7 @@ router.post('/', (req: AuthRequest, res) => {
         directors: expert ? [expert] : [],
         producers: [],
         cast: [],
-        studio: String(body.studio ?? 'Sineoda Eğitim'),
+        studio: String(body.studio ?? BRAND_EDUCATION),
       }),
       '[]',
       serializeSubtitles(body.subtitles ?? []),
@@ -225,7 +226,7 @@ router.patch('/:id', (req: AuthRequest, res) => {
         directors: expert ? [expert] : [],
         producers: [],
         cast: [],
-        studio: String(body.studio ?? 'Sineoda Eğitim'),
+        studio: String(body.studio ?? BRAND_EDUCATION),
       })
     : existing.credits_json
 

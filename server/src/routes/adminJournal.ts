@@ -6,6 +6,7 @@ import { mapJournalPost } from '../mappers.js'
 import { uniqueJournalSlug } from '../journalSeed.js'
 import { loadJournalPinIds, saveJournalPinIds, MAX_JOURNAL_PINS } from '../services/journalPins.js'
 import type { JournalPostRow } from '../types.js'
+import { BRAND_NAME } from '../constants/brand.js'
 
 const router = Router()
 
@@ -85,7 +86,7 @@ router.post('/', (req: AuthRequest, res) => {
       String(req.body.excerpt ?? '').trim(),
       String(req.body.body ?? '').trim(),
       String(req.body.coverImage ?? req.body.cover_image ?? '').trim(),
-      String(req.body.author ?? 'Sineoda').trim() || 'Sineoda',
+      String(req.body.author ?? BRAND_NAME).trim() || BRAND_NAME,
       req.body.contentId || req.body.content_id ? String(req.body.contentId ?? req.body.content_id) : null,
       status,
       publishedAt,
@@ -141,7 +142,7 @@ router.put('/:id', (req: AuthRequest, res) => {
       req.body.coverImage !== undefined || req.body.cover_image !== undefined
         ? String(req.body.coverImage ?? req.body.cover_image).trim()
         : existing.cover_image,
-      req.body.author !== undefined ? String(req.body.author).trim() || 'Sineoda' : existing.author,
+      req.body.author !== undefined ? String(req.body.author).trim() || BRAND_NAME : existing.author,
       req.body.contentId !== undefined || req.body.content_id !== undefined
         ? req.body.contentId || req.body.content_id
           ? String(req.body.contentId ?? req.body.content_id)

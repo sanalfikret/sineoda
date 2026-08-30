@@ -10,7 +10,7 @@ export function InstallPrompt() {
 
   if (!showBanner) return null
 
-  const title = 'Sineoda\'yı telefona yükle'
+  const title = 'Plooy\'yu telefona yükle'
 
   const description = canNativeInstall
     ? 'App Store gerekmez — yükle, ana ekrandan uygulama gibi aç.'

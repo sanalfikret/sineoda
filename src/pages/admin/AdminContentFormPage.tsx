@@ -13,6 +13,7 @@ import { buildCredits, creditsToForm } from '../../utils/credits'
 import { buildFestivals, festivalsToForm } from '../../utils/duration'
 import type { FestivalEntry } from '../../constants/festivals'
 import { CONTENT_TYPES, isSeriesContent } from '../../constants/contentTypes'
+import { BRAND_STUDIOS } from '../../constants/brand'
 import type { ContentType } from '../../types/content'
 import { toDateInputValue } from '../../utils/license'
 import { defaultScheduledDateTime, toDateTimeLocalValue } from '../../utils/publish'
@@ -381,7 +382,7 @@ export function AdminContentFormPage() {
               <input
                 value={form.studio}
                 onChange={(event) => update('studio', event.target.value)}
-                placeholder="Sineoda Studios"
+                placeholder={BRAND_STUDIOS}
                 className={inputClass}
               />
             </Field>

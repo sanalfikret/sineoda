@@ -4,6 +4,7 @@ import {
   BRAND_FEATURES,
   BRAND_HERO,
   BRAND_MANIFESTO,
+  BRAND_NAME,
   BRAND_PILLARS,
   BRAND_STUDENT_CINEMA,
 } from './brand'
@@ -114,7 +115,7 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
     ctaLink: '/kayit',
   },
   features: {
-    eyebrow: 'Neden Sineoda',
+    eyebrow: `Neden ${BRAND_NAME}`,
     title: 'Dünya bağımsız sineması için tasarlandı.\nGöz yormaz.',
     items: BRAND_FEATURES.map((item) => ({ title: item.title, text: item.text })),
   },
@@ -140,7 +141,7 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
     ctaPrimary: BRAND_STUDENT_CINEMA.ctaPrimary,
     ctaPrimaryLink: '/creator/kayit?program=genc-sinema',
     ctaSecondary: BRAND_STUDENT_CINEMA.ctaSecondary,
-    footnote: 'Okulunuz seçer · Sineoda son onayı verir · Film + kamera arkası birlikte yayınlanır',
+    footnote: `Okulunuz seçer · ${BRAND_NAME} son onayı verir · Film + kamera arkası birlikte yayınlanır`,
   },
   creator: {
     eyebrow: BRAND_CREATOR.eyebrow,
@@ -157,30 +158,28 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
     title: 'Sıkça Sorulan Sorular',
     items: [
       {
-        question: 'Sineoda nedir?',
-        answer:
-          'Sineoda; dünyanın dört bir yanından bağımsız sinemacıların filmlerini, dizilerini ve belgesellerini izleyebileceğiniz küratörlü bir dijital yayın platformudur.',
+        question: `${BRAND_NAME} nedir?`,
+        answer: `${BRAND_NAME}; dünyanın dört bir yanından bağımsız sinemacıların filmlerini, dizilerini ve belgesellerini izleyebileceğiniz küratörlü bir dijital yayın platformudur.`,
       },
       {
-        question: "Sineoda'nın maliyeti nedir?",
+        question: `${BRAND_NAME}'nın maliyeti nedir?`,
         answer:
           'Aylık ₺49 veya yıllık ₺490 planlarımız mevcuttur. Yıllık planda 2 ay bedava avantajı sunulur.',
       },
       {
         question: 'Nerede izleyebilirim?',
-        answer:
-          "Sineoda'yı web tarayıcısı, Android, iOS ve Android TV üzerinden izleyebilirsiniz.",
+        answer: `${BRAND_NAME}'yu web tarayıcısı, Android, iOS ve Android TV üzerinden izleyebilirsiniz.`,
       },
       {
         question: 'Nasıl iptal ederim?',
         answer: 'Hesabınızdan Abonelik bölümünden planınızı istediğiniz zaman iptal edebilirsiniz.',
       },
       {
-        question: "Sineoda'da ne izleyebilirim?",
+        question: `${BRAND_NAME}'da ne izleyebilirim?`,
         answer: 'Dünya bağımsız sinemasından filmler, diziler, belgeseller ve kısa metrajlar.',
       },
       {
-        question: 'Sineoda çocuklar için uygun mudur?',
+        question: `${BRAND_NAME} çocuklar için uygun mudur?`,
         answer: 'Evet. Çocuk profili ile yaşa uygun içerikler sunulur.',
       },
     ],
@@ -194,7 +193,7 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
     buttonLabel: 'Başla',
   },
   journal: {
-    eyebrow: 'Sineoda Dergi',
+    eyebrow: `${BRAND_NAME} Dergi`,
     title: 'Bağımsız sinema üzerine yazılar',
     description: 'Festival notları, küratör seçkileri ve dünya bağımsız sinemasından haberler.',
   },

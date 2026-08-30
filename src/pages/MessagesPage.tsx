@@ -73,7 +73,7 @@ export function MessagesPage() {
             ← Ana sayfa
           </Link>
           <h1 className="mt-2 text-2xl font-bold">Mesajlarım</h1>
-          <p className="mt-1 text-sm text-sineoda-muted">Sineoda ekibinden duyurular ve bildirimler</p>
+          <p className="mt-1 text-sm text-sineoda-muted">Plooy ekibinden duyurular ve bildirimler</p>
         </div>
 
         {viewerOnly ? (

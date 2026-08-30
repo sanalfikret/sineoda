@@ -1,3 +1,9 @@
+/** Marka — şirket / platform adı */
+export const BRAND_NAME = 'Plooy'
+export const BRAND_EDITOR = `${BRAND_NAME} Editör`
+export const BRAND_EDUCATION = `${BRAND_NAME} Eğitim`
+export const BRAND_STUDIOS = `${BRAND_NAME} Studios`
+
 /** Marka metinleri — landing ve pazarlama */
 
 export const BRAND_TAGLINE = 'Bağımsız sinemanın buluşma noktası'
@@ -16,7 +22,7 @@ export const BRAND_CREATOR = {
   eyebrow: 'Bağımsız yapımcılar için',
   title: 'Filmini yükle, adil paylaşımdan kazanç elde et',
   subtitle:
-    'Sineoda yalnızca izleyiciler için değil — bağımsız sinemacılar için de tasarlandı. Yapımını yükle, küratörlü katalogda yerini al, gelir paylaşımı koşulları yapımcı anlaşmasında açıkça belirtilir.',
+    'Plooy yalnızca izleyiciler için değil — bağımsız sinemacılar için de tasarlandı. Yapımını yükle, küratörlü katalogda yerini al, gelir paylaşımı koşulları yapımcı anlaşmasında açıkça belirtilir.',
   perks: [
     {
       title: 'Gerçek izleyici kitlesi',
@@ -51,7 +57,7 @@ export const BRAND_PILLARS = [
 ] as const
 
 export const BRAND_MANIFESTO = {
-  eyebrow: 'Sineoda nedir?',
+  eyebrow: 'Plooy nedir?',
   title: 'Dünyanın bağımsız sinemacılarına açılan kapı.',
   body: 'Hollywood ve ticari yapımların ötesinde; Cannes, Berlin, Sundance, Rotterdam ve yerli festivallerden bağımsız filmler, diziler, belgeseller ve kısa metrajlar. Özgün sesler, özenle seçildi — sakin, odaklı ve sinemaseverlere özel bir izleme deneyimi.',
 } as const
@@ -61,7 +67,7 @@ export const BRAND_STUDENT_CINEMA = {
   eyebrow: 'Sinema okullarıyla',
   title: 'Genç sinemaya dijital sahne',
   subtitle:
-    'Mezun ve öğrenci filmlerinizi yükleyin, kamera arkası görüntülerinizi paylaşın. Okulunuz seçer, Sineoda son onayı verir — genç sinemacıları birlikte destekliyoruz.',
+    'Mezun ve öğrenci filmlerinizi yükleyin, kamera arkası görüntülerinizi paylaşın. Okulunuz seçer, Plooy son onayı verir — genç sinemacıları birlikte destekliyoruz.',
   steps: [
     {
       title: 'Filmini ve kamera arkasını yükle',
@@ -72,7 +78,7 @@ export const BRAND_STUDENT_CINEMA = {
       text: 'Hocanız veya okul temsilcisi projeyi okul adına önerir.',
     },
     {
-      title: 'Sineoda yayınlasın',
+      title: 'Plooy yayınlasın',
       text: 'İçerik ve platform standartlarına uygunsa Genç Sinema seçkisinde yerini alır.',
     },
   ],

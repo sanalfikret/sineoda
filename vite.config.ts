@@ -21,11 +21,11 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.svg', 'icon.svg', 'pwa-192x192.png', 'pwa-512x512.png', 'apple-touch-icon.png', 'tv-banner.svg'],
+      includeAssets: ['favicon.svg', 'icon.svg', 'brand/*', 'pwa-192x192.png', 'pwa-512x512.png', 'apple-touch-icon.png', 'tv-banner.svg'],
       manifest: {
         id: '/',
-        name: 'Sineoda',
-        short_name: 'Sineoda',
+        name: 'Plooy',
+        short_name: 'Plooy',
         description: 'Bağımsız sinema platformu — telefona uygulama olarak yükle.',
         theme_color: '#080a12',
         background_color: '#080a12',

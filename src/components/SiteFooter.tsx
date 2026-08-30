@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { BRAND_NAME } from '../constants/brand'
 import { InstallAppButton } from './InstallAppButton'
 import { LEGAL_LINKS } from '../constants/legal'
 
@@ -6,7 +7,7 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-white/5 bg-sineoda-bg px-4 py-10 sm:px-6">
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
-        <p className="text-sm text-sineoda-muted">© {new Date().getFullYear()} Sineoda</p>
+        <p className="text-sm text-sineoda-muted">© {new Date().getFullYear()} {BRAND_NAME}</p>
         <nav className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm">
           <Link to="/dergi" className="text-sineoda-muted transition hover:text-white">
             Dergi

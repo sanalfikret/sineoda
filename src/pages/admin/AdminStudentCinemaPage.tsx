@@ -41,7 +41,7 @@ const SCHOOL_REVIEW_LABELS: Record<string, string> = {
 
 const REVIEW_LABELS: Record<string, string> = {
   draft: 'Taslak',
-  pending: 'Sineoda incelemede',
+  pending: 'Plooy incelemede',
   published: 'Yayında',
   rejected: 'Reddedildi',
 }

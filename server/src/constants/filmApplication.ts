@@ -1,3 +1,5 @@
+import { BRAND_NAME } from './brand.js'
+
 /** Film başvurusunda hak beyanı + belge gerektiren kategoriler */
 export const FILM_RIGHTS_CATEGORIES = [
   {
@@ -49,7 +51,7 @@ export const FILM_LEGAL_DECLARATIONS = [
   },
   {
     id: 'platform_rules',
-    text: 'Sineoda yapımcı sözleşmesi ve platform kurallarına uygun olduğunu kabul ederim.',
+    text: `${BRAND_NAME} yapımcı sözleşmesi ve platform kurallarına uygun olduğunu kabul ederim.`,
   },
 ] as const
 

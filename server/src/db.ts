@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import initSqlJs, { type Database } from 'sql.js'
 import { config } from './config.js'
+import { BRAND_NAME } from './constants/brand.js'
 import { resolveWritableDir } from './storagePaths.js'
 
 let dataDir = config.dataDir
@@ -352,7 +353,7 @@ function runMigrations() {
       excerpt TEXT NOT NULL DEFAULT '',
       body TEXT NOT NULL DEFAULT '',
       cover_image TEXT NOT NULL DEFAULT '',
-      author TEXT NOT NULL DEFAULT 'Sineoda',
+      author TEXT NOT NULL DEFAULT '${BRAND_NAME}',
       content_id TEXT,
       status TEXT NOT NULL DEFAULT 'draft',
       published_at TEXT,

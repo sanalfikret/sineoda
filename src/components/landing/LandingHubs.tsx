@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { BRAND_NAME } from '../../constants/brand'
 
 const hubs = [
   {
@@ -14,7 +15,7 @@ const hubs = [
     accent: 'from-blue-900/90',
   },
   {
-    title: 'Sineoda Originals',
+    title: `${BRAND_NAME} Originals`,
     text: 'Yalnızca burada izleyebileceğin özel yapımlar.',
     image: 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=900&h=1200&fit=crop&q=80',
     accent: 'from-amber-900/90',

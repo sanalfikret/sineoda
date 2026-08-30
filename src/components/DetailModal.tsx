@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { fetchEpisodes, fetchWatchProgress, resolveMediaUrl } from '../api/client'
 import type { ContentItem, Episode } from '../types/content'
 import { FEEDBACK_EMAIL } from '../constants/site'
+import { BRAND_NAME } from '../constants/brand'
 import { getContentTypeLabel, hasEpisodicContent } from '../constants/contentTypes'
 import { sortEpisodes } from '../utils/episodes'
 import { ContentActionButtons } from './ContentActionButtons'
@@ -317,7 +318,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
             <div>
               <p className="text-sm font-medium text-white">Geri bildirim</p>
               <a
-                href={`mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(`Sineoda geri bildirim: ${item.title}`)}`}
+                href={`mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(`${BRAND_NAME} geri bildirim: ${item.title}`)}`}
                 className="mt-2 inline-flex rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white transition hover:bg-white/10"
               >
                 Geri bildirimde bulunun

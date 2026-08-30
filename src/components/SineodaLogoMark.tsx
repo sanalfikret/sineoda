@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom'
+import { PlooyLogoStack } from './PlooyLogo'
 
+/** @deprecated SineodaLogoMark — PlooyLogoStack kullanın */
 export function SineodaLogoMark({
   size = 'md',
   linked = false,
@@ -9,25 +10,15 @@ export function SineodaLogoMark({
   linked?: boolean
   className?: string
 }) {
-  const iconClass = size === 'lg' ? 'h-14 w-14 rounded-xl' : 'h-11 w-11 rounded-lg'
-  const textClass = size === 'lg' ? 'text-3xl' : 'text-2xl'
-
-  const content = (
-    <div className={`flex flex-col items-center gap-3 text-center ${className}`}>
-      <img src="/icon.svg" alt="" className={iconClass} />
-      <span className={`${textClass} font-bold tracking-tight text-white`}>
-        Sine<span className="text-sineoda-gold">oda</span>
-      </span>
-    </div>
+  return (
+    <PlooyLogoStack
+      size={size === 'lg' ? 'lg' : 'md'}
+      tone="on-dark"
+      linked={linked}
+      className={className}
+    />
   )
-
-  if (linked) {
-    return (
-      <Link to="/" className="inline-flex transition hover:opacity-90">
-        {content}
-      </Link>
-    )
-  }
-
-  return content
 }
+
+export { PlooyLogo, PlooyLogoStack } from './PlooyLogo'
+export type { PlooyLogoTone } from './PlooyLogo'

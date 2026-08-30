@@ -116,7 +116,7 @@ export function SignupPage() {
 
   return (
     <AuthLayout
-      title={completed ? 'E-postanı kontrol et' : "Sineoda'ya katıl"}
+      title={completed ? 'E-postanı kontrol et' : "Plooy'a katıl"}
       subtitle={
         completed
           ? 'E-postanı doğrula, giriş yap — seçtiğin plan için kredi kartı ödeme adımına yönlendirileceksin.'

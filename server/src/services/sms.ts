@@ -1,4 +1,5 @@
 import { config } from '../config.js'
+import { BRAND_NAME } from '../constants/brand.js'
 
 function normalizePhone(phone: string) {
   const digits = phone.replace(/\D/g, '')
@@ -21,7 +22,7 @@ export function formatPhoneDisplay(phone: string) {
 
 export async function sendVerificationSms(phone: string, code: string) {
   const normalized = normalizePhone(phone)
-  const message = `Sineoda dogrulama kodunuz: ${code}. Bu kodu kimseyle paylasmayin.`
+  const message = `${BRAND_NAME} dogrulama kodunuz: ${code}. Bu kodu kimseyle paylasmayin.`
 
   if (!config.isSmsConfigured()) {
     console.info(`[SMS demo] ${normalized}: ${code}`)

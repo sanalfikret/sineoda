@@ -2,6 +2,7 @@ import { v4 as uuid } from 'uuid'
 import { CEKIM_NOTLARI_CATEGORIES } from '../constants/cekimNotlari.js'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { addToCekimCategory, SHOOTING_NOTES_PROGRAM } from './cekimNotlari.js'
+import { BRAND_EDUCATION } from '../constants/brand.js'
 
 const DEMO_VIDEOS_PER_CATEGORY = 5
 
@@ -101,7 +102,7 @@ export function ensureCekimNotlariDemoContent() {
             SHOOTING_NOTES_PROGRAM,
             'main',
             now,
-            JSON.stringify({ directors: [expert], producers: [], cast: [], studio: 'Sineoda Eğitim' }),
+            JSON.stringify({ directors: [expert], producers: [], cast: [], studio: BRAND_EDUCATION }),
             '[]',
             '[]',
           ],

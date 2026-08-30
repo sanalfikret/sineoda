@@ -17,7 +17,9 @@ import {
   type CreatorAccountingReport,
 } from '../../api/client'
 import { ShareButton } from '../../components/ShareButton'
+import { PlooyLogo } from '../../components/PlooyLogo'
 import { useAuth } from '../../context/AuthContext'
+import { BRAND_NAME } from '../../constants/brand'
 import { CREATOR_DOC_TYPES } from '../../constants/creatorLegal'
 import { CREATOR_FILM_UPLOAD_REQUIREMENTS } from '../../constants/creatorUpload'
 import {
@@ -365,10 +367,10 @@ export function CreatorDashboardPage() {
       <header className="border-b border-white/10 bg-[#11141c] px-4 py-4 sm:px-6">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <img src="/icon.svg" alt="" className="h-9 w-9 rounded-lg" />
+            <PlooyLogo variant="mark" tone="on-dark" className="h-9" />
             <div>
               <p className="text-lg font-bold">{studioName}</p>
-              <p className="text-xs text-sineoda-muted">Sineoda Creator · {registrationPaid ? 'Aktif' : 'Ödeme bekleniyor'}</p>
+              <p className="text-xs text-sineoda-muted">{BRAND_NAME} Creator · {registrationPaid ? 'Aktif' : 'Ödeme bekleniyor'}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -396,7 +398,7 @@ export function CreatorDashboardPage() {
         {program === 'student_cinema' && registrationPaid && (
           <div className="mb-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 text-sm text-emerald-100">
             Genç Sinema programındasınız. Ana filminizi ve kamera arkası görüntülerinizi yükleyebilirsiniz.
-            Okul onayından sonra Sineoda incelemesine alınır.
+            Okul onayından sonra {BRAND_NAME} incelemesine alınır.
           </div>
         )}
 
@@ -413,7 +415,7 @@ export function CreatorDashboardPage() {
 
         {program === 'standard' && registrationPaid && status !== 'rejected' && status !== 'suspended' && (
           <div className="mb-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 text-sm text-emerald-100">
-            Yapımcı üyeliğiniz aktiftir. Film başvurunuzu gönderin; yayına alma kararı yalnızca Sineoda
+            Yapımcı üyeliğiniz aktiftir. Film başvurunuzu gönderin; yayına alma kararı yalnızca {BRAND_NAME}
             admin ekibi tarafından verilir.
           </div>
         )}

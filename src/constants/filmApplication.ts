@@ -50,7 +50,7 @@ export const FILM_LEGAL_DECLARATIONS = [
   },
   {
     id: 'platform_rules',
-    text: 'Sineoda yapımcı sözleşmesi ve platform kurallarına uygun olduğunu kabul ederim.',
+    text: 'Plooy yapımcı sözleşmesi ve platform kurallarına uygun olduğunu kabul ederim.',
   },
 ] as const
 
