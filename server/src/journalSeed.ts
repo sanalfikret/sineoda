@@ -49,11 +49,17 @@ Katalogdaki yerli bağımsız filmler ve diziler düzenli olarak güncelleniyor.
 ] as const
 
 function upsertPost(post: (typeof SEED_POSTS)[number], index: number) {
-  const exists = dbGet('SELECT id FROM journal_posts WHERE slug = ?', [post.slug])
+  const existing = dbGet<{ id: string }>('SELECT id FROM journal_posts WHERE slug = ?', [post.slug])
   const now = new Date().toISOString()
   const publishedAt = new Date(Date.now() - index * 3 * 24 * 60 * 60 * 1000).toISOString()
 
-  if (exists) return
+  if (existing) {
+    dbRun(
+      'UPDATE journal_posts SET title = ?, excerpt = ?, body = ?, cover_image = ?, author = ? WHERE id = ?',
+      [post.title, post.excerpt, post.body, post.cover_image, post.author, existing.id],
+    )
+    return
+  }
 
   dbRun(
     `INSERT INTO journal_posts (id, slug, title, excerpt, body, cover_image, author, content_id, status, published_at, created_at, updated_at)

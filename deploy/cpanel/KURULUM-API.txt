@@ -1,4 +1,4 @@
-SINEODA — cPanel'de API kurulumu (senindomain.com)
+Plooy — cPanel'de API kurulumu (senindomain.com)
 =========================================================
 
 Hedef:
