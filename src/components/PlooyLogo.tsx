@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 export type PlooyLogoTone = 'on-dark' | 'on-light'
 
 const LOGO_SRC: Record<PlooyLogoTone, string> = {
-  'on-dark': '/brand/plooy-wordmark-light.png',
+  'on-dark': '/brand/plooy-wordmark.png',
   'on-light': '/brand/plooy-wordmark-on-light.png',
 }
 
