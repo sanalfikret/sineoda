@@ -585,6 +585,14 @@ export function AdminLandingPage() {
       })
 
       setHero(data.hero ?? hero)
+      const savedFeaturedId = data.hero?.featuredContentId ?? hero.featuredContentId
+      const savedFeatured = savedFeaturedId
+        ? pickerCatalog.find((item) => item.id === savedFeaturedId)
+        : null
+      const featuredUnpublished =
+        savedFeaturedId &&
+        savedFeatured &&
+        (!savedFeatured.publishedAt || new Date(savedFeatured.publishedAt) > new Date())
       setSections(mergeLandingSections(data.sections))
       const savedCustomBlocks = data.customBlocks ?? customBlocks
       setCustomBlocks(savedCustomBlocks)
@@ -620,7 +628,9 @@ export function AdminLandingPage() {
       )
       setBlockTitles(data.blockTitles ?? blockTitles)
       setMessage(
-        skipped > 0
+        featuredUnpublished
+          ? 'Kaydedildi. Seçilen öne çıkan içerik henüz yayında değil — ana sayfada yayındaki bir içerik gösterilir; içeriği yayınlayın veya yayındaki bir film seçin.'
+          : skipped > 0
           ? `Kaydedildi. ${skipped} demo içerik slider'a eklenemedi — yalnızca veritabanındaki içerikler kullanılır.`
           : customBlocks.length > 0 && !data.customBlocks
             ? 'Kaydedildi. Özel bölümler sunucuda henüz desteklenmiyor — plooy-api.zip güncellemesini yükleyin.'
