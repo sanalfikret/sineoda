@@ -44,7 +44,7 @@ export function ContactPage() {
     <div className="min-h-dvh bg-sineoda-bg">
       <header className="safe-top border-b border-white/5 px-4 py-5 sm:px-6">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
-          <PlooyLogo variant="wordmark" tone="on-dark" linked linkTo="/" className="h-7" />
+          <PlooyLogo tone="on-dark" linked linkTo="/" className="h-7" />
         </div>
       </header>
 

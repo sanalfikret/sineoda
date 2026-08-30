@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { CreatorAuthLayout } from '../../components/creator/CreatorAuthLayout'
-import { SineodaLogoMark } from '../../components/SineodaLogoMark'
+import { PlooyLogo } from '../../components/PlooyLogo'
 import { useAuth } from '../../context/AuthContext'
 
 export function CreatorLoginPage() {
@@ -33,7 +33,9 @@ export function CreatorLoginPage() {
   return (
     <CreatorAuthLayout>
       <div className="w-full max-w-md">
-        <SineodaLogoMark size="lg" linked className="mb-8" />
+        <div className="mb-8 flex justify-center">
+          <PlooyLogo tone="on-dark" linked className="h-10 sm:h-12" />
+        </div>
 
         <div className="rounded-2xl border border-white/10 bg-[#11141c] p-6 sm:p-8">
           <div className="mb-6 text-center">

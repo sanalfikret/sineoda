@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { SineodaLogoMark } from '../../components/SineodaLogoMark'
+import { PlooyLogo } from '../../components/PlooyLogo'
 import { useAuth } from '../../context/AuthContext'
 
 export function AdminLoginPage() {
@@ -33,7 +33,9 @@ export function AdminLoginPage() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-[#0d0f14] px-4 py-10">
       <div className="w-full max-w-md">
-        <SineodaLogoMark size="lg" linked className="mb-8" />
+        <div className="mb-8 flex justify-center">
+          <PlooyLogo tone="on-dark" linked className="h-10 sm:h-12" />
+        </div>
 
         <div className="rounded-2xl border border-white/10 bg-[#11141c] p-6 sm:p-8">
           <div className="mb-6 text-center">

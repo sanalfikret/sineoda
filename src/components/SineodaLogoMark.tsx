@@ -1,6 +1,6 @@
-import { PlooyLogoStack } from './PlooyLogo'
+import { PlooyLogo } from './PlooyLogo'
 
-/** @deprecated SineodaLogoMark — PlooyLogoStack kullanın */
+/** @deprecated PlooyLogo kullanın */
 export function SineodaLogoMark({
   size = 'md',
   linked = false,
@@ -10,12 +10,12 @@ export function SineodaLogoMark({
   linked?: boolean
   className?: string
 }) {
+  const height = size === 'lg' ? 'h-10 sm:h-12' : 'h-8 sm:h-9'
   return (
-    <PlooyLogoStack
-      size={size === 'lg' ? 'lg' : 'md'}
+    <PlooyLogo
       tone="on-dark"
       linked={linked}
-      className={className}
+      className={`mx-auto ${height} ${className}`.trim()}
     />
   )
 }

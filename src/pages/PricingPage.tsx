@@ -135,7 +135,7 @@ export function PricingPage() {
     <div className="min-h-dvh bg-sineoda-bg">
       <header className="safe-top border-b border-white/5 px-4 py-5 sm:px-6">
         <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <PlooyLogo variant="wordmark" tone="on-dark" linked linkTo="/" className="h-8" />
+          <PlooyLogo tone="on-dark" linked linkTo="/" className="h-8" />
           <Link to={user ? '/hesap' : '/giris'} className="text-sm text-sineoda-gold hover:underline">
             {user ? 'Hesabım' : 'Giriş Yap'}
           </Link>

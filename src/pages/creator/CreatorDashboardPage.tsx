@@ -367,7 +367,7 @@ export function CreatorDashboardPage() {
       <header className="border-b border-white/10 bg-[#11141c] px-4 py-4 sm:px-6">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <PlooyLogo variant="mark" tone="on-dark" className="h-9" />
+            <PlooyLogo tone="on-dark" className="h-8" />
             <div>
               <p className="text-lg font-bold">{studioName}</p>
               <p className="text-xs text-sineoda-muted">{BRAND_NAME} Creator · {registrationPaid ? 'Aktif' : 'Ödeme bekleniyor'}</p>
