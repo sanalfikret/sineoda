@@ -38,6 +38,16 @@ export function readAuthPayload(token: string): JwtPayload | null {
 
 export interface AuthRequest extends Request {
   auth?: JwtPayload
+  /** Oturum yenileme — JSON gövdesine de eklenir (CORS header kısıtına karşı). */
+  refreshedToken?: string
+}
+
+function attachRefreshedToken(req: AuthRequest, user: Pick<UserRow, 'id' | 'role'>, res: Response) {
+  const refreshed = signToken({ userId: user.id, role: user.role })
+  req.auth = { userId: user.id, role: user.role }
+  req.refreshedToken = refreshed
+  res.setHeader('X-Plooy-Token', refreshed)
+  res.setHeader('X-Sineoda-Token', refreshed)
 }
 
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
@@ -53,17 +63,14 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
     return
   }
 
-  const user = dbGet<UserRow>('SELECT id FROM users WHERE id = ?', [payload.userId])
+  const user = dbGet<UserRow>('SELECT id, role FROM users WHERE id = ?', [payload.userId])
   if (!user) {
     res.status(401).json({ error: 'Kullanıcı bulunamadı.' })
     return
   }
 
-  req.auth = payload
   // Her istekte oturumu 30 güne uzat (süresi dolmuş token da yenilenir)
-  const refreshed = signToken({ userId: payload.userId, role: payload.role })
-  res.setHeader('X-Plooy-Token', refreshed)
-  res.setHeader('X-Sineoda-Token', refreshed)
+  attachRefreshedToken(req, user, res)
   next()
 }
 
@@ -88,13 +95,13 @@ export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunctio
 
 export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
   requireAuth(req, res, () => {
-    const user = dbGet<UserRow>('SELECT role FROM users WHERE id = ?', [req.auth!.userId])
+    const user = dbGet<UserRow>('SELECT id, role FROM users WHERE id = ?', [req.auth!.userId])
     if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
       res.status(403).json({ error: 'Admin yetkisi gerekli.' })
       return
     }
-    if (req.auth && req.auth.role !== user.role) {
-      req.auth = { ...req.auth, role: user.role }
+    if (req.auth?.role !== user.role) {
+      attachRefreshedToken(req, user, res)
     }
     next()
   })

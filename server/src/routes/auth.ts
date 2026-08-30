@@ -348,7 +348,10 @@ router.post('/refresh', (req, res) => {
     return
   }
 
-  res.json({ token: signToken({ userId: user.id, role: user.role }) })
+  const token = signToken({ userId: user.id, role: user.role })
+  res.setHeader('X-Plooy-Token', token)
+  res.setHeader('X-Sineoda-Token', token)
+  res.json({ token })
 })
 
 const MAX_PROFILES = 4

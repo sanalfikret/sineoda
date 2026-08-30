@@ -215,10 +215,10 @@ export async function api<T>(path: string, options: RequestInit = {}, retried = 
     return undefined as T
   }
 
-  const refreshed = readAuthTokenHeader(response)
+  const data = (await response.json()) as T & { token?: string }
+  const refreshed = readAuthTokenHeader(response) ?? data.token
   if (refreshed) setToken(refreshed)
-
-  return response.json() as Promise<T>
+  return data as T
 }
 
 export async function uploadImage(file: File): Promise<string> {

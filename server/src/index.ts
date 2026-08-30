@@ -9,7 +9,7 @@ import { initDatabase, uploadsDir, dbAll, dbGet, getDbPath } from './db.js'
 import { mapContent } from './mappers.js'
 import billingRoutes from './routes/billing.js'
 import episodeRoutes from './routes/episodes.js'
-import { resolveJwtExpiresIn } from './middleware/auth.js'
+import { resolveJwtExpiresIn, type AuthRequest } from './middleware/auth.js'
 import authRoutes from './routes/auth.js'
 import categoryRoutes from './routes/categories.js'
 import contentRoutes from './routes/content.js'
@@ -107,8 +107,26 @@ app.use(
     },
     credentials: true,
     allowedHeaders: ['Authorization', 'Content-Type', 'X-Profile-Id'],
+    exposedHeaders: ['X-Plooy-Token', 'X-Sineoda-Token'],
   }),
 )
+app.use((req, res, next) => {
+  const originalJson = res.json.bind(res)
+  res.json = (body: unknown) => {
+    const refreshedToken = (req as AuthRequest).refreshedToken
+    if (
+      refreshedToken &&
+      body &&
+      typeof body === 'object' &&
+      !Array.isArray(body) &&
+      !('token' in (body as Record<string, unknown>))
+    ) {
+      return originalJson({ ...(body as Record<string, unknown>), token: refreshedToken })
+    }
+    return originalJson(body)
+  }
+  next()
+})
 app.use(express.json({ limit: '2mb' }))
 app.use(express.urlencoded({ extended: true }))
 app.use('/uploads', express.static(uploadsDir))
