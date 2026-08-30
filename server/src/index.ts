@@ -59,13 +59,30 @@ import { ensureCekimNotlariDemoContent } from './services/cekimNotlariSeed.js'
 import adminCekimNotlariRoutes from './routes/adminCekimNotlari.js'
 import adminBillingPlansRoutes from './routes/adminBillingPlans.js'
 import cekimNotlariRoutes from './routes/cekimNotlari.js'
-import { seedDatabase, ensureGenreCategories, seedEpisodes, ensureContentMeta, ensureVerticalSeries, ensureExtraSeedContent, seedLandingData, ensureLandingShowcases, ensureFilmSchools, ensureStudentCinemaDemoFilms, ensureStudentCinemaDemoCredits, ensureCreatorDemoSeed } from './seed.js'
+import {
+  seedDatabase,
+  ensureGenreCategories,
+  seedEpisodes,
+  ensureContentMeta,
+  ensureVerticalSeries,
+  ensureExtraSeedContent,
+  seedLandingData,
+  ensureLandingShowcases,
+  ensureFilmSchools,
+  ensureStudentCinemaDemoFilms,
+  ensureStudentCinemaDemoCredits,
+  ensureCreatorDemoSeed,
+  migrateLegacyBrandAccounts,
+} from './seed.js'
+import { migrateLegacyBrandText } from './services/brandMigration.js'
 import { ensureMonthlyRollover, seedDemoMonthlyIfEmpty } from './services/watchAccounting.js'
 import type { ContentRow } from './types.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 await initDatabase()
+migrateLegacyBrandAccounts()
+migrateLegacyBrandText()
 seedDatabase()
 seedEpisodes()
 ensureContentMeta()

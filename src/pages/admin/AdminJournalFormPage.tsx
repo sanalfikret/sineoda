@@ -8,7 +8,7 @@ import {
 import { ImageUpload } from '../../components/admin/ImageUpload'
 import { useContent } from '../../context/ContentContext'
 import type { JournalPostStatus } from '../../types/journal'
-import { BRAND_NAME } from '../../constants/brand'
+import { BRAND_EDITOR } from '../../constants/brand'
 
 const EMPTY = {
   title: '',
@@ -16,7 +16,7 @@ const EMPTY = {
   excerpt: '',
   body: '',
   coverImage: '',
-  author: BRAND_NAME,
+  author: BRAND_EDITOR,
   contentId: '',
   status: 'draft' as JournalPostStatus,
 }

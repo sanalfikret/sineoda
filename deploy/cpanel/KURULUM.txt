@@ -1,4 +1,4 @@
-SINEODA — cPanel paylaşımlı hosting (geçici test)
+Plooy — cPanel paylaşımlı hosting (geçici test)
 ================================================
 
 cPanel'de iki senaryo var. Önce hangisi olduğunu kontrol et:

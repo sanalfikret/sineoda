@@ -1,4 +1,4 @@
-SINEODA — VERİ KALICILIĞI (VPS)
+Plooy — VERİ KALICILIĞI (VPS)
 ================================
 
 Üyeler, admin ayarları, ana sayfa düzeni hepsi tek dosyada:
