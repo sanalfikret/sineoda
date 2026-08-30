@@ -46,20 +46,20 @@ export function JournalListPage() {
 
   return (
     <main className="mx-auto max-w-[1400px] px-5 py-12 sm:px-8 sm:py-16">
-      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sineoda-accent">
+      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-plooy-accent">
         {section.eyebrow}
       </p>
       <h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl">
         {section.title}
       </h1>
-      <p className="mt-4 max-w-2xl text-base leading-relaxed text-sineoda-muted">
+      <p className="mt-4 max-w-2xl text-base leading-relaxed text-plooy-muted">
         {section.description}
       </p>
 
       {loading ? (
-        <p className="mt-12 text-sm text-sineoda-muted">Yükleniyor...</p>
+        <p className="mt-12 text-sm text-plooy-muted">Yükleniyor...</p>
       ) : posts.length === 0 ? (
-        <p className="mt-12 text-sm text-sineoda-muted">Henüz yayınlanmış yazı yok.</p>
+        <p className="mt-12 text-sm text-plooy-muted">Henüz yayınlanmış yazı yok.</p>
       ) : (
         <>
           <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

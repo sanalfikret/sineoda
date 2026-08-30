@@ -135,7 +135,7 @@ export function AdminCreatorsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-white">Yapımcılar</h1>
-        <p className="mt-1 text-sm text-sineoda-muted">
+        <p className="mt-1 text-sm text-plooy-muted">
           Creator hesapları, belgeler ve film listesi · {creators.length} kayıt
         </p>
       </div>
@@ -157,11 +157,11 @@ export function AdminCreatorsPage() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#11141c]">
           {loading ? (
-            <p className="p-6 text-sm text-sineoda-muted">Yükleniyor...</p>
+            <p className="p-6 text-sm text-plooy-muted">Yükleniyor...</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
-                <thead className="border-b border-white/10 text-sineoda-muted">
+                <thead className="border-b border-white/10 text-plooy-muted">
                   <tr>
                     <th className="px-4 py-3 font-medium">Stüdyo</th>
                     <th className="px-4 py-3 font-medium">Kişi</th>
@@ -173,7 +173,7 @@ export function AdminCreatorsPage() {
                 <tbody>
                   {filteredCreators.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-10 text-center text-sineoda-muted">
+                      <td colSpan={5} className="px-4 py-10 text-center text-plooy-muted">
                         Aramanızla eşleşen yapımcı bulunamadı.
                       </td>
                     </tr>
@@ -183,13 +183,13 @@ export function AdminCreatorsPage() {
                         key={creator.id}
                         onClick={() => setSelectedId(creator.id)}
                         className={`cursor-pointer border-b border-white/5 last:border-0 transition hover:bg-white/[0.03] ${
-                          selectedId === creator.id ? 'bg-sineoda-gold/10' : ''
+                          selectedId === creator.id ? 'bg-plooy-gold/10' : ''
                         }`}
                       >
                         <td className="px-4 py-3 font-medium text-white">{creator.studioName}</td>
                         <td className="px-4 py-3">
                           <p className="text-white/90">{creator.name}</p>
-                          <p className="text-xs text-sineoda-muted">{creator.email}</p>
+                          <p className="text-xs text-plooy-muted">{creator.email}</p>
                         </td>
                         <td className="px-4 py-3">
                           <span
@@ -211,17 +211,17 @@ export function AdminCreatorsPage() {
 
         <div className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
           {!selectedCreator ? (
-            <div className="flex min-h-[320px] items-center justify-center text-sm text-sineoda-muted">
+            <div className="flex min-h-[320px] items-center justify-center text-sm text-plooy-muted">
               Detay görmek için listeden bir yapımcı seçin.
             </div>
           ) : detailLoading && !detail ? (
-            <p className="text-sm text-sineoda-muted">Detay yükleniyor...</p>
+            <p className="text-sm text-plooy-muted">Detay yükleniyor...</p>
           ) : (
             <div className="space-y-6">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h2 className="text-xl font-bold text-white">{selectedCreator.studioName}</h2>
-                  <p className="mt-1 text-sm text-sineoda-muted">{selectedCreator.name}</p>
+                  <p className="mt-1 text-sm text-plooy-muted">{selectedCreator.name}</p>
                 </div>
                 <select
                   value={selectedCreator.status}
@@ -242,32 +242,32 @@ export function AdminCreatorsPage() {
                 <h3 className="text-sm font-semibold text-white">Kişisel bilgiler</h3>
                 <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
                   <div>
-                    <dt className="text-sineoda-muted">Ad Soyad</dt>
+                    <dt className="text-plooy-muted">Ad Soyad</dt>
                     <dd className="text-white/90">{selectedCreator.name}</dd>
                   </div>
                   <div>
-                    <dt className="text-sineoda-muted">E-posta</dt>
+                    <dt className="text-plooy-muted">E-posta</dt>
                     <dd className="text-white/90">{selectedCreator.email}</dd>
                   </div>
                   <div>
-                    <dt className="text-sineoda-muted">Stüdyo / Yapım</dt>
+                    <dt className="text-plooy-muted">Stüdyo / Yapım</dt>
                     <dd className="text-white/90">{selectedCreator.studioName}</dd>
                   </div>
                   <div>
-                    <dt className="text-sineoda-muted">Kayıt tarihi</dt>
+                    <dt className="text-plooy-muted">Kayıt tarihi</dt>
                     <dd className="text-white/90">
                       {new Date(selectedCreator.createdAt).toLocaleDateString('tr-TR')}
                     </dd>
                   </div>
                   {detail?.creator.bio && (
                     <div className="sm:col-span-2">
-                      <dt className="text-sineoda-muted">Biyografi</dt>
+                      <dt className="text-plooy-muted">Biyografi</dt>
                       <dd className="mt-1 text-white/80">{detail.creator.bio}</dd>
                     </div>
                   )}
                   {detail?.creator.legalAcceptedAt && (
                     <div className="sm:col-span-2">
-                      <dt className="text-sineoda-muted">Yasal onay</dt>
+                      <dt className="text-plooy-muted">Yasal onay</dt>
                       <dd className="text-white/80">
                         {new Date(detail.creator.legalAcceptedAt).toLocaleString('tr-TR')}
                       </dd>
@@ -281,7 +281,7 @@ export function AdminCreatorsPage() {
                   Belgeler ({detail?.documents.length ?? selectedCreator.documentCount})
                 </h3>
                 {detail && detail.documents.length === 0 ? (
-                  <p className="mt-2 text-sm text-sineoda-muted">Henüz belge yüklenmemiş.</p>
+                  <p className="mt-2 text-sm text-plooy-muted">Henüz belge yüklenmemiş.</p>
                 ) : (
                   <ul className="mt-3 space-y-2">
                     {(detail?.documents ?? []).map((doc) => (
@@ -294,7 +294,7 @@ export function AdminCreatorsPage() {
                           href={doc.fileUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-sineoda-gold hover:underline"
+                          className="text-plooy-gold hover:underline"
                         >
                           Görüntüle
                         </a>
@@ -309,7 +309,7 @@ export function AdminCreatorsPage() {
                   Filmler ({detail?.content.length ?? selectedCreator.contentCount})
                 </h3>
                 {detail && detail.content.length === 0 ? (
-                  <p className="mt-2 text-sm text-sineoda-muted">Henüz film gönderilmemiş.</p>
+                  <p className="mt-2 text-sm text-plooy-muted">Henüz film gönderilmemiş.</p>
                 ) : (
                   <div className="mt-3 space-y-3">
                     {(detail?.content ?? []).map((item: AdminCreatorContent) => (
@@ -320,7 +320,7 @@ export function AdminCreatorsPage() {
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
                             <p className="font-medium text-white">{item.title}</p>
-                            <p className="mt-1 text-xs text-sineoda-muted">
+                            <p className="mt-1 text-xs text-plooy-muted">
                               {item.type} · {item.year} · {item.duration || 'Süre belirtilmemiş'}
                             </p>
                           </div>
@@ -332,7 +332,7 @@ export function AdminCreatorsPage() {
                             {reviewBadge(item)}
                           </span>
                         </div>
-                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-sineoda-muted">
+                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-plooy-muted">
                           <span>İzlenme: {item.watchMinutes ?? 0} dk</span>
                           <span>Nitelikli: {item.qualifiedMinutes ?? 0} dk</span>
                           <span>İzleyici: {item.viewers ?? 0}</span>
@@ -355,7 +355,7 @@ export function AdminCreatorsPage() {
                           <button
                             type="button"
                             onClick={() => setEditingContentId(item.id)}
-                            className="rounded-lg bg-sineoda-gold/15 px-3 py-1.5 text-xs font-medium text-sineoda-gold hover:bg-sineoda-gold/25"
+                            className="rounded-lg bg-plooy-gold/15 px-3 py-1.5 text-xs font-medium text-plooy-gold hover:bg-plooy-gold/25"
                           >
                             İncele ve düzenle
                           </button>

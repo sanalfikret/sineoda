@@ -62,7 +62,7 @@ export function ForgotPasswordPage() {
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded-lg border border-white/10 bg-sineoda-bg px-4 py-3 text-white outline-none transition focus:border-sineoda-gold"
+            className="w-full rounded-lg border border-white/10 bg-plooy-bg px-4 py-3 text-white outline-none transition focus:border-plooy-gold"
             placeholder="ornek@email.com"
           />
         </label>
@@ -70,14 +70,14 @@ export function ForgotPasswordPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-sineoda-gold py-3 text-sm font-semibold text-sineoda-bg transition hover:brightness-110 disabled:opacity-60"
+          className="w-full rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110 disabled:opacity-60"
         >
           {loading ? 'Gönderiliyor...' : 'Sıfırlama Bağlantısı Gönder'}
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-sineoda-muted">
-        <Link to="/giris" className="font-medium text-sineoda-gold hover:underline">
+      <p className="mt-6 text-center text-sm text-plooy-muted">
+        <Link to="/giris" className="font-medium text-plooy-gold hover:underline">
           Giriş sayfasına dön
         </Link>
       </p>

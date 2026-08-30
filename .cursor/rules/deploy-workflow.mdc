@@ -3,7 +3,7 @@ description: Merge, push, and verify deploy after completing feature work
 alwaysApply: true
 ---
 
-# Deploy workflow (Sineoda)
+# Deploy workflow (Plooy)
 
 ## Tek kaynak: VPS (kiralık sunucu)
 
@@ -13,7 +13,7 @@ Detay: `deploy/PRODUCTION-VPS.txt`
 
 ## Veri kalıcılığı (kritik)
 
-Canlı veri **git'te değil**, VPS'te `persistent/data/sineoda.db` dosyasında.
+Canlı veri **git'te değil**, VPS'te `persistent/data/Plooy.db` dosyasında.
 
 - Deploy sadece kodu günceller; `persistent/` klasörüne dokunmaz.
 - **Asla** `docker-compose down -v` veya `rm -rf persistent/` çalıştırma.
@@ -39,7 +39,7 @@ GitHub şifresi kabul etmez — **Personal Access Token** kullan (Settings → D
 
 ### VPS'te (PuTTY)
 ```bash
-cd /opt/sineoda
+cd /opt/Plooy
 git pull
 bash deploy/rebuild-vps.sh
 ```
@@ -54,7 +54,7 @@ npm run deploy:vps
 
 ## .env (VPS)
 
-- `PERSIST_DIR=/opt/sineoda/persistent`
+- `PERSIST_DIR=/opt/Plooy/persistent`
 - `VITE_API_URL=` boş (same-origin)
 - `JWT_SECRET` deploy sonrası değiştirme
 

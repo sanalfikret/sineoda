@@ -35,7 +35,7 @@ export function PlooyLogo({
   return (
     <Link
       to={linkTo}
-      className="inline-flex shrink-0 transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sineoda-gold"
+      className="inline-flex shrink-0 transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-plooy-gold"
       aria-label="Plooy"
     >
       {graphic}

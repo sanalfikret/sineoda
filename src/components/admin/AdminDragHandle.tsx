@@ -15,7 +15,7 @@ export function AdminDragHandle({ disabled = false, onDragStart, onDragEnd }: Ad
       role="button"
       tabIndex={0}
       aria-label="Sürükleyerek sırala"
-      className="cursor-grab rounded-lg border border-white/10 px-2 py-3 text-sineoda-muted hover:bg-white/5 active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-40"
+      className="cursor-grab rounded-lg border border-white/10 px-2 py-3 text-plooy-muted hover:bg-white/5 active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-40"
       title="Sürükleyerek sırala"
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

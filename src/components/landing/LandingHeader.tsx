@@ -27,7 +27,7 @@ export function LandingHeader({ scrolled, hiddenNavIds = [] }: LandingHeaderProp
     <header
       className={`safe-top fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
         scrolled
-          ? 'border-b border-white/5 bg-sineoda-bg/90 backdrop-blur-xl'
+          ? 'border-b border-white/5 bg-plooy-bg/90 backdrop-blur-xl'
           : 'bg-gradient-to-b from-black/80 via-black/30 to-transparent'
       }`}
     >
@@ -70,7 +70,7 @@ export function LandingHeader({ scrolled, hiddenNavIds = [] }: LandingHeaderProp
           </Link>
           <Link
             to="/kayit"
-            className="rounded-md bg-sineoda-gold px-4 py-2 text-sm font-bold text-sineoda-bg transition hover:brightness-110 sm:px-6 sm:py-2.5"
+            className="rounded-md bg-plooy-gold px-4 py-2 text-sm font-bold text-plooy-bg transition hover:brightness-110 sm:px-6 sm:py-2.5"
           >
             Üye Ol
           </Link>

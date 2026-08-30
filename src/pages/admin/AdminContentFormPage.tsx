@@ -248,7 +248,7 @@ export function AdminContentFormPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <Link to="/admin/icerikler" className="text-sm text-sineoda-muted hover:text-white">
+        <Link to="/admin/icerikler" className="text-sm text-plooy-muted hover:text-white">
           ← İçeriklere dön
         </Link>
         <h1 className="mt-2 text-2xl font-bold text-white">
@@ -289,10 +289,10 @@ export function AdminContentFormPage() {
                   className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                     activePreset === preset.id
                       ? preset.id === 'dikey'
-                        ? 'bg-sineoda-gold text-sineoda-bg'
-                        : 'bg-white text-sineoda-bg'
+                        ? 'bg-plooy-gold text-plooy-bg'
+                        : 'bg-white text-plooy-bg'
                       : preset.id === 'dikey'
-                        ? 'border border-sineoda-gold/50 bg-sineoda-gold/10 text-sineoda-gold hover:bg-sineoda-gold/20'
+                        ? 'border border-plooy-gold/50 bg-plooy-gold/10 text-plooy-gold hover:bg-plooy-gold/20'
                         : 'bg-white/10 text-white/85 hover:bg-white/15'
                   }`}
                 >
@@ -350,7 +350,7 @@ export function AdminContentFormPage() {
         <section className="space-y-3">
           <div>
             <h3 className="text-sm font-semibold text-white">Künye</h3>
-            <p className="mt-1 text-xs text-sineoda-muted">
+            <p className="mt-1 text-xs text-plooy-muted">
               Yönetmen, yapımcı ve oyuncular ayrı kutularda. Her satıra bir isim yazabilirsiniz.
             </p>
           </div>
@@ -421,7 +421,7 @@ export function AdminContentFormPage() {
                   placeholder="92"
                   className={inputClass}
                 />
-                <p className="text-xs text-sineoda-muted">Film süresi (dakika). Örn: 92 → 1s 32dk</p>
+                <p className="text-xs text-plooy-muted">Film süresi (dakika). Örn: 92 → 1s 32dk</p>
               </div>
             )}
           </Field>
@@ -471,7 +471,7 @@ export function AdminContentFormPage() {
                   }}
                   className={`rounded-full px-2.5 py-1 text-xs transition ${
                     selected
-                      ? 'bg-sineoda-gold text-sineoda-bg'
+                      ? 'bg-plooy-gold text-plooy-bg'
                       : 'bg-white/10 text-white/80 hover:bg-white/15'
                   }`}
                 >
@@ -480,7 +480,7 @@ export function AdminContentFormPage() {
               )
             })}
           </div>
-          <p className="mt-1.5 text-xs text-sineoda-muted">
+          <p className="mt-1.5 text-xs text-plooy-muted">
             Filtreler: {BROWSE_GENRES.join(', ')}
           </p>
         </Field>
@@ -488,7 +488,7 @@ export function AdminContentFormPage() {
         <section className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 sm:p-5">
           <div className="mb-4">
             <h3 className="text-sm font-semibold text-emerald-200">Yayın Zamanı</h3>
-            <p className="mt-1 text-xs text-sineoda-muted">
+            <p className="mt-1 text-xs text-plooy-muted">
               Yayınlanan içerikler aktif üyeler tarafından izlenebilir. Planlanan içerikler belirlenen
               saatte otomatik görünür.
             </p>
@@ -501,7 +501,7 @@ export function AdminContentFormPage() {
                 name="publishMode"
                 checked={form.publishMode === 'now'}
                 onChange={() => update('publishMode', 'now')}
-                className="accent-sineoda-gold"
+                className="accent-plooy-gold"
               />
               Hemen yayınla
             </label>
@@ -512,7 +512,7 @@ export function AdminContentFormPage() {
                 name="publishMode"
                 checked={form.publishMode === 'scheduled'}
                 onChange={() => update('publishMode', 'scheduled')}
-                className="accent-sineoda-gold"
+                className="accent-plooy-gold"
               />
               İleri tarihte yayınla
             </label>
@@ -534,7 +534,7 @@ export function AdminContentFormPage() {
         <section className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 sm:p-5">
           <div className="mb-4">
             <h3 className="text-sm font-semibold text-amber-200">Telif &amp; Yayın Bilgileri</h3>
-            <p className="mt-1 text-xs text-sineoda-muted">
+            <p className="mt-1 text-xs text-plooy-muted">
               Bu alanlar yalnızca admin panelinde görünür; üyeler bu bilgileri görmez.
             </p>
           </div>
@@ -565,7 +565,7 @@ export function AdminContentFormPage() {
                   type="checkbox"
                   checked={form.licenseUnlimited}
                   onChange={(event) => update('licenseUnlimited', event.target.checked)}
-                  className="h-4 w-4 rounded accent-sineoda-gold"
+                  className="h-4 w-4 rounded accent-plooy-gold"
                 />
                 Sınırsız telif (bitiş tarihi yok)
               </label>
@@ -579,7 +579,7 @@ export function AdminContentFormPage() {
           onChange={(url) => update('poster', url)}
         />
         {form.videoFormat === 'vertical' && (
-          <p className="-mt-3 text-xs text-sineoda-gold">
+          <p className="-mt-3 text-xs text-plooy-gold">
             Dikey dizi için portre (9:16) poster kullanın.
           </p>
         )}
@@ -609,7 +609,7 @@ export function AdminContentFormPage() {
           value={form.videoUrl}
           onChange={(url) => update('videoUrl', url)}
         />
-        <p className="-mt-3 text-xs text-sineoda-muted">
+        <p className="-mt-3 text-xs text-plooy-muted">
           YouTube, MP4 veya HLS (.m3u8) linki yapıştır. Test için YouTube da çalışır.
         </p>
 
@@ -618,7 +618,7 @@ export function AdminContentFormPage() {
           value={form.trailerUrl}
           onChange={(url) => update('trailerUrl', url)}
         />
-        <p className="-mt-3 text-xs text-sineoda-muted">
+        <p className="-mt-3 text-xs text-plooy-muted">
           Ana sayfa ve öne çıkan alanda oynatılır. Boş bırakılırsa ana video kullanılır.
         </p>
 
@@ -632,7 +632,7 @@ export function AdminContentFormPage() {
           value={form.subtitleEn}
           onChange={(url) => update('subtitleEn', url)}
         />
-        <p className="-mt-3 text-xs text-sineoda-muted">
+        <p className="-mt-3 text-xs text-plooy-muted">
           .srt dosyası yüklersen otomatik .vtt&apos;ye çevrilir. İzlerken CC butonuyla açılır.
         </p>
 
@@ -664,9 +664,9 @@ export function AdminContentFormPage() {
           </select>
         </Field>
         {form.videoFormat === 'vertical' && (
-          <div className="rounded-xl border border-sineoda-gold/20 bg-sineoda-gold/5 px-4 py-3 text-sm text-white/80">
-            <p className="font-semibold text-sineoda-gold">Dikey dizi ipuçları</p>
-            <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-sineoda-muted">
+          <div className="rounded-xl border border-plooy-gold/20 bg-plooy-gold/5 px-4 py-3 text-sm text-white/80">
+            <p className="font-semibold text-plooy-gold">Dikey dizi ipuçları</p>
+            <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-plooy-muted">
               <li>Poster ve kapak görseli 9:16 (dikey) oranında olmalı — örn. 400×711 px</li>
               <li>Bölümler genelde 1–5 dakika; süre alanına &quot;4 dk&quot; gibi kısa değerler girin</li>
               <li>İzleyici yukarı/aşağı kaydırarak bölümler arasında geçiş yapar</li>
@@ -679,7 +679,7 @@ export function AdminContentFormPage() {
             type="checkbox"
             checked={form.isNew}
             onChange={(event) => update('isNew', event.target.checked)}
-            className="h-4 w-4 rounded accent-sineoda-gold"
+            className="h-4 w-4 rounded accent-plooy-gold"
           />
           &quot;Yeni&quot; rozeti göster (30 gün)
         </label>
@@ -689,7 +689,7 @@ export function AdminContentFormPage() {
             type="checkbox"
             checked={form.featured}
             onChange={(event) => update('featured', event.target.checked)}
-            className="h-4 w-4 rounded accent-sineoda-gold"
+            className="h-4 w-4 rounded accent-plooy-gold"
           />
           Öne çıkan içerik olarak ayarla
         </label>
@@ -707,7 +707,7 @@ export function AdminContentFormPage() {
           <button
             type="submit"
             disabled={saving}
-            className="rounded-lg bg-sineoda-gold px-5 py-3 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
+            className="rounded-lg bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg disabled:opacity-60"
           >
             {saving ? 'Kaydediliyor...' : isEdit ? 'Kaydet' : 'Oluştur'}
           </button>
@@ -766,4 +766,4 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 }
 
 const inputClass =
-  'w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-sineoda-gold'
+  'w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-plooy-gold'

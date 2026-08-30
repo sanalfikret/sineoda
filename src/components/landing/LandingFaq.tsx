@@ -35,7 +35,7 @@ export function LandingFaq({ section }: { section: LandingSectionsConfig['faq'] 
 
         <p className="mt-10 text-center text-lg text-white/80">
           {section.footerText}{' '}
-          <Link to={section.footerLink} className="underline underline-offset-4 hover:text-sineoda-gold">
+          <Link to={section.footerLink} className="underline underline-offset-4 hover:text-plooy-gold">
             {section.footerLinkLabel}
           </Link>
           .

@@ -118,7 +118,7 @@ export function AdminCekimNotlariFormPage() {
   if (loading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-sineoda-gold border-t-transparent" />
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-plooy-gold border-t-transparent" />
       </div>
     )
   }
@@ -126,7 +126,7 @@ export function AdminCekimNotlariFormPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <Link to="/admin/cekim-notlari" className="text-sm text-sineoda-gold hover:underline">
+        <Link to="/admin/cekim-notlari" className="text-sm text-plooy-gold hover:underline">
           ← Çekim Notları
         </Link>
         <h1 className="mt-3 text-2xl font-bold text-white">
@@ -144,7 +144,7 @@ export function AdminCekimNotlariFormPage() {
           <select
             value={form.categoryId}
             onChange={(event) => setForm((current) => ({ ...current, categoryId: event.target.value }))}
-            className="w-full rounded-lg border border-white/10 bg-sineoda-surface px-3 py-2.5 text-white outline-none focus:border-sineoda-gold"
+            className="w-full rounded-lg border border-white/10 bg-plooy-surface px-3 py-2.5 text-white outline-none focus:border-plooy-gold"
           >
             {categoryOptions.map((category) => (
               <option key={category.id} value={category.id}>
@@ -159,7 +159,7 @@ export function AdminCekimNotlariFormPage() {
           <input
             value={form.title}
             onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
-            className="w-full rounded-lg border border-white/10 bg-sineoda-surface px-3 py-2.5 text-white outline-none focus:border-sineoda-gold"
+            className="w-full rounded-lg border border-white/10 bg-plooy-surface px-3 py-2.5 text-white outline-none focus:border-plooy-gold"
             required
           />
         </label>
@@ -170,7 +170,7 @@ export function AdminCekimNotlariFormPage() {
             value={form.description}
             onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
             rows={4}
-            className="w-full rounded-lg border border-white/10 bg-sineoda-surface px-3 py-2.5 text-white outline-none focus:border-sineoda-gold"
+            className="w-full rounded-lg border border-white/10 bg-plooy-surface px-3 py-2.5 text-white outline-none focus:border-plooy-gold"
           />
         </label>
 
@@ -179,7 +179,7 @@ export function AdminCekimNotlariFormPage() {
           <input
             value={form.expert}
             onChange={(event) => setForm((current) => ({ ...current, expert: event.target.value }))}
-            className="w-full rounded-lg border border-white/10 bg-sineoda-surface px-3 py-2.5 text-white outline-none focus:border-sineoda-gold"
+            className="w-full rounded-lg border border-white/10 bg-plooy-surface px-3 py-2.5 text-white outline-none focus:border-plooy-gold"
             placeholder="Örn. Ayşe Kaya"
           />
         </label>
@@ -191,7 +191,7 @@ export function AdminCekimNotlariFormPage() {
               type="number"
               value={form.year}
               onChange={(event) => setForm((current) => ({ ...current, year: Number(event.target.value) }))}
-              className="w-full rounded-lg border border-white/10 bg-sineoda-surface px-3 py-2.5 text-white outline-none focus:border-sineoda-gold"
+              className="w-full rounded-lg border border-white/10 bg-plooy-surface px-3 py-2.5 text-white outline-none focus:border-plooy-gold"
             />
           </label>
           <label className="block space-y-2">
@@ -199,7 +199,7 @@ export function AdminCekimNotlariFormPage() {
             <input
               value={form.duration}
               onChange={(event) => setForm((current) => ({ ...current, duration: event.target.value }))}
-              className="w-full rounded-lg border border-white/10 bg-sineoda-surface px-3 py-2.5 text-white outline-none focus:border-sineoda-gold"
+              className="w-full rounded-lg border border-white/10 bg-plooy-surface px-3 py-2.5 text-white outline-none focus:border-plooy-gold"
               placeholder="12 dk"
             />
           </label>
@@ -208,7 +208,7 @@ export function AdminCekimNotlariFormPage() {
             <select
               value={form.rating}
               onChange={(event) => setForm((current) => ({ ...current, rating: event.target.value }))}
-              className="w-full rounded-lg border border-white/10 bg-sineoda-surface px-3 py-2.5 text-white outline-none focus:border-sineoda-gold"
+              className="w-full rounded-lg border border-white/10 bg-plooy-surface px-3 py-2.5 text-white outline-none focus:border-plooy-gold"
             >
               {RATINGS.map((rating) => (
                 <option key={rating} value={rating}>
@@ -234,7 +234,7 @@ export function AdminCekimNotlariFormPage() {
           value={form.videoUrl}
           onChange={(videoUrl) => setForm((current) => ({ ...current, videoUrl }))}
         />
-        <p className="-mt-3 text-xs text-sineoda-muted">
+        <p className="-mt-3 text-xs text-plooy-muted">
           Videolar CDN üzerinden sunulur. Bunny.net HLS (.m3u8) veya MP4 linkini yapıştırın.
         </p>
 
@@ -243,7 +243,7 @@ export function AdminCekimNotlariFormPage() {
           <select
             value={form.streamProvider}
             onChange={(event) => setForm((current) => ({ ...current, streamProvider: event.target.value }))}
-            className="w-full rounded-lg border border-white/10 bg-sineoda-surface px-3 py-2.5 text-white outline-none focus:border-sineoda-gold"
+            className="w-full rounded-lg border border-white/10 bg-plooy-surface px-3 py-2.5 text-white outline-none focus:border-plooy-gold"
           >
             {STREAM_PROVIDERS.map((provider) => (
               <option key={provider.id} value={provider.id}>
@@ -266,7 +266,7 @@ export function AdminCekimNotlariFormPage() {
           <button
             type="submit"
             disabled={saving}
-            className="rounded-lg bg-sineoda-gold px-5 py-2.5 text-sm font-semibold text-sineoda-bg transition hover:brightness-110 disabled:opacity-50"
+            className="rounded-lg bg-plooy-gold px-5 py-2.5 text-sm font-semibold text-plooy-bg transition hover:brightness-110 disabled:opacity-50"
           >
             {saving ? 'Kaydediliyor...' : 'Kaydet'}
           </button>

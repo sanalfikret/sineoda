@@ -15,14 +15,14 @@ export function PaywallModal({ open, onClose }: PaywallModalProps) {
       role="presentation"
     >
       <div
-        className="w-full max-w-md rounded-2xl border border-sineoda-gold/30 bg-sineoda-surface p-6 shadow-2xl"
+        className="w-full max-w-md rounded-2xl border border-plooy-gold/30 bg-plooy-surface p-6 shadow-2xl"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sineoda-gold">Abonelik gerekli</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-plooy-gold">Abonelik gerekli</p>
         <h2 className="mt-2 text-2xl font-bold text-white">İzlemeye devam et</h2>
-        <p className="mt-3 text-sm leading-relaxed text-sineoda-muted">
+        <p className="mt-3 text-sm leading-relaxed text-plooy-muted">
           Bu içeriği izlemek için aktif bir Plooy aboneliğine ihtiyacın var. Öğrenci (₺49/ay) veya
           standart (₺69/ay) plan seçip ödeme yapmalısın.
         </p>
@@ -30,7 +30,7 @@ export function PaywallModal({ open, onClose }: PaywallModalProps) {
           <Link
             to="/planlar"
             onClick={onClose}
-            className="rounded-lg bg-sineoda-gold py-3 text-center text-sm font-semibold text-sineoda-bg"
+            className="rounded-lg bg-plooy-gold py-3 text-center text-sm font-semibold text-plooy-bg"
           >
             Planları Gör
           </Link>

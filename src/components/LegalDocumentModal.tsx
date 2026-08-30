@@ -28,7 +28,7 @@ export function LegalDocumentModal({ slug, open, onClose }: LegalDocumentModalPr
       role="presentation"
     >
       <div
-        className="flex max-h-[min(90dvh,820px)] w-full max-w-2xl flex-col rounded-t-2xl border border-white/10 bg-sineoda-bg shadow-2xl sm:rounded-2xl"
+        className="flex max-h-[min(90dvh,820px)] w-full max-w-2xl flex-col rounded-t-2xl border border-white/10 bg-plooy-bg shadow-2xl sm:rounded-2xl"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -36,11 +36,11 @@ export function LegalDocumentModal({ slug, open, onClose }: LegalDocumentModalPr
       >
         <div className="flex shrink-0 items-start justify-between gap-4 border-b border-white/10 px-5 py-4 sm:px-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sineoda-gold">Yasal</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-plooy-gold">Yasal</p>
             <h2 id="legal-modal-title" className="mt-1 text-xl font-bold text-white sm:text-2xl">
               {doc.title}
             </h2>
-            <p className="mt-1 text-xs text-sineoda-muted">Son güncelleme: {doc.updatedAt}</p>
+            <p className="mt-1 text-xs text-plooy-muted">Son güncelleme: {doc.updatedAt}</p>
           </div>
           <button
             type="button"
@@ -66,7 +66,7 @@ export function LegalDocumentModal({ slug, open, onClose }: LegalDocumentModalPr
           <button
             type="button"
             onClick={onClose}
-            className="w-full rounded-lg bg-sineoda-gold py-3 text-sm font-semibold text-sineoda-bg"
+            className="w-full rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg"
           >
             İçeriğe dön
           </button>

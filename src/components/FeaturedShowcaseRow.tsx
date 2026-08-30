@@ -71,7 +71,7 @@ export function FeaturedShowcaseRow({
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="whitespace-pre-line text-lg font-semibold text-white sm:text-xl">{title}</h2>
           {loginHref && (guestMode || hasMore) && (
-            <Link to={loginHref} className="shrink-0 text-sm font-medium text-sineoda-gold hover:underline">
+            <Link to={loginHref} className="shrink-0 text-sm font-medium text-plooy-gold hover:underline">
               Tümünü gör
             </Link>
           )}
@@ -109,7 +109,7 @@ export function FeaturedShowcaseRow({
           <div className="mt-6 text-center">
             <Link
               to={loginHref}
-              className="inline-flex items-center justify-center rounded-lg border border-sineoda-gold/40 bg-sineoda-gold/10 px-5 py-2.5 text-sm font-semibold text-sineoda-gold transition hover:bg-sineoda-gold/20"
+              className="inline-flex items-center justify-center rounded-lg border border-plooy-gold/40 bg-plooy-gold/10 px-5 py-2.5 text-sm font-semibold text-plooy-gold transition hover:bg-plooy-gold/20"
             >
               {guestMode ? 'Daha fazlasını görmek için giriş yap' : 'Tümünü gör'}
             </Link>

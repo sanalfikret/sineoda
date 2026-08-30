@@ -65,15 +65,15 @@ export function MessagesPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-sineoda-bg text-white">
+    <div className="min-h-dvh bg-plooy-bg text-white">
       <Header />
       <main className="mobile-page-bottom mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
         <div className="mb-6">
-          <Link to="/" className="text-sm text-sineoda-muted hover:text-white">
+          <Link to="/" className="text-sm text-plooy-muted hover:text-white">
             ← Ana sayfa
           </Link>
           <h1 className="mt-2 text-2xl font-bold">Mesajlarım</h1>
-          <p className="mt-1 text-sm text-sineoda-muted">Plooy ekibinden duyurular ve bildirimler</p>
+          <p className="mt-1 text-sm text-plooy-muted">Plooy ekibinden duyurular ve bildirimler</p>
         </div>
 
         {viewerOnly ? (
@@ -84,7 +84,7 @@ export function MessagesPage() {
               e-posta ve şifresiyle giriş yapın — gizli pencerede denemeniz en kolayı.
             </p>
             {isAdmin && (
-              <Link to="/admin/kullanicilar" className="mt-4 inline-block text-sineoda-gold hover:underline">
+              <Link to="/admin/kullanicilar" className="mt-4 inline-block text-plooy-gold hover:underline">
                 Admin → İzleyiciler
               </Link>
             )}
@@ -94,9 +94,9 @@ export function MessagesPage() {
             {error}
           </div>
         ) : loading ? (
-          <p className="text-sm text-sineoda-muted">Yükleniyor...</p>
+          <p className="text-sm text-plooy-muted">Yükleniyor...</p>
         ) : messages.length === 0 ? (
-          <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-sineoda-muted">
+          <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-plooy-muted">
             Henüz mesajınız yok. Admin panelinden size duyuru gönderildiğinde burada görünür.
           </p>
         ) : (
@@ -121,11 +121,11 @@ export function MessagesPage() {
                           {message.subject}
                         </p>
                         {!message.isRead && (
-                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-sineoda-gold" />
+                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-plooy-gold" />
                         )}
                       </div>
-                      <p className="mt-1 line-clamp-2 text-xs text-sineoda-muted">{message.body}</p>
-                      <p className="mt-1 text-xs text-sineoda-muted">
+                      <p className="mt-1 line-clamp-2 text-xs text-plooy-muted">{message.body}</p>
+                      <p className="mt-1 text-xs text-plooy-muted">
                         {new Date(message.createdAt).toLocaleDateString('tr-TR')}
                       </p>
                     </button>
@@ -144,18 +144,18 @@ export function MessagesPage() {
                   <button
                     type="button"
                     onClick={() => setMobileDetailOpen(false)}
-                    className="mb-4 text-sm text-sineoda-gold lg:hidden"
+                    className="mb-4 text-sm text-plooy-gold lg:hidden"
                   >
                     ← Mesaj listesi
                   </button>
                   <h2 className="text-lg font-semibold text-white">{selected.subject}</h2>
-                  <p className="mt-1 text-xs text-sineoda-muted">
+                  <p className="mt-1 text-xs text-plooy-muted">
                     {new Date(selected.createdAt).toLocaleString('tr-TR')}
                   </p>
                   <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-white/90">{selected.body}</p>
                 </>
               ) : (
-                <p className="text-sm text-sineoda-muted">Bir mesaj seçin.</p>
+                <p className="text-sm text-plooy-muted">Bir mesaj seçin.</p>
               )}
             </div>
           </div>

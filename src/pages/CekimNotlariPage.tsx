@@ -74,12 +74,12 @@ function CekimNotlariContent() {
 
   if (error) {
     return (
-      <p className="px-4 py-16 text-center text-sineoda-muted sm:px-6">{error}</p>
+      <p className="px-4 py-16 text-center text-plooy-muted sm:px-6">{error}</p>
     )
   }
 
   return (
-    <main className="bg-sineoda-bg">
+    <main className="bg-plooy-bg">
       {!loading && heroItem ? (
         <Hero
           item={heroItem}
@@ -89,14 +89,14 @@ function CekimNotlariContent() {
         />
       ) : (
         <div className="px-4 pb-4 pt-28 sm:px-6 lg:px-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sineoda-accent">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-plooy-accent">
             {CEKIM_NOTLARI_SECTION_TITLE}
           </p>
           <h1 className="mt-3 text-2xl font-bold text-white sm:text-3xl">{CEKIM_NOTLARI_NAV_LABEL}</h1>
         </div>
       )}
 
-      <p className="mx-auto max-w-3xl px-4 pb-8 pt-2 text-center text-sm text-sineoda-muted sm:px-6">
+      <p className="mx-auto max-w-3xl px-4 pb-8 pt-2 text-center text-sm text-plooy-muted sm:px-6">
         Alanında uzman isimlerden eğitici videolar — setten post prodüksiyona.
       </p>
 
@@ -109,7 +109,7 @@ function CekimNotlariContent() {
                 {Array.from({ length: PREVIEW_COUNT }, (__, cardIndex) => (
                   <div
                     key={cardIndex}
-                    className="flex h-[8.5rem] animate-pulse overflow-hidden rounded-xl border border-white/[0.06] bg-sineoda-surface"
+                    className="flex h-[8.5rem] animate-pulse overflow-hidden rounded-xl border border-white/[0.06] bg-plooy-surface"
                   >
                     <div className="w-[38%] bg-white/5 sm:w-[42%]" />
                     <div className="flex flex-1 flex-col justify-center gap-2 px-4 py-3">
@@ -140,10 +140,10 @@ function CekimNotlariContent() {
                   className="group mb-4 flex w-full items-center justify-between gap-3 text-left"
                   aria-expanded={expanded}
                 >
-                  <span className="text-lg font-semibold text-white transition group-hover:text-sineoda-accent sm:text-xl">
+                  <span className="text-lg font-semibold text-white transition group-hover:text-plooy-accent sm:text-xl">
                     {section.title}
                   </span>
-                  <span className="flex shrink-0 items-center gap-2 text-sm text-sineoda-muted">
+                  <span className="flex shrink-0 items-center gap-2 text-sm text-plooy-muted">
                     {section.items.length > 0 && (
                       <span className="hidden sm:inline">{expanded ? 'Daralt' : `${section.items.length} video`}</span>
                     )}
@@ -162,14 +162,14 @@ function CekimNotlariContent() {
                       <button
                         type="button"
                         onClick={() => toggleSection(section.id)}
-                        className="mt-3 text-sm font-medium text-sineoda-accent transition hover:text-white"
+                        className="mt-3 text-sm font-medium text-plooy-accent transition hover:text-white"
                       >
                         Tümünü gör ({section.items.length} video)
                       </button>
                     )}
                   </>
                 ) : (
-                  <p className="text-sm text-sineoda-muted">Bu bölüm için henüz video eklenmedi.</p>
+                  <p className="text-sm text-plooy-muted">Bu bölüm için henüz video eklenmedi.</p>
                 )}
               </section>
             )

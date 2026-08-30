@@ -301,12 +301,12 @@ export function AdminStudentCinemaPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Genç Sinema</h1>
-          <p className="mt-1 text-sm text-sineoda-muted">
+          <p className="mt-1 text-sm text-plooy-muted">
             Her satırda Yayınla, Yayından Al, Tarih Planla ve Sil butonları var. Detay ile künyeyi düzenleyin.
           </p>
         </div>
         {tab === 'schools' && (
-          <p className="text-sm text-sineoda-muted">
+          <p className="text-sm text-plooy-muted">
             {activeSchoolCount} aktif · {schools.length - activeSchoolCount} pasif · {schools.length} toplam
           </p>
         )}
@@ -346,7 +346,7 @@ export function AdminStudentCinemaPage() {
           onClick={() => setTab('schools')}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
             tab === 'schools'
-              ? 'bg-sineoda-gold/15 text-sineoda-gold'
+              ? 'bg-plooy-gold/15 text-plooy-gold'
               : 'bg-white/5 text-white/70 hover:bg-white/10'
           }`}
         >
@@ -360,7 +360,7 @@ export function AdminStudentCinemaPage() {
           className="flex flex-col gap-3 rounded-xl border border-white/10 bg-[#11141c] p-4 sm:flex-row sm:items-end"
         >
           <label className="block flex-1">
-            <span className="mb-1 block text-xs text-sineoda-muted">Okul adı (Üniversite — Bölüm)</span>
+            <span className="mb-1 block text-xs text-plooy-muted">Okul adı (Üniversite — Bölüm)</span>
             <input
               required
               value={schoolForm.name}
@@ -370,7 +370,7 @@ export function AdminStudentCinemaPage() {
             />
           </label>
           <label className="block sm:w-56">
-            <span className="mb-1 block text-xs text-sineoda-muted">Web (isteğe bağlı)</span>
+            <span className="mb-1 block text-xs text-plooy-muted">Web (isteğe bağlı)</span>
             <input
               value={schoolForm.website}
               onChange={(event) => setSchoolForm({ ...schoolForm, website: event.target.value })}
@@ -381,7 +381,7 @@ export function AdminStudentCinemaPage() {
           <button
             type="submit"
             disabled={submittingSchool}
-            className="rounded-lg bg-sineoda-gold px-5 py-2.5 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
+            className="rounded-lg bg-plooy-gold px-5 py-2.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
           >
             {submittingSchool ? 'Ekleniyor...' : '+ Ekle'}
           </button>
@@ -389,7 +389,7 @@ export function AdminStudentCinemaPage() {
       )}
 
       {loading ? (
-        <p className="text-sm text-sineoda-muted">Yükleniyor...</p>
+        <p className="text-sm text-plooy-muted">Yükleniyor...</p>
       ) : tab === 'films' ? (
         <>
           <div className="grid gap-4 sm:grid-cols-4">
@@ -400,7 +400,7 @@ export function AdminStudentCinemaPage() {
               { label: 'Toplam izleyici', value: String(filmTotals.viewers) },
             ].map((stat) => (
               <div key={stat.label} className="rounded-xl border border-white/10 bg-[#11141c] p-4">
-                <p className="text-xs text-sineoda-muted">{stat.label}</p>
+                <p className="text-xs text-plooy-muted">{stat.label}</p>
                 <p className="mt-1 text-2xl font-bold text-emerald-300">{stat.value}</p>
               </div>
             ))}
@@ -450,7 +450,7 @@ export function AdminStudentCinemaPage() {
                 type="button"
                 disabled={bulkLoading}
                 onClick={() => void runBulkReview('published', 'approved')}
-                className="rounded-lg bg-sineoda-gold px-3 py-1.5 text-xs font-semibold text-sineoda-bg disabled:opacity-60"
+                className="rounded-lg bg-plooy-gold px-3 py-1.5 text-xs font-semibold text-plooy-bg disabled:opacity-60"
               >
                 Toplu Yayınla
               </button>
@@ -481,7 +481,7 @@ export function AdminStudentCinemaPage() {
               <button
                 type="button"
                 onClick={() => setSelectedIds([])}
-                className="rounded-lg px-3 py-1.5 text-xs text-sineoda-muted"
+                className="rounded-lg px-3 py-1.5 text-xs text-plooy-muted"
               >
                 Seçimi Temizle
               </button>
@@ -489,14 +489,14 @@ export function AdminStudentCinemaPage() {
           )}
 
           {filteredFilms.length === 0 ? (
-            <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-sineoda-muted">
+            <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-plooy-muted">
               Filtrelere uygun Genç Sinema içeriği yok.
             </p>
           ) : (
             <div className="overflow-hidden rounded-xl border border-white/10 bg-[#11141c]">
               <div className="max-h-[min(70vh,680px)] overflow-auto">
                 <table className="min-w-full text-left text-sm">
-                  <thead className="sticky top-0 z-10 bg-[#11141c] text-sineoda-muted shadow-[0_1px_0_rgba(255,255,255,0.06)]">
+                  <thead className="sticky top-0 z-10 bg-[#11141c] text-plooy-muted shadow-[0_1px_0_rgba(255,255,255,0.06)]">
                     <tr>
                       <th className="px-4 py-3">
                         <input
@@ -539,17 +539,17 @@ export function AdminStudentCinemaPage() {
                             {item.title}
                           </button>
                         </td>
-                        <td className="px-4 py-3 text-sineoda-muted">
+                        <td className="px-4 py-3 text-plooy-muted">
                           <p>{resolveStudentLabel(item)}</p>
                           {item.studioName ? <p className="text-xs">{item.studioName}</p> : null}
                         </td>
-                        <td className="px-4 py-3 text-xs text-sineoda-muted">
+                        <td className="px-4 py-3 text-xs text-plooy-muted">
                           {item.creatorEmail ? <p>{item.creatorEmail}</p> : null}
                           {item.creatorPhone ? <p>{item.creatorPhone}</p> : null}
                           {!item.creatorEmail && !item.creatorPhone ? '—' : null}
                         </td>
-                        <td className="px-4 py-3 text-sineoda-muted">{item.schoolName ?? '—'}</td>
-                        <td className="px-4 py-3 text-sineoda-muted">
+                        <td className="px-4 py-3 text-plooy-muted">{item.schoolName ?? '—'}</td>
+                        <td className="px-4 py-3 text-plooy-muted">
                           {FORMAT_LABELS[item.contentFormat] ?? item.contentFormat}
                         </td>
                         <td className="px-4 py-3">
@@ -562,17 +562,17 @@ export function AdminStudentCinemaPage() {
                             <div>
                               <p className="font-medium text-emerald-300">{item.monthlyAward.badge}</p>
                               {item.monthlyAward.prize ? (
-                                <p className="mt-0.5 text-sineoda-muted">{item.monthlyAward.prize}</p>
+                                <p className="mt-0.5 text-plooy-muted">{item.monthlyAward.prize}</p>
                               ) : null}
                             </div>
                           ) : (
-                            <span className="text-sineoda-muted">—</span>
+                            <span className="text-plooy-muted">—</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-xs text-sineoda-muted">
+                        <td className="px-4 py-3 text-xs text-plooy-muted">
                           {formatPublishDate(item.publishedAt)}
                         </td>
-                        <td className="px-4 py-3 text-xs text-sineoda-muted">
+                        <td className="px-4 py-3 text-xs text-plooy-muted">
                           {item.licenseUnlimited ? (
                             <span>Sınırsız</span>
                           ) : item.licenseExpiresAt ? (
@@ -583,7 +583,7 @@ export function AdminStudentCinemaPage() {
                             '—'
                           )}
                         </td>
-                        <td className="px-4 py-3 text-xs text-sineoda-muted">
+                        <td className="px-4 py-3 text-xs text-plooy-muted">
                           {item.watchMinutes ?? 0} dk · {item.likes ?? 0} ♥
                         </td>
                         <td className="px-4 py-3 align-top">
@@ -607,7 +607,7 @@ export function AdminStudentCinemaPage() {
           <AdminSearchBar value={schoolQuery} onChange={setSchoolQuery} placeholder="Üniversite veya bölüm ara..." />
           <div className="overflow-x-auto rounded-xl border border-white/10">
             <table className="min-w-full text-left text-sm">
-              <thead className="bg-[#11141c] text-sineoda-muted">
+              <thead className="bg-[#11141c] text-plooy-muted">
                 <tr>
                   <th className="px-4 py-3 font-medium">Okul</th>
                   <th className="px-4 py-3 font-medium">Durum</th>
@@ -617,7 +617,7 @@ export function AdminStudentCinemaPage() {
               <tbody>
                 {filteredSchools.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-sineoda-muted">
+                    <td colSpan={3} className="px-4 py-8 text-center text-plooy-muted">
                       Okul bulunamadı.
                     </td>
                   </tr>
@@ -633,7 +633,7 @@ export function AdminStudentCinemaPage() {
                               href={school.website}
                               target="_blank"
                               rel="noreferrer"
-                              className="mt-0.5 inline-block text-xs text-sineoda-gold hover:underline"
+                              className="mt-0.5 inline-block text-xs text-plooy-gold hover:underline"
                             >
                               Web sitesi
                             </a>
@@ -696,7 +696,7 @@ export function AdminStudentCinemaPage() {
             totalCount={queue.length}
           />
           {filteredQueue.length === 0 ? (
-            <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-sineoda-muted">
+            <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-plooy-muted">
               Bekleyen Genç Sinema başvurusu yok.
             </p>
           ) : (
@@ -710,15 +710,15 @@ export function AdminStudentCinemaPage() {
                         {FORMAT_LABELS[item.contentFormat] ?? item.contentFormat}
                       </p>
                       <h3 className="mt-1 text-lg font-semibold text-white">{item.title}</h3>
-                      <p className="mt-1 text-sm text-sineoda-muted">
+                      <p className="mt-1 text-sm text-plooy-muted">
                         {resolveStudentLabel(item) === '—' ? 'Öğrenci belirtilmemiş' : resolveStudentLabel(item)} · {item.schoolName ?? 'Okul belirtilmemiş'}
                       </p>
                       {(item.creatorEmail || item.creatorPhone) && (
-                        <p className="mt-1 text-xs text-sineoda-muted">
+                        <p className="mt-1 text-xs text-plooy-muted">
                           {[item.creatorEmail, item.creatorPhone].filter(Boolean).join(' · ')}
                         </p>
                       )}
-                      <p className="mt-1 text-xs text-sineoda-muted">
+                      <p className="mt-1 text-xs text-plooy-muted">
                         {item.watchCount ?? 0} izlenme · {item.likes ?? 0} beğeni
                       </p>
                     </div>
@@ -762,7 +762,7 @@ export function AdminStudentCinemaPage() {
                       type="button"
                       disabled={item.schoolReviewStatus !== 'approved'}
                       onClick={() => void handlePlatformReview(item.id, 'published')}
-                      className="rounded-lg bg-sineoda-gold px-3 py-1.5 text-xs font-semibold text-sineoda-bg disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-lg bg-plooy-gold px-3 py-1.5 text-xs font-semibold text-plooy-bg disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       Yayınla
                     </button>

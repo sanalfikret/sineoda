@@ -16,7 +16,7 @@ interface LandingCategoryShowcaseProps {
 }
 
 function ShowcaseIcon({ icon, active }: { icon: string; active: boolean }) {
-  const color = active ? 'text-sineoda-gold' : 'text-white/35'
+  const color = active ? 'text-plooy-gold' : 'text-white/35'
   const stroke = 'currentColor'
 
   if (icon === 'dizi') {
@@ -164,14 +164,14 @@ export function LandingCategoryShowcase({ showcases }: LandingCategoryShowcasePr
                 <ShowcaseIcon icon={showcase.icon} active={isActive} />
                 <span
                   className={`text-sm font-semibold sm:text-base ${
-                    isActive ? 'text-sineoda-gold' : 'text-white/35 group-hover:text-white/60'
+                    isActive ? 'text-plooy-gold' : 'text-white/35 group-hover:text-white/60'
                   }`}
                 >
                   {showcase.title}
                 </span>
                 <span
                   className={`h-0.5 w-full rounded-full transition ${
-                    isActive ? 'bg-sineoda-gold' : 'bg-transparent'
+                    isActive ? 'bg-plooy-gold' : 'bg-transparent'
                   }`}
                 />
               </button>
@@ -224,7 +224,7 @@ export function LandingCategoryShowcase({ showcases }: LandingCategoryShowcasePr
                   <Link
                     key={item.id}
                     to="/kayit"
-                    className="group relative shrink-0 overflow-hidden rounded-lg transition hover:scale-[1.02] hover:ring-1 hover:ring-sineoda-gold/40"
+                    className="group relative shrink-0 overflow-hidden rounded-lg transition hover:scale-[1.02] hover:ring-1 hover:ring-plooy-gold/40"
                   >
                     <img
                       src={resolveMediaUrl(item.poster)}
@@ -254,7 +254,7 @@ export function LandingCategoryShowcase({ showcases }: LandingCategoryShowcasePr
                   type="button"
                   onClick={() => goToPage(index)}
                   className={`h-2 rounded-full transition-all ${
-                    index === pageIndex ? 'w-6 bg-sineoda-gold' : 'w-2 bg-white/30 hover:bg-white/50'
+                    index === pageIndex ? 'w-6 bg-plooy-gold' : 'w-2 bg-white/30 hover:bg-white/50'
                   }`}
                   aria-label={`Sayfa ${index + 1}`}
                 />

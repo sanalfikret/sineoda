@@ -81,7 +81,7 @@ export function AdminJournalFormPage() {
   }
 
   if (loading) {
-    return <p className="text-sm text-sineoda-muted">Yükleniyor...</p>
+    return <p className="text-sm text-plooy-muted">Yükleniyor...</p>
   }
 
   return (
@@ -89,9 +89,9 @@ export function AdminJournalFormPage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-white">{isNew ? 'Yeni Yazı' : 'Yazıyı Düzenle'}</h1>
-          <p className="mt-1 text-sm text-sineoda-muted">Dergi / blog içeriği</p>
+          <p className="mt-1 text-sm text-plooy-muted">Dergi / blog içeriği</p>
         </div>
-        <Link to="/admin/dergi" className="text-sm text-sineoda-gold hover:underline">
+        <Link to="/admin/dergi" className="text-sm text-plooy-gold hover:underline">
           ← Listeye dön
         </Link>
       </div>
@@ -103,7 +103,7 @@ export function AdminJournalFormPage() {
             value={form.title}
             onChange={(event) => update('title', event.target.value)}
             required
-            className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
+            className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-plooy-gold"
           />
         </label>
 
@@ -113,7 +113,7 @@ export function AdminJournalFormPage() {
             value={form.slug}
             onChange={(event) => update('slug', event.target.value)}
             placeholder="ornek-yazi-basligi"
-            className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
+            className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-plooy-gold"
           />
         </label>
 
@@ -123,7 +123,7 @@ export function AdminJournalFormPage() {
             value={form.excerpt}
             onChange={(event) => update('excerpt', event.target.value)}
             rows={2}
-            className="w-full resize-y rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
+            className="w-full resize-y rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-plooy-gold"
           />
         </label>
 
@@ -134,7 +134,7 @@ export function AdminJournalFormPage() {
           <input
             value={form.author}
             onChange={(event) => update('author', event.target.value)}
-            className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
+            className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-plooy-gold"
           />
         </label>
 
@@ -143,7 +143,7 @@ export function AdminJournalFormPage() {
           <select
             value={form.contentId}
             onChange={(event) => update('contentId', event.target.value)}
-            className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
+            className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-plooy-gold"
           >
             <option value="">Bağlantı yok</option>
             {catalog.map((item) => (
@@ -159,7 +159,7 @@ export function AdminJournalFormPage() {
           <select
             value={form.status}
             onChange={(event) => update('status', event.target.value as JournalPostStatus)}
-            className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
+            className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-plooy-gold"
           >
             <option value="draft">Taslak</option>
             <option value="published">Yayında</option>
@@ -173,7 +173,7 @@ export function AdminJournalFormPage() {
             onChange={(event) => update('body', event.target.value)}
             rows={14}
             placeholder="Paragraflar arasında boş satır bırakın."
-            className="w-full resize-y rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 font-mono text-sm leading-relaxed text-white outline-none focus:border-sineoda-gold"
+            className="w-full resize-y rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 font-mono text-sm leading-relaxed text-white outline-none focus:border-plooy-gold"
           />
         </label>
 
@@ -183,7 +183,7 @@ export function AdminJournalFormPage() {
           <button
             type="submit"
             disabled={saving}
-            className="rounded-lg bg-sineoda-gold px-6 py-2.5 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
+            className="rounded-lg bg-plooy-gold px-6 py-2.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
           >
             {saving ? 'Kaydediliyor...' : isNew ? 'Yayınla / Kaydet' : 'Güncelle'}
           </button>

@@ -235,14 +235,14 @@ export function AdminStudentCinemaFormPage() {
         <div>
           <Link
             to="/admin/genc-sinema"
-            className="inline-flex items-center gap-1 text-sm text-sineoda-muted hover:text-white"
+            className="inline-flex items-center gap-1 text-sm text-plooy-muted hover:text-white"
           >
             ← Genç Sinema listesi
           </Link>
           <p className="mt-2 text-xs uppercase tracking-wide text-emerald-300/80">Genç Sinema · Düzenle</p>
           <h1 className="mt-1 text-2xl font-semibold text-white">{item?.title ?? 'Yükleniyor…'}</h1>
           {item ? (
-            <p className="mt-1 text-sm text-sineoda-muted">
+            <p className="mt-1 text-sm text-plooy-muted">
               {studentLabel} · {item.schoolName ?? 'Okul belirtilmemiş'}
             </p>
           ) : null}
@@ -250,7 +250,7 @@ export function AdminStudentCinemaFormPage() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-sineoda-muted">Detay yükleniyor…</p>
+        <p className="text-sm text-plooy-muted">Detay yükleniyor…</p>
       ) : !item || !form ? (
         <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
           {error || 'İçerik bulunamadı.'}
@@ -258,7 +258,7 @@ export function AdminStudentCinemaFormPage() {
             <button
               type="button"
               onClick={() => navigate('/admin/genc-sinema')}
-              className="text-sineoda-gold hover:underline"
+              className="text-plooy-gold hover:underline"
             >
               Listeye dön
             </button>
@@ -297,7 +297,7 @@ export function AdminStudentCinemaFormPage() {
               { label: 'İzleyici', value: String(item.viewers ?? 0) },
             ].map((stat) => (
               <div key={stat.label} className="rounded-xl border border-white/10 bg-[#11141c] p-3">
-                <p className="text-xs text-sineoda-muted">{stat.label}</p>
+                <p className="text-xs text-plooy-muted">{stat.label}</p>
                 <p className="mt-1 text-lg font-semibold text-emerald-300">{stat.value}</p>
               </div>
             ))}
@@ -307,34 +307,34 @@ export function AdminStudentCinemaFormPage() {
             <h2 className="font-medium text-white">Öğrenci & Okul</h2>
             <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
               <div>
-                <dt className="text-sineoda-muted">Öğrenci / Yönetmen</dt>
+                <dt className="text-plooy-muted">Öğrenci / Yönetmen</dt>
                 <dd className="mt-0.5 text-white">{studentLabel}</dd>
               </div>
               <div>
-                <dt className="text-sineoda-muted">E-posta</dt>
+                <dt className="text-plooy-muted">E-posta</dt>
                 <dd className="mt-0.5 text-white">{item.creatorEmail ?? '—'}</dd>
               </div>
               <div>
-                <dt className="text-sineoda-muted">Telefon</dt>
+                <dt className="text-plooy-muted">Telefon</dt>
                 <dd className="mt-0.5 text-white">{item.creatorPhone ?? '—'}</dd>
               </div>
               <div>
-                <dt className="text-sineoda-muted">Proje / Stüdyo</dt>
+                <dt className="text-plooy-muted">Proje / Stüdyo</dt>
                 <dd className="mt-0.5 text-white">{item.studioName ?? '—'}</dd>
               </div>
               <div>
-                <dt className="text-sineoda-muted">Okul</dt>
+                <dt className="text-plooy-muted">Okul</dt>
                 <dd className="mt-0.5 text-white">{item.schoolName ?? '—'}</dd>
               </div>
               {item.projectCrew ? (
                 <div className="sm:col-span-2">
-                  <dt className="text-sineoda-muted">Ekip notu</dt>
+                  <dt className="text-plooy-muted">Ekip notu</dt>
                   <dd className="mt-0.5 whitespace-pre-wrap text-white">{item.projectCrew}</dd>
                 </div>
               ) : null}
               {item.parentTitle ? (
                 <div className="sm:col-span-2">
-                  <dt className="text-sineoda-muted">Bağlı ana film</dt>
+                  <dt className="text-plooy-muted">Bağlı ana film</dt>
                   <dd className="mt-0.5 text-white">{item.parentTitle}</dd>
                 </div>
               ) : null}
@@ -342,7 +342,7 @@ export function AdminStudentCinemaFormPage() {
 
             {documents.length > 0 && (
               <div className="mt-4">
-                <p className="text-xs uppercase tracking-wide text-sineoda-muted">Belgeler</p>
+                <p className="text-xs uppercase tracking-wide text-plooy-muted">Belgeler</p>
                 <ul className="mt-2 space-y-2">
                   {documents.map((doc) => (
                     <li key={doc.id} className="flex items-center justify-between gap-3 text-sm">
@@ -351,7 +351,7 @@ export function AdminStudentCinemaFormPage() {
                         href={resolveMediaUrl(doc.fileUrl)}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-sineoda-gold hover:underline"
+                        className="text-plooy-gold hover:underline"
                       >
                         Görüntüle
                       </a>
@@ -379,7 +379,7 @@ export function AdminStudentCinemaFormPage() {
                 type="button"
                 disabled={actionLoading || item.schoolReviewStatus !== 'approved'}
                 onClick={() => void runReviewAction({ reviewStatus: 'published' }, 'Yayına alındı.')}
-                className="rounded-lg bg-sineoda-gold px-3 py-1.5 text-xs font-semibold text-sineoda-bg disabled:opacity-40"
+                className="rounded-lg bg-plooy-gold px-3 py-1.5 text-xs font-semibold text-plooy-bg disabled:opacity-40"
               >
                 Yayınla
               </button>
@@ -412,12 +412,12 @@ export function AdminStudentCinemaFormPage() {
 
           <section className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
             <h2 className="font-medium text-amber-200">Telif hakkı süresi</h2>
-            <p className="mt-1 text-xs text-sineoda-muted">
+            <p className="mt-1 text-xs text-plooy-muted">
               Sınırsız veya belirli bitiş tarihi. Yalnızca admin görür.
             </p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <label className="block">
-                <span className="mb-1 block text-xs text-sineoda-muted">Platforma eklenme</span>
+                <span className="mb-1 block text-xs text-plooy-muted">Platforma eklenme</span>
                 <input
                   type="date"
                   required
@@ -427,7 +427,7 @@ export function AdminStudentCinemaFormPage() {
                 />
               </label>
               <label className="block">
-                <span className="mb-1 block text-xs text-sineoda-muted">Telif bitiş tarihi</span>
+                <span className="mb-1 block text-xs text-plooy-muted">Telif bitiş tarihi</span>
                 <input
                   type="date"
                   value={form.licenseExpiresAt}
@@ -466,7 +466,7 @@ export function AdminStudentCinemaFormPage() {
               ))}
             </div>
             {!form.licenseUnlimited && form.licenseExpiresAt && (
-              <p className="mt-2 text-xs text-sineoda-muted">
+              <p className="mt-2 text-xs text-plooy-muted">
                 {formatLicenseDate(form.licenseExpiresAt)} · {getLicenseDaysRemaining(form.licenseExpiresAt)} gün kaldı
               </p>
             )}
@@ -476,7 +476,7 @@ export function AdminStudentCinemaFormPage() {
             <h2 className="font-medium text-white">İçerik & Künye</h2>
 
             <label className="block">
-              <span className="mb-1 block text-xs text-sineoda-muted">Başlık</span>
+              <span className="mb-1 block text-xs text-plooy-muted">Başlık</span>
               <input
                 value={form.title}
                 onChange={(event) => setForm({ ...form, title: event.target.value })}
@@ -485,7 +485,7 @@ export function AdminStudentCinemaFormPage() {
             </label>
 
             <label className="block">
-              <span className="mb-1 block text-xs text-sineoda-muted">Açıklama</span>
+              <span className="mb-1 block text-xs text-plooy-muted">Açıklama</span>
               <textarea
                 rows={3}
                 value={form.description}
@@ -495,7 +495,7 @@ export function AdminStudentCinemaFormPage() {
             </label>
 
             <label className="block">
-              <span className="mb-1 block text-xs text-sineoda-muted">Okul</span>
+              <span className="mb-1 block text-xs text-plooy-muted">Okul</span>
               <select
                 value={form.schoolId}
                 onChange={(event) => setForm({ ...form, schoolId: event.target.value })}
@@ -512,7 +512,7 @@ export function AdminStudentCinemaFormPage() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
-                <span className="mb-1 block text-xs text-sineoda-muted">Yıl</span>
+                <span className="mb-1 block text-xs text-plooy-muted">Yıl</span>
                 <input
                   type="number"
                   value={form.year}
@@ -521,7 +521,7 @@ export function AdminStudentCinemaFormPage() {
                 />
               </label>
               <label className="block">
-                <span className="mb-1 block text-xs text-sineoda-muted">Süre (dakika)</span>
+                <span className="mb-1 block text-xs text-plooy-muted">Süre (dakika)</span>
                 <input
                   type="number"
                   min={1}
@@ -539,7 +539,7 @@ export function AdminStudentCinemaFormPage() {
             />
 
             <label className="block">
-              <span className="mb-1 block text-xs text-sineoda-muted">Türler (virgülle)</span>
+              <span className="mb-1 block text-xs text-plooy-muted">Türler (virgülle)</span>
               <input
                 value={form.genres}
                 onChange={(event) => setForm({ ...form, genres: event.target.value })}
@@ -549,7 +549,7 @@ export function AdminStudentCinemaFormPage() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
-                <span className="mb-1 block text-xs text-sineoda-muted">Yönetmen(ler)</span>
+                <span className="mb-1 block text-xs text-plooy-muted">Yönetmen(ler)</span>
                 <textarea
                   rows={2}
                   value={form.directors}
@@ -559,7 +559,7 @@ export function AdminStudentCinemaFormPage() {
                 />
               </label>
               <label className="block">
-                <span className="mb-1 block text-xs text-sineoda-muted">Yapımcı(lar)</span>
+                <span className="mb-1 block text-xs text-plooy-muted">Yapımcı(lar)</span>
                 <textarea
                   rows={2}
                   value={form.producers}
@@ -568,7 +568,7 @@ export function AdminStudentCinemaFormPage() {
                 />
               </label>
               <label className="block sm:col-span-2">
-                <span className="mb-1 block text-xs text-sineoda-muted">Oyuncular / Ekip</span>
+                <span className="mb-1 block text-xs text-plooy-muted">Oyuncular / Ekip</span>
                 <textarea
                   rows={2}
                   value={form.cast}
@@ -577,7 +577,7 @@ export function AdminStudentCinemaFormPage() {
                 />
               </label>
               <label className="block sm:col-span-2">
-                <span className="mb-1 block text-xs text-sineoda-muted">Yapım / Okul stüdyosu</span>
+                <span className="mb-1 block text-xs text-plooy-muted">Yapım / Okul stüdyosu</span>
                 <input
                   value={form.studio}
                   onChange={(event) => setForm({ ...form, studio: event.target.value })}
@@ -598,7 +598,7 @@ export function AdminStudentCinemaFormPage() {
                 href={resolveMediaUrl(form.videoUrl)}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-block text-sm text-sineoda-gold hover:underline"
+                className="inline-block text-sm text-plooy-gold hover:underline"
               >
                 Videoyu yeni sekmede aç
               </a>
@@ -608,7 +608,7 @@ export function AdminStudentCinemaFormPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-lg bg-sineoda-gold px-4 py-2.5 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
+                className="rounded-lg bg-plooy-gold px-4 py-2.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
               >
                 {saving ? 'Kaydediliyor…' : 'Değişiklikleri Kaydet'}
               </button>

@@ -411,7 +411,7 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
           <button
             type="button"
             onClick={handleClose}
-            className="pointer-events-auto flex items-center gap-2 rounded-full bg-black/50 px-3 py-2 text-sm text-white backdrop-blur-sm transition hover:bg-black/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sineoda-gold"
+            className="pointer-events-auto flex items-center gap-2 rounded-full bg-black/50 px-3 py-2 text-sm text-white backdrop-blur-sm transition hover:bg-black/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-plooy-gold"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M15 6L9 12L15 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -442,7 +442,7 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
           type="button"
           aria-label="Oynat"
           onClick={togglePlay}
-          className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-sineoda-gold/90 text-sineoda-bg shadow-xl transition hover:scale-105"
+          className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-plooy-gold/90 text-plooy-bg shadow-xl transition hover:scale-105"
         >
           <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M8 5v14l11-7z" />
@@ -452,16 +452,16 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
 
       {nextEpisode && (
         <div className="pointer-events-auto absolute bottom-24 right-4 z-20 w-[min(100%,20rem)] rounded-2xl border border-white/15 bg-black/85 p-4 shadow-2xl backdrop-blur-md sm:bottom-28 sm:right-6">
-          <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-gold">Sonraki Bölüm</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-plooy-gold">Sonraki Bölüm</p>
           <p className="mt-2 text-sm font-semibold text-white">
             S{nextEpisode.season} B{nextEpisode.episode} · {nextEpisode.title}
           </p>
-          <p className="mt-1 text-xs text-sineoda-muted">{countdown} saniye içinde başlıyor</p>
+          <p className="mt-1 text-xs text-plooy-muted">{countdown} saniye içinde başlıyor</p>
           <div className="mt-4 flex gap-2">
             <button
               type="button"
               onClick={playNextEpisode}
-              className="flex-1 rounded-lg bg-sineoda-gold px-4 py-2.5 text-sm font-semibold text-sineoda-bg transition hover:brightness-110"
+              className="flex-1 rounded-lg bg-plooy-gold px-4 py-2.5 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
             >
               Devam Et
             </button>
@@ -489,7 +489,7 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
           step={0.1}
           value={currentTime}
           onChange={(event) => handleSeek(Number(event.target.value))}
-          className="pointer-events-auto h-1 w-full cursor-pointer appearance-none rounded-full bg-white/20 accent-sineoda-gold"
+          className="pointer-events-auto h-1 w-full cursor-pointer appearance-none rounded-full bg-white/20 accent-plooy-gold"
           style={{
             background: `linear-gradient(to right, #e8b84a ${progress}%, rgba(255,255,255,0.2) ${progress}%)`,
           }}
@@ -509,7 +509,7 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
                 aria-label={captionsOn ? 'Altyazıyı kapat' : 'Altyazıyı aç'}
                 onClick={() => setCaptionsOn((value) => !value)}
                 className={`rounded-full px-2.5 py-2 text-xs font-semibold transition hover:bg-white/10 ${
-                  captionsOn ? 'text-sineoda-gold' : 'text-white'
+                  captionsOn ? 'text-plooy-gold' : 'text-white'
                 }`}
               >
                 CC

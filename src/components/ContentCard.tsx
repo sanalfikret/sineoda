@@ -123,7 +123,7 @@ export function ContentCard({
   const badges = (
     <>
       {item.isNew && !item.monthlyAward?.enabled && (
-        <span className="absolute left-2 top-2 z-10 rounded bg-sineoda-gold px-2 py-0.5 text-[10px] font-bold text-sineoda-bg">
+        <span className="absolute left-2 top-2 z-10 rounded bg-plooy-gold px-2 py-0.5 text-[10px] font-bold text-plooy-bg">
           YENİ
         </span>
       )}
@@ -135,7 +135,7 @@ export function ContentCard({
       )}
 
       {item.isNew && item.monthlyAward?.enabled && (
-        <span className="absolute left-2 top-8 z-10 rounded bg-sineoda-gold px-2 py-0.5 text-[10px] font-bold text-sineoda-bg">
+        <span className="absolute left-2 top-8 z-10 rounded bg-plooy-gold px-2 py-0.5 text-[10px] font-bold text-plooy-bg">
           YENİ
         </span>
       )}
@@ -149,7 +149,7 @@ export function ContentCard({
       {progressPercent !== undefined && progressPercent > 2 && (
         <div className="absolute inset-x-0 bottom-0 z-10 h-1 bg-white/20">
           <div
-            className="h-full bg-sineoda-gold"
+            className="h-full bg-plooy-gold"
             style={{ width: `${Math.min(progressPercent, 100)}%` }}
           />
         </div>
@@ -269,9 +269,9 @@ export function ContentCard({
             <button
               type="button"
               onClick={() => onSelect(item)}
-              className="block w-full border-0 bg-transparent p-0 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold"
+              className="block w-full border-0 bg-transparent p-0 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold"
             >
-              <div className="overflow-hidden rounded-t-md bg-sineoda-surface ring-1 ring-white/25">
+              <div className="overflow-hidden rounded-t-md bg-plooy-surface ring-1 ring-white/25">
                 <div className={`relative ${aspectClass} overflow-hidden`}>
                   {posterImage}
                   {badges}
@@ -290,7 +290,7 @@ export function ContentCard({
         ref={slotRef}
         className={`relative shrink-0 snap-start ${widthClass} ${hovered ? 'opacity-0' : 'opacity-100'}`}
       >
-        <div className={`relative overflow-hidden rounded-md bg-sineoda-surface ring-1 ring-white/10 ${aspectClass}`}>
+        <div className={`relative overflow-hidden rounded-md bg-plooy-surface ring-1 ring-white/10 ${aspectClass}`}>
           {posterImage}
           {badges}
           {posterTitleOverlay(false)}
@@ -306,7 +306,7 @@ export function ContentCard({
             event.currentTarget.focus({ preventScroll: true })
           }}
           onBlur={handleLeave}
-          className="absolute inset-0 z-10 border-0 bg-transparent p-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold"
+          className="absolute inset-0 z-10 border-0 bg-transparent p-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold"
         />
       </div>
       {hoverPortal}
@@ -314,9 +314,9 @@ export function ContentCard({
   )
 
   const standardCard = (
-    <div className={`group relative flex flex-col text-left ${widthClass} ${isGrid ? 'overflow-hidden rounded-md bg-sineoda-surface hover:ring-2 hover:ring-white/20' : 'shrink-0 snap-start overflow-hidden rounded-md bg-sineoda-surface hover:z-10 hover:ring-2 hover:ring-white/20'}`}>
+    <div className={`group relative flex flex-col text-left ${widthClass} ${isGrid ? 'overflow-hidden rounded-md bg-plooy-surface hover:ring-2 hover:ring-white/20' : 'shrink-0 snap-start overflow-hidden rounded-md bg-plooy-surface hover:z-10 hover:ring-2 hover:ring-white/20'}`}>
       <div className="relative w-full">
-        <div className={`relative overflow-hidden rounded-md bg-sineoda-surface ${aspectClass}`}>
+        <div className={`relative overflow-hidden rounded-md bg-plooy-surface ${aspectClass}`}>
           {posterImage}
           {badges}
           {isGrid ? posterTitleOverlay(false) : null}

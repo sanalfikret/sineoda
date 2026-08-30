@@ -88,7 +88,7 @@ export function AdminCategoryRow({
       onDragOver={onDragOver}
       onDrop={onDrop}
       className={`rounded-2xl border bg-[#11141c] transition ${
-        dragging ? 'border-sineoda-gold/50 opacity-70' : category.hidden ? 'border-white/10 opacity-75' : 'border-white/10'
+        dragging ? 'border-plooy-gold/50 opacity-70' : category.hidden ? 'border-white/10 opacity-75' : 'border-white/10'
       }`}
     >
       <div className="flex items-center gap-3 p-4">
@@ -99,7 +99,7 @@ export function AdminCategoryRow({
           role="button"
           tabIndex={0}
           aria-label="Sürükleyerek sırala"
-          className="cursor-grab rounded-lg border border-white/10 px-2 py-3 text-sineoda-muted hover:bg-white/5 active:cursor-grabbing"
+          className="cursor-grab rounded-lg border border-white/10 px-2 py-3 text-plooy-muted hover:bg-white/5 active:cursor-grabbing"
           title="Sürükleyerek sırala"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -143,12 +143,12 @@ export function AdminCategoryRow({
             <div className="flex flex-wrap items-center gap-2">
               <p className="truncate text-lg font-semibold text-white">{category.title}</p>
               {category.hidden ? (
-                <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-sineoda-muted">
+                <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-plooy-muted">
                   Gizli
                 </span>
               ) : null}
             </div>
-            <p className="text-xs text-sineoda-muted">
+            <p className="text-xs text-plooy-muted">
               {readOnly
                 ? 'İçerikler Tanıtım sayfası admininden seçilir · otomatik satır'
                 : `${selectedItems.length} içerik · ${category.id}`}
@@ -170,7 +170,7 @@ export function AdminCategoryRow({
               onClick={() => void onToggleHidden(!category.hidden)}
               className={`flex shrink-0 items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition disabled:opacity-50 ${
                 category.hidden
-                  ? 'border-white/10 text-sineoda-muted hover:bg-white/5'
+                  ? 'border-white/10 text-plooy-muted hover:bg-white/5'
                   : 'border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10'
               }`}
             >
@@ -207,7 +207,7 @@ export function AdminCategoryRow({
 
           {selectedItems.length > 0 && (
             <div className="mb-4">
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-sineoda-muted">
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-plooy-muted">
                 Seçili içerikler
               </p>
               <div className="flex flex-wrap gap-2">
@@ -216,7 +216,7 @@ export function AdminCategoryRow({
                     key={item.id}
                     type="button"
                     onClick={() => removeItem(item.id)}
-                    className="flex items-center gap-2 rounded-full border border-sineoda-gold/30 bg-sineoda-gold/10 px-2.5 py-1 text-xs text-white hover:bg-sineoda-gold/20"
+                    className="flex items-center gap-2 rounded-full border border-plooy-gold/30 bg-plooy-gold/10 px-2.5 py-1 text-xs text-white hover:bg-plooy-gold/20"
                   >
                     <img
                       src={resolveMediaUrl(item.poster)}
@@ -235,12 +235,12 @@ export function AdminCategoryRow({
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="İçerik ara ve ekle..."
-            className="mb-3 w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold"
+            className="mb-3 w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-plooy-gold"
           />
 
           <div className="max-h-72 space-y-2 overflow-y-auto">
             {addableItems.length === 0 ? (
-              <p className="py-4 text-center text-sm text-sineoda-muted">
+              <p className="py-4 text-center text-sm text-plooy-muted">
                 {search ? 'Eşleşen içerik yok.' : 'Tüm içerikler bu kategoride.'}
               </p>
             ) : (
@@ -249,7 +249,7 @@ export function AdminCategoryRow({
                   key={item.id}
                   type="button"
                   onClick={() => addItem(item.id)}
-                  className="flex w-full items-center gap-3 rounded-lg border border-white/10 px-3 py-2 text-left transition hover:border-sineoda-gold/30 hover:bg-white/5"
+                  className="flex w-full items-center gap-3 rounded-lg border border-white/10 px-3 py-2 text-left transition hover:border-plooy-gold/30 hover:bg-white/5"
                 >
                   <img
                     src={resolveMediaUrl(item.poster)}
@@ -257,7 +257,7 @@ export function AdminCategoryRow({
                     className="h-10 w-7 rounded object-cover"
                   />
                   <span className="truncate text-sm text-white/85">{item.title}</span>
-                  <span className="ml-auto text-xs text-sineoda-gold">Ekle</span>
+                  <span className="ml-auto text-xs text-plooy-gold">Ekle</span>
                 </button>
               ))
             )}

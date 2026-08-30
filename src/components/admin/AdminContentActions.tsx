@@ -15,13 +15,13 @@ export function AdminContentActions() {
       </Link>
       <Link
         to={ADMIN_NEW_VERTICAL_HREF}
-        className="rounded-lg border border-sineoda-gold/50 bg-sineoda-gold/10 px-4 py-2 text-sm font-semibold text-sineoda-gold transition hover:bg-sineoda-gold/20"
+        className="rounded-lg border border-plooy-gold/50 bg-plooy-gold/10 px-4 py-2 text-sm font-semibold text-plooy-gold transition hover:bg-plooy-gold/20"
       >
         + Dikey Dizi
       </Link>
       <Link
         to={ADMIN_NEW_CONTENT_HREF}
-        className="rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg transition hover:brightness-110"
+        className="rounded-lg bg-plooy-gold px-4 py-2 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
       >
         + Yeni İçerik
       </Link>

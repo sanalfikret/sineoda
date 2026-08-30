@@ -19,7 +19,7 @@ export function CekimNotlariCard({ item, onSelect }: CekimNotlariCardProps) {
     <button
       type="button"
       onClick={() => onSelect(item)}
-      className="group flex h-full w-full overflow-hidden rounded-xl border border-white/[0.06] bg-sineoda-surface text-left transition hover:border-white/12 hover:bg-sineoda-elevated/40"
+      className="group flex h-full w-full overflow-hidden rounded-xl border border-white/[0.06] bg-plooy-surface text-left transition hover:border-white/12 hover:bg-plooy-elevated/40"
     >
       <div className="relative w-[38%] shrink-0 overflow-hidden sm:w-[42%]">
         <div className="aspect-[4/3] h-full min-h-[7.5rem] sm:min-h-[8.5rem]">
@@ -31,13 +31,13 @@ export function CekimNotlariCard({ item, onSelect }: CekimNotlariCardProps) {
         </div>
       </div>
       <div className="flex min-w-0 flex-1 flex-col justify-center px-3 py-3 sm:px-4 sm:py-4">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sineoda-accent sm:text-xs">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-plooy-accent sm:text-xs">
           {item.duration} · {item.rating}
         </p>
-        <h3 className="mt-1.5 line-clamp-2 text-sm font-semibold leading-snug text-white group-hover:text-sineoda-accent sm:text-base">
+        <h3 className="mt-1.5 line-clamp-2 text-sm font-semibold leading-snug text-white group-hover:text-plooy-accent sm:text-base">
           {item.title}
         </h3>
-        <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-sineoda-muted sm:line-clamp-3 sm:text-sm">
+        <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-plooy-muted sm:line-clamp-3 sm:text-sm">
           {item.description}
         </p>
         <p className="mt-2 text-[11px] text-white/45">{expertName(item)}</p>

@@ -3,7 +3,7 @@ description: Test vs production phase — how to behave on deploy and data
 alwaysApply: true
 ---
 
-# Sineoda — proje aşaması
+# Plooy — proje aşaması
 
 ## Şu an: TEST aşaması (Fikret talimatı)
 
@@ -17,7 +17,7 @@ alwaysApply: true
 
 Yayına geçmeden önce mutlaka gözden geçir:
 
-1. **Veri kalıcılığı** — `PERSIST_DIR=/opt/sineoda/persistent`, `persistent/data/sineoda.db` host diskte, bind mount aktif.
+1. **Veri kalıcılığı** — `PERSIST_DIR=/opt/Plooy/persistent`, `persistent/data/Plooy.db` host diskte, bind mount aktif.
 2. **Yedek** — günlük cron `deploy/backup-vps.sh`; haftalık yedeği sunucu dışına indir.
 3. **Deploy güvenliği** — `npm run check:deploy` push öncesi; VPS'te `deploy/update-vps.sh` (asla `docker-compose down -v`).
 4. **Sağlık** — `/api/health` storage alanı; deploy sonrası `userCount` / `dbSizeBytes` kontrolü.

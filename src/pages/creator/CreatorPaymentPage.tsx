@@ -90,15 +90,15 @@ export function CreatorPaymentPage() {
       <div className="mx-auto w-full max-w-lg px-4 py-10">
         <div className="rounded-2xl border border-white/10 bg-[#11141c] p-6 sm:p-8">
           <h1 className="text-2xl font-bold text-white">{plan?.name ?? (isStudentProgram ? 'Genç Sinema Başvuru Ücreti' : 'Yapımcı Başvuru Ücreti')}</h1>
-          <p className="mt-2 text-sm text-sineoda-muted">
+          <p className="mt-2 text-sm text-plooy-muted">
             {isStudentProgram
               ? `Genç Sinema üyeliğiniz otomatik açılır. Film başvurunuzu göndermek için tek seferlik başvuru ücretini ödeyin; filminiz okul ve ${BRAND_NAME} incelemesine alınır.`
               : 'Yapımcı üyeliğiniz otomatik açılır. Film başvurusu göndermek için tek seferlik başvuru ücretini ödeyin; filminizin yayına alınması admin incelemesine tabidir.'}
           </p>
 
-          <div className="mt-6 rounded-xl border border-sineoda-gold/30 bg-sineoda-gold/5 p-5">
-            <p className="text-sm text-sineoda-muted">Başvuru ücreti</p>
-            <p className="mt-1 text-3xl font-bold text-sineoda-gold">₺{price}</p>
+          <div className="mt-6 rounded-xl border border-plooy-gold/30 bg-plooy-gold/5 p-5">
+            <p className="text-sm text-plooy-muted">Başvuru ücreti</p>
+            <p className="mt-1 text-3xl font-bold text-plooy-gold">₺{price}</p>
             <ul className="mt-4 space-y-2 text-sm text-white/80">
               {(plan?.features ?? []).map((feature) => (
                 <li key={feature}>{feature}</li>
@@ -116,13 +116,13 @@ export function CreatorPaymentPage() {
             type="button"
             disabled={paying || loading || !plan}
             onClick={() => void handleCheckout()}
-            className="mt-6 w-full rounded-lg bg-sineoda-gold py-3 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
+            className="mt-6 w-full rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg disabled:opacity-60"
           >
             {paying ? 'Yönlendiriliyor...' : `₺${price} Öde ve Başvuruya Devam Et`}
           </button>
 
-          <p className="mt-4 text-center text-sm text-sineoda-muted">
-            <Link to="/creator" className="text-sineoda-gold hover:underline">
+          <p className="mt-4 text-center text-sm text-plooy-muted">
+            <Link to="/creator" className="text-plooy-gold hover:underline">
               Panele dön
             </Link>
           </p>

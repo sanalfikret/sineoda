@@ -623,7 +623,7 @@ export function AdminLandingPage() {
         skipped > 0
           ? `Kaydedildi. ${skipped} demo içerik slider'a eklenemedi — yalnızca veritabanındaki içerikler kullanılır.`
           : customBlocks.length > 0 && !data.customBlocks
-            ? 'Kaydedildi. Özel bölümler sunucuda henüz desteklenmiyor — sineoda-api.zip güncellemesini yükleyin.'
+            ? 'Kaydedildi. Özel bölümler sunucuda henüz desteklenmiyor — plooy-api.zip güncellemesini yükleyin.'
             : 'Ana sayfa ayarları kaydedildi.',
       )
     } catch (err) {
@@ -665,9 +665,9 @@ export function AdminLandingPage() {
           onChange={(event) => updateBlockTitle(builtInId, event.target.value)}
           rows={showsOnSite ? 2 : 1}
           placeholder={LANDING_BLOCK_LABELS[builtInId]}
-          className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-sm text-white outline-none focus:border-sineoda-gold"
+          className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-sm text-white outline-none focus:border-plooy-gold"
         />
-        <p className="text-xs text-sineoda-muted">
+        <p className="text-xs text-plooy-muted">
           {showsOnSite
             ? 'Admin listesinde ve misafir ana sayfada görünür. Alt satır için Enter kullanın.'
             : 'Admin listesinde görünen ad. Metin bölümlerinin site başlığı aşağıdaki alanlardan düzenlenir.'}
@@ -698,7 +698,7 @@ export function AdminLandingPage() {
       case 'hero':
         return (
           <>
-            <p className="text-sm text-sineoda-muted">
+            <p className="text-sm text-plooy-muted">
               Giriş yapmışken <code className="text-white/70">/</code> farklı bir sayfadır — önizleme
               için yukarıdaki butonu kullanın.
             </p>
@@ -708,7 +708,7 @@ export function AdminLandingPage() {
                 <input
                   value={hero.line1}
                   onChange={(event) => updateHero({ line1: event.target.value })}
-                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-sineoda-gold"
+                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-plooy-gold"
                 />
               </label>
               <label className="block space-y-2">
@@ -716,7 +716,7 @@ export function AdminLandingPage() {
                 <input
                   value={hero.line2}
                   onChange={(event) => updateHero({ line2: event.target.value })}
-                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-sineoda-gold"
+                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-plooy-gold"
                 />
               </label>
             </div>
@@ -726,7 +726,7 @@ export function AdminLandingPage() {
                 value={hero.description}
                 onChange={(event) => updateHero({ description: event.target.value })}
                 rows={3}
-                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold"
+                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-plooy-gold"
               />
             </label>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -735,7 +735,7 @@ export function AdminLandingPage() {
                 <input
                   value={hero.ctaPrimary}
                   onChange={(event) => updateHero({ ctaPrimary: event.target.value })}
-                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-sineoda-gold"
+                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-plooy-gold"
                 />
               </label>
               <label className="block space-y-2">
@@ -743,7 +743,7 @@ export function AdminLandingPage() {
                 <input
                   value={hero.ctaPrimaryLink ?? '/kayit'}
                   onChange={(event) => updateHero({ ctaPrimaryLink: event.target.value })}
-                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-sineoda-gold"
+                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-plooy-gold"
                 />
               </label>
               <label className="block space-y-2">
@@ -751,7 +751,7 @@ export function AdminLandingPage() {
                 <input
                   value={hero.ctaSecondary}
                   onChange={(event) => updateHero({ ctaSecondary: event.target.value })}
-                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-sineoda-gold"
+                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-plooy-gold"
                 />
               </label>
               <label className="block space-y-2">
@@ -759,7 +759,7 @@ export function AdminLandingPage() {
                 <input
                   value={hero.ctaSecondaryLink ?? '/giris'}
                   onChange={(event) => updateHero({ ctaSecondaryLink: event.target.value })}
-                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-sineoda-gold"
+                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-plooy-gold"
                 />
               </label>
             </div>
@@ -768,7 +768,7 @@ export function AdminLandingPage() {
               <input
                 value={hero.legalNote}
                 onChange={(event) => updateHero({ legalNote: event.target.value })}
-                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold"
+                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-plooy-gold"
               />
             </label>
             <div className="mt-6 border-t border-white/10 pt-5 space-y-5">
@@ -800,7 +800,7 @@ export function AdminLandingPage() {
                 </div>
               </div>
               {heroBackgroundMode(hero) !== 'none' && (
-                <p className="text-xs text-sineoda-gold">
+                <p className="text-xs text-plooy-gold">
                   Aktif arka plan:{' '}
                   {heroBackgroundMode(hero) === 'image'
                     ? 'Özel görsel'
@@ -816,7 +816,7 @@ export function AdminLandingPage() {
                   type="checkbox"
                   checked={hero.showFeaturedCard}
                   onChange={(event) => updateHero({ showFeaturedCard: event.target.checked })}
-                  className="accent-sineoda-gold"
+                  className="accent-plooy-gold"
                 />
                 &quot;Bu hafta öne çıkan&quot; kutusunu göster
               </label>
@@ -837,12 +837,12 @@ export function AdminLandingPage() {
       case 'slider':
         return (
           <>
-            <p className="text-sm text-sineoda-muted">
+            <p className="text-sm text-plooy-muted">
               Filmler, diziler ve belgeseller sekmelerinden seçim yap.
             </p>
             {sliderIds.length > 0 && (
               <div className="mt-4">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-sineoda-muted">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-plooy-muted">
                   Slider sırası ({sliderIds.length} içerik)
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -852,7 +852,7 @@ export function AdminLandingPage() {
                     return (
                       <div
                         key={contentId}
-                        className="flex items-center gap-2 rounded-lg border border-sineoda-gold/30 bg-sineoda-gold/10 px-2 py-1"
+                        className="flex items-center gap-2 rounded-lg border border-plooy-gold/30 bg-plooy-gold/10 px-2 py-1"
                       >
                         <img
                           src={resolveMediaUrl(item.poster)}
@@ -861,7 +861,7 @@ export function AdminLandingPage() {
                         />
                         <div className="min-w-0">
                           <span className="block truncate text-xs font-medium text-white">{item.title}</span>
-                          <span className="text-[10px] text-sineoda-muted">
+                          <span className="text-[10px] text-plooy-muted">
                             {getContentDisplayLabel(item)}
                           </span>
                         </div>
@@ -905,7 +905,7 @@ export function AdminLandingPage() {
       case 'studentPicks':
         return (
           <>
-            <p className="text-sm text-sineoda-muted">
+            <p className="text-sm text-plooy-muted">
               Genç Sinema seçkisini buradan düzenleyin. Liste boş bırakılırsa onaylı Genç Sinema
               içerikleri otomatik gösterilir.
             </p>
@@ -917,7 +917,7 @@ export function AdminLandingPage() {
               </p>
             )}
             {!loading && studentCinemaCatalog.length > 0 && (
-              <p className="mt-2 text-xs text-sineoda-muted">
+              <p className="mt-2 text-xs text-plooy-muted">
                 {studentCinemaCatalog.length} Genç Sinema filmi seçilebilir.
               </p>
             )}
@@ -929,7 +929,7 @@ export function AdminLandingPage() {
                   return (
                     <div
                       key={contentId}
-                      className="flex items-center gap-2 rounded-lg border border-sineoda-gold/30 bg-sineoda-gold/10 px-2 py-1"
+                      className="flex items-center gap-2 rounded-lg border border-plooy-gold/30 bg-plooy-gold/10 px-2 py-1"
                     >
                       <img
                         src={resolveMediaUrl(item.poster)}
@@ -994,7 +994,7 @@ export function AdminLandingPage() {
       case 'studentMonthlyWinners':
         return (
           <>
-            <p className="text-sm text-sineoda-muted">
+            <p className="text-sm text-plooy-muted">
               Ayın birincilerini buradan seçin. Liste boş bırakılırsa Genç Sinema admin panelindeki
               &quot;Ayın birincisi&quot; rozetli filmler otomatik gösterilir.
             </p>
@@ -1006,7 +1006,7 @@ export function AdminLandingPage() {
               </p>
             )}
             {!loading && studentCinemaCatalog.length > 0 && (
-              <p className="mt-2 text-xs text-sineoda-muted">
+              <p className="mt-2 text-xs text-plooy-muted">
                 {studentCinemaCatalog.length} Genç Sinema filmi seçilebilir.
               </p>
             )}
@@ -1018,7 +1018,7 @@ export function AdminLandingPage() {
                   return (
                     <div
                       key={contentId}
-                      className="flex items-center gap-2 rounded-lg border border-sineoda-gold/30 bg-sineoda-gold/10 px-2 py-1"
+                      className="flex items-center gap-2 rounded-lg border border-plooy-gold/30 bg-plooy-gold/10 px-2 py-1"
                     >
                       <img
                         src={resolveMediaUrl(item.poster)}
@@ -1084,7 +1084,7 @@ export function AdminLandingPage() {
         return (
           <>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-sineoda-muted">
+              <p className="text-sm text-plooy-muted">
                 Dizi, Film, Belgesel gibi sekmeler ve poster satırları
               </p>
               <button
@@ -1107,12 +1107,12 @@ export function AdminLandingPage() {
                         value={showcase.title}
                         onChange={(event) => updateShowcase(index, { title: event.target.value })}
                         placeholder="Başlık (ör. Dizi)"
-                        className="rounded-lg border border-white/10 bg-[#11141c] px-3 py-2 text-white outline-none focus:border-sineoda-gold"
+                        className="rounded-lg border border-white/10 bg-[#11141c] px-3 py-2 text-white outline-none focus:border-plooy-gold"
                       />
                       <select
                         value={showcase.icon}
                         onChange={(event) => updateShowcase(index, { icon: event.target.value })}
-                        className="rounded-lg border border-white/10 bg-[#11141c] px-3 py-2 text-white outline-none focus:border-sineoda-gold"
+                        className="rounded-lg border border-white/10 bg-[#11141c] px-3 py-2 text-white outline-none focus:border-plooy-gold"
                       >
                         {ICON_OPTIONS.map((option) => (
                           <option key={option.value} value={option.value}>
@@ -1150,12 +1150,12 @@ export function AdminLandingPage() {
                     onChange={(event) => updateShowcase(index, { description: event.target.value })}
                     placeholder="Kategori açıklaması"
                     rows={2}
-                    className="mt-3 w-full rounded-lg border border-white/10 bg-[#11141c] px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold"
+                    className="mt-3 w-full rounded-lg border border-white/10 bg-[#11141c] px-3 py-2 text-sm text-white outline-none focus:border-plooy-gold"
                   />
                   <div className="mt-4">
                     {showcase.itemIds.length > 0 && (
                       <div className="mb-4 space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">
                           Sıralama (gösterim sırası)
                         </p>
                         {showcase.itemIds.map((contentId, itemIndex) => {
@@ -1164,7 +1164,7 @@ export function AdminLandingPage() {
                           return (
                             <div
                               key={contentId}
-                              className="flex items-center gap-2 rounded-lg border border-sineoda-gold/20 bg-sineoda-gold/5 px-3 py-2"
+                              className="flex items-center gap-2 rounded-lg border border-plooy-gold/20 bg-plooy-gold/5 px-3 py-2"
                             >
                               <img
                                 src={resolveMediaUrl(item.poster)}
@@ -1223,7 +1223,7 @@ export function AdminLandingPage() {
   if (loading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-sineoda-gold border-t-transparent" />
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-plooy-gold border-t-transparent" />
       </div>
     )
   }
@@ -1233,7 +1233,7 @@ export function AdminLandingPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-white">Ana Sayfa</h1>
-          <p className="mt-1 text-sm text-sineoda-muted">
+          <p className="mt-1 text-sm text-plooy-muted">
             Misafir tanıtım sayfası bölümleri. Sürükleyerek veya oklarla sırala — sıra{' '}
             <code className="text-white/70">/tanitim</code> sayfasına yansır.
           </p>
@@ -1251,7 +1251,7 @@ export function AdminLandingPage() {
             type="button"
             onClick={() => void handleSave()}
             disabled={saving}
-            className="rounded-lg bg-sineoda-gold px-5 py-2.5 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
+            className="rounded-lg bg-plooy-gold px-5 py-2.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
           >
             {saving ? 'Kaydediliyor...' : 'Kaydet'}
           </button>
@@ -1265,7 +1265,7 @@ export function AdminLandingPage() {
       )}
 
       <div className="rounded-2xl border border-dashed border-white/15 bg-[#11141c]/60 px-4 py-4">
-        <p className="text-sm text-sineoda-muted">
+        <p className="text-sm text-plooy-muted">
           Yeni bölüm ekleyin — tip seçin, içerik satırına film/dizi ekleyebilirsiniz. Sıralama ve
           gizle/göster anında kaydedilir; diğer değişiklikler için Kaydet&apos;e basın.
         </p>
@@ -1275,7 +1275,7 @@ export function AdminLandingPage() {
               key={type}
               type="button"
               onClick={() => addCustomBlock(type)}
-              className="rounded-lg border border-sineoda-gold/40 px-3 py-2 text-sm font-medium text-sineoda-gold hover:bg-sineoda-gold/10"
+              className="rounded-lg border border-plooy-gold/40 px-3 py-2 text-sm font-medium text-plooy-gold hover:bg-plooy-gold/10"
             >
               + {label}
             </button>
@@ -1343,7 +1343,7 @@ function SingleContentPicker({
       <span className="block text-sm text-white/85">{label}</span>
 
       {selectedItem ? (
-        <div className="flex items-center gap-3 rounded-lg border border-sineoda-gold/30 bg-sineoda-gold/10 px-3 py-2">
+        <div className="flex items-center gap-3 rounded-lg border border-plooy-gold/30 bg-plooy-gold/10 px-3 py-2">
           <img
             src={resolveMediaUrl(selectedItem.poster)}
             alt=""
@@ -1351,7 +1351,7 @@ function SingleContentPicker({
           />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-white">{selectedItem.title}</p>
-            <p className="text-xs text-sineoda-muted">{getContentDisplayLabel(selectedItem)}</p>
+            <p className="text-xs text-plooy-muted">{getContentDisplayLabel(selectedItem)}</p>
           </div>
           <button
             type="button"
@@ -1362,7 +1362,7 @@ function SingleContentPicker({
           </button>
         </div>
       ) : (
-        <p className="text-xs text-sineoda-muted">{emptyLabel}</p>
+        <p className="text-xs text-plooy-muted">{emptyLabel}</p>
       )}
 
       <input
@@ -1370,7 +1370,7 @@ function SingleContentPicker({
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         placeholder="İçerik ara..."
-        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-sm text-white outline-none focus:border-sineoda-gold"
+        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-sm text-white outline-none focus:border-plooy-gold"
       />
 
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -1381,7 +1381,7 @@ function SingleContentPicker({
             onClick={() => onSelect(item.id)}
             className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-left transition ${
               selectedId === item.id
-                ? 'border-sineoda-gold/40 bg-sineoda-gold/10'
+                ? 'border-plooy-gold/40 bg-plooy-gold/10'
                 : 'border-white/10 hover:bg-white/5'
             }`}
           >
@@ -1392,7 +1392,7 @@ function SingleContentPicker({
             />
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-white">{item.title}</p>
-              <p className="text-xs text-sineoda-muted">{getContentDisplayLabel(item)}</p>
+              <p className="text-xs text-plooy-muted">{getContentDisplayLabel(item)}</p>
             </div>
           </button>
         ))}
@@ -1439,7 +1439,7 @@ function ContentPicker({
               onClick={() => setPoolFilter(filter.id)}
               className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
                 poolFilter === filter.id
-                  ? 'bg-sineoda-gold text-sineoda-bg'
+                  ? 'bg-plooy-gold text-plooy-bg'
                   : 'bg-white/10 text-white/80 hover:bg-white/15'
               }`}
             >
@@ -1454,10 +1454,10 @@ function ContentPicker({
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         placeholder={searchPlaceholder}
-        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-sm text-white outline-none focus:border-sineoda-gold"
+        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-sm text-white outline-none focus:border-plooy-gold"
       />
 
-      <p className="text-xs text-sineoda-muted">
+      <p className="text-xs text-plooy-muted">
         {filteredCatalog.length === 0
           ? 'Eşleşen içerik yok.'
           : filteredCatalog.length > maxResults
@@ -1467,7 +1467,7 @@ function ContentPicker({
       </p>
 
       {visibleItems.length === 0 ? (
-        <p className="rounded-lg border border-white/10 bg-white/5 px-4 py-6 text-center text-sm text-sineoda-muted">
+        <p className="rounded-lg border border-white/10 bg-white/5 px-4 py-6 text-center text-sm text-plooy-muted">
           {query.trim() ? 'Aramanızla eşleşen içerik bulunamadı.' : 'Bu filtrede içerik yok.'}
         </p>
       ) : (
@@ -1479,7 +1479,7 @@ function ContentPicker({
                 key={item.id}
                 className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 transition ${
                   checked
-                    ? 'border-sineoda-gold/40 bg-sineoda-gold/10'
+                    ? 'border-plooy-gold/40 bg-plooy-gold/10'
                     : 'border-white/10 hover:bg-white/5'
                 }`}
               >
@@ -1487,7 +1487,7 @@ function ContentPicker({
                   type="checkbox"
                   checked={checked}
                   onChange={() => onToggle(item.id)}
-                  className="accent-sineoda-gold"
+                  className="accent-plooy-gold"
                 />
                 <img
                   src={resolveMediaUrl(item.poster)}
@@ -1496,7 +1496,7 @@ function ContentPicker({
                 />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-white">{item.title}</p>
-                  <p className="text-xs text-sineoda-muted">{getContentDisplayLabel(item)}</p>
+                  <p className="text-xs text-plooy-muted">{getContentDisplayLabel(item)}</p>
                 </div>
               </label>
             )

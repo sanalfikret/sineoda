@@ -9,17 +9,25 @@ import { isAuthSessionError, isTransientApiError, sleep } from '../utils/authSes
 
 export type { LandingSectionsConfig } from '../constants/landingDefaults'
 
-const TOKEN_KEY = 'sineoda_token'
-const PROFILE_KEY = 'sineoda_profile_id'
+const TOKEN_KEY = 'plooy_token'
+const LEGACY_TOKEN_KEY = 'sineoda_token'
+const PROFILE_KEY = 'plooy_profile_id'
+const LEGACY_PROFILE_KEY = 'sineoda_profile_id'
+const AUTH_TOKEN_HEADER = 'X-Plooy-Token'
+const LEGACY_AUTH_TOKEN_HEADER = 'X-Sineoda-Token'
 
 /**
  * API kökü — production VPS: aynı origin (/api).
- * Sunucunun index.html'e enjekte ettiği __SINEODA_API_BASE__ önceliklidir.
- * VITE_API_URL yalnızca bilinçli ayrı API domain kurulumunda kullanılır.
+ * Sunucunun index.html'e enjekte ettiği __PLOOY_API_BASE__ önceliklidir.
  */
 export function getApiBase() {
   if (typeof window !== 'undefined') {
-    const runtime = (window as Window & { __SINEODA_API_BASE__?: string }).__SINEODA_API_BASE__
+    type ApiWindow = Window & {
+      __PLOOY_API_BASE__?: string
+      __SINEODA_API_BASE__?: string
+    }
+    const w = window as ApiWindow
+    const runtime = w.__PLOOY_API_BASE__ ?? w.__SINEODA_API_BASE__
     if (runtime !== undefined) {
       return runtime.replace(/\/$/, '')
     }
@@ -29,6 +37,24 @@ export function getApiBase() {
   }
 
   return String(import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
+}
+
+function readStorageItem(key: string, legacyKey: string) {
+  return localStorage.getItem(key) ?? localStorage.getItem(legacyKey)
+}
+
+function writeStorageItem(key: string, legacyKey: string, value: string | null) {
+  if (value) {
+    localStorage.setItem(key, value)
+    localStorage.removeItem(legacyKey)
+    return
+  }
+  localStorage.removeItem(key)
+  localStorage.removeItem(legacyKey)
+}
+
+function readAuthTokenHeader(response: Response) {
+  return response.headers.get(AUTH_TOKEN_HEADER) ?? response.headers.get(LEGACY_AUTH_TOKEN_HEADER)
 }
 
 /** DB'ye kaydedilecek yol — domain yok, sunucu taşınsa da çalışır (/uploads/...). */
@@ -56,21 +82,19 @@ export function resolveMediaUrl(url: string) {
 }
 
 export function getToken() {
-  return localStorage.getItem(TOKEN_KEY)
+  return readStorageItem(TOKEN_KEY, LEGACY_TOKEN_KEY)
 }
 
 export function setToken(token: string | null) {
-  if (token) localStorage.setItem(TOKEN_KEY, token)
-  else localStorage.removeItem(TOKEN_KEY)
+  writeStorageItem(TOKEN_KEY, LEGACY_TOKEN_KEY, token)
 }
 
 export function getProfileId() {
-  return localStorage.getItem(PROFILE_KEY)
+  return readStorageItem(PROFILE_KEY, LEGACY_PROFILE_KEY)
 }
 
 export function setProfileId(profileId: string | null) {
-  if (profileId) localStorage.setItem(PROFILE_KEY, profileId)
-  else localStorage.removeItem(PROFILE_KEY)
+  writeStorageItem(PROFILE_KEY, LEGACY_PROFILE_KEY, profileId)
 }
 
 export async function refreshSessionToken() {
@@ -94,7 +118,7 @@ export async function refreshSessionToken() {
 
     if (!response.ok) return false
 
-    const headerToken = response.headers.get('X-Sineoda-Token')
+    const headerToken = readAuthTokenHeader(response)
     if (headerToken) {
       setToken(headerToken)
       return true
@@ -185,12 +209,12 @@ export async function api<T>(path: string, options: RequestInit = {}, retried = 
   }
 
   if (response.status === 204) {
-    const refreshed = response.headers.get('X-Sineoda-Token')
+    const refreshed = readAuthTokenHeader(response)
     if (refreshed) setToken(refreshed)
     return undefined as T
   }
 
-  const refreshed = response.headers.get('X-Sineoda-Token')
+  const refreshed = readAuthTokenHeader(response)
   if (refreshed) setToken(refreshed)
 
   return response.json() as Promise<T>

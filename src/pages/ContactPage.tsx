@@ -41,7 +41,7 @@ export function ContactPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-sineoda-bg">
+    <div className="min-h-dvh bg-plooy-bg">
       <header className="safe-top border-b border-white/5 px-4 py-5 sm:px-6">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <PlooyLogo tone="on-dark" linked linkTo="/" className="h-7" />
@@ -49,9 +49,9 @@ export function ContactPage() {
       </header>
 
       <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6 sm:py-14">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sineoda-gold">İletişim</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-plooy-gold">İletişim</p>
         <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">Bize Ulaşın</h1>
-        <p className="mt-3 text-sm leading-relaxed text-sineoda-muted sm:text-base">
+        <p className="mt-3 text-sm leading-relaxed text-plooy-muted sm:text-base">
           Öneri, istek veya şikayetlerinizi bizimle paylaşın. Ekibimiz en kısa sürede size dönüş yapacaktır.
         </p>
 
@@ -65,7 +65,7 @@ export function ContactPage() {
                 onChange={(event) => setName(event.target.value)}
                 required
                 minLength={2}
-                className="w-full rounded-lg border border-white/10 bg-sineoda-surface px-4 py-3 text-white outline-none focus:border-sineoda-gold"
+                className="w-full rounded-lg border border-white/10 bg-plooy-surface px-4 py-3 text-white outline-none focus:border-plooy-gold"
                 placeholder="Adınız"
               />
             </label>
@@ -77,7 +77,7 @@ export function ContactPage() {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 required
-                className="w-full rounded-lg border border-white/10 bg-sineoda-surface px-4 py-3 text-white outline-none focus:border-sineoda-gold"
+                className="w-full rounded-lg border border-white/10 bg-plooy-surface px-4 py-3 text-white outline-none focus:border-plooy-gold"
                 placeholder="ornek@email.com"
               />
             </label>
@@ -88,7 +88,7 @@ export function ContactPage() {
             <select
               value={subject}
               onChange={(event) => setSubject(event.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-sineoda-surface px-4 py-3 text-white outline-none focus:border-sineoda-gold"
+              className="w-full rounded-lg border border-white/10 bg-plooy-surface px-4 py-3 text-white outline-none focus:border-plooy-gold"
             >
               {SUBJECT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -106,7 +106,7 @@ export function ContactPage() {
               required
               minLength={10}
               rows={6}
-              className="w-full resize-y rounded-lg border border-white/10 bg-sineoda-surface px-4 py-3 text-white outline-none focus:border-sineoda-gold"
+              className="w-full resize-y rounded-lg border border-white/10 bg-plooy-surface px-4 py-3 text-white outline-none focus:border-plooy-gold"
               placeholder="Mesajınızı buraya yazın..."
             />
           </label>
@@ -126,7 +126,7 @@ export function ContactPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-sineoda-gold py-3.5 text-base font-bold text-sineoda-bg transition hover:brightness-110 disabled:opacity-60 sm:w-auto sm:px-10"
+            className="w-full rounded-lg bg-plooy-gold py-3.5 text-base font-bold text-plooy-bg transition hover:brightness-110 disabled:opacity-60 sm:w-auto sm:px-10"
           >
             {loading ? 'Gönderiliyor...' : 'Gönder'}
           </button>

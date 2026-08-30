@@ -19,10 +19,10 @@ export function PaytrCheckoutPage() {
 
   if (!token) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-sineoda-bg px-4 text-center text-white">
+      <div className="flex min-h-dvh items-center justify-center bg-plooy-bg px-4 text-center text-white">
         <div>
           <p>Ödeme oturumu bulunamadı.</p>
-          <Link to="/planlar" className="mt-4 inline-block text-sineoda-gold hover:underline">
+          <Link to="/planlar" className="mt-4 inline-block text-plooy-gold hover:underline">
             Planlara dön
           </Link>
         </div>
@@ -31,14 +31,14 @@ export function PaytrCheckoutPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-sineoda-bg">
+    <div className="min-h-dvh bg-plooy-bg">
       <header className="safe-top border-b border-white/10 px-4 py-4 sm:px-6">
         <div className="mx-auto flex max-w-4xl items-center justify-between">
           <div className="flex items-center gap-2">
             <PlooyLogo tone="on-dark" className="h-6" />
-            <span className="text-sm text-sineoda-muted">· PayTR</span>
+            <span className="text-sm text-plooy-muted">· PayTR</span>
           </div>
-          <Link to="/planlar" className="text-sm text-sineoda-muted hover:text-white">
+          <Link to="/planlar" className="text-sm text-plooy-muted hover:text-white">
             İptal
           </Link>
         </div>

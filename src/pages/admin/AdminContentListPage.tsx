@@ -149,7 +149,7 @@ export function AdminContentListPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-white">İçerikler</h1>
-        <p className="mt-1 text-sm text-sineoda-muted">
+        <p className="mt-1 text-sm text-plooy-muted">
           Telif uyarıları önce · {adminCatalog.length} kayıt
           {verticalCount > 0 && ` · ${verticalCount} dikey dizi`}
           {expiringCount > 0 && ` · ${expiringCount} telif bitiyor`}
@@ -170,7 +170,7 @@ export function AdminContentListPage() {
       )}
 
       {usingFallback && (
-        <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-sineoda-muted">
+        <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-plooy-muted">
           Telif bilgileri henüz API&apos;den yüklenemedi; içerik listesi site kataloğundan gösteriliyor.
           Telif tarihlerini kaydetmek için API&apos;yi güncelleyin.
         </div>
@@ -190,7 +190,7 @@ export function AdminContentListPage() {
           onClick={() => setTypeFilter('all')}
           className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
             typeFilter === 'all'
-              ? 'bg-sineoda-gold text-sineoda-bg'
+              ? 'bg-plooy-gold text-plooy-bg'
               : 'bg-white/10 text-white/85 hover:bg-white/15'
           }`}
         >
@@ -201,7 +201,7 @@ export function AdminContentListPage() {
           onClick={() => setTypeFilter('expiring')}
           className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
             typeFilter === 'expiring'
-              ? 'bg-amber-500 text-sineoda-bg'
+              ? 'bg-amber-500 text-plooy-bg'
               : 'bg-amber-500/15 text-amber-200 hover:bg-amber-500/25'
           }`}
         >
@@ -217,7 +217,7 @@ export function AdminContentListPage() {
             onClick={() => setTypeFilter(entry.value)}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
               typeFilter === entry.value
-                ? 'bg-sineoda-gold text-sineoda-bg'
+                ? 'bg-plooy-gold text-plooy-bg'
                 : 'bg-white/10 text-white/85 hover:bg-white/15'
             }`}
           >
@@ -229,7 +229,7 @@ export function AdminContentListPage() {
           onClick={() => setTypeFilter('dikey')}
           className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
             typeFilter === 'dikey'
-              ? 'bg-sineoda-gold text-sineoda-bg'
+              ? 'bg-plooy-gold text-plooy-bg'
               : 'bg-white/10 text-white/85 hover:bg-white/15'
           }`}
         >
@@ -243,7 +243,7 @@ export function AdminContentListPage() {
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#11141c]">
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-white/10 text-sineoda-muted">
+            <thead className="border-b border-white/10 text-plooy-muted">
               <tr>
                 <th className="px-4 py-3 font-medium">Poster</th>
                 <th className="px-4 py-3 font-medium">Başlık</th>
@@ -259,19 +259,19 @@ export function AdminContentListPage() {
             <tbody>
               {loading || catalogLoading ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-10 text-center text-sineoda-muted">
+                  <td colSpan={9} className="px-4 py-10 text-center text-plooy-muted">
                     Yükleniyor...
                   </td>
                 </tr>
               ) : filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-10 text-center text-sineoda-muted">
+                  <td colSpan={9} className="px-4 py-10 text-center text-plooy-muted">
                     {typeFilter === 'dikey' ? (
                       <div className="space-y-3">
                         <p>Henüz dikey dizi eklenmemiş.</p>
                         <Link
                           to={ADMIN_NEW_VERTICAL_HREF}
-                          className="inline-flex rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg"
+                          className="inline-flex rounded-lg bg-plooy-gold px-4 py-2 text-sm font-semibold text-plooy-bg"
                         >
                           + İlk Dikey Diziyi Ekle
                         </Link>
@@ -304,13 +304,13 @@ export function AdminContentListPage() {
                     </td>
                     <td className="px-4 py-3">
                       <p className="font-medium text-white">{item.title}</p>
-                      <p className="text-xs text-sineoda-muted">{item.id}</p>
+                      <p className="text-xs text-plooy-muted">{item.id}</p>
                     </td>
                     <td className="px-4 py-3">
                       <span
                         className={
                           isVerticalContent(item)
-                            ? 'rounded-full bg-sineoda-gold/15 px-2 py-1 text-xs font-medium text-sineoda-gold'
+                            ? 'rounded-full bg-plooy-gold/15 px-2 py-1 text-xs font-medium text-plooy-gold'
                             : 'text-white/80'
                         }
                       >
@@ -331,14 +331,14 @@ export function AdminContentListPage() {
                     </td>
                     <td className="px-4 py-3">
                       {item.featured ? (
-                        <span className="rounded-full bg-sineoda-gold/15 px-2 py-1 text-xs text-sineoda-gold">
+                        <span className="rounded-full bg-plooy-gold/15 px-2 py-1 text-xs text-plooy-gold">
                           Evet
                         </span>
                       ) : (
                         <button
                           type="button"
                           onClick={() => void handleFeatured(item.id)}
-                          className="text-xs text-sineoda-muted hover:text-white"
+                          className="text-xs text-plooy-muted hover:text-white"
                         >
                           Öne çıkar
                         </button>

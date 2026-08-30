@@ -1,4 +1,4 @@
-# Sineoda — tek konteyner: API + statik frontend
+# Plooy — tek konteyner: API + statik frontend
 FROM node:22-alpine AS frontend
 WORKDIR /app
 COPY package.json package-lock.json ./

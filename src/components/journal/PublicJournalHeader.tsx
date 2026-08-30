@@ -19,7 +19,7 @@ export function PublicJournalHeader() {
         ) : (
           <Link
             to="/kayit"
-            className="rounded-md bg-sineoda-accent px-4 py-2 text-sm font-semibold text-sineoda-bg"
+            className="rounded-md bg-plooy-accent px-4 py-2 text-sm font-semibold text-plooy-bg"
           >
             Üye Ol
           </Link>

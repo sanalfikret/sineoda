@@ -63,7 +63,7 @@ export function ShareMenu({ contentId, title, onClose }: ShareMenuProps) {
     >
       <div className="border-b border-white/10 px-4 py-3">
         <p className="text-sm font-semibold text-white">Paylaş</p>
-        <p className="mt-0.5 text-xs text-sineoda-muted">
+        <p className="mt-0.5 text-xs text-plooy-muted">
           {copied ? 'Bağlantı kopyalandı — platform seç' : 'Bağlantı hazırlanıyor...'}
         </p>
       </div>
@@ -76,7 +76,7 @@ export function ShareMenu({ contentId, title, onClose }: ShareMenuProps) {
             onClick={() => void handleNativeShare()}
             className="mb-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-white transition hover:bg-white/10"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-sineoda-gold/20 text-sineoda-gold">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-plooy-gold/20 text-plooy-gold">
               ↗
             </span>
             Diğer uygulamalar
@@ -95,7 +95,7 @@ export function ShareMenu({ contentId, title, onClose }: ShareMenuProps) {
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-white transition hover:bg-white/10"
           >
             <span
-              className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-sineoda-bg"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-plooy-bg"
               style={{ backgroundColor: channel.color }}
             >
               {channel.label.charAt(0)}

@@ -45,7 +45,7 @@ export function LoginPage() {
               <p className="mt-3">
                 <Link
                   to={`/eposta-dogrula?email=${encodeURIComponent(resendEmail)}`}
-                  className="font-medium text-sineoda-gold hover:underline"
+                  className="font-medium text-plooy-gold hover:underline"
                 >
                   Doğrulama e-postasını yeniden gönder
                 </Link>
@@ -62,7 +62,7 @@ export function LoginPage() {
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded-lg border border-white/10 bg-sineoda-bg px-4 py-3 text-white outline-none transition focus:border-sineoda-gold"
+            className="w-full rounded-lg border border-white/10 bg-plooy-bg px-4 py-3 text-white outline-none transition focus:border-plooy-gold"
             placeholder="ornek@email.com"
           />
         </label>
@@ -70,7 +70,7 @@ export function LoginPage() {
         <label className="block">
           <div className="mb-1.5 flex items-center justify-between">
             <span className="text-sm font-medium text-white/90">Şifre</span>
-            <Link to="/sifremi-unuttum" className="text-xs text-sineoda-gold hover:underline">
+            <Link to="/sifremi-unuttum" className="text-xs text-plooy-gold hover:underline">
               Şifremi unuttum
             </Link>
           </div>
@@ -80,7 +80,7 @@ export function LoginPage() {
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-lg border border-white/10 bg-sineoda-bg px-4 py-3 text-white outline-none transition focus:border-sineoda-gold"
+            className="w-full rounded-lg border border-white/10 bg-plooy-bg px-4 py-3 text-white outline-none transition focus:border-plooy-gold"
             placeholder="••••••••"
           />
         </label>
@@ -88,21 +88,21 @@ export function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-sineoda-gold py-3 text-sm font-semibold text-sineoda-bg transition hover:brightness-110 disabled:opacity-60"
+          className="w-full rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110 disabled:opacity-60"
         >
           {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-sineoda-muted">
+      <p className="mt-6 text-center text-sm text-plooy-muted">
         Hesabın yok mu?{' '}
-        <Link to="/kayit" className="font-medium text-sineoda-gold hover:underline">
+        <Link to="/kayit" className="font-medium text-plooy-gold hover:underline">
           Kayıt ol
         </Link>
       </p>
 
       {from !== '/' && (
-        <p className="mt-2 text-center text-xs text-sineoda-muted">
+        <p className="mt-2 text-center text-xs text-plooy-muted">
           Giriş yaptıktan sonra ödeme adımına yönlendirileceksin.
         </p>
       )}

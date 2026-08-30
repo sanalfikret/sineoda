@@ -21,7 +21,7 @@ ADIM 0 — Bilgisayarda API zip olustur
 --------------------------------------
   deploy\cpanel\build-api.bat
 
-  Cikti: deploy\cpanel\sineoda-api.zip
+  Cikti: deploy\cpanel\Plooy-api.zip
 
 
 ADIM 1 — Alt domain
@@ -39,11 +39,11 @@ ADIM 2 — Klasor (public_html DISINDA)
 -------------------------------------
   cPanel -> File Manager -> Home (public_html'in UST dizini)
 
-  Ornek yol: /home/KULLANICIADI/sineoda-api
+  Ornek yol: /home/KULLANICIADI/Plooy-api
 
-  sineoda-api.zip yukle -> Extract
+  Plooy-api.zip yukle -> Extract
   Sonuc:
-    sineoda-api/
+    Plooy-api/
       package.json
       src/
       data/        (bos, yazilabilir)
@@ -58,7 +58,7 @@ ADIM 3 — Node.js uygulamasi
 
   Node.js version     : 18.x veya 22.x (18+ yeterli)
   Application mode    : Production
-  Application root    : sineoda-api   (tam yol: /home/.../sineoda-api)
+  Application root    : Plooy-api   (tam yol: /home/.../Plooy-api)
   Application URL     : api.birtakimislerdizi.com
   Application startup : npm start
                         (veya: npx tsx src/index.ts)
@@ -78,8 +78,8 @@ ADIM 4 — Environment variables (Node.js App ekraninda)
   PUBLIC_URL=https://api.birtakimislerdizi.com
   REQUIRE_SUBSCRIPTION=false
   REQUIRE_SMS_VERIFICATION=false
-  DATA_DIR=/home/KULLANICIADI/sineoda-api/data
-  UPLOADS_DIR=/home/KULLANICIADI/sineoda-api/uploads
+  DATA_DIR=/home/KULLANICIADI/Plooy-api/data
+  UPLOADS_DIR=/home/KULLANICIADI/Plooy-api/uploads
 
   Kaydet -> Restart uygulama.
 
@@ -118,7 +118,7 @@ ADIM 6 — Frontend'i yeni API'ye bagla
 ADIM 7 — Ilk admin / demo
 -------------------------
   Yeni SQLite = sifirdan seed. Demo admin:
-    admin@sineoda.com / admin123
+    admin@Plooy.com / admin123
   Canlida sifreyi degistir.
 
   Eski Render uyesi verisi otomatik gelmez. Render'dan export yoksa
@@ -147,7 +147,7 @@ SIK SORUNLAR
 
 • Uyeler / kategoriler kayboluyor
   - DATA_DIR yanlis veya public_html icinde -> yazilamiyor / siliniyor
-  - Dogru: /home/.../sineoda-api/data
+  - Dogru: /home/.../Plooy-api/data
 
 • Eski Render API hala kullaniliyor
   - Frontend'i VITE_API_URL ile yeniden build et, public_html'e yukle
@@ -158,5 +158,5 @@ SIK SORUNLAR
 
 RENDER'I KAPATMA (istege bagli)
 -------------------------------
-  API cPanel'de stabil calistiktan sonra Render sineoda-api servisini
+  API cPanel'de stabil calistiktan sonra Render Plooy-api servisini
   durdurabilirsin (ucret / uyku sorunu biter).

@@ -65,7 +65,7 @@ export function LandingSlider({ items }: LandingSliderProps) {
         <div className="absolute inset-x-0 bottom-0">
           <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 px-5 pb-5 sm:flex-row sm:items-end sm:justify-between sm:px-8 sm:pb-8 lg:pb-10">
             <div className="max-w-xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sineoda-gold">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-plooy-gold">
                 Öne Çıkan
               </p>
               <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl lg:text-4xl">
@@ -77,7 +77,7 @@ export function LandingSlider({ items }: LandingSliderProps) {
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <Link
                   to="/kayit"
-                  className="inline-flex items-center justify-center rounded-md bg-sineoda-gold px-6 py-2.5 text-sm font-bold text-sineoda-bg transition hover:brightness-110"
+                  className="inline-flex items-center justify-center rounded-md bg-plooy-gold px-6 py-2.5 text-sm font-bold text-plooy-bg transition hover:brightness-110"
                 >
                   Üye Ol
                 </Link>
@@ -95,7 +95,7 @@ export function LandingSlider({ items }: LandingSliderProps) {
                   onClick={() => goTo(index)}
                   className={`shrink-0 overflow-hidden rounded-lg border-2 transition ${
                     index === activeIndex
-                      ? 'scale-105 border-sineoda-gold'
+                      ? 'scale-105 border-plooy-gold'
                       : 'border-transparent opacity-60 hover:opacity-100'
                   }`}
                   aria-label={item.title}
@@ -143,7 +143,7 @@ export function LandingSlider({ items }: LandingSliderProps) {
               type="button"
               onClick={() => goTo(index)}
               className={`h-2 rounded-full transition-all ${
-                index === activeIndex ? 'w-6 bg-sineoda-gold' : 'w-2 bg-white/40'
+                index === activeIndex ? 'w-6 bg-plooy-gold' : 'w-2 bg-white/40'
               }`}
               aria-label={`Slayt ${index + 1}`}
             />

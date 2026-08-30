@@ -19,9 +19,9 @@ export function InstallAppButton({
 
   const styles =
     variant === 'primary'
-      ? 'rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg hover:brightness-110'
+      ? 'rounded-lg bg-plooy-gold px-4 py-2 text-sm font-semibold text-plooy-bg hover:brightness-110'
       : variant === 'link'
-        ? 'text-sm text-sineoda-gold hover:underline'
+        ? 'text-sm text-plooy-gold hover:underline'
         : 'rounded-lg border border-white/10 px-4 py-2 text-sm text-white/90 hover:bg-white/5'
 
   return (
@@ -69,13 +69,13 @@ export function InstallAppStatusCard() {
         </p>
       ) : (
         <>
-          <p className="mt-2 text-sm text-sineoda-muted">
+          <p className="mt-2 text-sm text-plooy-muted">
             Plooy&apos;yu telefona uygulama olarak yükleyin — mağaza veya APK gerekmez.
           </p>
           <button
             type="button"
             onClick={() => void installApp()}
-            className="mt-4 rounded-lg bg-sineoda-gold px-4 py-2.5 text-sm font-semibold text-sineoda-bg hover:brightness-110"
+            className="mt-4 rounded-lg bg-plooy-gold px-4 py-2.5 text-sm font-semibold text-plooy-bg hover:brightness-110"
           >
             Yükle
           </button>

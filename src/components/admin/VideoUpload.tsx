@@ -76,10 +76,10 @@ export function VideoUpload({ label, value, onChange }: VideoUploadProps) {
         value={isUploadedFile ? '' : value}
         onChange={(event) => onChange(normalizeStoredMediaPath(event.target.value))}
         placeholder="Bunny CDN HLS (.m3u8) veya MP4 URL yapıştır"
-        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
+        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-plooy-gold"
       />
 
-      {progress && <p className="text-xs text-sineoda-muted">{progress}</p>}
+      {progress && <p className="text-xs text-plooy-muted">{progress}</p>}
       {error && <p className="text-xs text-red-300">{error}</p>}
     </div>
   )

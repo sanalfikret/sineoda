@@ -45,7 +45,7 @@ export function FestivalLaurelBadge({
     >
       <svg
         viewBox="0 0 120 120"
-        className="absolute inset-0 h-full w-full text-sineoda-gold/85"
+        className="absolute inset-0 h-full w-full text-plooy-gold/85"
         aria-hidden="true"
       >
         <path
@@ -64,7 +64,7 @@ export function FestivalLaurelBadge({
         <p className={`font-semibold leading-tight text-white ${compact ? 'text-[9px]' : 'text-[11px]'}`}>
           {entry.festivalName}
         </p>
-        <p className={`mt-0.5 text-sineoda-gold ${compact ? 'text-[8px]' : 'text-[10px]'}`}>{entry.year}</p>
+        <p className={`mt-0.5 text-plooy-gold ${compact ? 'text-[8px]' : 'text-[10px]'}`}>{entry.year}</p>
         {!compact && (
           <p className="mt-1 text-[9px] leading-tight text-white/70">{subtitle}</p>
         )}

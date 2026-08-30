@@ -26,21 +26,21 @@ export function LandingJournalTeaser({
   if (posts.length === 0) return null
 
   return (
-    <section className="border-y border-white/[0.06] bg-sineoda-bg px-5 py-20 sm:px-8 sm:py-24">
+    <section className="border-y border-white/[0.06] bg-plooy-bg px-5 py-20 sm:px-8 sm:py-24">
       <div className="mx-auto max-w-[1400px]">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sineoda-accent">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-plooy-accent">
               {section.eyebrow}
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
               {section.title}
             </h2>
-            <p className="mt-3 max-w-2xl text-base text-sineoda-muted">{section.description}</p>
+            <p className="mt-3 max-w-2xl text-base text-plooy-muted">{section.description}</p>
           </div>
           <Link
             to="/dergi"
-            className="text-sm font-medium text-sineoda-accent transition hover:text-white"
+            className="text-sm font-medium text-plooy-accent transition hover:text-white"
           >
             Tüm yazılar →
           </Link>

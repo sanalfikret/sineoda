@@ -11,7 +11,7 @@ export function TermsAcceptanceNote() {
         <button
           type="button"
           onClick={() => setLegalOpen(true)}
-          className="text-sineoda-gold underline underline-offset-2 hover:text-sineoda-gold/80"
+          className="text-plooy-gold underline underline-offset-2 hover:text-plooy-gold/80"
         >
           Kullanım Koşulları
         </button>

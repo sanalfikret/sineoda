@@ -158,7 +158,7 @@ export function AdminUsersPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-white">İzleyiciler</h1>
-          <p className="mt-1 text-sm text-sineoda-muted">
+          <p className="mt-1 text-sm text-plooy-muted">
             {members.length} üye · {staff.length} yönetici
           </p>
         </div>
@@ -176,7 +176,7 @@ export function AdminUsersPage() {
             <button
               type="button"
               onClick={() => setShowForm((open) => !open)}
-              className="rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg"
+              className="rounded-lg bg-plooy-gold px-4 py-2 text-sm font-semibold text-plooy-bg"
             >
               + Yönetici ekle
             </button>
@@ -193,7 +193,7 @@ export function AdminUsersPage() {
             setShowForm(false)
           }}
           className={`rounded-full px-4 py-1.5 text-sm font-medium ${
-            tab === 'members' ? 'bg-sineoda-gold/15 text-sineoda-gold' : 'bg-white/5 text-white/70'
+            tab === 'members' ? 'bg-plooy-gold/15 text-plooy-gold' : 'bg-white/5 text-white/70'
           }`}
         >
           İzleyiciler ({members.length})
@@ -206,7 +206,7 @@ export function AdminUsersPage() {
             setShowBroadcast(false)
           }}
           className={`rounded-full px-4 py-1.5 text-sm font-medium ${
-            tab === 'staff' ? 'bg-sineoda-gold/15 text-sineoda-gold' : 'bg-white/5 text-white/70'
+            tab === 'staff' ? 'bg-plooy-gold/15 text-plooy-gold' : 'bg-white/5 text-white/70'
           }`}
         >
           Yöneticiler ({staff.length})
@@ -241,7 +241,7 @@ export function AdminUsersPage() {
               value={form.name}
               onChange={(event) => setForm({ ...form, name: event.target.value })}
               placeholder="Ad Soyad"
-              className="rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
+              className="rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-plooy-gold"
             />
             <input
               required
@@ -249,7 +249,7 @@ export function AdminUsersPage() {
               value={form.email}
               onChange={(event) => setForm({ ...form, email: event.target.value })}
               placeholder="E-posta"
-              className="rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
+              className="rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-plooy-gold"
             />
             <input
               required
@@ -258,20 +258,20 @@ export function AdminUsersPage() {
               value={form.password}
               onChange={(event) => setForm({ ...form, password: event.target.value })}
               placeholder="Şifre (min 6)"
-              className="rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
+              className="rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-plooy-gold"
             />
             <select
               value={form.role}
               onChange={(event) =>
                 setForm({ ...form, role: event.target.value as 'admin' | 'manager' })
               }
-              className="rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
+              className="rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-plooy-gold"
             >
               <option value="manager">Yönetici</option>
               <option value="admin">Admin</option>
             </select>
           </div>
-          <button type="submit" className="rounded-lg bg-sineoda-gold px-5 py-2.5 text-sm font-semibold text-sineoda-bg">
+          <button type="submit" className="rounded-lg bg-plooy-gold px-5 py-2.5 text-sm font-semibold text-plooy-bg">
             Oluştur
           </button>
         </form>
@@ -324,7 +324,7 @@ export function AdminUsersPage() {
               <button
                 type="submit"
                 disabled={broadcasting}
-                className="rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg disabled:opacity-50"
+                className="rounded-lg bg-plooy-gold px-4 py-2 text-sm font-semibold text-plooy-bg disabled:opacity-50"
               >
                 {broadcasting ? 'Gönderiliyor...' : 'Gönder'}
               </button>
@@ -335,11 +335,11 @@ export function AdminUsersPage() {
 
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#11141c]">
         {loading ? (
-          <p className="p-6 text-sm text-sineoda-muted">Yükleniyor...</p>
+          <p className="p-6 text-sm text-plooy-muted">Yükleniyor...</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-white/10 text-sineoda-muted">
+              <thead className="border-b border-white/10 text-plooy-muted">
                 <tr>
                   <th className="px-4 py-3 font-medium">Ad</th>
                   <th className="px-4 py-3 font-medium">E-posta</th>
@@ -353,7 +353,7 @@ export function AdminUsersPage() {
               <tbody>
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-10 text-center text-sineoda-muted">
+                    <td colSpan={6} className="px-4 py-10 text-center text-plooy-muted">
                       Kayıt bulunamadı.
                     </td>
                   </tr>
@@ -401,7 +401,7 @@ export function AdminUsersPage() {
                               <button
                                 type="button"
                                 onClick={() => setSelectedUser(user)}
-                                className="rounded-lg bg-sineoda-gold/10 px-3 py-1.5 text-xs text-sineoda-gold hover:bg-sineoda-gold/20"
+                                className="rounded-lg bg-plooy-gold/10 px-3 py-1.5 text-xs text-plooy-gold hover:bg-plooy-gold/20"
                               >
                                 Mesaj
                               </button>

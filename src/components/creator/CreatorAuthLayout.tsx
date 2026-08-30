@@ -8,7 +8,7 @@ export function CreatorAuthLayout({ children }: { children: React.ReactNode }) {
         {children}
       </div>
       <div className="px-4 pb-6 text-center">
-        <Link to="/" className="text-sm text-sineoda-gold hover:underline">
+        <Link to="/" className="text-sm text-plooy-gold hover:underline">
           Ana siteye dön
         </Link>
       </div>

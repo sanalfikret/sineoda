@@ -29,7 +29,7 @@ export function JournalPostPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[50dvh] items-center justify-center text-sineoda-muted">
+      <div className="flex min-h-[50dvh] items-center justify-center text-plooy-muted">
         Yükleniyor...
       </div>
     )
@@ -39,7 +39,7 @@ export function JournalPostPage() {
     return (
       <div className="flex min-h-[50dvh] flex-col items-center justify-center gap-4 px-4 text-center">
         <p className="text-lg text-white">Yazı bulunamadı.</p>
-        <Link to="/dergi" className="text-sineoda-accent hover:underline">
+        <Link to="/dergi" className="text-plooy-accent hover:underline">
           Dergiye dön
         </Link>
       </div>
@@ -51,10 +51,10 @@ export function JournalPostPage() {
       {!isMember && (
         <header className="safe-top border-b border-white/5 px-4 py-5 sm:px-6">
           <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
-            <Link to="/dergi" className="text-sm text-sineoda-muted transition hover:text-white">
+            <Link to="/dergi" className="text-sm text-plooy-muted transition hover:text-white">
               ← Dergi
             </Link>
-            <Link to="/" className="text-sm font-medium text-sineoda-accent">
+            <Link to="/" className="text-sm font-medium text-plooy-accent">
               {BRAND_NAME}
             </Link>
           </div>
@@ -63,19 +63,19 @@ export function JournalPostPage() {
 
       <article className={`mx-auto max-w-3xl px-5 sm:px-8 ${isMember ? 'py-8' : 'py-10 sm:py-14'}`}>
         {isMember && (
-          <Link to="/dergi" className="text-sm text-sineoda-muted transition hover:text-white">
+          <Link to="/dergi" className="text-sm text-plooy-muted transition hover:text-white">
             ← Dergi
           </Link>
         )}
 
-        <p className={`text-xs font-semibold uppercase tracking-[0.22em] text-sineoda-accent ${isMember ? 'mt-4' : ''}`}>
+        <p className={`text-xs font-semibold uppercase tracking-[0.22em] text-plooy-accent ${isMember ? 'mt-4' : ''}`}>
           {formatJournalDate(post.publishedAt)} · {post.author}
         </p>
         <h1 className="mt-4 text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">
           {post.title}
         </h1>
         {post.excerpt && (
-          <p className="mt-5 text-lg leading-relaxed text-sineoda-muted">{post.excerpt}</p>
+          <p className="mt-5 text-lg leading-relaxed text-plooy-muted">{post.excerpt}</p>
         )}
 
         {post.coverImage && (
@@ -95,14 +95,14 @@ export function JournalPostPage() {
         </div>
 
         {linkedContent && (
-          <div className="mt-12 rounded-xl border border-white/[0.08] bg-sineoda-surface p-5 sm:flex sm:items-center sm:gap-5">
+          <div className="mt-12 rounded-xl border border-white/[0.08] bg-plooy-surface p-5 sm:flex sm:items-center sm:gap-5">
             <img
               src={resolveMediaUrl(linkedContent.poster)}
               alt=""
               className="h-28 w-20 rounded-lg object-cover"
             />
             <div className="mt-4 sm:mt-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sineoda-accent">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-plooy-accent">
                 İlgili içerik
               </p>
               <p className="mt-2 text-lg font-medium">{linkedContent.title}</p>
@@ -110,14 +110,14 @@ export function JournalPostPage() {
                 <button
                   type="button"
                   onClick={() => void contentUI.openPlayer(linkedContent)}
-                  className="mt-3 inline-flex rounded-md bg-sineoda-accent px-4 py-2 text-sm font-semibold text-sineoda-bg"
+                  className="mt-3 inline-flex rounded-md bg-plooy-accent px-4 py-2 text-sm font-semibold text-plooy-bg"
                 >
                   İzle
                 </button>
               ) : (
                 <Link
                   to="/giris"
-                  className="mt-3 inline-flex rounded-md bg-sineoda-accent px-4 py-2 text-sm font-semibold text-sineoda-bg"
+                  className="mt-3 inline-flex rounded-md bg-plooy-accent px-4 py-2 text-sm font-semibold text-plooy-bg"
                 >
                   İzlemek için giriş yap
                 </Link>

@@ -65,12 +65,12 @@ export function AdminCekimNotlariVideoList({
         </p>
       ) : null}
       {savingOrder ? (
-        <p className="text-xs text-sineoda-muted">Video sırası kaydediliyor...</p>
+        <p className="text-xs text-plooy-muted">Video sırası kaydediliyor...</p>
       ) : null}
 
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
-          <thead className="text-xs uppercase tracking-wide text-sineoda-muted">
+          <thead className="text-xs uppercase tracking-wide text-plooy-muted">
             <tr>
               {!dragDisabled ? <th className="pb-3 pr-2 w-10" /> : null}
               <th className="pb-3 pr-4">Başlık</th>
@@ -125,11 +125,11 @@ export function AdminCekimNotlariVideoList({
                     </td>
                   ) : null}
                   <td className="py-3 pr-4 font-medium text-white">{item.title}</td>
-                  <td className="py-3 pr-4 text-sineoda-muted">
+                  <td className="py-3 pr-4 text-plooy-muted">
                     {item.credits?.directors?.[0] ?? '—'}
                   </td>
-                  <td className="py-3 pr-4 text-sineoda-muted">{item.duration}</td>
-                  <td className="py-3 pr-4 text-sineoda-muted">
+                  <td className="py-3 pr-4 text-plooy-muted">{item.duration}</td>
+                  <td className="py-3 pr-4 text-plooy-muted">
                     {item.publishedAt ? 'Yayında' : 'Taslak'}
                   </td>
                   <td className="py-3">

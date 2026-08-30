@@ -22,7 +22,7 @@ ADIM 1 — Bilgisayarında build
   deploy\cpanel\build-static.bat
 
 ADIM 2 — Render API'de domain izni
-  Render → sineoda-api → Environment
+  Render → Plooy-api → Environment
   FRONTEND_URL = https://senindomain.com  (cPanel domain'in)
 
 ADIM 3 — FTP / Dosya Yöneticisi ile yükle
@@ -38,7 +38,7 @@ Not: Render free tier uyuyunca ilk istek 30-60 sn gecikebilir.
 ÖNEMLİ — Üyeler ve veritabanı (Render):
   Render ücretsiz planda sunucu yeniden başlayınca veya deploy olunca
   veritabanı SIFIRLANABİLİR (üyeler kaybolur). Zip yüklemek bunu etkilemez.
-  Kalıcı veri için: Render → sineoda-api → Disk ekle (/var/data),
+  Kalıcı veri için: Render → Plooy-api → Disk ekle (/var/data),
   DATA_DIR=/var/data ve UPLOADS_DIR=/var/data/uploads env ayarla.
   (Starter plan veya üzeri gerekir.)
 
@@ -51,9 +51,9 @@ Render'a para vermeden API'yi kendi hostinginde çalıştır.
 Ayrıntılı rehber: deploy\cpanel\KURULUM-API.txt
 
 Özet:
-  1) deploy\cpanel\build-api.bat  →  sineoda-api.zip
+  1) deploy\cpanel\build-api.bat  →  Plooy-api.zip
   2) Alt domain: api.senindomain.com + SSL
-  3) Zip'i /home/kullanici/sineoda-api'ye aç (public_html DIŞI)
+  3) Zip'i /home/kullanici/Plooy-api'ye aç (public_html DIŞI)
   4) Setup Node.js App → npm start → Run NPM Install → env değişkenleri
   5) .env.cpanel: VITE_API_URL=https://api.senindomain.com → build-static.bat
   6) dist → public_html
@@ -66,7 +66,7 @@ Sık sorunlar
 • Siyah ekran / site açılmıyor:
   1) cPanel → SSL/TLS → Let's Encrypt / AutoSSL ile HTTPS aç
      (http:// adresinde bazı tarayıcı özellikleri çalışmaz)
-  2) Eski dosyaları sil, yeni sineoda-site.zip yükle
+  2) Eski dosyaları sil, yeni Plooy-site.zip yükle
   3) Ctrl+Shift+R ile hard refresh
   4) Render → FRONTEND_URL = https://birtakimislerdizi.com
 
@@ -78,4 +78,4 @@ Sık sorunlar
 • SQLite / upload: public_html İÇİNE koyma — data ve uploads ayrı klasör
 
 Demo admin (canlıda şifreyi değiştir):
-  admin@sineoda.com / admin123
+  admin@Plooy.com / admin123

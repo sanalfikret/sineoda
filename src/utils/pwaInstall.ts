@@ -1,7 +1,7 @@
 export type InstallPlatform = 'ios' | 'android' | 'desktop' | 'unknown'
 
-const DISMISS_KEY = 'sineoda-install-dismissed-until'
-const AUTO_PROMPT_KEY = 'sineoda-install-auto-prompted'
+const DISMISS_KEY = 'plooy-install-dismissed-until'
+const AUTO_PROMPT_KEY = 'plooy-install-auto-prompted'
 
 export interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>

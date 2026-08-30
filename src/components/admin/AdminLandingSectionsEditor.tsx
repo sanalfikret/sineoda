@@ -4,7 +4,7 @@ import type { LandingContentBlockId } from '../../constants/landingLayout'
 import type { LandingFaqItem, LandingSectionsConfig, LandingTextItem } from '../../constants/landingDefaults'
 
 const inputClass =
-  'w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold'
+  'w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-plooy-gold'
 
 function Field({
   label,
@@ -182,7 +182,7 @@ export function AdminLandingSectionBlock({
     ),
     campaign: (
       <>
-        <p className="text-xs text-sineoda-muted">
+        <p className="text-xs text-plooy-muted">
           Kampanya dönemlerinde etiketi &quot;Kampanya&quot;, fiyatı ve görseli buradan değiştirin.
         </p>
         <Field

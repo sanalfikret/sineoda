@@ -1,4 +1,4 @@
-Sineoda — tek sunucu (VPS) production rehberi
+Plooy — tek sunucu (VPS) production rehberi
 =============================================
 
 Amaç: Site + API + veritabanı + yüklemeler TEK kiralık sunucuda.
@@ -7,12 +7,12 @@ Render, Vercel, GitHub runtime'da kullanılmaz.
 Mimari
 ------
   İnternet → nginx (443) → Docker :3001 → Node API + statik React
-  Veri     → /opt/sineoda/persistent/data/sineoda.db (host disk)
-  Upload   → /opt/sineoda/persistent/uploads/
+  Veri     → /opt/Plooy/persistent/data/Plooy.db (host disk)
+  Upload   → /opt/Plooy/persistent/uploads/
 
-Zorunlu .env (/opt/sineoda/.env)
+Zorunlu .env (/opt/Plooy/.env)
 --------------------------------
-  PERSIST_DIR=/opt/sineoda/persistent
+  PERSIST_DIR=/opt/Plooy/persistent
   JWT_SECRET=<uzun rastgele, deploy sonrası değiştirmeyin>
   FRONTEND_URL=https://sizin-domain.com
   PUBLIC_URL=https://sizin-domain.com
@@ -27,7 +27,7 @@ Deploy yöntemleri
 A) GitHub + VPS (önerilen — Netflix/Mubi modeli):
    PC: git push origin main
    VPS (PuTTY):
-     cd /opt/sineoda
+     cd /opt/Plooy
      git pull
      bash deploy/rebuild-vps.sh
    GitHub = kod deposu. Canlı site = VPS.
@@ -37,7 +37,7 @@ B) GitHub'sız yedek — bilgisayardan direkt aktarım:
    powershell -File deploy/sync-to-vps.ps1
 
 Sadece rebuild (kod zaten VPS'te güncelse):
-   cd /opt/sineoda && bash deploy/rebuild-vps.sh
+   cd /opt/Plooy && bash deploy/rebuild-vps.sh
 
 Deploy sonrası doğrulama
 ------------------------
@@ -64,4 +64,4 @@ Yedek
 -----------
   bash deploy/install-vps.sh
   cp deploy/env.production.example .env  → düzenle
-  nginx: deploy/nginx-sineoda.conf
+  nginx: deploy/nginx-Plooy.conf

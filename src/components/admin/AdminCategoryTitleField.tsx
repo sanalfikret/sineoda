@@ -72,13 +72,13 @@ export function AdminCategoryTitleField({
             event.currentTarget.blur()
           }
         }}
-        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-base font-semibold text-white outline-none focus:border-sineoda-gold disabled:opacity-60"
+        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-base font-semibold text-white outline-none focus:border-plooy-gold disabled:opacity-60"
         aria-label="Kategori adı"
       />
       {saving ? (
-        <p className="mt-1 text-xs text-sineoda-gold">Kaydediliyor…</p>
+        <p className="mt-1 text-xs text-plooy-gold">Kaydediliyor…</p>
       ) : (
-        <p className="mt-1 text-xs text-sineoda-muted">Enter ile kaydet · Esc ile iptal</p>
+        <p className="mt-1 text-xs text-plooy-muted">Enter ile kaydet · Esc ile iptal</p>
       )}
     </div>
   )

@@ -1,7 +1,7 @@
 /** Marka adı — logo metni (Pl + ooy vurgusu) */
 export function BrandName({
   className = '',
-  accentClass = 'text-sineoda-gold',
+  accentClass = 'text-plooy-gold',
 }: {
   className?: string
   accentClass?: string

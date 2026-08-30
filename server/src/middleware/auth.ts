@@ -61,7 +61,9 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
 
   req.auth = payload
   // Her istekte oturumu 30 güne uzat (süresi dolmuş token da yenilenir)
-  res.setHeader('X-Sineoda-Token', signToken({ userId: payload.userId, role: payload.role }))
+  const refreshed = signToken({ userId: payload.userId, role: payload.role })
+  res.setHeader('X-Plooy-Token', refreshed)
+  res.setHeader('X-Sineoda-Token', refreshed)
   next()
 }
 

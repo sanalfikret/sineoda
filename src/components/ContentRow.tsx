@@ -57,7 +57,7 @@ export function ContentRow({
         <h2 className="text-lg font-semibold text-white sm:text-xl">{title}</h2>
         <div className="flex items-center gap-2">
           {viewAllHref && (
-            <Link to={viewAllHref} className="text-sm font-medium text-sineoda-gold hover:underline">
+            <Link to={viewAllHref} className="text-sm font-medium text-plooy-gold hover:underline">
               Tümünü gör
             </Link>
           )}
@@ -142,7 +142,7 @@ function ScrollButton({
       type="button"
       aria-label={direction === 'left' ? 'Sola kaydır' : 'Sağa kaydır'}
       onClick={onClick}
-      className="rounded-full border border-white/10 bg-sineoda-elevated p-2 text-white/80 transition hover:bg-white/10 hover:text-white"
+      className="rounded-full border border-white/10 bg-plooy-elevated p-2 text-white/80 transition hover:bg-white/10 hover:text-white"
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         {direction === 'left' ? (

@@ -138,25 +138,25 @@ export function SignupPage() {
             {devVerifyUrl ? (
               <p className="mt-2 break-all text-xs text-white/70">
                 Geliştirme modu bağlantısı:{' '}
-                <a href={devVerifyUrl} className="text-sineoda-gold underline">
+                <a href={devVerifyUrl} className="text-plooy-gold underline">
                   {devVerifyUrl}
                 </a>
               </p>
             ) : null}
           </div>
-          <p className="text-sm text-sineoda-muted">
+          <p className="text-sm text-plooy-muted">
             E-postayı doğruladıktan sonra giriş yap. Aktif aboneliğin yoksa doğrudan ödeme sayfasına
             yönlendirileceksin.
           </p>
           <Link
             to={`/eposta-dogrula?email=${encodeURIComponent(pendingEmail || email)}`}
-            className="block w-full rounded-lg border border-sineoda-gold/40 bg-sineoda-gold/10 py-3 text-center text-sm font-semibold text-sineoda-gold"
+            className="block w-full rounded-lg border border-plooy-gold/40 bg-plooy-gold/10 py-3 text-center text-sm font-semibold text-plooy-gold"
           >
             Doğrulama E-postasını Yeniden Gönder
           </Link>
           <Link
             to="/giris"
-            className="block w-full rounded-lg bg-sineoda-gold py-3 text-center text-sm font-semibold text-sineoda-bg"
+            className="block w-full rounded-lg bg-plooy-gold py-3 text-center text-sm font-semibold text-plooy-bg"
           >
             Giriş Yap ve Ödemeye Geç
           </Link>
@@ -169,7 +169,7 @@ export function SignupPage() {
             </div>
           )}
           {info && (
-            <div className="rounded-lg border border-sineoda-gold/30 bg-sineoda-gold/10 px-4 py-3 text-sm text-sineoda-gold">
+            <div className="rounded-lg border border-plooy-gold/30 bg-plooy-gold/10 px-4 py-3 text-sm text-plooy-gold">
               {info}
               {devCode && (
                 <p className="mt-1 text-xs text-white/80">
@@ -194,16 +194,16 @@ export function SignupPage() {
                     }}
                     className={`rounded-xl border px-4 py-3 text-left transition ${
                       active
-                        ? 'border-sineoda-gold/50 bg-sineoda-gold/10'
+                        ? 'border-plooy-gold/50 bg-plooy-gold/10'
                         : 'border-white/10 bg-white/[0.03] hover:border-white/20'
                     }`}
                   >
                     <p className="font-semibold text-white">{plan.name}</p>
-                    <p className="mt-1 text-lg font-bold text-sineoda-gold">
+                    <p className="mt-1 text-lg font-bold text-plooy-gold">
                       ₺{plan.price}
-                      <span className="text-xs font-normal text-sineoda-muted">/ay</span>
+                      <span className="text-xs font-normal text-plooy-muted">/ay</span>
                     </p>
-                    <p className="mt-1 text-xs text-sineoda-muted">{plan.note}</p>
+                    <p className="mt-1 text-xs text-plooy-muted">{plan.note}</p>
                   </button>
                 )
               })}
@@ -218,9 +218,9 @@ export function SignupPage() {
                 required
                 accept="image/*,application/pdf"
                 onChange={(event) => setStudentIdFile(event.target.files?.[0] ?? null)}
-                className="w-full rounded-lg border border-white/10 bg-sineoda-bg px-3 py-2.5 text-sm text-white file:mr-3 file:rounded-md file:border-0 file:bg-sineoda-gold file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sineoda-bg"
+                className="w-full rounded-lg border border-white/10 bg-plooy-bg px-3 py-2.5 text-sm text-white file:mr-3 file:rounded-md file:border-0 file:bg-plooy-gold file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-plooy-bg"
               />
-              <p className="mt-1 text-xs text-sineoda-muted">JPG, PNG veya PDF — max 10 MB</p>
+              <p className="mt-1 text-xs text-plooy-muted">JPG, PNG veya PDF — max 10 MB</p>
             </label>
           )}
 
@@ -232,7 +232,7 @@ export function SignupPage() {
               autoComplete="name"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-sineoda-bg px-4 py-3 text-white outline-none transition focus:border-sineoda-gold"
+              className="w-full rounded-lg border border-white/10 bg-plooy-bg px-4 py-3 text-white outline-none transition focus:border-plooy-gold"
               placeholder="Adın"
             />
           </label>
@@ -245,7 +245,7 @@ export function SignupPage() {
               autoComplete="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-sineoda-bg px-4 py-3 text-white outline-none transition focus:border-sineoda-gold"
+              className="w-full rounded-lg border border-white/10 bg-plooy-bg px-4 py-3 text-white outline-none transition focus:border-plooy-gold"
               placeholder="ornek@email.com"
             />
           </label>
@@ -262,14 +262,14 @@ export function SignupPage() {
                   setPhone(event.target.value)
                   setCodeSent(false)
                 }}
-                className="min-w-0 flex-1 rounded-lg border border-white/10 bg-sineoda-bg px-4 py-3 text-white outline-none transition focus:border-sineoda-gold"
+                className="min-w-0 flex-1 rounded-lg border border-white/10 bg-plooy-bg px-4 py-3 text-white outline-none transition focus:border-plooy-gold"
                 placeholder="5xx xxx xx xx"
               />
               <button
                 type="button"
                 disabled={sendingCode || !phone.trim()}
                 onClick={() => void handleSendCode()}
-                className="shrink-0 rounded-lg border border-sineoda-gold/40 bg-sineoda-gold/10 px-3 py-3 text-xs font-semibold text-sineoda-gold disabled:opacity-50 sm:text-sm"
+                className="shrink-0 rounded-lg border border-plooy-gold/40 bg-plooy-gold/10 px-3 py-3 text-xs font-semibold text-plooy-gold disabled:opacity-50 sm:text-sm"
               >
                 {sendingCode ? '...' : 'Kod Gönder'}
               </button>
@@ -286,7 +286,7 @@ export function SignupPage() {
               maxLength={6}
               value={smsCode}
               onChange={(event) => setSmsCode(event.target.value.replace(/\D/g, ''))}
-              className="w-full rounded-lg border border-white/10 bg-sineoda-bg px-4 py-3 text-white outline-none transition focus:border-sineoda-gold"
+              className="w-full rounded-lg border border-white/10 bg-plooy-bg px-4 py-3 text-white outline-none transition focus:border-plooy-gold"
               placeholder="6 haneli kod"
             />
           </label>
@@ -300,22 +300,22 @@ export function SignupPage() {
               autoComplete="new-password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-sineoda-bg px-4 py-3 text-white outline-none transition focus:border-sineoda-gold"
+              className="w-full rounded-lg border border-white/10 bg-plooy-bg px-4 py-3 text-white outline-none transition focus:border-plooy-gold"
               placeholder="En az 6 karakter"
             />
           </label>
 
-          <p className="text-xs leading-relaxed text-sineoda-muted">
+          <p className="text-xs leading-relaxed text-plooy-muted">
             Kayıt olarak{' '}
-            <Link to="/yasal/kullanim-kosullari" className="text-sineoda-gold hover:underline">
+            <Link to="/yasal/kullanim-kosullari" className="text-plooy-gold hover:underline">
               Kullanım Koşulları
             </Link>
             ,{' '}
-            <Link to="/yasal/gizlilik-politikasi" className="text-sineoda-gold hover:underline">
+            <Link to="/yasal/gizlilik-politikasi" className="text-plooy-gold hover:underline">
               Gizlilik Politikası
             </Link>{' '}
             ve{' '}
-            <Link to="/yasal/kvkk-aydinlatma" className="text-sineoda-gold hover:underline">
+            <Link to="/yasal/kvkk-aydinlatma" className="text-plooy-gold hover:underline">
               KVKK Aydınlatma Metni
             </Link>
             &apos;ni kabul etmiş olursunuz.
@@ -324,7 +324,7 @@ export function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-sineoda-gold py-3 text-sm font-semibold text-sineoda-bg transition hover:brightness-110 disabled:opacity-60"
+            className="w-full rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110 disabled:opacity-60"
           >
             {loading ? 'Hesap oluşturuluyor...' : 'Kayıt Ol ve Ödemeye Geç'}
           </button>
@@ -333,7 +333,7 @@ export function SignupPage() {
 
       {!completed ? (
         <>
-          <div className="mt-4 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-sineoda-muted">
+          <div className="mt-4 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-plooy-muted">
             {LEGAL_LINKS.map((link) => (
               <Link key={link.slug} to={`/yasal/${link.slug}`} className="hover:text-white">
                 {link.label}
@@ -341,9 +341,9 @@ export function SignupPage() {
             ))}
           </div>
 
-          <p className="mt-6 text-center text-sm text-sineoda-muted">
+          <p className="mt-6 text-center text-sm text-plooy-muted">
             Zaten hesabın var mı?{' '}
-            <Link to="/giris" className="font-medium text-sineoda-gold hover:underline">
+            <Link to="/giris" className="font-medium text-plooy-gold hover:underline">
               Giriş yap
             </Link>
           </p>

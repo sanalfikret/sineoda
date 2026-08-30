@@ -96,7 +96,7 @@ export function AdminBillingPlansPage() {
   if (loading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-sineoda-gold border-t-transparent" />
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-plooy-gold border-t-transparent" />
       </div>
     )
   }
@@ -106,7 +106,7 @@ export function AdminBillingPlansPage() {
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Abonelik & Başvuru Planları</h1>
-          <p className="mt-2 max-w-2xl text-sm text-sineoda-muted">
+          <p className="mt-2 max-w-2xl text-sm text-plooy-muted">
             Fiyatları, plan adlarını ve madde listesini buradan değiştirin. Değişiklikler fiyatlandırma
             sayfası, yapımcı ödeme ekranı ve checkout tutarlarına yansır.
           </p>
@@ -115,7 +115,7 @@ export function AdminBillingPlansPage() {
           type="button"
           disabled={saving}
           onClick={() => void handleSave()}
-          className="rounded-lg bg-sineoda-gold px-5 py-2.5 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
+          className="rounded-lg bg-plooy-gold px-5 py-2.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
         >
           {saving ? 'Kaydediliyor...' : 'Kaydet'}
         </button>
@@ -140,10 +140,10 @@ export function AdminBillingPlansPage() {
             <section key={plan.id} className="rounded-2xl border border-white/10 bg-[#11141c] p-6">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-gold">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-plooy-gold">
                     {audienceLabel(plan.audience)}
                   </p>
-                  <p className="text-xs text-sineoda-muted">{intervalLabel(plan.interval)}</p>
+                  <p className="text-xs text-plooy-muted">{intervalLabel(plan.interval)}</p>
                 </div>
                 <label className="flex items-center gap-2 text-sm text-white/80">
                   <input
@@ -158,16 +158,16 @@ export function AdminBillingPlansPage() {
 
               <div className="space-y-4">
                 <label className="block">
-                  <span className="mb-1.5 block text-sm text-sineoda-muted">Plan adı</span>
+                  <span className="mb-1.5 block text-sm text-plooy-muted">Plan adı</span>
                   <input
                     value={draft.name}
                     onChange={(event) => updateDraft(plan.id, { name: event.target.value })}
-                    className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-sineoda-gold"
+                    className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-plooy-gold"
                   />
                 </label>
 
                 <label className="block">
-                  <span className="mb-1.5 block text-sm text-sineoda-muted">Fiyat (₺)</span>
+                  <span className="mb-1.5 block text-sm text-plooy-muted">Fiyat (₺)</span>
                   <input
                     type="number"
                     min={1}
@@ -176,19 +176,19 @@ export function AdminBillingPlansPage() {
                     onChange={(event) =>
                       updateDraft(plan.id, { price: Math.max(1, Number(event.target.value) || 1) })
                     }
-                    className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-sineoda-gold"
+                    className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-plooy-gold"
                   />
                 </label>
 
                 <label className="block">
-                  <span className="mb-1.5 block text-sm text-sineoda-muted">
+                  <span className="mb-1.5 block text-sm text-plooy-muted">
                     Özellikler (her satır bir madde)
                   </span>
                   <textarea
                     value={draft.featuresText}
                     onChange={(event) => updateDraft(plan.id, { featuresText: event.target.value })}
                     rows={5}
-                    className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold"
+                    className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-plooy-gold"
                   />
                 </label>
 

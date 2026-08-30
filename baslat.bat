@@ -1,11 +1,11 @@
 @echo off
-title Sineoda
+title Plooy
 cd /d "%~dp0"
 set "PATH=C:\Program Files\nodejs;%PATH%"
 
 echo.
 echo  ========================================
-echo   Sineoda baslatiliyor...
+echo   Plooy baslatiliyor...
 echo   Site: http://localhost:5173
 echo  ========================================
 echo.

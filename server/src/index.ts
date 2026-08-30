@@ -125,7 +125,7 @@ app.get('/api/health', (_req, res) => {
 
   res.json({
     ok: true,
-    service: 'sineoda-api',
+    service: 'plooy-api',
     version: 2,
     storage: {
       dataDir: config.dataDir,
@@ -281,11 +281,11 @@ if (config.webDistDir) {
   const distPath = path.resolve(config.webDistDir)
   const indexPath = path.join(distPath, 'index.html')
   const indexHtmlRaw = fs.existsSync(indexPath) ? fs.readFileSync(indexPath, 'utf8') : ''
-  const indexHtml = indexHtmlRaw.includes('__SINEODA_API_BASE__')
+  const indexHtml = indexHtmlRaw.includes('__PLOOY_API_BASE__') || indexHtmlRaw.includes('__SINEODA_API_BASE__')
     ? indexHtmlRaw
     : indexHtmlRaw.replace(
         '<head>',
-        "<head><script>window.__SINEODA_API_BASE__='';</script>",
+        "<head><script>window.__PLOOY_API_BASE__='';</script>",
       )
 
   app.use(express.static(distPath, { index: false }))

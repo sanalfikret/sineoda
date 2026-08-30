@@ -251,13 +251,13 @@ function BrowseContent({
   if (isLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-sineoda-gold border-t-transparent" />
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-plooy-gold border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <main className="bg-sineoda-bg">
+    <main className="bg-plooy-bg">
       {displayHero ? (
       <Hero
         item={displayHero}
@@ -294,7 +294,7 @@ function BrowseContent({
       )}
 
       {cekimNotlariOnly && (
-        <p className="mx-auto max-w-3xl px-4 pb-2 text-center text-sm text-sineoda-muted sm:px-6">
+        <p className="mx-auto max-w-3xl px-4 pb-2 text-center text-sm text-plooy-muted sm:px-6">
           Alanında uzman isimlerden eğitici videolar — setten post prodüksiyona.
         </p>
       )}
@@ -310,7 +310,7 @@ function BrowseContent({
         )}
 
         {rows.length === 0 ? (
-          <p className="px-4 py-12 text-center text-sineoda-muted sm:px-6">
+          <p className="px-4 py-12 text-center text-plooy-muted sm:px-6">
             Bu filtrede içerik bulunamadı.
           </p>
         ) : (
