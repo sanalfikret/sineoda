@@ -26,6 +26,10 @@ import {
 } from '../services/landingSections.js'
 import { filterContentIdsForPool, poolForShowcaseIcon } from '../services/contentPools.js'
 import {
+  resolveLandingFeaturedItem,
+  syncFeaturedFromHero,
+} from '../services/landingFeatured.js'
+import {
   getLandingBlockTitlesConfig,
   saveLandingBlockTitlesConfig,
 } from '../services/landingBlockTitles.js'
@@ -80,6 +84,7 @@ export function getLandingConfig() {
   const sections = getLandingSectionsConfig()
   const layout = getLandingLayoutConfig(customBlockIds)
   const blockTitles = getLandingBlockTitlesConfig()
+  const featuredItem = resolveLandingFeaturedItem(hero, catalog)
 
   const monthlyWinnerRows = dbAll<{ content_id: string; sort_order: number }>(
     'SELECT content_id, sort_order FROM landing_monthly_winners ORDER BY sort_order',
@@ -118,6 +123,7 @@ export function getLandingConfig() {
     sliderContentIds,
     showcases,
     hero,
+    featuredItem,
     sections,
     layout,
     customBlocks,
@@ -172,6 +178,7 @@ function sanitizeLayout(raw: Partial<LandingLayoutConfig> | undefined, customBlo
 
 router.patch('/hero', requireAdmin, (req: AuthRequest, res) => {
   const hero = saveLandingHeroConfig(validateHeroPayload(req.body))
+  syncFeaturedFromHero(hero)
   res.json({ hero })
 })
 
@@ -213,7 +220,8 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
   const customBlockIds = customBlocks.map((block) => block.id)
 
   if (body.hero) {
-    saveLandingHeroConfig(validateHeroPayload(body.hero))
+    const hero = saveLandingHeroConfig(validateHeroPayload(body.hero))
+    syncFeaturedFromHero(hero)
   }
   if (body.sections) {
     saveLandingSectionsConfig(body.sections)

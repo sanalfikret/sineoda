@@ -331,6 +331,7 @@ export interface LandingConfigResponse {
   sliderContentIds?: string[]
   showcases: LandingShowcaseResponse[]
   hero?: LandingHeroConfig
+  featuredItem?: ContentItem | null
   sections?: LandingSectionsConfig
   layout?: LandingLayoutConfig
   customBlocks?: LandingCustomBlock[]

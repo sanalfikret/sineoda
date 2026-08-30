@@ -8,6 +8,7 @@ import { resolveDurationFields } from '../services/duration.js'
 import { parseContentAddedAt, parseLicenseDate } from '../services/license.js'
 import { parsePublishedAt } from '../services/publish.js'
 import { normalizeContentType } from '../constants/contentTypes.js'
+import { syncFeaturedContentSelection } from '../services/landingFeatured.js'
 import type { ContentRow } from '../types.js'
 
 const router = Router()
@@ -160,6 +161,8 @@ router.post('/', requireAdmin, (req: AuthRequest, res) => {
     ],
   )
 
+  if (fields.featured) syncFeaturedContentSelection(id)
+
   res.status(201).json({ item: mapContent(dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [id])!) })
 })
 
@@ -190,6 +193,8 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
     ],
   )
 
+  if (fields.featured) syncFeaturedContentSelection(existing.id)
+
   res.json({ item: mapContent(dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [existing.id])!) })
 })
 
@@ -209,8 +214,7 @@ router.post('/:id/featured', requireAdmin, (req: AuthRequest, res) => {
     res.status(404).json({ error: 'İçerik bulunamadı.' })
     return
   }
-  dbRun('UPDATE content SET featured = 0')
-  dbRun('UPDATE content SET featured = 1 WHERE id = ?', [req.params.id])
+  syncFeaturedContentSelection(String(req.params.id))
   res.json({ ok: true })
 })
 

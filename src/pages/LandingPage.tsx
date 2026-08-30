@@ -35,8 +35,19 @@ function findContent(catalog: ContentItem[], contentId: string | null | undefine
   return catalog.find((item) => item.id === contentId) ?? null
 }
 
+function resolveFeaturedFallback(catalog: ContentItem[], featuredContentId?: string | null) {
+  const fromHero = findContent(catalog, featuredContentId)
+  if (fromHero) return fromHero
+  return (
+    catalog.find((item) => item.featured && item.program !== 'student_cinema') ??
+    catalog.find((item) => item.program !== 'student_cinema') ??
+    null
+  )
+}
+
 export function LandingPage() {
   const [catalog, setCatalog] = useState<ContentItem[]>([])
+  const [featuredItem, setFeaturedItem] = useState<ContentItem | null>(null)
   const [heroConfig, setHeroConfig] = useState<LandingHeroConfig>(DEFAULT_LANDING_HERO)
   const [sections, setSections] = useState(DEFAULT_LANDING_SECTIONS)
   const [layout, setLayout] = useState(() => normalizeLandingLayout(null))
@@ -67,6 +78,11 @@ export function LandingPage() {
 
     setCatalog(mergedCatalog)
     setHeroConfig(landing.hero ?? bootstrap.landing?.hero ?? DEFAULT_LANDING_HERO)
+    setFeaturedItem(
+      landing.featuredItem ??
+        bootstrap.landing?.featuredItem ??
+        resolveFeaturedFallback(mergedCatalog, landing.hero?.featuredContentId),
+    )
     setSections(mergeLandingSections(landing.sections ?? bootstrap.landing?.sections))
     const loadedCustomBlocks = landing.customBlocks ?? []
     setCustomBlocks(loadedCustomBlocks)
@@ -148,15 +164,10 @@ export function LandingPage() {
     [lookupCatalog, heroConfig?.backgroundContentId],
   )
 
-  const featuredItem = useMemo(() => {
-    const fromHero = findContent(lookupCatalog, heroConfig?.featuredContentId)
-    if (fromHero) return fromHero
-    return (
-      lookupCatalog.find((item) => item.featured && item.program !== 'student_cinema') ??
-      lookupCatalog[0] ??
-      null
-    )
-  }, [lookupCatalog, heroConfig?.featuredContentId])
+  const displayFeaturedItem = useMemo(() => {
+    if (featuredItem) return featuredItem
+    return resolveFeaturedFallback(lookupCatalog, heroConfig?.featuredContentId)
+  }, [featuredItem, lookupCatalog, heroConfig?.featuredContentId])
 
   if (!ready) {
     return (
@@ -173,7 +184,7 @@ export function LandingPage() {
         ctx={{
           heroConfig,
           backgroundContent,
-          featuredItem,
+          featuredItem: displayFeaturedItem,
           fallbackImage: FALLBACK_HERO,
           sections,
           blockTitles,
