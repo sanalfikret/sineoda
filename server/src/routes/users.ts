@@ -5,6 +5,7 @@ import { dbAll, dbGet, dbRun } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import { mapUser } from '../mappers.js'
 import { giftSubscriptionMonths } from '../services/subscriptionGift.js'
+import { getKvkkSummariesByUserIds, listUserLegalConsents } from '../services/legalConsent.js'
 import type { ProfileRow, UserRow } from '../types.js'
 
 const router = Router()
@@ -24,7 +25,24 @@ function getUsersWithProfiles() {
 
 router.get('/', requireAdmin, (_req: AuthRequest, res) => {
   const users = getUsersWithProfiles().filter((user) => user.role !== 'creator')
-  res.json({ users })
+  const memberIds = users.filter((user) => user.role === 'user').map((user) => user.id)
+  const kvkkSummaries = getKvkkSummariesByUserIds(memberIds)
+  res.json({
+    users: users.map((user) => ({
+      ...user,
+      kvkkConsent:
+        user.role === 'user'
+          ? kvkkSummaries[user.id] ?? {
+              accepted: false,
+              consentId: null,
+              acceptedAt: null,
+              ipAddress: null,
+              userName: null,
+              consentText: null,
+            }
+          : null,
+    })),
+  })
 })
 
 router.post('/', requireAdmin, (req: AuthRequest, res) => {
@@ -119,6 +137,15 @@ router.post('/:id/gift-subscription', requireAdmin, (req: AuthRequest, res) => {
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : 'Hediye abonelik verilemedi.' })
   }
+})
+
+router.get('/:id/legal-consents', requireAdmin, (req: AuthRequest, res) => {
+  const existing = dbGet('SELECT id FROM users WHERE id = ?', [req.params.id])
+  if (!existing) {
+    res.status(404).json({ error: 'Kullanıcı bulunamadı.' })
+    return
+  }
+  res.json({ consents: listUserLegalConsents(req.params.id) })
 })
 
 router.delete('/:id', requireAdmin, (req: AuthRequest, res) => {

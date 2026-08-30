@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import {
   broadcastAdminMessage,
   createAdminUser,
@@ -7,6 +8,7 @@ import {
   updateAdminUser,
   type AdminUser,
 } from '../../api/client'
+import { AdminKvkkConsentModal } from '../../components/admin/AdminKvkkConsentModal'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { AdminUserDetailPanel } from '../../components/admin/AdminUserDetailPanel'
 import { fuzzySearchMatch, sortByTurkishTitle } from '../../utils/search'
@@ -60,6 +62,7 @@ export function AdminUsersPage() {
     body: '',
     audience: 'all' as 'all' | 'active_subscribers',
   })
+  const [kvkkModalUser, setKvkkModalUser] = useState<AdminUser | null>(null)
 
   const loadUsers = async () => {
     setLoading(true)
@@ -163,6 +166,14 @@ export function AdminUsersPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {tab === 'members' && (
+            <Link
+              to="/admin/yasal"
+              className="rounded-lg border border-plooy-gold/30 bg-plooy-gold/10 px-4 py-2 text-sm font-medium text-plooy-gold hover:bg-plooy-gold/20"
+            >
+              Yasal metinler
+            </Link>
+          )}
           {tab === 'members' && (
             <button
               type="button"
@@ -344,6 +355,7 @@ export function AdminUsersPage() {
                   <th className="px-4 py-3 font-medium">Ad</th>
                   <th className="px-4 py-3 font-medium">E-posta</th>
                   {tab === 'members' && <th className="px-4 py-3 font-medium">Telefon</th>}
+                  {tab === 'members' && <th className="px-4 py-3 font-medium">KVKK</th>}
                   {tab === 'members' && <th className="px-4 py-3 font-medium">Abonelik</th>}
                   {tab === 'staff' && <th className="px-4 py-3 font-medium">Rol</th>}
                   <th className="px-4 py-3 font-medium">Profiller</th>
@@ -353,7 +365,7 @@ export function AdminUsersPage() {
               <tbody>
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-10 text-center text-plooy-muted">
+                    <td colSpan={tab === 'members' ? 7 : 6} className="px-4 py-10 text-center text-plooy-muted">
                       Kayıt bulunamadı.
                     </td>
                   </tr>
@@ -364,6 +376,31 @@ export function AdminUsersPage() {
                       <td className="px-4 py-3 text-white/80">{user.email}</td>
                       {tab === 'members' && (
                         <td className="px-4 py-3 text-white/70">{user.phone?.trim() || '—'}</td>
+                      )}
+                      {tab === 'members' && (
+                        <td className="px-4 py-3">
+                          {user.kvkkConsent?.accepted && user.kvkkConsent.acceptedAt ? (
+                            <button
+                              type="button"
+                              onClick={() => setKvkkModalUser(user)}
+                              className="group text-left"
+                              title="KVKK onay metnini gör"
+                            >
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-300 group-hover:bg-emerald-500/25">
+                                ✓ Onaylı
+                              </span>
+                              <span className="mt-1 block text-xs text-plooy-muted group-hover:text-plooy-gold">
+                                {new Date(user.kvkkConsent.acceptedAt).toLocaleDateString('tr-TR')}
+                                {' · '}
+                                {user.kvkkConsent.ipAddress}
+                              </span>
+                            </button>
+                          ) : (
+                            <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-white/50">
+                              Kayıt yok
+                            </span>
+                          )}
+                        </td>
                       )}
                       {tab === 'members' && (
                         <td className="px-4 py-3">
@@ -424,6 +461,20 @@ export function AdminUsersPage() {
           </div>
         )}
       </div>
+
+      {kvkkModalUser?.kvkkConsent?.accepted &&
+        kvkkModalUser.kvkkConsent.acceptedAt &&
+        kvkkModalUser.kvkkConsent.consentText &&
+        kvkkModalUser.kvkkConsent.ipAddress && (
+          <AdminKvkkConsentModal
+            userName={kvkkModalUser.name}
+            userEmail={kvkkModalUser.email}
+            acceptedAt={kvkkModalUser.kvkkConsent.acceptedAt}
+            ipAddress={kvkkModalUser.kvkkConsent.ipAddress}
+            consentText={kvkkModalUser.kvkkConsent.consentText}
+            onClose={() => setKvkkModalUser(null)}
+          />
+        )}
 
       {selectedUser && (
         <AdminUserDetailPanel

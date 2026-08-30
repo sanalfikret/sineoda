@@ -287,6 +287,7 @@ const DEFAULT_ADMIN_ID = 'plooy-admin'
 export function migrateLegacyBrandAccounts() {
   dbRun('UPDATE users SET email = ? WHERE email = ?', [DEFAULT_ADMIN_EMAIL, LEGACY_ADMIN_EMAIL])
   dbRun('UPDATE users SET email = ? WHERE email = ?', ['demo@plooy.com', 'demo@sineoda.com'])
+  dbRun("UPDATE users SET name = ? WHERE name = 'Sineoda Admin'", [`${BRAND_NAME} Admin`])
 }
 
 export function ensureDefaultAdmin() {

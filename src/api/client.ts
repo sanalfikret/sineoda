@@ -367,7 +367,13 @@ export async function signupRequest(
   password: string,
   phone: string,
   smsCode: string,
-  options?: { planId?: string; studentIdUrl?: string },
+  options?: {
+    planId?: string
+    studentIdUrl?: string
+    acceptTerms?: boolean
+    acceptPrivacy?: boolean
+    acceptKvkk?: boolean
+  },
 ): Promise<{ message: string; email: string; planId?: string; devVerifyUrl?: string }> {
   return api('/api/auth/signup', {
     method: 'POST',
@@ -379,6 +385,9 @@ export async function signupRequest(
       smsCode,
       planId: options?.planId,
       studentIdUrl: options?.studentIdUrl,
+      acceptTerms: options?.acceptTerms,
+      acceptPrivacy: options?.acceptPrivacy,
+      acceptKvkk: options?.acceptKvkk,
     }),
   })
 }
@@ -634,8 +643,18 @@ export async function removeFromWatchlist(contentId: string) {
   return api('/api/watchlist/' + contentId, { method: 'DELETE' })
 }
 
+export interface AdminKvkkConsent {
+  accepted: boolean
+  consentId: string | null
+  acceptedAt: string | null
+  ipAddress: string | null
+  userName: string | null
+  consentText: string | null
+}
+
 export interface AdminUser extends User {
   createdAt: string
+  kvkkConsent?: AdminKvkkConsent | null
 }
 
 export async function fetchAdminUsers(): Promise<{ users: AdminUser[] }> {
@@ -676,6 +695,37 @@ export async function giftAdminUserSubscription(id: string, months: number) {
 
 export async function deleteAdminUser(id: string) {
   return api(`/api/admin/users/${id}`, { method: 'DELETE' })
+}
+
+export interface LegalConsentRecord {
+  id: string
+  consentType: 'terms' | 'privacy' | 'kvkk' | 'cookies' | 'creator_terms'
+  documentSlug: string
+  documentVersion: string
+  userName: string
+  userEmail: string | null
+  ipAddress: string
+  acceptedAt: string
+  consentText: string
+}
+
+export async function fetchLegalConsents() {
+  return api<{ consents: LegalConsentRecord[] }>('/api/legal/consents')
+}
+
+export async function fetchAdminUserLegalConsents(userId: string) {
+  return api<{ consents: LegalConsentRecord[] }>(`/api/admin/users/${encodeURIComponent(userId)}/legal-consents`)
+}
+
+export async function recordCookieConsent(data: {
+  choice: 'accepted' | 'essential-only'
+  sessionId?: string
+  userName?: string
+}) {
+  return api<{ consent: LegalConsentRecord }>('/api/legal/cookie-consent', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
 }
 
 export interface UserMessage {

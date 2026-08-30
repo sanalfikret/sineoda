@@ -5,9 +5,10 @@ interface LegalDocumentModalProps {
   slug: LegalSlug
   open: boolean
   onClose: () => void
+  closeLabel?: string
 }
 
-export function LegalDocumentModal({ slug, open, onClose }: LegalDocumentModalProps) {
+export function LegalDocumentModal({ slug, open, onClose, closeLabel = 'Kapat' }: LegalDocumentModalProps) {
   const doc = LEGAL_DOCUMENTS[slug]
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export function LegalDocumentModal({ slug, open, onClose }: LegalDocumentModalPr
             onClick={onClose}
             className="shrink-0 rounded-lg border border-white/10 px-3 py-1.5 text-sm text-white/80 hover:bg-white/5"
           >
-            Kapat
+            {closeLabel}
           </button>
         </div>
 
@@ -68,7 +69,7 @@ export function LegalDocumentModal({ slug, open, onClose }: LegalDocumentModalPr
             onClick={onClose}
             className="w-full rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg"
           >
-            İçeriğe dön
+            {closeLabel}
           </button>
         </div>
       </div>

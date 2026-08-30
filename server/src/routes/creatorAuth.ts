@@ -6,11 +6,12 @@ import { dbGet, dbRun } from '../db.js'
 import { signToken } from '../middleware/auth.js'
 import { mapUser } from '../mappers.js'
 import { createStudentFilmSubmission } from '../services/studentFilmSubmission.js'
+import { LEGAL_VERSION } from '../constants/legal.js'
+import { recordLegalConsent } from '../services/legalConsent.js'
+import { getClientIp, getUserAgent } from '../utils/clientIp.js'
 import type { UserRow } from '../types.js'
 
 const router = Router()
-
-const LEGAL_VERSION = '2026-08-20'
 
 function isValidHttpUrl(value: string) {
   try {
@@ -191,6 +192,16 @@ router.post('/signup', (req, res) => {
       now,
     })
   }
+
+  recordLegalConsent({
+    userId,
+    type: 'creator_terms',
+    userName: name.trim(),
+    userEmail: normalizedEmail,
+    ipAddress: getClientIp(req),
+    userAgent: getUserAgent(req),
+    acceptedAt: now,
+  })
 
   const user = dbGet<UserRow>('SELECT * FROM users WHERE id = ?', [userId])!
   const publicUser = mapCreatorUser(user)

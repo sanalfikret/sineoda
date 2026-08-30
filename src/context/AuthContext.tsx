@@ -43,7 +43,13 @@ interface AuthContextValue {
     password: string,
     phone: string,
     smsCode: string,
-    options?: { planId?: string; studentIdUrl?: string },
+    options?: {
+      planId?: string
+      studentIdUrl?: string
+      acceptTerms?: boolean
+      acceptPrivacy?: boolean
+      acceptKvkk?: boolean
+    },
   ) => Promise<{ message: string; email: string; planId?: string; devVerifyUrl?: string }>
   creatorLogin: (email: string, password: string) => Promise<void>
   creatorSignup: (data: {
@@ -182,7 +188,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password: string,
       phone: string,
       smsCode: string,
-      options?: { planId?: string; studentIdUrl?: string },
+      options?: {
+        planId?: string
+        studentIdUrl?: string
+        acceptTerms?: boolean
+        acceptPrivacy?: boolean
+        acceptKvkk?: boolean
+      },
     ) => {
       return signupRequest(name, email, password, phone, smsCode, options)
     },

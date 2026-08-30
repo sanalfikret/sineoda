@@ -15,6 +15,7 @@ const navItems = [
   { to: '/admin/genc-sinema', label: 'Genç Sinema', end: false },
   { to: '/admin/cekim-notlari', label: 'Çekim Notları', end: false },
   { to: '/admin/kullanicilar', label: 'İzleyiciler', end: false },
+  { to: '/admin/yasal', label: 'Yasal Metinler', end: false },
   { to: '/admin/planlar', label: 'Planlar & Fiyatlar', end: false },
   { to: '/admin/muhasebe', label: 'Muhasebe', end: false },
   { to: '/admin/dergi', label: 'Dergi', end: false },

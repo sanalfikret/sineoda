@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { fetchBillingPlans, fetchSubscription } from '../api/client'
+import { fetchBillingPlans, fetchLegalConsents, fetchSubscription, type LegalConsentRecord } from '../api/client'
 import { PageFooter } from '../components/PageFooter'
 import { InstallAppStatusCard } from '../components/InstallAppButton'
 import { ProfileAvatar } from '../components/ProfileAvatar'
 import { ProfileAvatarPicker } from '../components/ProfileAvatarPicker'
 import { ProfileWatchStatsPanel } from '../components/ProfileWatchStatsPanel'
 import { useAuth } from '../context/AuthContext'
+import { CONSENT_TYPE_LABELS, LEGAL_LINKS, LEGAL_VERSION, legalPageHref } from '../constants/legal'
 import { PROFILE_AVATARS, type Profile } from '../types/auth'
 
 function formatDate(value: string | null | undefined) {
@@ -50,6 +51,8 @@ export function AccountPage() {
   const [newName, setNewName] = useState('')
   const [newAvatar, setNewAvatar] = useState<string>(PROFILE_AVATARS[0])
   const [newKids, setNewKids] = useState(false)
+  const [legalConsents, setLegalConsents] = useState<LegalConsentRecord[]>([])
+  const [expandedConsentId, setExpandedConsentId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -67,6 +70,13 @@ export function AccountPage() {
         setSubscription(null)
       }
     })()
+  }, [user])
+
+  useEffect(() => {
+    if (!user) return
+    void fetchLegalConsents()
+      .then(({ consents }) => setLegalConsents(consents))
+      .catch(() => setLegalConsents([]))
   }, [user])
 
   if (!user) return null
@@ -238,6 +248,63 @@ export function AccountPage() {
             </div>
           </section>
         )}
+
+        <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
+          <h2 className="text-lg font-semibold">Yasal Bilgiler</h2>
+          <p className="mt-1 text-sm text-plooy-muted">
+            Platform kullanımına ilişkin metinler. Güncel sürüm: {LEGAL_VERSION}.
+          </p>
+          <nav className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+            {LEGAL_LINKS.map((link) => (
+              <Link key={link.slug} to={legalPageHref(link.slug, '/hesap')} className="text-plooy-gold hover:underline">
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          {legalConsents.length > 0 && (
+            <div className="mt-6 border-t border-white/10 pt-5">
+              <h3 className="text-sm font-semibold text-white">Onay kayıtlarım</h3>
+              <p className="mt-1 text-xs text-plooy-muted">
+                Kayıt ve çerez tercihlerinizde adınız, IP adresiniz ve zaman damgası saklanır.
+              </p>
+              <ul className="mt-4 space-y-3">
+                {legalConsents.map((consent) => (
+                  <li key={consent.id} className="rounded-xl border border-white/10 bg-[#0d0f14] p-3">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-medium text-white">
+                          {CONSENT_TYPE_LABELS[consent.consentType]}
+                        </p>
+                        <p className="mt-1 text-xs text-plooy-muted">
+                          {new Date(consent.acceptedAt).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}
+                          {' · IP: '}
+                          {consent.ipAddress}
+                          {' · Sürüm: '}
+                          {consent.documentVersion}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedConsentId((current) => (current === consent.id ? null : consent.id))
+                        }
+                        className="text-xs text-plooy-gold hover:underline"
+                      >
+                        {expandedConsentId === consent.id ? 'Gizle' : 'Metni gör'}
+                      </button>
+                    </div>
+                    {expandedConsentId === consent.id && (
+                      <pre className="mt-3 max-h-48 overflow-auto whitespace-pre-wrap rounded-lg bg-black/30 p-3 text-xs leading-relaxed text-white/75">
+                        {consent.consentText}
+                      </pre>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
 
         <section className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">

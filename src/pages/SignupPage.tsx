@@ -2,9 +2,30 @@ import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { sendSmsCode, uploadStudentId } from '../api/client'
 import { AuthLayout } from '../components/AuthLayout'
-import { LEGAL_LINKS } from '../constants/legal'
+import { LegalDocumentModal } from '../components/LegalDocumentModal'
+import { LEGAL_LINKS, type LegalSlug } from '../constants/legal'
 import { useAuth } from '../context/AuthContext'
 import { planDisplayName, postLoginPath } from '../utils/billing'
+
+function LegalReadButton({
+  slug,
+  label,
+  onOpen,
+}: {
+  slug: LegalSlug
+  label: string
+  onOpen: (slug: LegalSlug) => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(slug)}
+      className="text-plooy-gold underline underline-offset-2 hover:text-plooy-gold/80"
+    >
+      {label}
+    </button>
+  )
+}
 
 type SignupPlanId = 'standard' | 'student'
 
@@ -51,6 +72,12 @@ export function SignupPage() {
   const [pendingPlan, setPendingPlan] = useState<SignupPlanId>('standard')
   const [devVerifyUrl, setDevVerifyUrl] = useState<string | null>(null)
   const [sendingCode, setSendingCode] = useState(false)
+  const [acceptTerms, setAcceptTerms] = useState(false)
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false)
+  const [acceptKvkk, setAcceptKvkk] = useState(false)
+  const [legalModalSlug, setLegalModalSlug] = useState<LegalSlug | null>(null)
+
+  const legalAccepted = acceptTerms && acceptPrivacy && acceptKvkk
 
   if (user) {
     return <Navigate to={postLoginPath(user)} replace />
@@ -91,6 +118,11 @@ export function SignupPage() {
       return
     }
 
+    if (!acceptTerms || !acceptPrivacy || !acceptKvkk) {
+      setError('Kayıt için Kullanım Koşulları, Gizlilik Politikası ve KVKK / Açık Rıza onayı zorunludur.')
+      return
+    }
+
     setLoading(true)
     try {
       let studentIdUrl: string | undefined
@@ -101,6 +133,9 @@ export function SignupPage() {
       const result = await signup(name, email, password, phone.trim(), smsCode.trim(), {
         planId: selectedPlan,
         studentIdUrl,
+        acceptTerms,
+        acceptPrivacy,
+        acceptKvkk,
       })
       setPendingEmail(result.email)
       setPendingPlan((result.planId as SignupPlanId) ?? selectedPlan)
@@ -305,25 +340,58 @@ export function SignupPage() {
             />
           </label>
 
-          <p className="text-xs leading-relaxed text-plooy-muted">
-            Kayıt olarak{' '}
-            <Link to="/yasal/kullanim-kosullari" className="text-plooy-gold hover:underline">
-              Kullanım Koşulları
-            </Link>
-            ,{' '}
-            <Link to="/yasal/gizlilik-politikasi" className="text-plooy-gold hover:underline">
-              Gizlilik Politikası
-            </Link>{' '}
-            ve{' '}
-            <Link to="/yasal/kvkk-aydinlatma" className="text-plooy-gold hover:underline">
-              KVKK Aydınlatma Metni
-            </Link>
-            &apos;ni kabul etmiş olursunuz.
-          </p>
+          <div className="space-y-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-xs leading-relaxed text-plooy-muted">
+            <p className="font-medium text-white/90">Yasal onaylar (zorunlu)</p>
+            <p className="text-[11px] text-plooy-muted/90">
+              Metin adlarına tıklayarak okuyabilirsiniz; sayfadan çıkmadan geri dönersiniz.
+            </p>
+            <label className="flex items-start gap-2.5">
+              <input
+                type="checkbox"
+                required
+                checked={acceptTerms}
+                onChange={(event) => setAcceptTerms(event.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-plooy-gold"
+              />
+              <span>
+                <LegalReadButton slug="kullanim-kosullari" label="Kullanım Koşulları" onOpen={setLegalModalSlug} />
+                &apos;nı okudum ve kabul ediyorum.
+              </span>
+            </label>
+            <label className="flex items-start gap-2.5">
+              <input
+                type="checkbox"
+                required
+                checked={acceptPrivacy}
+                onChange={(event) => setAcceptPrivacy(event.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-plooy-gold"
+              />
+              <span>
+                <LegalReadButton slug="gizlilik-politikasi" label="Gizlilik Politikası" onOpen={setLegalModalSlug} />
+                &apos;nı okudum ve kabul ediyorum.
+              </span>
+            </label>
+            <label className="flex items-start gap-2.5">
+              <input
+                type="checkbox"
+                required
+                checked={acceptKvkk}
+                onChange={(event) => setAcceptKvkk(event.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-plooy-gold"
+              />
+              <span>
+                <LegalReadButton slug="kvkk-aydinlatma" label="KVKK Aydınlatma Metni" onOpen={setLegalModalSlug} />
+                {' '}ve{' '}
+                <LegalReadButton slug="acik-riza-metni" label="Açık Rıza Metni" onOpen={setLegalModalSlug} />
+                &apos;ni okudum; kişisel verilerimin işlenmesine açık rızam olduğunu, onayımın adım, IP adresim ve
+                zaman damgası ile kayıt altına alınacağını kabul ediyorum.
+              </span>
+            </label>
+          </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !legalAccepted}
             className="w-full rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110 disabled:opacity-60"
           >
             {loading ? 'Hesap oluşturuluyor...' : 'Kayıt Ol ve Ödemeye Geç'}
@@ -335,9 +403,14 @@ export function SignupPage() {
         <>
           <div className="mt-4 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-plooy-muted">
             {LEGAL_LINKS.map((link) => (
-              <Link key={link.slug} to={`/yasal/${link.slug}`} className="hover:text-white">
+              <button
+                key={link.slug}
+                type="button"
+                onClick={() => setLegalModalSlug(link.slug)}
+                className="hover:text-white"
+              >
                 {link.label}
-              </Link>
+              </button>
             ))}
           </div>
 
@@ -349,6 +422,15 @@ export function SignupPage() {
           </p>
         </>
       ) : null}
+
+      {legalModalSlug && (
+        <LegalDocumentModal
+          slug={legalModalSlug}
+          open
+          onClose={() => setLegalModalSlug(null)}
+          closeLabel="Kayda dön"
+        />
+      )}
     </AuthLayout>
   )
 }

@@ -15,6 +15,7 @@ import { AdminDashboardPage } from './pages/admin/AdminDashboardPage'
 import { AdminLoginPage } from './pages/admin/AdminLoginPage'
 import { AdminJournalFormPage } from './pages/admin/AdminJournalFormPage'
 import { AdminJournalListPage } from './pages/admin/AdminJournalListPage'
+import { AdminLegalPage } from './pages/admin/AdminLegalPage'
 import { AdminLandingPage } from './pages/admin/AdminLandingPage'
 import { AdminWatchAccountingPage } from './pages/admin/AdminWatchAccountingPage'
 import { AdminBillingPlansPage } from './pages/admin/AdminBillingPlansPage'
@@ -300,6 +301,7 @@ function App() {
         <Route path="reklamlar" element={<AdminAdsPage />} />
         <Route path="ana-sayfa" element={<AdminLandingPage />} />
         <Route path="dergi" element={<AdminJournalListPage />} />
+        <Route path="yasal" element={<AdminLegalPage />} />
         <Route path="dergi/yeni" element={<AdminJournalFormPage />} />
         <Route path="dergi/:id" element={<AdminJournalFormPage />} />
         <Route path="kullanicilar" element={<AdminUsersPage />} />
