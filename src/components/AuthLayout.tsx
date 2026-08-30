@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { PageFooter } from './PageFooter'
-import { SineodaLogoMark } from './SineodaLogoMark'
+import { PlooyLogo } from './PlooyLogo'
 
 interface AuthLayoutProps {
   children: ReactNode
@@ -21,7 +21,9 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
       <div className="absolute inset-0 bg-gradient-to-b from-sineoda-bg/60 via-sineoda-bg/90 to-sineoda-bg" />
 
       <div className="safe-top relative z-10 mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-4 py-10 sm:px-6">
-        <SineodaLogoMark size="lg" linked className="mb-8" />
+        <div className="mb-8 flex justify-center">
+          <PlooyLogo tone="on-dark" linked className="h-10 sm:h-12" />
+        </div>
 
         <div className="w-full rounded-2xl border border-white/10 bg-sineoda-surface/90 p-6 shadow-2xl backdrop-blur-md sm:p-8">
           <h1 className="text-center text-2xl font-bold text-white">{title}</h1>

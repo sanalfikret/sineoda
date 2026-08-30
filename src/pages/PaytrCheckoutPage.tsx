@@ -35,7 +35,7 @@ export function PaytrCheckoutPage() {
       <header className="safe-top border-b border-white/10 px-4 py-4 sm:px-6">
         <div className="mx-auto flex max-w-4xl items-center justify-between">
           <div className="flex items-center gap-2">
-            <PlooyLogo variant="wordmark" tone="on-dark" className="h-6" />
+            <PlooyLogo tone="on-dark" className="h-6" />
             <span className="text-sm text-sineoda-muted">· PayTR</span>
           </div>
           <Link to="/planlar" className="text-sm text-sineoda-muted hover:text-white">

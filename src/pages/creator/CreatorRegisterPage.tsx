@@ -110,7 +110,7 @@ export function CreatorRegisterPage() {
       <div className="px-4 py-10">
       <div className="mx-auto w-full max-w-2xl">
         <div className="mb-8 flex items-center gap-3">
-          <PlooyLogo variant="mark" tone="on-dark" className="h-10" />
+          <PlooyLogo tone="on-dark" className="h-8" />
           <div>
             <h1 className="text-2xl font-bold text-white">
               {isStudentProgram ? 'Genç Sinema Başvurusu' : 'Yapımcı Kaydı'}

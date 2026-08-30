@@ -55,12 +55,9 @@ export function AdminLayout() {
         }`}
       >
         <div className="border-b border-white/10 px-5 py-5">
-          <Link to="/admin" className="flex items-center gap-2">
-            <PlooyLogo variant="mark" tone="on-dark" className="h-8 w-auto shrink-0" />
-            <div>
-              <PlooyLogo variant="wordmark" tone="on-dark" className="h-5" />
-              <p className="text-xs text-sineoda-muted">Admin Panel</p>
-            </div>
+          <Link to="/admin" className="block">
+            <PlooyLogo tone="on-dark" className="h-6" />
+            <p className="mt-1 text-xs text-sineoda-muted">Admin Panel</p>
           </Link>
         </div>
 

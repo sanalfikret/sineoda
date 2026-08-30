@@ -8,7 +8,7 @@ export function PublicJournalHeader() {
   return (
     <header className="safe-top border-b border-white/5 px-4 py-5 sm:px-6">
       <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4">
-        <PlooyLogo variant="wordmark" tone="on-dark" linked linkTo="/" className="h-7" />
+        <PlooyLogo tone="on-dark" linked linkTo="/" className="h-7" />
         {user ? (
           <Link
             to="/profiller"
