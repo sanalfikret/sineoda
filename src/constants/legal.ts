@@ -1,4 +1,7 @@
 import { BRAND_NAME } from './brand'
+import { appConfig } from '../config/appConfig'
+
+const { support: supportEmail, kvkk: kvkkEmail } = appConfig.emails
 
 export const LEGAL_VERSION = '2026-08-30'
 
@@ -52,7 +55,7 @@ export const LEGAL_DOCUMENTS: Record<LegalSlug, LegalDocument> = {
       },
       {
         heading: '8. Değişiklikler ve İletişim',
-        body: `Bu Koşullar güncellenebilir. Güncel metin Platform üzerinde yayımlandığı tarihte yürürlüğe girer. Önemli değişikliklerde kullanıcılar e-posta veya uygulama içi bildirimle bilgilendirilebilir. Sorularınız için: destek@plooy.com`,
+        body: `Bu Koşullar güncellenebilir. Güncel metin Platform üzerinde yayımlandığı tarihte yürürlüğe girer. Önemli değişikliklerde kullanıcılar e-posta veya uygulama içi bildirimle bilgilendirilebilir. Sorularınız için: ${supportEmail}`,
       },
     ],
   },
@@ -87,7 +90,7 @@ export const LEGAL_DOCUMENTS: Record<LegalSlug, LegalDocument> = {
       },
       {
         heading: '7. Haklarınız',
-        body: 'KVKK kapsamında verilerinize erişme, düzeltme, silme, işlemeyi kısıtlama, itiraz etme ve açık rızayı geri çekme haklarına sahipsiniz. Taleplerinizi kvkk@plooy.com adresine iletebilirsiniz.',
+        body: `KVKK kapsamında verilerinize erişme, düzeltme, silme, işlemeyi kısıtlama, itiraz etme ve açık rızayı geri çekme haklarına sahipsiniz. Taleplerinizi ${kvkkEmail} adresine iletebilirsiniz.`,
       },
     ],
   },
@@ -98,7 +101,7 @@ export const LEGAL_DOCUMENTS: Record<LegalSlug, LegalDocument> = {
     sections: [
       {
         heading: 'Veri Sorumlusu',
-        body: `6698 sayılı KVKK uyarınca veri sorumlusu ${BRAND_NAME} platform işletmecisidir. İletişim: kvkk@plooy.com · destek@plooy.com`,
+        body: `6698 sayılı KVKK uyarınca veri sorumlusu ${BRAND_NAME} platform işletmecisidir. İletişim: ${kvkkEmail} · ${supportEmail}`,
       },
       {
         heading: 'İşlenen Kişisel Veri Kategorileri',
@@ -118,7 +121,7 @@ export const LEGAL_DOCUMENTS: Record<LegalSlug, LegalDocument> = {
       },
       {
         heading: 'Başvuru',
-        body: 'KVKK kapsamındaki taleplerinizi yazılı olarak kvkk@plooy.com adresine veya kayıtlı elektronik posta yoluyla iletebilirsiniz. Başvurular en geç 30 gün içinde sonuçlandırılır.',
+        body: `KVKK kapsamındaki taleplerinizi yazılı olarak ${kvkkEmail} adresine veya kayıtlı elektronik posta yoluyla iletebilirsiniz. Başvurular en geç 30 gün içinde sonuçlandırılır.`,
       },
     ],
   },
@@ -137,7 +140,7 @@ export const LEGAL_DOCUMENTS: Record<LegalSlug, LegalDocument> = {
       },
       {
         heading: 'Rızanın Geri Alınması',
-        body: 'Açık rızanızı dilediğiniz zaman kvkk@plooy.com üzerinden geri alabilirsiniz. Rızanın geri alınması, geri alma tarihinden sonraki işlemleri etkiler; rıza dayanaklı işlemlerin hukuka uygun şekilde tamamlanmış olması saklıdır.',
+        body: `Açık rızanızı dilediğiniz zaman ${kvkkEmail} üzerinden geri alabilirsiniz. Rızanın geri alınması, geri alma tarihinden sonraki işlemleri etkiler; rıza dayanaklı işlemlerin hukuka uygun şekilde tamamlanmış olması saklıdır.`,
       },
     ],
   },

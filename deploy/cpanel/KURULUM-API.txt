@@ -1,9 +1,9 @@
-SINEODA — cPanel'de API kurulumu (birtakimislerdizi.com)
+SINEODA — cPanel'de API kurulumu (senindomain.com)
 =========================================================
 
 Hedef:
-  Site  -> https://birtakimislerdizi.com        (public_html, statik)
-  API   -> https://api.birtakimislerdizi.com    (Node.js, SQLite kalici)
+  Site  -> https://senindomain.com        (public_html, statik)
+  API   -> https://api.senindomain.com    (Node.js, SQLite kalici)
 
 Render / GitHub gerekmez. Zip + cPanel arayuzu yeterli.
 
@@ -28,11 +28,11 @@ ADIM 1 — Alt domain
 -------------------
   cPanel -> Subdomains
   Subdomain: api
-  Document root: genelde otomatik (api.birtakimislerdizi.com)
+  Document root: genelde otomatik (api.senindomain.com)
   Olustur.
 
   cPanel -> SSL/TLS Status (veya Let's Encrypt)
-  api.birtakimislerdizi.com icin sertifika aktif olsun (HTTPS).
+  api.senindomain.com icin sertifika aktif olsun (HTTPS).
 
 
 ADIM 2 — Klasor (public_html DISINDA)
@@ -59,7 +59,7 @@ ADIM 3 — Node.js uygulamasi
   Node.js version     : 18.x veya 22.x (18+ yeterli)
   Application mode    : Production
   Application root    : Plooy-api   (tam yol: /home/.../Plooy-api)
-  Application URL     : api.birtakimislerdizi.com
+  Application URL     : api.senindomain.com
   Application startup : npm start
                         (veya: npx tsx src/index.ts)
 
@@ -74,8 +74,8 @@ ADIM 4 — Environment variables (Node.js App ekraninda)
 
   PORT=3001
   JWT_SECRET=uzun-rastgele-bir-metin-buraya-degistir
-  FRONTEND_URL=https://birtakimislerdizi.com
-  PUBLIC_URL=https://api.birtakimislerdizi.com
+  FRONTEND_URL=https://senindomain.com
+  PUBLIC_URL=https://api.senindomain.com
   REQUIRE_SUBSCRIPTION=false
   REQUIRE_SMS_VERIFICATION=false
   DATA_DIR=/home/KULLANICIADI/Plooy-api/data
@@ -91,9 +91,9 @@ ADIM 5 — API test
 -----------------
   Tarayici veya curl:
 
-  https://api.birtakimislerdizi.com/api/health
+  https://api.senindomain.com/api/health
   veya
-  https://api.birtakimislerdizi.com/api/bootstrap
+  https://api.senindomain.com/api/bootstrap
 
   JSON donmeli. 502 / bos sayfa -> loglara bak (Node App -> stderr log).
 
@@ -105,7 +105,7 @@ ADIM 6 — Frontend'i yeni API'ye bagla
   copy deploy\cpanel\env.static.example .env.cpanel
 
   .env.cpanel icinde:
-  VITE_API_URL=https://api.birtakimislerdizi.com
+  VITE_API_URL=https://api.senindomain.com
 
   deploy\cpanel\build-static.bat
 
@@ -142,7 +142,7 @@ SIK SORUNLAR
   - Application root dogru klasor mu?
 
 • CORS hatasi (site aciliyor, API reddediyor)
-  - FRONTEND_URL tam olarak https://birtakimislerdizi.com (sonunda / yok)
+  - FRONTEND_URL tam olarak https://senindomain.com (sonunda / yok)
   - Restart
 
 • Uyeler / kategoriler kayboluyor

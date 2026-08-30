@@ -2,11 +2,12 @@ import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { PlooyLogo } from '../../components/PlooyLogo'
 import { useAuth } from '../../context/AuthContext'
+import { appConfig } from '../../config/appConfig'
 
 export function AdminLoginPage() {
   const { login, isAdmin, isLoading } = useAuth()
   const navigate = useNavigate()
-  const [email, setEmail] = useState('admin@plooy.com')
+  const [email, setEmail] = useState(appConfig.emails.admin)
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -80,7 +81,7 @@ export function AdminLoginPage() {
           </form>
 
           <p className="mt-6 text-center text-xs text-plooy-muted">
-            Admin: admin@plooy.com / admin123 · Demo: demo@plooy.com / demo1234
+            Admin: {appConfig.emails.admin} / admin123 · Demo: {appConfig.emails.demo} / demo1234
           </p>
           <p className="mt-2 text-center text-sm">
             <Link to="/" className="text-plooy-gold hover:underline">

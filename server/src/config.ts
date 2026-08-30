@@ -1,14 +1,27 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { BRAND_NAME } from './constants/brand.js'
+import { contactEmails, smtpFromDefault } from './constants/contact.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+const DEV_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173']
+
+function parseCorsOrigins() {
+  const primary = process.env.FRONTEND_URL ?? 'http://localhost:5173'
+  const extra = String(process.env.CORS_ORIGINS ?? '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+  return [...new Set([primary, ...DEV_ORIGINS, ...extra])]
+}
 
 export const config = {
   port: Number(process.env.PORT ?? 3001),
   jwtSecret: process.env.JWT_SECRET ?? 'sineoda-dev-secret-change-in-production',
   frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:5173',
   publicUrl: process.env.PUBLIC_URL ?? 'http://localhost:3001',
+  corsOrigins: parseCorsOrigins(),
+  contactEmails,
   dataDir: process.env.DATA_DIR ?? path.join(__dirname, '..', 'data'),
   uploadsDir: process.env.UPLOADS_DIR ?? path.join(__dirname, '..', 'uploads'),
   /** Production: build edilmiş React dosyalarının yolu (tek sunucu kurulumu) */
@@ -20,7 +33,7 @@ export const config = {
     port: Number(process.env.SMTP_PORT ?? 587),
     user: process.env.SMTP_USER ?? '',
     pass: process.env.SMTP_PASS ?? '',
-    from: process.env.SMTP_FROM ?? `${BRAND_NAME} <noreply@plooy.com>`,
+    from: smtpFromDefault(),
   },
   paytr: {
     merchantId: process.env.PAYTR_MERCHANT_ID ?? '',
@@ -50,7 +63,7 @@ export const config = {
     netgsm: {
       user: process.env.NETGSM_USER ?? '',
       pass: process.env.NETGSM_PASS ?? '',
-      header: process.env.NETGSM_HEADER ?? 'SINEODA',
+      header: process.env.NETGSM_HEADER ?? 'PLOOY',
     },
   },
   requireSmsVerification: process.env.REQUIRE_SMS_VERIFICATION !== 'false',

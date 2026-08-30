@@ -90,16 +90,10 @@ ensureStudentCinemaCatalog()
 
 const app = express()
 
-const allowedOrigins = [
-  config.frontendUrl,
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-].filter(Boolean)
-
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || config.corsOrigins.includes(origin)) {
         callback(null, true)
       } else {
         callback(null, true) // geliştirme kolaylığı; production'da sıkılaştırılabilir
