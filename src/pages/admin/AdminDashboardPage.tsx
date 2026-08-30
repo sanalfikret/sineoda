@@ -58,7 +58,7 @@ export function AdminDashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="mt-1 text-sm text-sineoda-muted">
+        <p className="mt-1 text-sm text-plooy-muted">
           Canlı site istatistikleri · 30 saniyede bir güncellenir
         </p>
       </div>
@@ -70,17 +70,17 @@ export function AdminDashboardPage() {
       )}
 
       {!statsLoading && overview && (
-        <section className="rounded-2xl border border-sineoda-gold/20 bg-gradient-to-br from-sineoda-gold/10 to-transparent p-5">
+        <section className="rounded-2xl border border-plooy-gold/20 bg-gradient-to-br from-plooy-gold/10 to-transparent p-5">
           <h2 className="font-semibold text-white">Canlı Özet</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {liveStats.map((stat) => (
               <div key={stat.label} className="rounded-xl border border-white/10 bg-[#11141c]/80 p-4">
-                <p className="text-sm text-sineoda-muted">{stat.label}</p>
-                <p className="mt-2 text-2xl font-bold text-sineoda-gold">{stat.value}</p>
+                <p className="text-sm text-plooy-muted">{stat.label}</p>
+                <p className="mt-2 text-2xl font-bold text-plooy-gold">{stat.value}</p>
               </div>
             ))}
           </div>
-          <p className="mt-4 text-xs text-sineoda-muted">
+          <p className="mt-4 text-xs text-plooy-muted">
             Toplam izlenme: {overview.totals.watchHours} saat ({overview.totals.watchMinutes} dk) ·{' '}
             {overview.totals.activeSubscriptions} aktif abonelik · {overview.totals.users} kullanıcı
           </p>
@@ -88,7 +88,7 @@ export function AdminDashboardPage() {
       )}
 
       {expiringError && (
-        <p className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-sineoda-muted">
+        <p className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-plooy-muted">
           Telif uyarıları yüklenemedi; izleme istatistikleri etkilenmez.
         </p>
       )}
@@ -123,7 +123,7 @@ export function AdminDashboardPage() {
                   />
                   <div>
                     <p className="font-medium text-white">{item.title}</p>
-                    <p className="text-xs text-sineoda-muted">
+                    <p className="text-xs text-plooy-muted">
                       Bitiş: {formatLicenseDate(item.licenseExpiresAt)}
                     </p>
                   </div>
@@ -134,7 +134,7 @@ export function AdminDashboardPage() {
                   </span>
                   <Link
                     to={`/admin/icerikler/${item.id}`}
-                    className="text-sm text-sineoda-gold hover:underline"
+                    className="text-sm text-plooy-gold hover:underline"
                   >
                     Düzenle
                   </Link>
@@ -151,7 +151,7 @@ export function AdminDashboardPage() {
             key={stat.label}
             className="rounded-2xl border border-white/10 bg-[#11141c] p-5"
           >
-            <p className="text-sm text-sineoda-muted">{stat.label}</p>
+            <p className="text-sm text-plooy-muted">{stat.label}</p>
             <p className="mt-2 text-3xl font-bold text-white">{stat.value}</p>
           </div>
         ))}
@@ -159,23 +159,23 @@ export function AdminDashboardPage() {
 
       <section className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
         <h2 className="font-semibold text-white">İzleme İstatistikleri</h2>
-        <p className="mt-1 text-sm text-sineoda-muted">
+        <p className="mt-1 text-sm text-plooy-muted">
           Her içerik için toplam izlenen dakika ve ortalama ilerleme yüzdesi
         </p>
 
         {statsLoading ? (
-          <p className="mt-4 text-sm text-sineoda-muted">Yükleniyor...</p>
+          <p className="mt-4 text-sm text-plooy-muted">Yükleniyor...</p>
         ) : watchStatsError ? (
           <p className="mt-4 text-sm text-amber-200">
             İzleme verileri yüklenemedi. API&apos;nin güncel olduğundan emin olun.
           </p>
         ) : watchStats.length === 0 ? (
-          <p className="mt-4 text-sm text-sineoda-muted">Henüz izleme verisi yok.</p>
+          <p className="mt-4 text-sm text-plooy-muted">Henüz izleme verisi yok.</p>
         ) : (
           <div className="mt-4 overflow-x-auto">
             <table className="w-full min-w-[520px] text-left text-sm">
               <thead>
-                <tr className="border-b border-white/10 text-sineoda-muted">
+                <tr className="border-b border-white/10 text-plooy-muted">
                   <th className="pb-3 pr-4 font-medium">İçerik</th>
                   <th className="pb-3 pr-4 font-medium">Tür</th>
                   <th className="pb-3 pr-4 font-medium">Toplam dk</th>
@@ -187,8 +187,8 @@ export function AdminDashboardPage() {
                 {watchStats.map((row) => (
                   <tr key={row.contentId} className="border-b border-white/5">
                     <td className="py-3 pr-4 text-white">{row.title}</td>
-                    <td className="py-3 pr-4 capitalize text-sineoda-muted">{row.type}</td>
-                    <td className="py-3 pr-4 text-sineoda-gold">{row.totalWatchedMinutes} dk</td>
+                    <td className="py-3 pr-4 capitalize text-plooy-muted">{row.type}</td>
+                    <td className="py-3 pr-4 text-plooy-gold">{row.totalWatchedMinutes} dk</td>
                     <td className="py-3 pr-4 text-white/80">{row.viewerCount}</td>
                     <td className="py-3 text-white/80">{row.avgProgressPercent}%</td>
                   </tr>
@@ -211,19 +211,19 @@ export function AdminDashboardPage() {
               />
               <div>
                 <p className="font-medium text-white">{featuredContent.title}</p>
-                <p className="mt-1 text-sm text-sineoda-muted capitalize">
+                <p className="mt-1 text-sm text-plooy-muted capitalize">
                   {featuredContent.type} · {featuredContent.year}
                 </p>
                 <Link
                   to={`/admin/icerikler/${featuredContent.id}`}
-                  className="mt-3 inline-block text-sm text-sineoda-gold hover:underline"
+                  className="mt-3 inline-block text-sm text-plooy-gold hover:underline"
                 >
                   Düzenle
                 </Link>
               </div>
             </div>
           ) : (
-            <p className="mt-4 text-sm text-sineoda-muted">Henüz öne çıkan içerik yok.</p>
+            <p className="mt-4 text-sm text-plooy-muted">Henüz öne çıkan içerik yok.</p>
           )}
         </section>
 
@@ -238,7 +238,7 @@ export function AdminDashboardPage() {
             </Link>
             <Link
               to="/admin/icerikler/yeni"
-              className="rounded-lg bg-sineoda-gold/15 px-4 py-3 text-sm font-medium text-sineoda-gold hover:bg-sineoda-gold/20"
+              className="rounded-lg bg-plooy-gold/15 px-4 py-3 text-sm font-medium text-plooy-gold hover:bg-plooy-gold/20"
             >
               + Yeni film veya dizi ekle
             </Link>

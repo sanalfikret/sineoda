@@ -1,10 +1,10 @@
 @echo off
-title Sineoda Online
+title Plooy Online
 cd /d "%~dp0"
 
 echo.
 echo  ========================================
-echo   Sineoda - Online Test
+echo   Plooy - Online Test
 echo  ========================================
 echo.
 echo  Not: Ngrok surumu eski oldugu icin

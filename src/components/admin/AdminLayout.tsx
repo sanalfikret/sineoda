@@ -57,7 +57,7 @@ export function AdminLayout() {
         <div className="border-b border-white/10 px-5 py-5">
           <Link to="/admin" className="block">
             <PlooyLogo tone="on-dark" className="h-6" />
-            <p className="mt-1 text-xs text-sineoda-muted">Admin Panel</p>
+            <p className="mt-1 text-xs text-plooy-muted">Admin Panel</p>
           </Link>
         </div>
 
@@ -71,7 +71,7 @@ export function AdminLayout() {
               className={({ isActive }) =>
                 `block rounded-lg px-3 py-2.5 text-sm font-medium transition ${
                   isActive
-                    ? 'bg-sineoda-gold/15 text-sineoda-gold'
+                    ? 'bg-plooy-gold/15 text-plooy-gold'
                     : 'text-white/75 hover:bg-white/5 hover:text-white'
                 }`
               }
@@ -83,7 +83,7 @@ export function AdminLayout() {
 
         <div className="border-t border-white/10 p-4">
           <p className="truncate text-sm font-medium">{user?.name}</p>
-          <p className="truncate text-xs text-sineoda-muted">{user?.email}</p>
+          <p className="truncate text-xs text-plooy-muted">{user?.email}</p>
           <div className="mt-3 flex flex-col gap-2">
             <Link
               to="/"
@@ -113,7 +113,7 @@ export function AdminLayout() {
               <path d="M4 7H20M4 12H20M4 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </button>
-          <p className="text-sm text-sineoda-muted lg:hidden">Admin Panel</p>
+          <p className="text-sm text-plooy-muted lg:hidden">Admin Panel</p>
           <AdminContentActions />
         </header>
 

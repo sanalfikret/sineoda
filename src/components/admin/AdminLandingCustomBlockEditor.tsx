@@ -14,7 +14,7 @@ import { viewAllHrefForBlock, viewAllHrefForPool } from '../../utils/landingCont
 import { normalizeLandingLink } from '../../utils/landingContentRow'
 
 const inputClass =
-  'w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold'
+  'w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-plooy-gold'
 
 function pickerThumb(item: ContentItem, poolFilter: ContentPoolId) {
   const horizontal = poolFilter === 'shooting_notes' || isShootingNotesContent(item)
@@ -79,7 +79,7 @@ function ContentRowPicker({
     <div className="space-y-4">
       {selectedIds.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs text-sineoda-muted">Seçili içerikler (sıra önemli)</p>
+          <p className="text-xs text-plooy-muted">Seçili içerikler (sıra önemli)</p>
           {selectedIds.map((contentId, index) => {
             const item = catalog.find((entry) => entry.id === contentId)
             if (!item) return null
@@ -92,7 +92,7 @@ function ContentRowPicker({
                 <img src={resolveMediaUrl(thumb.src)} alt="" className={thumb.className} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-white">{item.title}</p>
-                  <p className="text-xs text-sineoda-muted">{getContentDisplayLabel(item)}</p>
+                  <p className="text-xs text-plooy-muted">{getContentDisplayLabel(item)}</p>
                 </div>
                 <button type="button" onClick={() => move(index, -1)} className="text-xs text-white/60 hover:text-white">
                   ↑
@@ -125,13 +125,13 @@ function ContentRowPicker({
               type="button"
               onClick={() => toggle(item.id)}
               className={`flex items-center gap-3 rounded-lg border p-2 text-left transition ${
-                selected ? 'border-sineoda-gold/50 bg-sineoda-gold/10' : 'border-white/10 hover:bg-white/5'
+                selected ? 'border-plooy-gold/50 bg-plooy-gold/10' : 'border-white/10 hover:bg-white/5'
               }`}
             >
               <img src={resolveMediaUrl(thumb.src)} alt="" className={thumb.className} />
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-white">{item.title}</p>
-                <p className="text-xs text-sineoda-muted">{getContentDisplayLabel(item)}</p>
+                <p className="text-xs text-plooy-muted">{getContentDisplayLabel(item)}</p>
               </div>
             </button>
           )
@@ -200,7 +200,7 @@ export function AdminLandingCustomBlockEditor({
     return (
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-sineoda-muted">Film/dizi poster satırı — misafir ana sayfada gösterilir</p>
+          <p className="text-sm text-plooy-muted">Film/dizi poster satırı — misafir ana sayfada gösterilir</p>
           <button
             type="button"
             onClick={onRemove}
@@ -286,7 +286,7 @@ export function AdminLandingCustomBlockEditor({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-sineoda-muted">Admin panelinde görünen bölüm adı</p>
+        <p className="text-sm text-plooy-muted">Admin panelinde görünen bölüm adı</p>
         <button
           type="button"
           onClick={onRemove}

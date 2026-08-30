@@ -80,8 +80,8 @@ function HomeRoute() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-sineoda-bg">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-sineoda-gold border-t-transparent" />
+      <div className="flex min-h-dvh items-center justify-center bg-plooy-bg">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-plooy-gold border-t-transparent" />
       </div>
     )
   }

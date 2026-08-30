@@ -160,14 +160,14 @@ export function LandingPage() {
 
   if (!ready) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-sineoda-bg">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-sineoda-gold border-t-transparent" />
+      <div className="flex min-h-dvh items-center justify-center bg-plooy-bg">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-plooy-gold border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-dvh bg-sineoda-bg text-white">
+    <div className="min-h-dvh bg-plooy-bg text-white">
       <LandingHeader scrolled={scrolled} hiddenNavIds={hiddenNavIds} />
       <LandingPageBlocks
         ctx={{

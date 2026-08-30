@@ -1,5 +1,5 @@
 @echo off
-title Sineoda - GitHub Yukle
+title Plooy - GitHub Yukle
 cd /d "%~dp0"
 set "GIT=C:\Program Files\Git\bin\git.exe"
 
@@ -26,6 +26,6 @@ if errorlevel 1 (
 
 echo.
 echo  BASARILI! Kod GitHub'a yuklendi.
-echo  https://github.com/sanalfikret/sineoda
+echo  https://github.com/sanalfikret/Plooy
 echo.
 pause

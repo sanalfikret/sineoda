@@ -139,9 +139,9 @@ export function AdminCategoriesPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-white">Kategoriler & Menü</h1>
-          <p className="mt-1 text-sm text-sineoda-muted">
+          <p className="mt-1 text-sm text-plooy-muted">
             Ana sayfa satırları ve üst menü görünürlüğünü yönet. Kapalı öğeler sitede hiç görünmez.
-            {savingOrder && <span className="ml-2 text-sineoda-gold">Kaydediliyor…</span>}
+            {savingOrder && <span className="ml-2 text-plooy-gold">Kaydediliyor…</span>}
           </p>
         </div>
         <button
@@ -180,12 +180,12 @@ export function AdminCategoriesPage() {
             value={newTitle}
             onChange={(event) => setNewTitle(event.target.value)}
             placeholder="Yeni kategori adı"
-            className="flex-1 rounded-lg border border-white/10 bg-[#11141c] px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
+            className="flex-1 rounded-lg border border-white/10 bg-[#11141c] px-4 py-2.5 text-white outline-none focus:border-plooy-gold"
           />
           <button
             type="button"
             onClick={() => void handleAddCategory()}
-            className="rounded-lg bg-sineoda-gold px-4 py-2.5 text-sm font-semibold text-sineoda-bg"
+            className="rounded-lg bg-plooy-gold px-4 py-2.5 text-sm font-semibold text-plooy-bg"
           >
             Ekle
           </button>

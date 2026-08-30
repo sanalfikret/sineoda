@@ -155,14 +155,14 @@ export function AdminStudentCinemaFilmActions({
 
       {showSchedule && (
         <div className="rounded-lg border border-sky-500/20 bg-sky-500/5 p-2.5">
-          <label className="block text-[11px] text-sineoda-muted">Yayın tarihi ve saati</label>
+          <label className="block text-[11px] text-plooy-muted">Yayın tarihi ve saati</label>
           <input
             type="datetime-local"
             value={scheduleAt}
             onChange={(event) => setScheduleAt(event.target.value)}
             className="mt-1 w-full rounded border border-white/10 bg-[#0d0f14] px-2 py-1.5 text-xs text-white"
           />
-          <p className="mt-1 text-[11px] text-sineoda-muted">
+          <p className="mt-1 text-[11px] text-plooy-muted">
             Mevcut: {formatPublishDate(item.publishedAt)}
           </p>
           <div className="mt-2 flex gap-2">
@@ -177,7 +177,7 @@ export function AdminStudentCinemaFilmActions({
             <button
               type="button"
               onClick={() => setShowSchedule(false)}
-              className="rounded px-2 py-1 text-xs text-sineoda-muted"
+              className="rounded px-2 py-1 text-xs text-plooy-muted"
             >
               İptal
             </button>

@@ -31,10 +31,10 @@ export function ProfilesPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-sineoda-bg px-4 py-8 sm:px-6">
+    <div className="min-h-dvh bg-plooy-bg px-4 py-8 sm:px-6">
       <div className="safe-top mx-auto max-w-4xl text-center">
         <h1 className="text-2xl font-bold text-white sm:text-4xl">Kim izliyor?</h1>
-        <p className="mt-2 text-sm text-sineoda-muted sm:text-base">
+        <p className="mt-2 text-sm text-plooy-muted sm:text-base">
           Profilini seç veya yeni bir profil ekle
         </p>
 
@@ -58,14 +58,14 @@ export function ProfilesPage() {
               <ProfileAvatar
                 avatar={profile.avatar}
                 name={profile.name}
-                className="h-24 w-24 border-2 border-transparent transition group-hover:border-sineoda-gold group-hover:scale-105 sm:h-28 sm:w-28"
+                className="h-24 w-24 border-2 border-transparent transition group-hover:border-plooy-gold group-hover:scale-105 sm:h-28 sm:w-28"
                 emojiClassName="text-4xl sm:text-5xl"
               />
               <span className="text-sm font-medium text-white/80 transition group-hover:text-white sm:text-base">
                 {profile.name}
               </span>
               {profile.isKids && (
-                <span className="-mt-2 text-xs text-sineoda-blue">Çocuk profili</span>
+                <span className="-mt-2 text-xs text-plooy-blue">Çocuk profili</span>
               )}
             </button>
           ))}
@@ -75,7 +75,7 @@ export function ProfilesPage() {
             onClick={() => setShowAddForm(true)}
             className="group flex w-[120px] flex-col items-center gap-3 sm:w-[140px]"
           >
-            <div className="flex h-24 w-24 items-center justify-center rounded-2xl border-2 border-dashed border-white/20 text-3xl text-white/40 transition group-hover:border-sineoda-gold group-hover:text-sineoda-gold sm:h-28 sm:w-28">
+            <div className="flex h-24 w-24 items-center justify-center rounded-2xl border-2 border-dashed border-white/20 text-3xl text-white/40 transition group-hover:border-plooy-gold group-hover:text-plooy-gold sm:h-28 sm:w-28">
               +
             </div>
             <span className="text-sm font-medium text-white/60 transition group-hover:text-white sm:text-base">
@@ -85,14 +85,14 @@ export function ProfilesPage() {
         </div>
 
         {showAddForm && (
-          <div className="mx-auto mt-10 max-w-sm rounded-2xl border border-white/10 bg-sineoda-surface p-5 text-left">
+          <div className="mx-auto mt-10 max-w-sm rounded-2xl border border-white/10 bg-plooy-surface p-5 text-left">
             <h2 className="font-semibold text-white">Yeni profil</h2>
             <input
               type="text"
               value={newName}
               onChange={(event) => setNewName(event.target.value)}
               placeholder="Profil adı"
-              className="mt-3 w-full rounded-lg border border-white/10 bg-sineoda-bg px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
+              className="mt-3 w-full rounded-lg border border-white/10 bg-plooy-bg px-4 py-2.5 text-white outline-none focus:border-plooy-gold"
             />
             <div className="mt-3">
               <ProfileAvatarPicker value={newAvatar} onChange={setNewAvatar} name={newName} />
@@ -102,7 +102,7 @@ export function ProfilesPage() {
                 type="checkbox"
                 checked={newKids}
                 onChange={(event) => setNewKids(event.target.checked)}
-                className="accent-sineoda-gold"
+                className="accent-plooy-gold"
               />
               Çocuk profili
             </label>
@@ -110,14 +110,14 @@ export function ProfilesPage() {
               <button
                 type="button"
                 onClick={() => void handleAddProfile()}
-                className="flex-1 rounded-lg bg-sineoda-gold py-2.5 text-sm font-semibold text-sineoda-bg"
+                className="flex-1 rounded-lg bg-plooy-gold py-2.5 text-sm font-semibold text-plooy-bg"
               >
                 Ekle
               </button>
               <button
                 type="button"
                 onClick={() => setShowAddForm(false)}
-                className="rounded-lg px-4 py-2.5 text-sm text-sineoda-muted hover:text-white"
+                className="rounded-lg px-4 py-2.5 text-sm text-plooy-muted hover:text-white"
               >
                 İptal
               </button>
@@ -131,7 +131,7 @@ export function ProfilesPage() {
             logout()
             navigate('/', { replace: true })
           }}
-          className="mt-12 text-sm text-sineoda-muted transition hover:text-white"
+          className="mt-12 text-sm text-plooy-muted transition hover:text-white"
         >
           Hesaptan çıkış yap
         </button>

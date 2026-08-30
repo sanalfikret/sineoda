@@ -13,7 +13,7 @@ export function PaymentSuccessPage() {
   }, [refreshUser])
 
   return (
-    <div className="min-h-dvh bg-sineoda-bg">
+    <div className="min-h-dvh bg-plooy-bg">
       <div className="flex min-h-[70dvh] items-center justify-center px-4">
       <div className="max-w-md rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center">
         <p className="text-4xl">✓</p>
@@ -25,7 +25,7 @@ export function PaymentSuccessPage() {
         </p>
         <Link
           to={isCreatorReturn ? '/creator' : '/profiller'}
-          className="mt-6 inline-block rounded-lg bg-sineoda-gold px-6 py-3 text-sm font-semibold text-sineoda-bg"
+          className="mt-6 inline-block rounded-lg bg-plooy-gold px-6 py-3 text-sm font-semibold text-plooy-bg"
         >
           {isCreatorReturn ? 'Yapımcı Paneline Git' : 'Profil Seç ve İzle'}
         </Link>

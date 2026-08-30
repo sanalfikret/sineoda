@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-const STORAGE_KEY = 'sineoda_cookie_consent'
+const STORAGE_KEY = 'plooy_cookie_consent'
+const LEGACY_STORAGE_KEY = 'sineoda_cookie_consent'
 
 export function CookieConsent() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY)
+    const saved = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY)
     if (!saved) setVisible(true)
   }, [])
 
@@ -28,9 +29,9 @@ export function CookieConsent() {
       <div className="mx-auto flex max-w-4xl flex-col gap-4 rounded-2xl border border-white/10 bg-[#11141c]/95 p-5 shadow-2xl backdrop-blur-md sm:flex-row sm:items-center sm:justify-between">
         <div className="text-sm text-white/85">
           <p className="font-medium text-white">Çerez kullanımı</p>
-          <p className="mt-1 text-sineoda-muted">
+          <p className="mt-1 text-plooy-muted">
             Deneyimi iyileştirmek için çerezler kullanıyoruz. Detaylar için{' '}
-            <Link to="/yasal/cerez-politikasi" className="text-sineoda-gold hover:underline">
+            <Link to="/yasal/cerez-politikasi" className="text-plooy-gold hover:underline">
               Çerez Politikası
             </Link>
             &apos;nı inceleyebilirsiniz.
@@ -47,7 +48,7 @@ export function CookieConsent() {
           <button
             type="button"
             onClick={accept}
-            className="rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg hover:brightness-110"
+            className="rounded-lg bg-plooy-gold px-4 py-2 text-sm font-semibold text-plooy-bg hover:brightness-110"
           >
             Kabul et
           </button>

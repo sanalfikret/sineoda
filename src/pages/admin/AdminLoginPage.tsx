@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext'
 export function AdminLoginPage() {
   const { login, isAdmin, isLoading } = useAuth()
   const navigate = useNavigate()
-  const [email, setEmail] = useState('admin@sineoda.com')
+  const [email, setEmail] = useState('admin@plooy.com')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -40,7 +40,7 @@ export function AdminLoginPage() {
         <div className="rounded-2xl border border-white/10 bg-[#11141c] p-6 sm:p-8">
           <div className="mb-6 text-center">
             <h1 className="text-xl font-bold text-white">Admin Girişi</h1>
-            <p className="mt-1 text-sm text-sineoda-muted">Plooy yönetim paneli</p>
+            <p className="mt-1 text-sm text-plooy-muted">Plooy yönetim paneli</p>
           </div>
 
           {error && (
@@ -57,7 +57,7 @@ export function AdminLoginPage() {
                 required
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-sineoda-gold"
+                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-plooy-gold"
               />
             </label>
             <label className="block">
@@ -67,23 +67,23 @@ export function AdminLoginPage() {
                 required
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-sineoda-gold"
+                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-plooy-gold"
               />
             </label>
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-sineoda-gold py-3 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
+              className="w-full rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg disabled:opacity-60"
             >
               {loading ? 'Giriş yapılıyor...' : 'Panele Gir'}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-xs text-sineoda-muted">
-            Admin: admin@sineoda.com / admin123 · Demo: demo@sineoda.com / demo1234
+          <p className="mt-6 text-center text-xs text-plooy-muted">
+            Admin: admin@plooy.com / admin123 · Demo: demo@plooy.com / demo1234
           </p>
           <p className="mt-2 text-center text-sm">
-            <Link to="/" className="text-sineoda-gold hover:underline">
+            <Link to="/" className="text-plooy-gold hover:underline">
               Ana siteye dön
             </Link>
           </p>

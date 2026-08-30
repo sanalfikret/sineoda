@@ -89,7 +89,7 @@ export function AdminWatchAccountingPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-white">Aylık İzlenme Muhasebesi</h1>
-        <p className="mt-1 text-sm text-sineoda-muted">
+        <p className="mt-1 text-sm text-plooy-muted">
           Her ayın 1&apos;inde sıfırlanır, ay sonunda arşivlenir. Ödeme hesapları nitelikli izlenme dakikasına göre yapılır.
         </p>
       </div>
@@ -102,7 +102,7 @@ export function AdminWatchAccountingPage() {
 
       <div className="flex flex-wrap items-end gap-3">
         <label className="block">
-          <span className="mb-1 block text-xs text-sineoda-muted">Dönem</span>
+          <span className="mb-1 block text-xs text-plooy-muted">Dönem</span>
           <select
             value={month}
             onChange={(event) => setMonth(event.target.value)}
@@ -123,7 +123,7 @@ export function AdminWatchAccountingPage() {
               onClick={() => setProgram(filter.id)}
               className={`rounded-full px-3 py-1.5 text-xs font-medium ${
                 program === filter.id
-                  ? 'bg-sineoda-gold/15 text-sineoda-gold'
+                  ? 'bg-plooy-gold/15 text-plooy-gold'
                   : 'bg-white/5 text-white/70 hover:bg-white/10'
               }`}
             >
@@ -137,23 +137,23 @@ export function AdminWatchAccountingPage() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
-              <p className="text-xs text-sineoda-muted">Toplam nitelikli izlenme</p>
-              <p className="mt-1 text-2xl font-bold text-sineoda-gold">{report.totalQualifiedMinutes} dk</p>
+              <p className="text-xs text-plooy-muted">Toplam nitelikli izlenme</p>
+              <p className="mt-1 text-2xl font-bold text-plooy-gold">{report.totalQualifiedMinutes} dk</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
-              <p className="text-xs text-sineoda-muted">Toplam izlenme</p>
+              <p className="text-xs text-plooy-muted">Toplam izlenme</p>
               <p className="mt-1 text-2xl font-bold text-white">{report.totalWatchMinutes} dk</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
-              <p className="text-xs text-sineoda-muted">Bu ay yeni üye</p>
+              <p className="text-xs text-plooy-muted">Bu ay yeni üye</p>
               <p className="mt-1 text-2xl font-bold text-emerald-300">{report.memberStats?.newMembersThisMonth ?? 0}</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
-              <p className="text-xs text-sineoda-muted">Mevcut üye sayısı</p>
+              <p className="text-xs text-plooy-muted">Mevcut üye sayısı</p>
               <p className="mt-1 text-2xl font-bold text-white">{report.memberStats?.totalMembers ?? 0}</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
-              <p className="text-xs text-sineoda-muted">Durum</p>
+              <p className="text-xs text-plooy-muted">Durum</p>
               <p className="mt-1 text-lg font-semibold text-white">
                 {report.status === 'open' ? 'Ay devam ediyor' : 'Arşivlendi'}
               </p>
@@ -171,16 +171,16 @@ export function AdminWatchAccountingPage() {
       />
 
       {loading ? (
-        <p className="text-sm text-sineoda-muted">Yükleniyor...</p>
+        <p className="text-sm text-plooy-muted">Yükleniyor...</p>
       ) : !report || filteredItems.length === 0 ? (
-        <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-sineoda-muted">
+        <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-plooy-muted">
           Bu dönem için kayıt yok.
         </p>
       ) : (
         <div className="overflow-hidden rounded-xl border border-white/10 bg-[#11141c]">
           <div className="max-h-[min(70vh,680px)] overflow-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="sticky top-0 z-10 bg-[#11141c] text-sineoda-muted shadow-[0_1px_0_rgba(255,255,255,0.06)]">
+              <thead className="sticky top-0 z-10 bg-[#11141c] text-plooy-muted shadow-[0_1px_0_rgba(255,255,255,0.06)]">
                 <tr>
                   <th className="px-4 py-3 font-medium">Film</th>
                   <th className="px-4 py-3 font-medium">Yapımcı / Öğrenci</th>
@@ -194,7 +194,7 @@ export function AdminWatchAccountingPage() {
                 {filteredItems.map((item) => (
                   <tr key={item.contentId} className="border-t border-white/5 hover:bg-white/[0.02]">
                     <td className="px-4 py-3 font-medium text-white">{item.title}</td>
-                    <td className="px-4 py-3 text-sineoda-muted">
+                    <td className="px-4 py-3 text-plooy-muted">
                       <p>
                         {item.program === 'platform'
                           ? BRAND_NAME
@@ -204,9 +204,9 @@ export function AdminWatchAccountingPage() {
                         <p className="text-xs">{item.studioName}</p>
                       ) : null}
                     </td>
-                    <td className="px-4 py-3 text-sineoda-muted">{programLabel(item.program)}</td>
+                    <td className="px-4 py-3 text-plooy-muted">{programLabel(item.program)}</td>
                     <td className="px-4 py-3 text-emerald-300">{item.qualifiedMinutes} dk</td>
-                    <td className="px-4 py-3 font-semibold text-sineoda-gold">%{item.sharePercent}</td>
+                    <td className="px-4 py-3 font-semibold text-plooy-gold">%{item.sharePercent}</td>
                     <td className="px-4 py-3 text-white/80">{item.viewerCount}</td>
                   </tr>
                 ))}

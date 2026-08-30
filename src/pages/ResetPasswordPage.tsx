@@ -56,7 +56,7 @@ export function ResetPasswordPage() {
           <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
             {message}
             <p className="mt-3">
-              <Link to="/giris" className="font-medium text-sineoda-gold hover:underline">
+              <Link to="/giris" className="font-medium text-plooy-gold hover:underline">
                 Giriş yap
               </Link>
             </p>
@@ -72,7 +72,7 @@ export function ResetPasswordPage() {
                 autoComplete="new-password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-sineoda-bg px-4 py-3 text-white outline-none transition focus:border-sineoda-gold"
+                className="w-full rounded-lg border border-white/10 bg-plooy-bg px-4 py-3 text-white outline-none transition focus:border-plooy-gold"
               />
             </label>
 
@@ -85,14 +85,14 @@ export function ResetPasswordPage() {
                 autoComplete="new-password"
                 value={confirm}
                 onChange={(event) => setConfirm(event.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-sineoda-bg px-4 py-3 text-white outline-none transition focus:border-sineoda-gold"
+                className="w-full rounded-lg border border-white/10 bg-plooy-bg px-4 py-3 text-white outline-none transition focus:border-plooy-gold"
               />
             </label>
 
             <button
               type="submit"
               disabled={loading || !token}
-              className="w-full rounded-lg bg-sineoda-gold py-3 text-sm font-semibold text-sineoda-bg transition hover:brightness-110 disabled:opacity-60"
+              className="w-full rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110 disabled:opacity-60"
             >
               {loading ? 'Kaydediliyor...' : 'Şifreyi Güncelle'}
             </button>

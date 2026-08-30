@@ -136,7 +136,7 @@ export function InstallAppProvider({ children }: { children: ReactNode }) {
       {children}
       {hintMessage && (
         <div
-          className="safe-bottom pointer-events-none fixed inset-x-4 bottom-20 z-[85] mx-auto max-w-md rounded-xl border border-white/10 bg-sineoda-elevated/95 px-4 py-3 text-center text-sm text-white shadow-xl backdrop-blur-md sm:bottom-6"
+          className="safe-bottom pointer-events-none fixed inset-x-4 bottom-20 z-[85] mx-auto max-w-md rounded-xl border border-white/10 bg-plooy-elevated/95 px-4 py-3 text-center text-sm text-white shadow-xl backdrop-blur-md sm:bottom-6"
           role="status"
         >
           {hintMessage}

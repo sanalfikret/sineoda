@@ -137,12 +137,12 @@ export function AccountPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-sineoda-bg px-4 py-8 text-white sm:px-6">
+    <div className="min-h-dvh bg-plooy-bg px-4 py-8 text-white sm:px-6">
       <div className="safe-top mx-auto max-w-3xl">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold sm:text-3xl">Hesabım</h1>
-            <p className="mt-1 text-sm text-sineoda-muted">{user.email}</p>
+            <p className="mt-1 text-sm text-plooy-muted">{user.email}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
@@ -172,18 +172,18 @@ export function AccountPage() {
         <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
           <h2 className="text-lg font-semibold">Hesap Bilgileri</h2>
           <label className="mt-4 block space-y-2">
-            <span className="text-xs font-medium uppercase tracking-wide text-sineoda-muted">Ad Soyad</span>
+            <span className="text-xs font-medium uppercase tracking-wide text-plooy-muted">Ad Soyad</span>
             <input
               value={accountName}
               onChange={(event) => setAccountName(event.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 outline-none focus:border-sineoda-gold"
+              className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 outline-none focus:border-plooy-gold"
             />
           </label>
           <button
             type="button"
             disabled={savingAccount}
             onClick={() => void handleSaveAccount()}
-            className="mt-4 rounded-lg bg-sineoda-gold px-4 py-2.5 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
+            className="mt-4 rounded-lg bg-plooy-gold px-4 py-2.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
           >
             {savingAccount ? 'Kaydediliyor…' : 'Hesabı Kaydet'}
           </button>
@@ -192,34 +192,34 @@ export function AccountPage() {
         <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <h2 className="text-lg font-semibold">Abonelik</h2>
-            <Link to="/planlar" className="text-sm text-sineoda-gold hover:underline">
+            <Link to="/planlar" className="text-sm text-plooy-gold hover:underline">
               Planları Gör
             </Link>
           </div>
 
           <dl className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
-              <dt className="text-xs uppercase tracking-wide text-sineoda-muted">Durum</dt>
+              <dt className="text-xs uppercase tracking-wide text-plooy-muted">Durum</dt>
               <dd className="mt-1 font-medium">
                 {subscription ? subscriptionStatusLabel(subscription.status) : '—'}
               </dd>
             </div>
             <div>
-              <dt className="text-xs uppercase tracking-wide text-sineoda-muted">Plan</dt>
+              <dt className="text-xs uppercase tracking-wide text-plooy-muted">Plan</dt>
               <dd className="mt-1 font-medium">{planName ?? '—'}</dd>
             </div>
             <div>
-              <dt className="text-xs uppercase tracking-wide text-sineoda-muted">Başlangıç</dt>
+              <dt className="text-xs uppercase tracking-wide text-plooy-muted">Başlangıç</dt>
               <dd className="mt-1 font-medium">{formatDate(subscription?.startedAt)}</dd>
             </div>
             <div>
-              <dt className="text-xs uppercase tracking-wide text-sineoda-muted">Bitiş</dt>
+              <dt className="text-xs uppercase tracking-wide text-plooy-muted">Bitiş</dt>
               <dd className="mt-1 font-medium">{formatDate(subscription?.expiresAt)}</dd>
             </div>
           </dl>
 
           {activeProfile && (
-            <div className="mt-4 flex items-center gap-3 text-sm text-sineoda-muted">
+            <div className="mt-4 flex items-center gap-3 text-sm text-plooy-muted">
               <span>Aktif profil:</span>
               <ProfileAvatar avatar={activeProfile.avatar} name={activeProfile.name} className="h-8 w-8" emojiClassName="text-lg" />
               <span className="text-white">{activeProfile.name}</span>
@@ -230,7 +230,7 @@ export function AccountPage() {
         {activeProfile && (
           <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
             <h2 className="text-lg font-semibold">İzleme İstatistikleri</h2>
-            <p className="mt-1 text-sm text-sineoda-muted">
+            <p className="mt-1 text-sm text-plooy-muted">
               Aktif profilin için film, dizi ve diğer içeriklerde geçirdiğin süre.
             </p>
             <div className="mt-4">
@@ -246,7 +246,7 @@ export function AccountPage() {
               <button
                 type="button"
                 onClick={() => setShowAddForm((open) => !open)}
-                className="rounded-lg border border-sineoda-gold/40 px-3 py-1.5 text-sm text-sineoda-gold"
+                className="rounded-lg border border-plooy-gold/40 px-3 py-1.5 text-sm text-plooy-gold"
               >
                 + Profil Ekle
               </button>
@@ -261,7 +261,7 @@ export function AccountPage() {
                     <input
                       value={editName}
                       onChange={(event) => setEditName(event.target.value)}
-                      className="w-full rounded-lg border border-white/10 bg-sineoda-bg px-4 py-2.5 outline-none focus:border-sineoda-gold"
+                      className="w-full rounded-lg border border-white/10 bg-plooy-bg px-4 py-2.5 outline-none focus:border-plooy-gold"
                     />
                     <ProfileAvatarPicker value={editAvatar} onChange={setEditAvatar} name={editName} />
                     <label className="flex items-center gap-2 text-sm text-white/85">
@@ -269,7 +269,7 @@ export function AccountPage() {
                         type="checkbox"
                         checked={editKids}
                         onChange={(event) => setEditKids(event.target.checked)}
-                        className="accent-sineoda-gold"
+                        className="accent-plooy-gold"
                       />
                       Çocuk profili
                     </label>
@@ -277,14 +277,14 @@ export function AccountPage() {
                       <button
                         type="button"
                         onClick={() => void handleSaveProfile()}
-                        className="rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg"
+                        className="rounded-lg bg-plooy-gold px-4 py-2 text-sm font-semibold text-plooy-bg"
                       >
                         Kaydet
                       </button>
                       <button
                         type="button"
                         onClick={() => setEditingProfileId(null)}
-                        className="rounded-lg px-4 py-2 text-sm text-sineoda-muted hover:text-white"
+                        className="rounded-lg px-4 py-2 text-sm text-plooy-muted hover:text-white"
                       >
                         İptal
                       </button>
@@ -305,7 +305,7 @@ export function AccountPage() {
                       <ProfileAvatar avatar={profile.avatar} name={profile.name} className="h-12 w-12" emojiClassName="text-2xl" />
                       <div>
                         <p className="text-lg">{profile.name}</p>
-                        <p className="text-sm text-sineoda-muted">
+                        <p className="text-sm text-plooy-muted">
                           {profile.isKids ? 'Çocuk profili' : 'Standart profil'}
                           {activeProfile?.id === profile.id ? ' · Şu an aktif' : ''}
                         </p>
@@ -325,13 +325,13 @@ export function AccountPage() {
           </div>
 
           {showAddForm && (
-            <div className="mt-4 rounded-xl border border-sineoda-gold/20 bg-sineoda-gold/5 p-4">
+            <div className="mt-4 rounded-xl border border-plooy-gold/20 bg-plooy-gold/5 p-4">
               <h3 className="font-medium">Yeni profil</h3>
               <input
                 value={newName}
                 onChange={(event) => setNewName(event.target.value)}
                 placeholder="Profil adı"
-                className="mt-3 w-full rounded-lg border border-white/10 bg-sineoda-bg px-4 py-2.5 outline-none focus:border-sineoda-gold"
+                className="mt-3 w-full rounded-lg border border-white/10 bg-plooy-bg px-4 py-2.5 outline-none focus:border-plooy-gold"
               />
               <ProfileAvatarPicker value={newAvatar} onChange={setNewAvatar} name={newName} />
               <label className="mt-3 flex items-center gap-2 text-sm">
@@ -339,7 +339,7 @@ export function AccountPage() {
                   type="checkbox"
                   checked={newKids}
                   onChange={(event) => setNewKids(event.target.checked)}
-                  className="accent-sineoda-gold"
+                  className="accent-plooy-gold"
                 />
                 Çocuk profili
               </label>
@@ -347,14 +347,14 @@ export function AccountPage() {
                 <button
                   type="button"
                   onClick={() => void handleAddProfile()}
-                  className="rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg"
+                  className="rounded-lg bg-plooy-gold px-4 py-2 text-sm font-semibold text-plooy-bg"
                 >
                   Ekle
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="rounded-lg px-4 py-2 text-sm text-sineoda-muted"
+                  className="rounded-lg px-4 py-2 text-sm text-plooy-muted"
                 >
                   İptal
                 </button>

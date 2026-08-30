@@ -59,12 +59,12 @@ export function ProfileAvatarPicker({ value, onChange, name = '' }: ProfileAvata
           >
             {uploading ? 'Yükleniyor…' : 'Fotoğraf Yükle'}
           </button>
-          <p className="mt-1 text-xs text-sineoda-muted">JPG, PNG veya WebP · en fazla 2 MB</p>
+          <p className="mt-1 text-xs text-plooy-muted">JPG, PNG veya WebP · en fazla 2 MB</p>
           {isProfilePhoto(value) && (
             <button
               type="button"
               onClick={() => onChange(PROFILE_AVATARS[0])}
-              className="mt-1 text-xs text-sineoda-gold hover:underline"
+              className="mt-1 text-xs text-plooy-gold hover:underline"
             >
               Emoji avatar kullan
             </button>
@@ -88,8 +88,8 @@ export function ProfileAvatarPicker({ value, onChange, name = '' }: ProfileAvata
               onClick={() => onChange(avatar)}
               className={`flex h-10 w-10 items-center justify-center rounded-lg text-xl ${
                 value === avatar
-                  ? 'bg-sineoda-gold/20 ring-2 ring-sineoda-gold'
-                  : 'bg-sineoda-bg hover:bg-white/5'
+                  ? 'bg-plooy-gold/20 ring-2 ring-plooy-gold'
+                  : 'bg-plooy-bg hover:bg-white/5'
               }`}
             >
               {avatar}

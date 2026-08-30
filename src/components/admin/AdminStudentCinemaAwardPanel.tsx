@@ -74,7 +74,7 @@ export function AdminStudentCinemaAwardPanel({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="font-medium text-emerald-200">Ayın Birincisi & Ödül</h2>
-          <p className="mt-1 text-xs text-sineoda-muted">
+          <p className="mt-1 text-xs text-plooy-muted">
             Bu filmi seçtiğiniz ay için birinci ilan edin. Aynı ayda yalnızca bir film birinci olabilir;
             rozet ana sayfada ve film kartında görünür.
           </p>
@@ -94,7 +94,7 @@ export function AdminStudentCinemaAwardPanel({
       {enabled ? (
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <label className="block">
-            <span className="mb-1 block text-xs text-sineoda-muted">Yarışma dönemi</span>
+            <span className="mb-1 block text-xs text-plooy-muted">Yarışma dönemi</span>
             <select
               value={period}
               disabled={disabled}
@@ -109,7 +109,7 @@ export function AdminStudentCinemaAwardPanel({
             </select>
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs text-sineoda-muted">Rozet metni</span>
+            <span className="mb-1 block text-xs text-plooy-muted">Rozet metni</span>
             <input
               type="text"
               value={badge}
@@ -121,12 +121,12 @@ export function AdminStudentCinemaAwardPanel({
               placeholder={defaultBadgeForPeriod(period)}
               className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
             />
-            <p className="mt-1 text-[11px] text-sineoda-muted">
+            <p className="mt-1 text-[11px] text-plooy-muted">
               Örnek: {TR_MONTH_NAMES[Number(period.slice(5, 7)) - 1]} Birincisi
             </p>
           </label>
           <label className="block sm:col-span-2">
-            <span className="mb-1 block text-xs text-sineoda-muted">Ödül (isteğe bağlı)</span>
+            <span className="mb-1 block text-xs text-plooy-muted">Ödül (isteğe bağlı)</span>
             <input
               type="text"
               value={prize}
@@ -138,13 +138,13 @@ export function AdminStudentCinemaAwardPanel({
               placeholder="Örn. 5.000 ₺ nakit ödül"
               className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
             />
-            <p className="mt-1 text-[11px] text-sineoda-muted">
+            <p className="mt-1 text-[11px] text-plooy-muted">
               Boş bırakırsanız ödül gösterilmez. Ödülü kaldırmak için metni silip kaydedin.
             </p>
           </label>
         </div>
       ) : (
-        <p className="mt-3 text-xs text-sineoda-muted">
+        <p className="mt-3 text-xs text-plooy-muted">
           Birinci rozeti ve ödül bu film için gösterilmez.
         </p>
       )}

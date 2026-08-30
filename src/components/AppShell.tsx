@@ -165,7 +165,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <ContentUIContext.Provider value={value}>
-      <div className="min-h-dvh bg-sineoda-bg">
+      <div className="min-h-dvh bg-plooy-bg">
         <Header />
         {children}
         <PageFooter />
@@ -196,11 +196,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               <p id="kids-block-title" className="text-lg font-semibold text-white">
                 Çocuk profili
               </p>
-              <p className="mt-2 text-sm text-sineoda-muted">{kidsBlockMessage}</p>
+              <p className="mt-2 text-sm text-plooy-muted">{kidsBlockMessage}</p>
               <button
                 type="button"
                 onClick={() => setKidsBlockMessage(null)}
-                className="mt-5 w-full rounded-lg bg-sineoda-gold px-4 py-2.5 text-sm font-semibold text-sineoda-bg"
+                className="mt-5 w-full rounded-lg bg-plooy-gold px-4 py-2.5 text-sm font-semibold text-plooy-bg"
               >
                 Tamam
               </button>

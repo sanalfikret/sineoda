@@ -37,7 +37,7 @@ function CreditList({ label, items }: { label: string; items: string[] }) {
   if (!items.length) return null
   return (
     <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">{label}</p>
       <p className="mt-1 text-sm text-white/90">{items.join(', ')}</p>
     </div>
   )
@@ -151,13 +151,13 @@ export function ContentDetailView({
       : null
 
   return (
-    <div className={mode === 'modal' ? '' : 'min-h-dvh bg-sineoda-bg text-white'}>
+    <div className={mode === 'modal' ? '' : 'min-h-dvh bg-plooy-bg text-white'}>
       <div className={`relative aspect-video w-full overflow-hidden ${mode === 'page' ? 'max-h-[50vh]' : 'sm:rounded-t-3xl'}`}>
         <img src={resolveMediaUrl(item.backdrop)} alt="" className="h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-sineoda-bg via-black/20 to-black/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-plooy-bg via-black/20 to-black/40" />
 
         {item.isNew && (
-          <span className="absolute left-4 top-4 rounded bg-sineoda-gold px-2.5 py-1 text-xs font-bold text-sineoda-bg">
+          <span className="absolute left-4 top-4 rounded bg-plooy-gold px-2.5 py-1 text-xs font-bold text-plooy-bg">
             YENİ
           </span>
         )}
@@ -185,7 +185,7 @@ export function ContentDetailView({
           </p>
         ) : null}
 
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-sineoda-muted">
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-plooy-muted">
           <span className="rounded bg-white/10 px-2 py-0.5 text-xs font-semibold text-white">
             {item.rating}
           </span>
@@ -193,7 +193,7 @@ export function ContentDetailView({
             {getContentTypeLabel(item.type)}
           </span>
           {item.videoFormat === 'vertical' && (
-            <span className="rounded bg-sineoda-gold/20 px-2 py-0.5 text-xs text-sineoda-gold">
+            <span className="rounded bg-plooy-gold/20 px-2 py-0.5 text-xs text-plooy-gold">
               Dikey
             </span>
           )}
@@ -233,7 +233,7 @@ export function ContentDetailView({
             <button
               type="button"
               onClick={() => onPlay(item, seriesResume.episode)}
-              className="inline-flex items-center gap-2 rounded-lg bg-sineoda-gold px-5 py-3 text-sm font-semibold text-sineoda-bg transition hover:brightness-110"
+              className="inline-flex items-center gap-2 rounded-lg bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
             >
               <PlaySmallIcon />
               Kaldığın Yerden Devam · S{seriesResume.episode.season} B{seriesResume.episode.episode}
@@ -244,7 +244,7 @@ export function ContentDetailView({
             <button
               type="button"
               onClick={() => onPlay(item)}
-              className="inline-flex items-center gap-2 rounded-lg bg-sineoda-gold px-5 py-3 text-sm font-semibold text-sineoda-bg transition hover:brightness-110"
+              className="inline-flex items-center gap-2 rounded-lg bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
             >
               <PlaySmallIcon />
               Kaldığın Yerden Devam ({formatResumeTime(filmResume)})
@@ -255,7 +255,7 @@ export function ContentDetailView({
             <button
               type="button"
               onClick={() => onPlay(item, firstEpisode)}
-              className="inline-flex items-center gap-2 rounded-lg bg-sineoda-gold px-5 py-3 text-sm font-semibold text-sineoda-bg transition hover:brightness-110"
+              className="inline-flex items-center gap-2 rounded-lg bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
             >
               <PlaySmallIcon />
               {item.videoFormat === 'vertical' ? 'Dikey İzlemeye Başla' : '1. Bölümü Oynat'}
@@ -266,7 +266,7 @@ export function ContentDetailView({
             <button
               type="button"
               onClick={() => onPlay(item)}
-              className="inline-flex items-center gap-2 rounded-lg bg-sineoda-gold px-5 py-3 text-sm font-semibold text-sineoda-bg transition hover:brightness-110"
+              className="inline-flex items-center gap-2 rounded-lg bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
             >
               <PlaySmallIcon />
               {item.videoFormat === 'vertical' ? 'Dikey İzle' : 'Oynat'}
@@ -277,7 +277,7 @@ export function ContentDetailView({
             <button
               type="button"
               onClick={() => onPlay(item)}
-              className="inline-flex items-center gap-2 rounded-lg bg-sineoda-gold px-5 py-3 text-sm font-semibold text-sineoda-bg transition hover:brightness-110"
+              className="inline-flex items-center gap-2 rounded-lg bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
             >
               <PlaySmallIcon />
               Oynat
@@ -285,7 +285,7 @@ export function ContentDetailView({
           )}
 
           {!canPlay && (
-            <p className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-sineoda-muted">
+            <p className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-plooy-muted">
               Bu içerik için henüz video eklenmemiş.
             </p>
           )}
@@ -310,7 +310,7 @@ export function ContentDetailView({
         {tab === 'overview' && (
           <>
             {festivals.length > 0 && (
-              <div className="mt-5 rounded-xl border border-sineoda-gold/15 bg-sineoda-gold/5 p-4">
+              <div className="mt-5 rounded-xl border border-plooy-gold/15 bg-plooy-gold/5 p-4">
                 <FestivalCreditsDisplay festivals={festivals} compact />
               </div>
             )}
@@ -337,13 +337,13 @@ export function ContentDetailView({
               <CreditList label="Oyuncu Kadrosu" items={credits.cast ?? []} />
               {item.program === 'student_cinema' && item.schoolName ? (
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">Okul</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">Okul</p>
                   <p className="mt-1 text-sm text-white/90">{item.schoolName}</p>
                 </div>
               ) : null}
               {credits.studio && (
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">Stüdyo</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">Stüdyo</p>
                   <p className="mt-1 text-sm text-white/90">{credits.studio}</p>
                 </div>
               )}
@@ -356,19 +356,19 @@ export function ContentDetailView({
 
             <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">
+                <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">
                   Seslendirme Dilleri
                 </p>
                 <p className="mt-1 text-sm text-white/90">{audioLanguages.join(', ')}</p>
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">Alt Yazılar</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">Alt Yazılar</p>
                 <p className="mt-1 text-sm text-white/90">{subtitleLanguages.join(', ')}</p>
               </div>
               <StudentCinemaMetaDetails item={item} />
               {isSeries && seriesMeta && (
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">Yapı</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">Yapı</p>
                   <p className="mt-1 text-sm text-white/90">{seriesMeta}</p>
                 </div>
               )}

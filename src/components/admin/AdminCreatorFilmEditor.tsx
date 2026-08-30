@@ -217,10 +217,10 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
       <div className="flex h-full max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#11141c] shadow-2xl">
         <div className="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4">
           <div>
-            <p className="text-xs uppercase tracking-wide text-sineoda-muted">Yapımcı filmi</p>
+            <p className="text-xs uppercase tracking-wide text-plooy-muted">Yapımcı filmi</p>
             <h2 className="text-lg font-bold text-white">{item?.title ?? 'Film düzenle'}</h2>
             {item && (
-              <p className="mt-1 text-sm text-sineoda-muted">
+              <p className="mt-1 text-sm text-plooy-muted">
                 {item.studioName} · {item.creatorName}
               </p>
             )}
@@ -236,29 +236,29 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {loading || !form ? (
-            <p className="text-sm text-sineoda-muted">Yükleniyor...</p>
+            <p className="text-sm text-plooy-muted">Yükleniyor...</p>
           ) : (
             <>
               {item && (
                 <div className="mb-5 grid gap-3 rounded-xl border border-white/5 bg-[#0d0f14] p-4 sm:grid-cols-2">
                   <div>
-                    <p className="text-xs text-sineoda-muted">İzlenme süresi</p>
+                    <p className="text-xs text-plooy-muted">İzlenme süresi</p>
                     <p className="text-sm font-medium text-white">{item.watchMinutes ?? 0} dk</p>
                   </div>
                   <div>
-                    <p className="text-xs text-sineoda-muted">Nitelikli izlenme</p>
+                    <p className="text-xs text-plooy-muted">Nitelikli izlenme</p>
                     <p className="text-sm font-medium text-white">{item.qualifiedMinutes ?? 0} dk</p>
                   </div>
                   <div>
-                    <p className="text-xs text-sineoda-muted">İzleyici</p>
+                    <p className="text-xs text-plooy-muted">İzleyici</p>
                     <p className="text-sm font-medium text-white">{item.viewers ?? 0}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-sineoda-muted">Beğeni</p>
+                    <p className="text-xs text-plooy-muted">Beğeni</p>
                     <p className="text-sm font-medium text-white">{item.likes ?? 0}</p>
                   </div>
                   <div className="sm:col-span-2">
-                    <p className="text-xs text-sineoda-muted">Durum</p>
+                    <p className="text-xs text-plooy-muted">Durum</p>
                     <p className="text-sm text-white/90">
                       {REVIEW_LABELS[item.reviewStatus] ?? item.reviewStatus}
                       {item.isScheduled && ` · Planlandı (${formatPublishDate(item.publishedAt)})`}
@@ -281,7 +281,7 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
                           href={resolveMediaUrl(doc.fileUrl)}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-sineoda-gold hover:underline"
+                          className="text-plooy-gold hover:underline"
                         >
                           Görüntüle
                         </a>
@@ -289,7 +289,7 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
                     ))}
                   </ul>
                   {item.applicationDeclaration?.declaredAt && (
-                    <p className="mt-3 text-xs text-sineoda-muted">
+                    <p className="mt-3 text-xs text-plooy-muted">
                       Beyan tarihi:{' '}
                       {new Date(item.applicationDeclaration.declaredAt).toLocaleString('tr-TR')}
                     </p>
@@ -307,7 +307,7 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
                 <section className="space-y-4 rounded-xl border border-sky-500/20 bg-sky-500/5 p-4">
                   <div>
                     <h3 className="text-sm font-semibold text-sky-200">Yapımcının gönderdiği video linki</h3>
-                    <p className="mt-1 text-xs text-sineoda-muted">
+                    <p className="mt-1 text-xs text-plooy-muted">
                       CDN&apos;e yüklemeden önce bu linkten videoyu indirin. Dış linkler yeni sekmede açılır.
                     </p>
                   </div>
@@ -354,7 +354,7 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
                 <section className="space-y-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
                   <div>
                     <h3 className="text-sm font-semibold text-emerald-200">Yayın videosu (CDN)</h3>
-                    <p className="mt-1 text-xs text-sineoda-muted">
+                    <p className="mt-1 text-xs text-plooy-muted">
                       İndirdiğiniz videoyu CDN&apos;e yükleyin; üyelerin izleyeceği link buraya yazılır.
                     </p>
                   </div>
@@ -500,7 +500,7 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
                 <section className="space-y-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
                   <div>
                     <h3 className="text-sm font-semibold text-amber-200">Telif hakkı süresi</h3>
-                    <p className="mt-1 text-xs text-sineoda-muted">
+                    <p className="mt-1 text-xs text-plooy-muted">
                       Yalnızca admin görür. Telif bitince film otomatik katalog dışı kalır.
                     </p>
                   </div>
@@ -552,7 +552,7 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
                     ))}
                   </div>
                   {!form.licenseUnlimited && form.licenseExpiresAt && (
-                    <p className="text-xs text-sineoda-muted">
+                    <p className="text-xs text-plooy-muted">
                       {formatLicenseDate(form.licenseExpiresAt)}
                       {' · '}
                       {getLicenseDaysRemaining(form.licenseExpiresAt)} gün kaldı
@@ -563,7 +563,7 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
                 <section className="space-y-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
                   <div>
                     <h3 className="text-sm font-semibold text-emerald-200">İlk yayın tarihi</h3>
-                    <p className="mt-1 text-xs text-sineoda-muted">
+                    <p className="mt-1 text-xs text-plooy-muted">
                       Admin yayın kararını verir. Planlanan tarih gelince film otomatik yayına girer.
                     </p>
                   </div>
@@ -596,7 +596,7 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
                         onChange={(event) => update('publishedAt', event.target.value)}
                         className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white"
                       />
-                      <p className="mt-1 text-xs text-sineoda-muted">
+                      <p className="mt-1 text-xs text-plooy-muted">
                         {form.publishMode === 'scheduled'
                           ? 'Bu tarihten önce film katalogda görünmez.'
                           : 'Geçmiş veya bugünkü tarih seçerek hemen yayına alabilirsiniz.'}
@@ -631,7 +631,7 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
                 type="submit"
                 form="creator-film-form"
                 disabled={saving}
-                className="rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-black hover:bg-sineoda-gold/90 disabled:opacity-60"
+                className="rounded-lg bg-plooy-gold px-4 py-2 text-sm font-semibold text-black hover:bg-plooy-gold/90 disabled:opacity-60"
               >
                 {saving ? 'Kaydediliyor...' : 'Kaydet'}
               </button>

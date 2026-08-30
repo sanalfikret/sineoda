@@ -280,11 +280,20 @@ export function seedEpisodes() {
   }
 }
 
-const DEFAULT_ADMIN_EMAIL = 'admin@sineoda.com'
-const DEFAULT_ADMIN_ID = 'sineoda-admin'
+const DEFAULT_ADMIN_EMAIL = 'admin@plooy.com'
+const LEGACY_ADMIN_EMAIL = 'admin@sineoda.com'
+const DEFAULT_ADMIN_ID = 'plooy-admin'
+
+export function migrateLegacyBrandAccounts() {
+  dbRun('UPDATE users SET email = ? WHERE email = ?', [DEFAULT_ADMIN_EMAIL, LEGACY_ADMIN_EMAIL])
+  dbRun('UPDATE users SET email = ? WHERE email = ?', ['demo@plooy.com', 'demo@sineoda.com'])
+}
 
 export function ensureDefaultAdmin() {
-  const existing = dbGet<UserRow>('SELECT * FROM users WHERE email = ?', [DEFAULT_ADMIN_EMAIL])
+  migrateLegacyBrandAccounts()
+  const existing =
+    dbGet<UserRow>('SELECT * FROM users WHERE email = ?', [DEFAULT_ADMIN_EMAIL]) ??
+    dbGet<UserRow>('SELECT * FROM users WHERE email = ?', [LEGACY_ADMIN_EMAIL])
   if (!existing) {
     const adminHash = bcrypt.hashSync('admin123', 10)
     dbRun(
@@ -292,6 +301,10 @@ export function ensureDefaultAdmin() {
       [DEFAULT_ADMIN_ID, `${BRAND_NAME} Admin`, DEFAULT_ADMIN_EMAIL, adminHash, 'admin', new Date().toISOString()],
     )
     return
+  }
+
+  if (existing.email === LEGACY_ADMIN_EMAIL) {
+    dbRun('UPDATE users SET email = ? WHERE id = ?', [DEFAULT_ADMIN_EMAIL, existing.id])
   }
 
   if (existing.role !== 'admin') {
@@ -308,7 +321,7 @@ export function seedDatabase() {
     const demoId = uuid()
     dbRun(
       'INSERT INTO users (id, name, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-      [demoId, 'Demo Kullanıcı', 'demo@sineoda.com', demoHash, 'user', new Date().toISOString()],
+      [demoId, 'Demo Kullanıcı', 'demo@plooy.com', demoHash, 'user', new Date().toISOString()],
     )
     dbRun('INSERT INTO profiles (id, user_id, name, avatar, is_kids) VALUES (?, ?, ?, ?, ?)', [
       uuid(), demoId, 'Ana Profil', '🎬', 0,

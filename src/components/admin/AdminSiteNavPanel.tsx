@@ -12,7 +12,7 @@ export function AdminSiteNavPanel({ hiddenNavIds, saving = false, onToggle }: Ad
     <section className="rounded-2xl border border-white/10 bg-[#11141c] p-4">
       <div className="mb-4">
         <h2 className="text-lg font-semibold text-white">Menü görünürlüğü</h2>
-        <p className="mt-1 text-sm text-sineoda-muted">
+        <p className="mt-1 text-sm text-plooy-muted">
           Kapatılan menüler üst navigasyonda, ilgili sayfalarda, bağlı kategori satırlarında ve o türdeki
           içeriklerde görünmez. Menü ile kategori çift yönlü senkronlanır.
         </p>
@@ -31,13 +31,13 @@ export function AdminSiteNavPanel({ hiddenNavIds, saving = false, onToggle }: Ad
             >
               <div className="min-w-0">
                 <p className="font-medium text-white">{item.label}</p>
-                <p className="truncate text-xs text-sineoda-muted">{item.path}</p>
+                <p className="truncate text-xs text-plooy-muted">{item.path}</p>
                 {linkedCategories.length > 0 ? (
                   <p className="mt-1 text-[11px] text-emerald-300/70">
                     Kategoriler: {linkedCategories.join(', ')}
                   </p>
                 ) : (
-                  <p className="mt-1 text-[11px] text-sineoda-muted">Bağımsız menü</p>
+                  <p className="mt-1 text-[11px] text-plooy-muted">Bağımsız menü</p>
                 )}
               </div>
               <button
@@ -47,7 +47,7 @@ export function AdminSiteNavPanel({ hiddenNavIds, saving = false, onToggle }: Ad
                 onClick={() => onToggle(item.id, !hidden)}
                 className={`flex shrink-0 items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition disabled:opacity-50 ${
                   hidden
-                    ? 'border-white/10 text-sineoda-muted hover:bg-white/5'
+                    ? 'border-white/10 text-plooy-muted hover:bg-white/5'
                     : 'border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10'
                 }`}
               >

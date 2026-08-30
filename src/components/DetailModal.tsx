@@ -28,7 +28,7 @@ function CreditList({ label, items }: { label: string; items: string[] }) {
   if (!items.length) return null
   return (
     <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">{label}</p>
       <p className="mt-1 text-sm text-white/90">{items.join(', ')}</p>
     </div>
   )
@@ -118,7 +118,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
       role="presentation"
     >
       <div
-        className="max-h-[92dvh] w-full max-w-4xl overflow-y-auto rounded-t-3xl bg-sineoda-surface sm:rounded-3xl"
+        className="max-h-[92dvh] w-full max-w-4xl overflow-y-auto rounded-t-3xl bg-plooy-surface sm:rounded-3xl"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -126,9 +126,9 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
       >
         <div className="relative aspect-video w-full overflow-hidden sm:rounded-t-3xl">
           <img src={resolveMediaUrl(item.backdrop)} alt="" className="h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-sineoda-surface via-transparent to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-plooy-surface via-transparent to-black/30" />
           {item.isNew && (
-            <span className="absolute left-4 top-4 rounded bg-sineoda-gold px-2.5 py-1 text-xs font-bold text-sineoda-bg">
+            <span className="absolute left-4 top-4 rounded bg-plooy-gold px-2.5 py-1 text-xs font-bold text-plooy-bg">
               YENİ
             </span>
           )}
@@ -153,7 +153,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
               {[getStudentDisplayName(item), item.schoolName].filter(Boolean).join(' · ')}
             </p>
           ) : null}
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-sineoda-muted">
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-plooy-muted">
             <span className="rounded bg-white/10 px-2 py-0.5 text-xs font-semibold text-white">
               {item.rating}
             </span>
@@ -161,7 +161,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
               {getContentTypeLabel(item.type)}
             </span>
             {item.videoFormat === 'vertical' && (
-              <span className="rounded bg-sineoda-gold/20 px-2 py-0.5 text-xs text-sineoda-gold">
+              <span className="rounded bg-plooy-gold/20 px-2 py-0.5 text-xs text-plooy-gold">
                 Dikey
               </span>
             )}
@@ -186,7 +186,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
               <button
                 type="button"
                 onClick={() => onPlay(item)}
-                className="inline-flex items-center gap-2 rounded-lg bg-sineoda-gold px-5 py-3 text-sm font-semibold text-sineoda-bg transition hover:brightness-110"
+                className="inline-flex items-center gap-2 rounded-lg bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
               >
                 <PlaySmallIcon />
                 Kaldığın Yerden Devam ({formatResumeTime(resumePosition)})
@@ -197,7 +197,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
               <button
                 type="button"
                 onClick={() => onPlay(item, firstEpisode)}
-                className="inline-flex items-center gap-2 rounded-lg bg-sineoda-gold px-5 py-3 text-sm font-semibold text-sineoda-bg transition hover:brightness-110"
+                className="inline-flex items-center gap-2 rounded-lg bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
               >
                 <PlaySmallIcon />
                 {item.videoFormat === 'vertical' ? 'Dikey İzlemeye Başla' : '1. Bölümü Oynat'}
@@ -208,7 +208,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
               <button
                 type="button"
                 onClick={() => onPlay(item)}
-                className="inline-flex items-center gap-2 rounded-lg bg-sineoda-gold px-5 py-3 text-sm font-semibold text-sineoda-bg transition hover:brightness-110"
+                className="inline-flex items-center gap-2 rounded-lg bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
               >
                 <PlaySmallIcon />
                 {item.videoFormat === 'vertical' ? 'Dikey İzle' : 'Oynat'}
@@ -219,7 +219,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
               <button
                 type="button"
                 onClick={() => onPlay(item)}
-                className="inline-flex items-center gap-2 rounded-lg bg-sineoda-gold px-5 py-3 text-sm font-semibold text-sineoda-bg transition hover:brightness-110"
+                className="inline-flex items-center gap-2 rounded-lg bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
               >
                 <PlaySmallIcon />
                 Oynat
@@ -227,7 +227,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
             )}
 
             {!canResume && !canPlay && (
-              <p className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-sineoda-muted">
+              <p className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-plooy-muted">
                 Bu içerik için henüz video eklenmemiş. Admin panelinden video URL&apos;si ve bölümleri
                 ekleyebilirsiniz.
               </p>
@@ -273,13 +273,13 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
                 <CreditList label="Oyuncu Kadrosu" items={credits.cast ?? []} />
                 {item.program === 'student_cinema' && item.schoolName ? (
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">Okul</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">Okul</p>
                     <p className="mt-1 text-sm text-white/90">{item.schoolName}</p>
                   </div>
                 ) : null}
                 {credits.studio && (
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">Stüdyo</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">Stüdyo</p>
                     <p className="mt-1 text-sm text-white/90">{credits.studio}</p>
                   </div>
                 )}
@@ -287,24 +287,24 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
                   !credits.producers?.length &&
                   !credits.cast?.length &&
                   !credits.studio && (
-                    <p className="text-sm text-sineoda-muted">Bu içerik için künye bilgisi henüz eklenmedi.</p>
+                    <p className="text-sm text-plooy-muted">Bu içerik için künye bilgisi henüz eklenmedi.</p>
                   )}
               </div>
 
               <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">
                     Seslendirme Dilleri
                   </p>
                   <p className="mt-1 text-sm text-white/90">{audioLanguages.join(', ')}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">Alt Yazılar</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">Alt Yazılar</p>
                   <p className="mt-1 text-sm text-white/90">{subtitleLanguages.join(', ')}</p>
                 </div>
                 <StudentCinemaMetaDetails item={item} />
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">
                     İçerik Danışma
                   </p>
                   <p className="mt-1 text-sm text-white/90">{item.rating}</p>

@@ -59,12 +59,12 @@ export function AdminJournalListPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-white">Dergi</h1>
-          <p className="mt-1 text-sm text-sineoda-muted">
+          <p className="mt-1 text-sm text-plooy-muted">
             Bağımsız sinema yazıları · {posts.length} yazı
           </p>
-          <p className="mt-1 text-xs text-sineoda-muted">
+          <p className="mt-1 text-xs text-plooy-muted">
             Dergi başlığı ve açıklaması{' '}
-            <Link to="/admin/ana-sayfa" className="text-sineoda-gold hover:underline">
+            <Link to="/admin/ana-sayfa" className="text-plooy-gold hover:underline">
               Ana Sayfa
             </Link>{' '}
             ayarlarından düzenlenir.
@@ -72,7 +72,7 @@ export function AdminJournalListPage() {
         </div>
         <Link
           to="/admin/dergi/yeni"
-          className="rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg"
+          className="rounded-lg bg-plooy-gold px-4 py-2 text-sm font-semibold text-plooy-bg"
         >
           + Yeni Yazı
         </Link>
@@ -89,7 +89,7 @@ export function AdminJournalListPage() {
 
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#11141c]">
         <table className="min-w-full text-left text-sm">
-          <thead className="border-b border-white/10 text-sineoda-muted">
+          <thead className="border-b border-white/10 text-plooy-muted">
             <tr>
               <th className="px-4 py-3 font-medium">Başlık</th>
               <th className="px-4 py-3 font-medium">Yazar</th>
@@ -102,15 +102,15 @@ export function AdminJournalListPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-sineoda-muted">
+                <td colSpan={6} className="px-4 py-10 text-center text-plooy-muted">
                   Yükleniyor...
                 </td>
               </tr>
             ) : posts.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-sineoda-muted">
+                <td colSpan={6} className="px-4 py-10 text-center text-plooy-muted">
                   Henüz yazı yok.{' '}
-                  <Link to="/admin/dergi/yeni" className="text-sineoda-gold hover:underline">
+                  <Link to="/admin/dergi/yeni" className="text-plooy-gold hover:underline">
                     İlk yazıyı ekle
                   </Link>
                 </td>
@@ -120,7 +120,7 @@ export function AdminJournalListPage() {
                 <tr key={post.id} className="border-b border-white/5 last:border-0">
                   <td className="px-4 py-3">
                     <p className="font-medium text-white">{post.title}</p>
-                    <p className="text-xs text-sineoda-muted">/dergi/{post.slug}</p>
+                    <p className="text-xs text-plooy-muted">/dergi/{post.slug}</p>
                   </td>
                   <td className="px-4 py-3 text-white/80">{post.author}</td>
                   <td className="px-4 py-3">
@@ -136,11 +136,11 @@ export function AdminJournalListPage() {
                   </td>
                   <td className="px-4 py-3 text-xs text-white/70">
                     {post.pinnedOrder ? (
-                      <span className="rounded-full bg-sineoda-gold/15 px-2 py-1 font-medium text-sineoda-gold">
+                      <span className="rounded-full bg-plooy-gold/15 px-2 py-1 font-medium text-plooy-gold">
                         Sabit #{post.pinnedOrder}
                       </span>
                     ) : (
-                      <span className="text-sineoda-muted">Serbest</span>
+                      <span className="text-plooy-muted">Serbest</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-xs text-white/70">

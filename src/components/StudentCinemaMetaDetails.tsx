@@ -25,13 +25,13 @@ export function StudentCinemaMetaDetails({ item }: { item: ContentItem }) {
       ) : null}
       {item.schoolName ? (
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">Okul</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">Okul</p>
           <p className="mt-1 text-sm text-white/90">{item.schoolName}</p>
         </div>
       ) : null}
       {studentName ? (
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-sineoda-muted">
+          <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">
             Yönetmen / Öğrenci
           </p>
           <p className="mt-1 text-sm text-white/90">{studentName}</p>

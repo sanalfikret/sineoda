@@ -20,7 +20,7 @@ export function AdminRoute({ children }: { children: ReactNode }) {
   if (isLoading || (token && !user && recovering)) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-[#0d0f14]">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-sineoda-gold border-t-transparent" />
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-plooy-gold border-t-transparent" />
       </div>
     )
   }

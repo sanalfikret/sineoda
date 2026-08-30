@@ -56,7 +56,7 @@ export function SubtitleUpload({ label, value, onChange }: SubtitleUploadProps) 
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder="veya altyazı URL yapıştır"
-        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
+        className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-plooy-gold"
       />
 
       {error && <p className="text-xs text-red-300">{error}</p>}

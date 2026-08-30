@@ -37,7 +37,7 @@ export function FilmApplicationRightsPanel({
     <div className="space-y-6 rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
       <div>
         <h3 className="text-base font-semibold text-amber-100">Yönetmen ve yapımcı — hak beyanı</h3>
-        <p className="mt-1 text-sm text-sineoda-muted">
+        <p className="mt-1 text-sm text-plooy-muted">
           Yönetmen ve yapımcı olarak telif haklarınızı beyan edin; her kategori için destekleyici belge
           yükleyin (PDF veya görsel). Tüm yasal sorumluluk size aittir.
         </p>
@@ -53,20 +53,20 @@ export function FilmApplicationRightsPanel({
                   type="checkbox"
                   checked={rightsDeclaration[entry.id] === true}
                   onChange={(event) => onRightsChange(entry.id, event.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-white/20 bg-transparent text-sineoda-gold"
+                  className="mt-1 h-4 w-4 rounded border-white/20 bg-transparent text-plooy-gold"
                 />
                 <span className="text-sm leading-relaxed text-white/90">{entry.declaration}</span>
               </label>
 
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-white/5 pt-3">
                 <div>
-                  <p className="text-xs font-medium text-sineoda-muted">{entry.docLabel}</p>
+                  <p className="text-xs font-medium text-plooy-muted">{entry.docLabel}</p>
                   {uploaded ? (
                     <a
                       href={uploaded.fileUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-sm text-sineoda-gold hover:underline"
+                      className="text-sm text-plooy-gold hover:underline"
                     >
                       Belge yüklendi — görüntüle
                     </a>
@@ -113,7 +113,7 @@ export function FilmApplicationRightsPanel({
               type="checkbox"
               checked={rightsDeclaration[entry.id] === true}
               onChange={(event) => onRightsChange(entry.id, event.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-white/20 bg-transparent text-sineoda-gold"
+              className="mt-0.5 h-4 w-4 rounded border-white/20 bg-transparent text-plooy-gold"
             />
             <span className="text-sm text-white/80">{entry.text}</span>
           </label>

@@ -15,7 +15,7 @@ export function JournalPagination({ page, totalPages, total, onPageChange }: Jou
       className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-8"
       aria-label="Sayfalama"
     >
-      <p className="text-sm text-sineoda-muted">
+      <p className="text-sm text-plooy-muted">
         Toplam {total} yazı · Sayfa {page} / {totalPages}
       </p>
       <div className="flex flex-wrap items-center gap-2">
@@ -39,7 +39,7 @@ export function JournalPagination({ page, totalPages, total, onPageChange }: Jou
               onClick={() => onPageChange(item)}
               className={`min-w-10 rounded-lg px-3 py-2 text-sm transition ${
                 item === page
-                  ? 'bg-sineoda-gold font-semibold text-sineoda-bg'
+                  ? 'bg-plooy-gold font-semibold text-plooy-bg'
                   : 'border border-white/10 text-white/80 hover:bg-white/5'
               }`}
               aria-current={item === page ? 'page' : undefined}

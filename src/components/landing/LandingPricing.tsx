@@ -9,7 +9,7 @@ export function LandingPricing({ section }: { section: LandingCampaignSection })
         <div className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#141824] via-[#10131c] to-black">
           <div className="grid lg:grid-cols-2">
             <div className="p-8 sm:p-12 lg:p-14">
-              <p className="text-xs font-bold uppercase tracking-[0.3em] text-sineoda-gold">
+              <p className="text-xs font-bold uppercase tracking-[0.3em] text-plooy-gold">
                 {section.eyebrow}
               </p>
               <h2 className="mt-4 text-3xl font-bold sm:text-4xl">{section.title}</h2>

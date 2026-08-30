@@ -438,7 +438,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
           type="button"
           aria-label="Oynat"
           onClick={togglePlay}
-          className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-sineoda-gold/90 text-sineoda-bg shadow-xl"
+          className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-plooy-gold/90 text-plooy-bg shadow-xl"
         >
           <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M8 5v14l11-7z" />
@@ -461,7 +461,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
                   onClick={() => goToEpisode(index)}
                   className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                     index === episodeIndex
-                      ? 'bg-sineoda-gold text-sineoda-bg'
+                      ? 'bg-plooy-gold text-plooy-bg'
                       : 'bg-white/15 text-white/80 hover:bg-white/25'
                   }`}
                 >
@@ -478,7 +478,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
             step={0.1}
             value={currentTime}
             onChange={(event) => handleSeek(Number(event.target.value))}
-            className="pointer-events-auto h-1 w-full cursor-pointer appearance-none rounded-full bg-white/20 accent-sineoda-gold"
+            className="pointer-events-auto h-1 w-full cursor-pointer appearance-none rounded-full bg-white/20 accent-plooy-gold"
             style={{
               background: `linear-gradient(to right, #e8b84a ${progress}%, rgba(255,255,255,0.2) ${progress}%)`,
             }}
@@ -521,7 +521,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
 
       {showEpisodeList && hasEpisodes && (
         <div className="absolute inset-0 z-20 flex items-end bg-black/70 backdrop-blur-sm">
-          <div className="max-h-[70dvh] w-full overflow-y-auto rounded-t-3xl bg-sineoda-surface p-5">
+          <div className="max-h-[70dvh] w-full overflow-y-auto rounded-t-3xl bg-plooy-surface p-5">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-white">Bölümler</h3>
               <button
@@ -540,7 +540,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
                   onClick={() => goToEpisode(index)}
                   className={`rounded-xl border p-3 text-center transition ${
                     index === episodeIndex
-                      ? 'border-sineoda-gold bg-sineoda-gold/15 text-sineoda-gold'
+                      ? 'border-plooy-gold bg-plooy-gold/15 text-plooy-gold'
                       : 'border-white/10 bg-white/5 text-white hover:bg-white/10'
                   }`}
                 >

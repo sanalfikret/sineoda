@@ -234,7 +234,7 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
           type="button"
           disabled={!dirty || savingId === episode.id}
           onClick={() => void handleSaveEpisode(episode)}
-          className="rounded-lg bg-sineoda-gold/15 px-3 py-1.5 text-xs font-semibold text-sineoda-gold disabled:opacity-40"
+          className="rounded-lg bg-plooy-gold/15 px-3 py-1.5 text-xs font-semibold text-plooy-gold disabled:opacity-40"
         >
           {savingId === episode.id ? 'Kaydediliyor…' : 'Bu bölümü kaydet'}
         </button>
@@ -242,7 +242,7 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
     )
   }
 
-  if (loading) return <p className="text-sm text-sineoda-muted">Bölümler yükleniyor...</p>
+  if (loading) return <p className="text-sm text-plooy-muted">Bölümler yükleniyor...</p>
 
   return (
     <div className="space-y-4 rounded-2xl border border-white/10 bg-[#11141c] p-5">
@@ -255,16 +255,16 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
         </p>
       )}
 
-      <div className="rounded-xl border border-sineoda-gold/20 bg-sineoda-gold/5 p-4">
-        <h3 className="text-sm font-semibold text-sineoda-gold">Toplu Bölüm Oluştur</h3>
-        <p className="mt-1 text-xs text-sineoda-muted">
+      <div className="rounded-xl border border-plooy-gold/20 bg-plooy-gold/5 p-4">
+        <h3 className="text-sm font-semibold text-plooy-gold">Toplu Bölüm Oluştur</h3>
+        <p className="mt-1 text-xs text-plooy-muted">
           Mevcut sezona bölüm eklemek için sezon butonuna tıkla. Yeni sezon için{' '}
           <strong className="text-white/90">+ Sıradaki sezon</strong> veya{' '}
           <strong className="text-white/90">Sezon no</strong> alanına istediğin numarayı yaz (1–99).
         </p>
 
         <div className="mt-4">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-sineoda-muted">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-plooy-muted">
             Hangi sezona ekliyorsun?
           </p>
           <div className="flex flex-wrap gap-2">
@@ -277,7 +277,7 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
                   onClick={() => selectBulkSeason(seasonNumber)}
                   className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                     bulkSeason === seasonNumber
-                      ? 'bg-sineoda-gold text-sineoda-bg'
+                      ? 'bg-plooy-gold text-plooy-bg'
                       : 'bg-white/10 text-white/85 hover:bg-white/15'
                   }`}
                 >
@@ -291,28 +291,28 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
               onClick={() => selectBulkSeason(nextNewSeason)}
               className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                 bulkSeason === nextNewSeason && !existingSeasons.includes(bulkSeason)
-                  ? 'bg-sineoda-gold text-sineoda-bg'
-                  : 'border border-dashed border-sineoda-gold/40 bg-transparent text-sineoda-gold hover:bg-sineoda-gold/10'
+                  ? 'bg-plooy-gold text-plooy-bg'
+                  : 'border border-dashed border-plooy-gold/40 bg-transparent text-plooy-gold hover:bg-plooy-gold/10'
               }`}
             >
               + Sıradaki sezon ({nextNewSeason})
             </button>
             {!existingSeasons.includes(bulkSeason) && bulkSeason !== nextNewSeason && (
-              <span className="inline-flex items-center rounded-full bg-sineoda-gold/15 px-4 py-2 text-sm font-medium text-sineoda-gold">
+              <span className="inline-flex items-center rounded-full bg-plooy-gold/15 px-4 py-2 text-sm font-medium text-plooy-gold">
                 Sezon {bulkSeason} (yeni)
               </span>
             )}
           </div>
         </div>
 
-        <p className="mt-3 text-xs text-sineoda-muted">
+        <p className="mt-3 text-xs text-plooy-muted">
           Sezon {bulkSeason} için bölümler <strong className="text-white/90">B{bulkStartEpisode}</strong>
           numarasından başlayarak eklenecek.
         </p>
 
         <div className="mt-3 grid gap-3 sm:grid-cols-4">
           <label className="block space-y-1.5">
-            <span className="text-xs font-medium text-sineoda-muted">Sezon no (1–99)</span>
+            <span className="text-xs font-medium text-plooy-muted">Sezon no (1–99)</span>
             <input
               type="number"
               min={1}
@@ -323,7 +323,7 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
             />
           </label>
           <label className="block space-y-1.5">
-            <span className="text-xs font-medium text-sineoda-muted">Bölüm sayısı</span>
+            <span className="text-xs font-medium text-plooy-muted">Bölüm sayısı</span>
             <input
               type="number"
               min={1}
@@ -334,7 +334,7 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
             />
           </label>
           <label className="block space-y-1.5">
-            <span className="text-xs font-medium text-sineoda-muted">Başlık öneki</span>
+            <span className="text-xs font-medium text-plooy-muted">Başlık öneki</span>
             <input
               value={bulkPrefix}
               onChange={(e) => setBulkPrefix(e.target.value)}
@@ -343,7 +343,7 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
             />
           </label>
           <label className="block space-y-1.5">
-            <span className="text-xs font-medium text-sineoda-muted">Süre</span>
+            <span className="text-xs font-medium text-plooy-muted">Süre</span>
             <input
               value={bulkDuration}
               onChange={(e) => setBulkDuration(e.target.value)}
@@ -374,14 +374,14 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
           type="button"
           disabled={bulkLoading}
           onClick={() => void handleBulkCreate()}
-          className="mt-3 rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
+          className="mt-3 rounded-lg bg-plooy-gold px-4 py-2 text-sm font-semibold text-plooy-bg disabled:opacity-60"
         >
           {bulkLoading ? 'Oluşturuluyor...' : `S${bulkSeason} · B${bulkStartEpisode}–B${bulkStartEpisode + bulkCount - 1} oluştur (${bulkCount} bölüm)`}
         </button>
       </div>
 
       {sortedEpisodes.length > 0 && (
-        <p className="text-sm text-sineoda-muted">
+        <p className="text-sm text-plooy-muted">
           Toplam {sortedEpisodes.length} bölüm ·{' '}
           {[...new Set(sortedEpisodes.map((episode) => episode.season))]
             .sort((a, b) => a - b)
@@ -392,7 +392,7 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
 
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block space-y-1.5">
-          <span className="text-xs font-medium text-sineoda-muted">Sezon (tek bölüm, 1–99)</span>
+          <span className="text-xs font-medium text-plooy-muted">Sezon (tek bölüm, 1–99)</span>
           <input
             type="number"
             min={1}
@@ -403,7 +403,7 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
           />
         </label>
         <label className="block space-y-1.5">
-          <span className="text-xs font-medium text-sineoda-muted">Bölüm no</span>
+          <span className="text-xs font-medium text-plooy-muted">Bölüm no</span>
           <input
             type="number"
             min={1}
@@ -448,7 +448,7 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
                 <div key={seasonNumber} className="space-y-3">
                   <h3 className="text-sm font-semibold text-white">
                     Sezon {seasonNumber}
-                    <span className="ml-2 font-normal text-sineoda-muted">· {seasonEpisodes.length} bölüm</span>
+                    <span className="ml-2 font-normal text-plooy-muted">· {seasonEpisodes.length} bölüm</span>
                   </h3>
                   {seasonEpisodes.map((episode) => renderEpisodeRow(episode))}
                 </div>
@@ -456,7 +456,7 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
             })
           : null}
         {sortedEpisodes.length === 0 && (
-          <p className="text-sm text-sineoda-muted">Henüz bölüm eklenmedi. Yukarıdan toplu oluşturabilirsiniz.</p>
+          <p className="text-sm text-plooy-muted">Henüz bölüm eklenmedi. Yukarıdan toplu oluşturabilirsiniz.</p>
         )}
       </div>
     </div>
@@ -464,4 +464,4 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
 }
 
 const inputClass =
-  'w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-sineoda-gold'
+  'w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-plooy-gold'

@@ -49,7 +49,7 @@ export function CollapsibleAdminPanel({
       onDragEnd={onDragEnd}
       className={`rounded-2xl border bg-[#11141c] transition ${
         isDragging
-          ? 'border-sineoda-gold/50 opacity-70'
+          ? 'border-plooy-gold/50 opacity-70'
           : hidden
             ? 'border-white/5 opacity-70'
             : 'border-white/10'
@@ -60,7 +60,7 @@ export function CollapsibleAdminPanel({
           <button
             type="button"
             aria-label="Sürükleyerek sırala"
-            className="cursor-grab rounded-lg border border-white/10 px-2 py-3 text-sineoda-muted hover:bg-white/5 active:cursor-grabbing"
+            className="cursor-grab rounded-lg border border-white/10 px-2 py-3 text-plooy-muted hover:bg-white/5 active:cursor-grabbing"
             title="Sürükleyerek sırala"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -103,7 +103,7 @@ export function CollapsibleAdminPanel({
           <span className="shrink-0 text-white/60">{expanded ? '▼' : '▶'}</span>
           <div className="min-w-0">
             <p className="truncate text-lg font-semibold text-white">{title}</p>
-            {subtitle && <p className="truncate text-xs text-sineoda-muted">{subtitle}</p>}
+            {subtitle && <p className="truncate text-xs text-plooy-muted">{subtitle}</p>}
           </div>
         </button>
 
@@ -113,7 +113,7 @@ export function CollapsibleAdminPanel({
             onClick={onToggleHidden}
             className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs transition ${
               hidden
-                ? 'border-sineoda-gold/40 text-sineoda-gold hover:bg-sineoda-gold/10'
+                ? 'border-plooy-gold/40 text-plooy-gold hover:bg-plooy-gold/10'
                 : 'border-white/10 text-white/70 hover:bg-white/5'
             }`}
           >

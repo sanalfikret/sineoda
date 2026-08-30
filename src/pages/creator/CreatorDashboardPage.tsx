@@ -370,17 +370,17 @@ export function CreatorDashboardPage() {
             <PlooyLogo tone="on-dark" className="h-8" />
             <div>
               <p className="text-lg font-bold">{studioName}</p>
-              <p className="text-xs text-sineoda-muted">{BRAND_NAME} Creator · {registrationPaid ? 'Aktif' : 'Ödeme bekleniyor'}</p>
+              <p className="text-xs text-plooy-muted">{BRAND_NAME} Creator · {registrationPaid ? 'Aktif' : 'Ödeme bekleniyor'}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Link to="/" className="text-sm text-sineoda-muted hover:text-white">
+            <Link to="/" className="text-sm text-plooy-muted hover:text-white">
               Ana site
             </Link>
             <button
               type="button"
               onClick={logout}
-              className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-sineoda-muted hover:text-white"
+              className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-plooy-muted hover:text-white"
             >
               Çıkış
             </button>
@@ -403,11 +403,11 @@ export function CreatorDashboardPage() {
         )}
 
         {program === 'student_cinema' && !registrationPaid && status !== 'rejected' && status !== 'suspended' && (
-          <div className="mb-6 rounded-xl border border-sineoda-gold/30 bg-sineoda-gold/10 px-4 py-4 text-sm text-amber-100">
+          <div className="mb-6 rounded-xl border border-plooy-gold/30 bg-plooy-gold/10 px-4 py-4 text-sm text-amber-100">
             Film başvurunuzu tamamlamak için{' '}
-            <strong className="text-sineoda-gold">₺49 Genç Sinema başvuru ücreti</strong> ödemeniz gerekir.
+            <strong className="text-plooy-gold">₺49 Genç Sinema başvuru ücreti</strong> ödemeniz gerekir.
             Ödeme sonrası filminiz okul ve admin incelemesine alınır.{' '}
-            <Link to={creatorCheckoutPath()} className="font-semibold text-sineoda-gold underline">
+            <Link to={creatorCheckoutPath()} className="font-semibold text-plooy-gold underline">
               Ödeme yap
             </Link>
           </div>
@@ -421,11 +421,11 @@ export function CreatorDashboardPage() {
         )}
 
         {program === 'standard' && !registrationPaid && status !== 'rejected' && status !== 'suspended' && (
-          <div className="mb-6 rounded-xl border border-sineoda-gold/30 bg-sineoda-gold/10 px-4 py-4 text-sm text-amber-100">
+          <div className="mb-6 rounded-xl border border-plooy-gold/30 bg-plooy-gold/10 px-4 py-4 text-sm text-amber-100">
             Film başvurusu göndermek için{' '}
-            <strong className="text-sineoda-gold">₺69 yapımcı başvuru ücreti</strong> ödemeniz gerekir. Yapımcı
+            <strong className="text-plooy-gold">₺69 yapımcı başvuru ücreti</strong> ödemeniz gerekir. Yapımcı
             üyeliğiniz otomatik açılır; filminizin onayı admin tarafından yapılır.{' '}
-            <Link to={creatorCheckoutPath()} className="font-semibold text-sineoda-gold underline">
+            <Link to={creatorCheckoutPath()} className="font-semibold text-plooy-gold underline">
               Ödeme yap
             </Link>
           </div>
@@ -440,8 +440,8 @@ export function CreatorDashboardPage() {
                   key={message.id}
                   className={`rounded-lg border px-4 py-3 text-sm ${
                     message.isRead
-                      ? 'border-white/5 bg-[#0d0f14] text-sineoda-muted'
-                      : 'border-sineoda-gold/30 bg-sineoda-gold/5 text-white'
+                      ? 'border-white/5 bg-[#0d0f14] text-plooy-muted'
+                      : 'border-plooy-gold/30 bg-plooy-gold/5 text-white'
                   }`}
                 >
                   <p className="font-medium">{message.subject}</p>
@@ -458,7 +458,7 @@ export function CreatorDashboardPage() {
                           )
                         })
                       }}
-                      className="mt-2 text-xs text-sineoda-gold hover:underline"
+                      className="mt-2 text-xs text-plooy-gold hover:underline"
                     >
                       Okundu işaretle
                     </button>
@@ -501,18 +501,18 @@ export function CreatorDashboardPage() {
               ]
           ).map((stat) => (
             <div key={stat.label} className="rounded-xl border border-white/10 bg-[#11141c] p-4">
-              <p className="text-xs text-sineoda-muted">{stat.label}</p>
-              <p className="mt-1 text-2xl font-bold text-sineoda-gold">{stat.value}</p>
+              <p className="text-xs text-plooy-muted">{stat.label}</p>
+              <p className="mt-1 text-2xl font-bold text-plooy-gold">{stat.value}</p>
             </div>
           ))}
         </section>
 
         {status === 'approved' && registrationPaid && (
-          <section className="mb-8 rounded-xl border border-sineoda-gold/20 bg-sineoda-gold/5 p-6">
+          <section className="mb-8 rounded-xl border border-plooy-gold/20 bg-plooy-gold/5 p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold text-sineoda-gold">Bu ayın izlenme özeti</h2>
-                <p className="mt-1 text-sm text-sineoda-muted">
+                <h2 className="text-lg font-semibold text-plooy-gold">Bu ayın izlenme özeti</h2>
+                <p className="mt-1 text-sm text-plooy-muted">
                   Her ayın 1&apos;inde sıfırlanır. Yalnızca kendi filmlerinizin nitelikli izlenme dakikalarını görürsünüz.
                 </p>
               </div>
@@ -536,18 +536,18 @@ export function CreatorDashboardPage() {
               <>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   <div className="rounded-lg border border-white/10 bg-[#11141c] p-4">
-                    <p className="text-xs text-sineoda-muted">Nitelikli izlenme</p>
-                    <p className="mt-1 text-2xl font-bold text-sineoda-gold">{accounting.totalQualifiedMinutes} dk</p>
+                    <p className="text-xs text-plooy-muted">Nitelikli izlenme</p>
+                    <p className="mt-1 text-2xl font-bold text-plooy-gold">{accounting.totalQualifiedMinutes} dk</p>
                   </div>
                   <div className="rounded-lg border border-white/10 bg-[#11141c] p-4">
-                    <p className="text-xs text-sineoda-muted">Toplam izlenme</p>
+                    <p className="text-xs text-plooy-muted">Toplam izlenme</p>
                     <p className="mt-1 text-2xl font-bold text-white">{accounting.totalWatchMinutes} dk</p>
                   </div>
                 </div>
                 {accounting.items.length > 0 ? (
                   <div className="mt-4 overflow-hidden rounded-lg border border-white/10">
                     <table className="min-w-full text-left text-sm">
-                      <thead className="bg-[#11141c] text-sineoda-muted">
+                      <thead className="bg-[#11141c] text-plooy-muted">
                         <tr>
                           <th className="px-4 py-2 font-medium">Film</th>
                           <th className="px-4 py-2 font-medium">Nitelikli dk</th>
@@ -558,26 +558,26 @@ export function CreatorDashboardPage() {
                         {accounting.items.map((item) => (
                           <tr key={item.contentId} className="border-t border-white/5">
                             <td className="px-4 py-2 text-white">{item.title}</td>
-                            <td className="px-4 py-2 text-sineoda-gold">{item.qualifiedMinutes} dk</td>
-                            <td className="px-4 py-2 text-sineoda-muted">{item.viewerCount}</td>
+                            <td className="px-4 py-2 text-plooy-gold">{item.qualifiedMinutes} dk</td>
+                            <td className="px-4 py-2 text-plooy-muted">{item.viewerCount}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 ) : (
-                  <p className="mt-4 text-sm text-sineoda-muted">Bu dönemde henüz izlenme kaydı yok.</p>
+                  <p className="mt-4 text-sm text-plooy-muted">Bu dönemde henüz izlenme kaydı yok.</p>
                 )}
               </>
             ) : (
-              <p className="mt-4 text-sm text-sineoda-muted">Muhasebe verisi yüklenemedi.</p>
+              <p className="mt-4 text-sm text-plooy-muted">Muhasebe verisi yüklenemedi.</p>
             )}
           </section>
         )}
 
         <section className="mb-8 rounded-xl border border-white/10 bg-[#11141c] p-6">
           <h2 className="text-lg font-semibold">Gelir paylaşımı</h2>
-          <p className="mt-2 text-sm text-sineoda-muted">
+          <p className="mt-2 text-sm text-plooy-muted">
             Kazançlar, yapımcı anlaşmasında tanımlanan adil paylaşım modeline göre hesaplanır.
             Detaylı oranlar ve koşullar anlaşma metninde yer alır.
           </p>
@@ -587,17 +587,17 @@ export function CreatorDashboardPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold">Yönetmen ve yapımcı belgeleri</h2>
-              <p className="mt-1 text-sm text-sineoda-muted">
+              <p className="mt-1 text-sm text-plooy-muted">
                 Yönetmen ve yapımcı olarak telif hakkının size ait olduğunu kanıtlayan belgeler.
                 Tüm yasal sorumluluk size aittir.
               </p>
             </div>
-            <span className="text-sm text-sineoda-muted">{documentCount} belge</span>
+            <span className="text-sm text-plooy-muted">{documentCount} belge</span>
           </div>
 
           <div className="mt-4 flex flex-wrap items-end gap-3">
             <label className="block">
-              <span className="mb-1 block text-xs text-sineoda-muted">Belge türü</span>
+              <span className="mb-1 block text-xs text-plooy-muted">Belge türü</span>
               <select
                 value={docType}
                 onChange={(event) => setDocType(event.target.value)}
@@ -611,7 +611,7 @@ export function CreatorDashboardPage() {
               </select>
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs text-sineoda-muted">PDF veya görsel</span>
+              <span className="mb-1 block text-xs text-plooy-muted">PDF veya görsel</span>
               <input
                 type="file"
                 accept=".pdf,image/*"
@@ -621,7 +621,7 @@ export function CreatorDashboardPage() {
                   if (file) void handleDocumentUpload(file)
                   event.target.value = ''
                 }}
-                className="text-sm text-sineoda-muted file:mr-3 file:rounded-lg file:border-0 file:bg-sineoda-gold file:px-3 file:py-2 file:text-sm file:font-medium file:text-sineoda-bg"
+                className="text-sm text-plooy-muted file:mr-3 file:rounded-lg file:border-0 file:bg-plooy-gold file:px-3 file:py-2 file:text-sm file:font-medium file:text-plooy-bg"
               />
             </label>
           </div>
@@ -635,7 +635,7 @@ export function CreatorDashboardPage() {
                 >
                   <span>
                     {CREATOR_DOC_TYPES.find((t) => t.value === doc.docType)?.label ?? doc.docType} ·{' '}
-                    <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="text-sineoda-gold hover:underline">
+                    <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="text-plooy-gold hover:underline">
                       Görüntüle
                     </a>
                   </span>
@@ -666,7 +666,7 @@ export function CreatorDashboardPage() {
                     openApplicationForm()
                   }
                 }}
-                className="rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg"
+                className="rounded-lg bg-plooy-gold px-4 py-2 text-sm font-semibold text-plooy-bg"
               >
                 {showForm ? 'Başvuruyu kapat' : 'Film Başvurusu Yap'}
               </button>
@@ -676,18 +676,18 @@ export function CreatorDashboardPage() {
           {showForm && canSubmitFilms && (
             <form
               onSubmit={handleSubmitContent}
-              className="mb-6 space-y-4 rounded-xl border border-sineoda-gold/20 bg-[#11141c] p-6"
+              className="mb-6 space-y-4 rounded-xl border border-plooy-gold/20 bg-[#11141c] p-6"
             >
               <div>
                 <h3 className="text-lg font-semibold text-white">Film Başvurusu</h3>
-                <p className="mt-1 text-sm text-sineoda-muted">
+                <p className="mt-1 text-sm text-plooy-muted">
                   Film indirme linki, künye, ödüller ve yönetmen/yapımcı belgelerinizi gönderin. İnceleme
                   sonrası yayına alınır.
                 </p>
               </div>
 
-              <div className="rounded-xl border border-sineoda-gold/25 bg-sineoda-gold/5 p-4">
-                <p className="text-sm font-semibold text-sineoda-gold">
+              <div className="rounded-xl border border-plooy-gold/25 bg-plooy-gold/5 p-4">
+                <p className="text-sm font-semibold text-plooy-gold">
                   {CREATOR_FILM_UPLOAD_REQUIREMENTS.title}
                 </p>
                 <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-white/80">
@@ -883,7 +883,7 @@ export function CreatorDashboardPage() {
                     placeholder="https://drive.google.com/... (H.265, Full HD)"
                     className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
                   />
-                  <p className="mt-1 text-xs text-sineoda-muted">
+                  <p className="mt-1 text-xs text-plooy-muted">
                     Filmin tam dosyası — H.265 codec, kaliteden ödün vermeden Full HD (1080p+)
                   </p>
                 </label>
@@ -896,7 +896,7 @@ export function CreatorDashboardPage() {
                       const file = e.target.files?.[0]
                       if (file) void handlePosterUpload(file)
                     }}
-                    className="text-sm text-sineoda-muted"
+                    className="text-sm text-plooy-muted"
                   />
                 </label>
                 <label className="block">
@@ -908,7 +908,7 @@ export function CreatorDashboardPage() {
                       const file = e.target.files?.[0]
                       if (file) void handleVideoUpload(file)
                     }}
-                    className="text-sm text-sineoda-muted"
+                    className="text-sm text-plooy-muted"
                   />
                 </label>
                 {form.videoUrl && form.videoUrl !== form.downloadLink && (
@@ -917,7 +917,7 @@ export function CreatorDashboardPage() {
                     <input
                       readOnly
                       value={form.videoUrl}
-                      className="w-full rounded-lg border border-white/10 bg-[#0d0f14]/50 px-3 py-2 text-sm text-sineoda-muted"
+                      className="w-full rounded-lg border border-white/10 bg-[#0d0f14]/50 px-3 py-2 text-sm text-plooy-muted"
                     />
                   </label>
                 )}
@@ -941,7 +941,7 @@ export function CreatorDashboardPage() {
                   ((program !== 'student_cinema' || form.contentFormat === 'main') &&
                     !isFilmApplicationReady(rightsDeclaration, applicationDocs))
                 }
-                className="rounded-lg bg-sineoda-gold px-5 py-2.5 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
+                className="rounded-lg bg-plooy-gold px-5 py-2.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
               >
                 {submitting ? 'Gönderiliyor...' : 'Film Başvurusu Yap'}
               </button>
@@ -949,9 +949,9 @@ export function CreatorDashboardPage() {
           )}
 
           {loading ? (
-            <p className="text-sm text-sineoda-muted">Yükleniyor...</p>
+            <p className="text-sm text-plooy-muted">Yükleniyor...</p>
           ) : content.length === 0 ? (
-            <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-sineoda-muted">
+            <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-plooy-muted">
               {canSubmitFilms
                 ? 'Henüz film başvurunuz yok. Yukarıdaki düğmeden başvuru yapabilirsiniz.'
                 : 'Henüz film başvurunuz yok. Başvuru ücretini ödedikten sonra film gönderebilirsiniz.'}
@@ -959,7 +959,7 @@ export function CreatorDashboardPage() {
           ) : (
             <div className="overflow-x-auto rounded-xl border border-white/10">
               <table className="min-w-full text-left text-sm">
-                <thead className="bg-[#11141c] text-sineoda-muted">
+                <thead className="bg-[#11141c] text-plooy-muted">
                   <tr>
                     <th className="px-4 py-3 font-medium">Başlık</th>
                     {program === 'student_cinema' && (
@@ -980,13 +980,13 @@ export function CreatorDashboardPage() {
                     <tr key={item.id} className="border-t border-white/5">
                       <td className="px-4 py-3">{item.title}</td>
                       {program === 'student_cinema' && (
-                        <td className="px-4 py-3 text-sineoda-muted">
+                        <td className="px-4 py-3 text-plooy-muted">
                           {FORMAT_LABELS[item.contentFormat ?? 'main'] ?? item.contentFormat}
                         </td>
                       )}
                       <td className="px-4 py-3">{REVIEW_LABELS[item.reviewStatus] ?? item.reviewStatus}</td>
                       {program === 'student_cinema' && (
-                        <td className="px-4 py-3 text-sineoda-muted">
+                        <td className="px-4 py-3 text-plooy-muted">
                           {SCHOOL_REVIEW_LABELS[item.schoolReviewStatus ?? 'none'] ?? item.schoolReviewStatus}
                         </td>
                       )}

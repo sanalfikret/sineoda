@@ -24,7 +24,7 @@ const hubs = [
 
 export function LandingHubs() {
   return (
-    <section className="relative bg-sineoda-bg px-5 py-20 sm:px-8">
+    <section className="relative bg-plooy-bg px-5 py-20 sm:px-8">
       <div className="mx-auto max-w-[1400px]">
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
           Dünya bağımsız sineması, tek adreste
@@ -51,7 +51,7 @@ export function LandingHubs() {
               <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
                 <h3 className="text-2xl font-bold sm:text-3xl">{hub.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-white/75">{hub.text}</p>
-                <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-sineoda-gold opacity-0 transition group-hover:opacity-100">
+                <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-plooy-gold opacity-0 transition group-hover:opacity-100">
                   Keşfet
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />

@@ -129,7 +129,7 @@ function ClassicButton({
         showLabel ? 'px-4 py-2.5 text-sm font-medium' : 'h-11 w-11 justify-center'
       } ${
         active
-          ? 'border-sineoda-gold bg-sineoda-gold/15 text-sineoda-gold shadow-[0_0_0_1px_rgba(232,184,74,0.35)]'
+          ? 'border-plooy-gold bg-plooy-gold/15 text-plooy-gold shadow-[0_0_0_1px_rgba(232,184,74,0.35)]'
           : 'border-white/50 bg-black/55 text-white backdrop-blur-sm hover:border-white hover:bg-black/75'
       }`}
     >

@@ -172,7 +172,7 @@ export function AdminAdsPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-white">Reklam Kampanyaları</h1>
-        <p className="mt-1 max-w-3xl text-sm text-sineoda-muted">
+        <p className="mt-1 max-w-3xl text-sm text-plooy-muted">
           Film öncesi sponsor reklamları. Abonelere de gösterilir; sıklık, hedef filmler ve atlama
           kuralları tamamen senin kontrolünde.
         </p>
@@ -345,7 +345,7 @@ export function AdminAdsPage() {
                   Seçimi temizle
                 </button>
               </div>
-              <p className="text-xs text-sineoda-muted">{form.contentIds.length} film seçili</p>
+              <p className="text-xs text-plooy-muted">{form.contentIds.length} film seçili</p>
               <div className="max-h-56 space-y-1 overflow-y-auto rounded-lg border border-white/10 p-2">
                 {filteredCatalog.map((item) => (
                   <label
@@ -371,7 +371,7 @@ export function AdminAdsPage() {
         <button
           type="submit"
           disabled={saving}
-          className="rounded-lg bg-sineoda-gold px-5 py-2.5 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
+          className="rounded-lg bg-plooy-gold px-5 py-2.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
         >
           {saving ? 'Kaydediliyor...' : editingId ? 'Güncelle' : 'Kampanya oluştur'}
         </button>
@@ -379,7 +379,7 @@ export function AdminAdsPage() {
 
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#11141c]">
         <table className="min-w-full text-left text-sm">
-          <thead className="border-b border-white/10 text-sineoda-muted">
+          <thead className="border-b border-white/10 text-plooy-muted">
             <tr>
               <th className="px-4 py-3 font-medium">Kampanya</th>
               <th className="px-4 py-3 font-medium">Hedef</th>
@@ -391,13 +391,13 @@ export function AdminAdsPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-sineoda-muted">
+                <td colSpan={5} className="px-4 py-10 text-center text-plooy-muted">
                   Yükleniyor...
                 </td>
               </tr>
             ) : campaigns.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-sineoda-muted">
+                <td colSpan={5} className="px-4 py-10 text-center text-plooy-muted">
                   Henüz kampanya yok.
                 </td>
               </tr>
@@ -406,7 +406,7 @@ export function AdminAdsPage() {
                 <tr key={campaign.id} className="border-b border-white/5 last:border-0">
                   <td className="px-4 py-3">
                     <p className="font-medium text-white">{campaign.name}</p>
-                    <p className="text-xs text-sineoda-muted">
+                    <p className="text-xs text-plooy-muted">
                       {campaign.skipMode === 'mandatory'
                         ? 'Zorunlu reklam'
                         : `${campaign.skipAfterSeconds}s sonra geç`}

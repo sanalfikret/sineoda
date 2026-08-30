@@ -66,7 +66,7 @@ export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
 
   return (
     <div
-      className="safe-top safe-bottom fixed inset-0 z-50 bg-sineoda-bg/95 backdrop-blur-md"
+      className="safe-top safe-bottom fixed inset-0 z-50 bg-plooy-bg/95 backdrop-blur-md"
       role="dialog"
       aria-modal="true"
       aria-label="İçerik ara"
@@ -74,20 +74,20 @@ export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
       <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6">
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
-            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-sineoda-muted" />
+            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-plooy-muted" />
             <input
               type="search"
               autoFocus
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Film, dizi veya tür ara..."
-              className="w-full rounded-xl border border-white/10 bg-sineoda-surface py-3.5 pl-12 pr-4 text-white outline-none transition focus:border-sineoda-gold"
+              className="w-full rounded-xl border border-white/10 bg-plooy-surface py-3.5 pl-12 pr-4 text-white outline-none transition focus:border-plooy-gold"
             />
           </div>
           <button
             type="button"
             onClick={closeSearch}
-            className="rounded-xl px-4 py-3.5 text-sm text-sineoda-muted transition hover:text-white"
+            className="rounded-xl px-4 py-3.5 text-sm text-plooy-muted transition hover:text-white"
           >
             Kapat
           </button>
@@ -109,7 +109,7 @@ export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
           <select
             value={genre ?? ''}
             onChange={(event) => setGenre(event.target.value || null)}
-            className="rounded-lg border border-white/10 bg-sineoda-surface px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold"
+            className="rounded-lg border border-white/10 bg-plooy-surface px-3 py-2 text-sm text-white outline-none focus:border-plooy-gold"
           >
             <option value="">Tüm türler</option>
             {genres.map((entry) => (
@@ -122,7 +122,7 @@ export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
           <select
             value={year ?? ''}
             onChange={(event) => setYear(event.target.value ? Number(event.target.value) : null)}
-            className="rounded-lg border border-white/10 bg-sineoda-surface px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold"
+            className="rounded-lg border border-white/10 bg-plooy-surface px-3 py-2 text-sm text-white outline-none focus:border-plooy-gold"
           >
             <option value="">Tüm yıllar</option>
             {years.map((entry) => (
@@ -134,7 +134,7 @@ export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
         </div>
 
         <div className="mt-6">
-          <p className="mb-4 text-sm text-sineoda-muted">{results.length} sonuç bulundu</p>
+          <p className="mb-4 text-sm text-plooy-muted">{results.length} sonuç bulundu</p>
 
           {results.length > 0 ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
@@ -143,9 +143,9 @@ export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl border border-white/10 bg-sineoda-surface px-6 py-12 text-center">
+            <div className="rounded-2xl border border-white/10 bg-plooy-surface px-6 py-12 text-center">
               <p className="text-lg font-medium text-white">Sonuç bulunamadı</p>
-              <p className="mt-2 text-sm text-sineoda-muted">
+              <p className="mt-2 text-sm text-plooy-muted">
                 Farklı bir arama terimi veya filtre dene.
               </p>
             </div>
@@ -171,8 +171,8 @@ function FilterChip({
       onClick={onClick}
       className={`rounded-full px-4 py-2 text-sm font-medium transition ${
         active
-          ? 'bg-sineoda-gold text-sineoda-bg'
-          : 'bg-sineoda-surface text-white/80 hover:bg-white/10'
+          ? 'bg-plooy-gold text-plooy-bg'
+          : 'bg-plooy-surface text-white/80 hover:bg-white/10'
       }`}
     >
       {label}

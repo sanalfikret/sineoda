@@ -206,11 +206,11 @@ export function AdminCekimNotlariPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sineoda-accent">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-plooy-accent">
             {CEKIM_NOTLARI_SECTION_TITLE}
           </p>
           <h1 className="mt-2 text-2xl font-bold text-white">{CEKIM_NOTLARI_NAV_LABEL}</h1>
-          <p className="mt-2 text-sm text-sineoda-muted">
+          <p className="mt-2 text-sm text-plooy-muted">
             {totalVideos} video · {orderedSections.length} alt kategori
             {savingOrder ? ' · Sıra kaydediliyor...' : ''}
           </p>
@@ -218,7 +218,7 @@ export function AdminCekimNotlariPage() {
         <button
           type="button"
           onClick={() => navigate('/admin/cekim-notlari/yeni')}
-          className="rounded-lg bg-sineoda-gold px-4 py-2.5 text-sm font-semibold text-sineoda-bg transition hover:brightness-110"
+          className="rounded-lg bg-plooy-gold px-4 py-2.5 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
         >
           + Yeni Video
         </button>
@@ -231,7 +231,7 @@ export function AdminCekimNotlariPage() {
             value={newCategoryTitle}
             onChange={(event) => setNewCategoryTitle(event.target.value)}
             placeholder="Örn. Kurgu Dersleri"
-            className="min-w-[220px] flex-1 rounded-lg border border-white/10 bg-sineoda-bg px-4 py-2.5 text-white outline-none focus:border-sineoda-gold"
+            className="min-w-[220px] flex-1 rounded-lg border border-white/10 bg-plooy-bg px-4 py-2.5 text-white outline-none focus:border-plooy-gold"
             onKeyDown={(event) => {
               if (event.key === 'Enter') void handleAddCategory()
             }}
@@ -240,7 +240,7 @@ export function AdminCekimNotlariPage() {
             type="button"
             disabled={savingCategory || !newCategoryTitle.trim()}
             onClick={() => void handleAddCategory()}
-            className="rounded-lg bg-sineoda-gold px-4 py-2.5 text-sm font-semibold text-sineoda-bg disabled:opacity-50"
+            className="rounded-lg bg-plooy-gold px-4 py-2.5 text-sm font-semibold text-plooy-bg disabled:opacity-50"
           >
             Kategori Ekle
           </button>
@@ -251,7 +251,7 @@ export function AdminCekimNotlariPage() {
 
       {loading ? (
         <div className="flex min-h-[30vh] items-center justify-center">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-sineoda-gold border-t-transparent" />
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-plooy-gold border-t-transparent" />
         </div>
       ) : displayError ? (
         <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{displayError}</p>
@@ -268,7 +268,7 @@ export function AdminCekimNotlariPage() {
                 onDragOver={(event) => handleDragOver(event, section.id)}
                 onDrop={handleDrop}
                 className={`overflow-hidden rounded-2xl border bg-[#11141c] transition ${
-                  dragging ? 'border-sineoda-gold/50 opacity-70' : 'border-white/10'
+                  dragging ? 'border-plooy-gold/50 opacity-70' : 'border-white/10'
                 }`}
               >
                 <div className="flex items-center gap-2 border-b border-white/5 px-4 py-3">
@@ -307,18 +307,18 @@ export function AdminCekimNotlariPage() {
                     <span className="text-white/50">{expanded ? '▼' : '▶'}</span>
                     <span className="truncate font-semibold text-white">{section.title}</span>
                     {section.hidden ? (
-                      <span className="shrink-0 rounded bg-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-sineoda-muted">
+                      <span className="shrink-0 rounded bg-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-plooy-muted">
                         Gizli
                       </span>
                     ) : null}
-                    <span className="shrink-0 text-xs text-sineoda-muted">{section.items.length} video</span>
+                    <span className="shrink-0 text-xs text-plooy-muted">{section.items.length} video</span>
                   </button>
                 </div>
 
                 {expanded && (
                   <div className="space-y-4 p-4">
                     <div className="flex flex-wrap items-end gap-2">
-                      <label className="flex min-w-[220px] flex-1 flex-col gap-1 text-xs text-sineoda-muted">
+                      <label className="flex min-w-[220px] flex-1 flex-col gap-1 text-xs text-plooy-muted">
                         Kategori başlığı
                         <input
                           value={editingTitles[section.id] ?? section.title}
@@ -328,7 +328,7 @@ export function AdminCekimNotlariPage() {
                               [section.id]: event.target.value,
                             }))
                           }
-                          className="rounded-lg border border-white/10 bg-sineoda-bg px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold"
+                          className="rounded-lg border border-white/10 bg-plooy-bg px-3 py-2 text-sm text-white outline-none focus:border-plooy-gold"
                         />
                       </label>
                       <button
@@ -362,18 +362,18 @@ export function AdminCekimNotlariPage() {
                       </button>
                       <Link
                         to={`/admin/cekim-notlari/yeni?kategori=${encodeURIComponent(section.id)}`}
-                        className="ml-auto text-sm font-medium text-sineoda-gold hover:underline"
+                        className="ml-auto text-sm font-medium text-plooy-gold hover:underline"
                       >
                         + Bu kategoriye video ekle
                       </Link>
                     </div>
 
                     {section.items.length === 0 ? (
-                      <p className="text-sm text-sineoda-muted">Henüz video yok.</p>
+                      <p className="text-sm text-plooy-muted">Henüz video yok.</p>
                     ) : query.trim() ? (
                       <div className="overflow-x-auto">
                         <table className="min-w-full text-left text-sm">
-                          <thead className="text-xs uppercase tracking-wide text-sineoda-muted">
+                          <thead className="text-xs uppercase tracking-wide text-plooy-muted">
                             <tr>
                               <th className="pb-3 pr-4">Başlık</th>
                               <th className="pb-3 pr-4">Uzman</th>
@@ -386,11 +386,11 @@ export function AdminCekimNotlariPage() {
                             {section.items.map((item) => (
                               <tr key={item.id}>
                                 <td className="py-3 pr-4 font-medium text-white">{item.title}</td>
-                                <td className="py-3 pr-4 text-sineoda-muted">
+                                <td className="py-3 pr-4 text-plooy-muted">
                                   {item.credits?.directors?.[0] ?? '—'}
                                 </td>
-                                <td className="py-3 pr-4 text-sineoda-muted">{item.duration}</td>
-                                <td className="py-3 pr-4 text-sineoda-muted">
+                                <td className="py-3 pr-4 text-plooy-muted">{item.duration}</td>
+                                <td className="py-3 pr-4 text-plooy-muted">
                                   {item.publishedAt ? 'Yayında' : 'Taslak'}
                                 </td>
                                 <td className="py-3">

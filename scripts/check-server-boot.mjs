@@ -54,7 +54,7 @@ function fail(reason) {
 
 child.stdout.on('data', (chunk) => {
   out += chunk.toString()
-  if (out.includes('Sineoda API')) {
+  if (out.includes('Plooy API')) {
     clearTimeout(timeout)
     child.kill('SIGTERM')
     console.log('check-server-boot OK')
@@ -70,6 +70,6 @@ child.stderr.on('data', (chunk) => {
 })
 
 child.on('exit', (code, signal) => {
-  if (out.includes('Sineoda API')) return
+  if (out.includes('Plooy API')) return
   fail(`çıkış kodu ${code ?? signal}`)
 })

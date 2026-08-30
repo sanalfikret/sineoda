@@ -43,7 +43,7 @@ export function LandingHero({
       </div>
 
       <div className="absolute inset-0 bg-black/55" />
-      <div className="absolute inset-0 bg-gradient-to-t from-sineoda-bg via-black/30 to-black/50" />
+      <div className="absolute inset-0 bg-gradient-to-t from-plooy-bg via-black/30 to-black/50" />
 
       <div className="relative mx-auto flex min-h-[88dvh] max-w-[1400px] flex-col items-center justify-center px-5 pb-20 pt-28 text-center sm:min-h-dvh sm:px-8">
         <h1 className="max-w-4xl font-semibold leading-[1.05] tracking-tight">
@@ -53,14 +53,14 @@ export function LandingHero({
           </span>
         </h1>
 
-        <p className="mt-8 max-w-2xl text-base leading-relaxed text-sineoda-muted sm:text-lg">
+        <p className="mt-8 max-w-2xl text-base leading-relaxed text-plooy-muted sm:text-lg">
           {hero.description}
         </p>
 
         <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4">
           <Link
             to={hero.ctaPrimaryLink || '/kayit'}
-            className="inline-flex h-12 min-w-[200px] items-center justify-center rounded-md bg-sineoda-accent px-10 text-base font-semibold text-sineoda-bg transition hover:brightness-105"
+            className="inline-flex h-12 min-w-[200px] items-center justify-center rounded-md bg-plooy-accent px-10 text-base font-semibold text-plooy-bg transition hover:brightness-105"
           >
             {hero.ctaPrimary}
           </Link>
@@ -76,11 +76,11 @@ export function LandingHero({
 
         {showFeaturedCard && (
           <div className="mt-14 w-full max-w-xl rounded-xl border border-white/10 bg-black/35 px-5 py-4 text-left backdrop-blur-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sineoda-accent">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-plooy-accent">
               Bu hafta öne çıkan
             </p>
             <p className="mt-2 text-lg font-medium text-white">{featuredItem.title}</p>
-            <p className="mt-1 text-sm text-sineoda-muted">
+            <p className="mt-1 text-sm text-plooy-muted">
               {featuredItem.year} · {featuredItem.genres.slice(0, 2).join(', ')}
             </p>
           </div>

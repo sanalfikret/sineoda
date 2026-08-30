@@ -83,7 +83,7 @@ export function AdminJournalPinsPanel({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-white">Üst sıra</h2>
-          <p className="mt-1 text-sm text-sineoda-muted">
+          <p className="mt-1 text-sm text-plooy-muted">
             En fazla {MAX_JOURNAL_PINS} yazıyı dergi listesinin en üstüne sabitleyebilirsiniz. Sabitlenmeyen
             yazılar yayın tarihine göre sıralanır.
           </p>
@@ -103,7 +103,7 @@ export function AdminJournalPinsPanel({
             type="button"
             onClick={() => void handleSave()}
             disabled={!dirty || saving}
-            className="rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg disabled:opacity-50"
+            className="rounded-lg bg-plooy-gold px-4 py-2 text-sm font-semibold text-plooy-bg disabled:opacity-50"
           >
             {saving ? 'Kaydediliyor…' : 'Sırayı kaydet'}
           </button>
@@ -118,7 +118,7 @@ export function AdminJournalPinsPanel({
 
       <div className="mt-5 space-y-2">
         {pinnedPosts.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-white/10 px-4 py-6 text-sm text-sineoda-muted">
+          <p className="rounded-xl border border-dashed border-white/10 px-4 py-6 text-sm text-plooy-muted">
             Henüz sabitlenmiş yazı yok. Liste tamamen yayın tarihine göre serbest sıralanır.
           </p>
         ) : (
@@ -127,10 +127,10 @@ export function AdminJournalPinsPanel({
               key={post.id}
               className="flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-black/20 px-4 py-3"
             >
-              <span className="w-6 text-sm font-semibold text-sineoda-gold">{index + 1}</span>
+              <span className="w-6 text-sm font-semibold text-plooy-gold">{index + 1}</span>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-white">{post.title}</p>
-                <p className="text-xs text-sineoda-muted">/dergi/{post.slug}</p>
+                <p className="text-xs text-plooy-muted">/dergi/{post.slug}</p>
               </div>
               <div className="flex gap-1">
                 <button

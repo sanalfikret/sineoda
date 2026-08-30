@@ -17,7 +17,7 @@ function MyListContent() {
     <main className="px-4 pb-24 pt-28 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <h1 className="text-2xl font-bold text-white sm:text-3xl">Listem</h1>
-        <p className="mt-2 text-sm text-sineoda-muted">
+        <p className="mt-2 text-sm text-plooy-muted">
           Daha sonra izlemek için kaydettiğin içerikler
         </p>
 
@@ -29,7 +29,7 @@ function MyListContent() {
                 <button
                   type="button"
                   onClick={() => openPlayer(item)}
-                  className="w-full rounded-lg bg-sineoda-gold/15 py-2 text-xs font-semibold text-sineoda-gold transition hover:bg-sineoda-gold/25 sm:text-sm"
+                  className="w-full rounded-lg bg-plooy-gold/15 py-2 text-xs font-semibold text-plooy-gold transition hover:bg-plooy-gold/25 sm:text-sm"
                 >
                   Oynat
                 </button>
@@ -37,9 +37,9 @@ function MyListContent() {
             ))}
           </div>
         ) : (
-          <div className="mt-12 rounded-2xl border border-white/10 bg-sineoda-surface px-6 py-16 text-center">
+          <div className="mt-12 rounded-2xl border border-white/10 bg-plooy-surface px-6 py-16 text-center">
             <p className="text-lg font-medium text-white">Listen henüz boş</p>
-            <p className="mt-2 text-sm text-sineoda-muted">
+            <p className="mt-2 text-sm text-plooy-muted">
               Bir içeriğin detay sayfasından &quot;Listeme Ekle&quot; butonuna basarak başla.
             </p>
           </div>

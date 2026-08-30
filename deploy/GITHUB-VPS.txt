@@ -1,4 +1,4 @@
-Sineoda — GitHub + VPS kurulumu (Netflix/Mubi modeli)
+Plooy — GitHub + VPS kurulumu (Netflix/Mubi modeli)
 =====================================================
 
 GitHub  = kod deposu, yedek, versiyon geçmişi
@@ -23,7 +23,7 @@ PC'de push veya VPS'te pull şifre sorunca:
 
 2) PC'den push (her kod değişikliğinde)
 ---------------------------------------
-cd C:\Users\PC\Projects\sineoda
+cd C:\Users\PC\Projects\Plooy
 npm run check:deploy
 git add .
 git commit -m "ne yaptığın"
@@ -33,22 +33,22 @@ git push origin main
 
 3) VPS'te pull + deploy (PuTTY)
 -------------------------------
-cd /opt/sineoda
+cd /opt/Plooy
 git pull
 bash deploy/rebuild-vps.sh
 
 rebuild-vps.sh yoksa:
   docker-compose build --no-cache --build-arg VITE_API_URL=
-  docker rm -f sineoda
-  docker run -d --name sineoda --restart unless-stopped -p 3001:3001 \
+  docker rm -f Plooy
+  docker run -d --name Plooy --restart unless-stopped -p 3001:3001 \
     --env-file .env \
     -e WEB_DIST_DIR=/app/web-dist \
     -e DATA_DIR=/app/server/data \
     -e UPLOADS_DIR=/app/server/uploads \
     -e NODE_ENV=production \
-    -v /opt/sineoda/persistent/data:/app/server/data \
-    -v /opt/sineoda/persistent/uploads:/app/server/uploads \
-    sineoda_sineoda:latest
+    -v /opt/Plooy/persistent/data:/app/server/data \
+    -v /opt/Plooy/persistent/uploads:/app/server/uploads \
+    Plooy_Plooy:latest
 
 curl -s http://127.0.0.1:3001/api/health
 
@@ -57,8 +57,8 @@ curl -s http://127.0.0.1:3001/api/health
 4) VPS'te ilk kez git clone (henüz yoksa)
 -----------------------------------------
 cd /opt
-git clone https://github.com/sanalfikret/sineoda.git
-cd sineoda
+git clone https://github.com/sanalfikret/Plooy.git
+cd Plooy
 cp deploy/env.production.example .env
 nano .env   # JWT_SECRET, PUBLIC_URL, FRONTEND_URL
 bash deploy/install-vps.sh
@@ -73,4 +73,4 @@ bash deploy/install-vps.sh
 
 ---
 
-Repo: https://github.com/sanalfikret/sineoda
+Repo: https://github.com/sanalfikret/Plooy

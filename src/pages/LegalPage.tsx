@@ -12,9 +12,9 @@ export function LegalPage() {
 
   if (!doc) {
     return (
-      <div className="min-h-dvh bg-sineoda-bg px-4 py-24 text-center text-white sm:px-6">
+      <div className="min-h-dvh bg-plooy-bg px-4 py-24 text-center text-white sm:px-6">
         <h1 className="text-2xl font-bold">Sayfa bulunamadı</h1>
-        <Link to="/" className="mt-4 inline-block text-sineoda-gold hover:underline">
+        <Link to="/" className="mt-4 inline-block text-plooy-gold hover:underline">
           Ana sayfaya dön
         </Link>
       </div>
@@ -22,7 +22,7 @@ export function LegalPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-sineoda-bg">
+    <div className="min-h-dvh bg-plooy-bg">
       <header className="safe-top border-b border-white/5 px-4 py-5 sm:px-6">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <PlooyLogo tone="on-dark" linked linkTo="/" className="h-7" />
@@ -30,9 +30,9 @@ export function LegalPage() {
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sineoda-gold">Yasal</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-plooy-gold">Yasal</p>
         <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">{doc.title}</h1>
-        <p className="mt-2 text-sm text-sineoda-muted">Son güncelleme: {doc.updatedAt}</p>
+        <p className="mt-2 text-sm text-plooy-muted">Son güncelleme: {doc.updatedAt}</p>
 
         <div className="mt-10 space-y-8">
           {doc.sections.map((section) => (

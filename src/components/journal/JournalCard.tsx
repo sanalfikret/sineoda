@@ -13,7 +13,7 @@ export function JournalCard({ post, featured = false, compact = false }: Journal
   return (
     <Link
       to={`/dergi/${post.slug}`}
-      className={`group block overflow-hidden rounded-xl border border-white/[0.06] bg-sineoda-surface transition hover:border-white/12 ${
+      className={`group block overflow-hidden rounded-xl border border-white/[0.06] bg-plooy-surface transition hover:border-white/12 ${
         featured ? 'sm:grid sm:grid-cols-[1.1fr_1fr]' : ''
       }`}
     >
@@ -29,18 +29,18 @@ export function JournalCard({ post, featured = false, compact = false }: Journal
         />
       </div>
       <div className={`flex flex-col justify-center ${compact ? 'p-4' : featured ? 'p-5 sm:p-8' : 'p-5 sm:p-6'}`}>
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sineoda-accent">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-plooy-accent">
           {formatJournalDate(post.publishedAt)}
         </p>
         <h3
-          className={`mt-2 font-semibold leading-snug text-white group-hover:text-sineoda-accent ${
+          className={`mt-2 font-semibold leading-snug text-white group-hover:text-plooy-accent ${
             featured ? 'mt-3 text-2xl sm:text-3xl' : compact ? 'line-clamp-2 text-base' : 'mt-3 text-lg'
           }`}
         >
           {post.title}
         </h3>
         <p
-          className={`text-sineoda-muted ${
+          className={`text-plooy-muted ${
             featured
               ? 'mt-3 text-base leading-relaxed'
               : compact

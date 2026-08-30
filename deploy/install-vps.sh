@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Ubuntu/Debian VPS — Docker ile Sineoda kurulumu
+# Ubuntu/Debian VPS — Docker ile Plooy kurulumu
 set -euo pipefail
 
 if ! command -v docker >/dev/null 2>&1; then
@@ -25,4 +25,4 @@ echo "Kurulum tamam. Sağlık kontrolü:"
 sleep 3
 curl -sf "http://127.0.0.1:${HOST_PORT:-3001}/api/health" | head -c 200 || true
 echo ""
-echo "Site: docker compose logs -f sineoda"
+echo "Site: docker compose logs -f Plooy"

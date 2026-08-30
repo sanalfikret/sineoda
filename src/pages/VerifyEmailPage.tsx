@@ -69,7 +69,7 @@ export function VerifyEmailPage() {
       }
     >
       {loading ? (
-        <p className="text-sm text-sineoda-muted">Doğrulama bağlantısı kontrol ediliyor…</p>
+        <p className="text-sm text-plooy-muted">Doğrulama bağlantısı kontrol ediliyor…</p>
       ) : null}
 
       {error ? (
@@ -85,7 +85,7 @@ export function VerifyEmailPage() {
             Giriş yaptıktan sonra seçtiğin plan için kredi kartı ödeme adımına yönlendirileceksin.
           </p>
           <p className="mt-3">
-            <Link to="/giris" className="font-medium text-sineoda-gold hover:underline">
+            <Link to="/giris" className="font-medium text-plooy-gold hover:underline">
               Giriş yap ve ödemeye geç
             </Link>
           </p>
@@ -94,7 +94,7 @@ export function VerifyEmailPage() {
 
       {!loading && !message ? (
         <div className="space-y-4">
-          <p className="text-sm text-sineoda-muted">
+          <p className="text-sm text-plooy-muted">
             E-postandaki &quot;E-postamı Doğrula&quot; bağlantısına tıkla. Bağlantı gelmediyse aşağıdan yeniden
             gönderebilirsin.
           </p>
@@ -104,7 +104,7 @@ export function VerifyEmailPage() {
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-sineoda-bg px-4 py-3 text-white outline-none transition focus:border-sineoda-gold"
+              className="w-full rounded-lg border border-white/10 bg-plooy-bg px-4 py-3 text-white outline-none transition focus:border-plooy-gold"
               placeholder="ornek@email.com"
             />
           </label>
@@ -112,15 +112,15 @@ export function VerifyEmailPage() {
             type="button"
             disabled={resending}
             onClick={() => void handleResend()}
-            className="w-full rounded-lg border border-sineoda-gold/40 bg-sineoda-gold/10 py-3 text-sm font-semibold text-sineoda-gold disabled:opacity-60"
+            className="w-full rounded-lg border border-plooy-gold/40 bg-plooy-gold/10 py-3 text-sm font-semibold text-plooy-gold disabled:opacity-60"
           >
             {resending ? 'Gönderiliyor…' : 'Doğrulama E-postasını Yeniden Gönder'}
           </button>
         </div>
       ) : null}
 
-      <p className="mt-6 text-center text-sm text-sineoda-muted">
-        <Link to="/giris" className="font-medium text-sineoda-gold hover:underline">
+      <p className="mt-6 text-center text-sm text-plooy-muted">
+        <Link to="/giris" className="font-medium text-plooy-gold hover:underline">
           Giriş sayfasına dön
         </Link>
       </p>

@@ -1,5 +1,5 @@
 @echo off
-title Sineoda - Ngrok Token Kur
+title Plooy - Ngrok Token Kur
 cd /d "%~dp0"
 
 echo.

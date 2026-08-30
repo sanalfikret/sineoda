@@ -115,7 +115,7 @@ export function CreatorRegisterPage() {
             <h1 className="text-2xl font-bold text-white">
               {isStudentProgram ? 'Genç Sinema Başvurusu' : 'Yapımcı Kaydı'}
             </h1>
-            <p className="text-sm text-sineoda-muted">
+            <p className="text-sm text-plooy-muted">
               {isStudentProgram
                 ? 'Mezun veya öğrenci projenizi yüklemek için hesap oluşturun'
                 : `Bağımsız sinemanızı ${BRAND_NAME}'da yayınlayın — yapımcı üyeliği otomatik açılır, film onayı admin tarafından verilir`}
@@ -169,7 +169,7 @@ export function CreatorRegisterPage() {
                 required
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-sineoda-gold"
+                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-plooy-gold"
               />
             </label>
             <label className="block">
@@ -180,7 +180,7 @@ export function CreatorRegisterPage() {
                 required
                 value={studioName}
                 onChange={(event) => setStudioName(event.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-sineoda-gold"
+                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-plooy-gold"
               />
             </label>
           </div>
@@ -258,7 +258,7 @@ export function CreatorRegisterPage() {
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-sineoda-gold"
+              className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-plooy-gold"
             />
           </label>
 
@@ -270,7 +270,7 @@ export function CreatorRegisterPage() {
               minLength={6}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-sineoda-gold"
+              className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-plooy-gold"
             />
           </label>
 
@@ -280,20 +280,20 @@ export function CreatorRegisterPage() {
               rows={3}
               value={bio}
               onChange={(event) => setBio(event.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-sineoda-gold"
+              className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-plooy-gold"
             />
           </label>
 
           {!isStudentProgram && (
-            <div className="rounded-xl border border-sineoda-gold/25 bg-sineoda-gold/5 px-4 py-4 text-sm text-white/85">
-              Kayıt sonrası <strong className="text-sineoda-gold">₺69</strong> yapımcı başvuru ücreti
+            <div className="rounded-xl border border-plooy-gold/25 bg-plooy-gold/5 px-4 py-4 text-sm text-white/85">
+              Kayıt sonrası <strong className="text-plooy-gold">₺69</strong> yapımcı başvuru ücreti
               ödenir. Üyeliğiniz otomatik onaylanır; filminizin yayına alınması admin incelemesine tabidir.
             </div>
           )}
 
           <div className="rounded-xl border border-white/10 bg-[#0d0f14] p-4">
             <p className="text-sm font-medium text-white">Yasal şartlar ve sorumluluk beyanı</p>
-            <pre className="mt-3 max-h-48 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-sineoda-muted">
+            <pre className="mt-3 max-h-48 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-plooy-muted">
               {CREATOR_LEGAL_TERMS}
             </pre>
             <label className="mt-4 flex cursor-pointer items-start gap-3">
@@ -301,7 +301,7 @@ export function CreatorRegisterPage() {
                 type="checkbox"
                 checked={acceptLegal}
                 onChange={(event) => setAcceptLegal(event.target.checked)}
-                className="mt-1 h-4 w-4 rounded border-white/20 accent-sineoda-gold"
+                className="mt-1 h-4 w-4 rounded border-white/20 accent-plooy-gold"
               />
               <span className="text-sm text-white/90">
                 Filminin bana ait olduğunu belgeleyeceğimi, tüm yasal sorumluluğun bana ait olduğunu
@@ -316,7 +316,7 @@ export function CreatorRegisterPage() {
             className={`w-full rounded-lg py-3 text-sm font-semibold disabled:opacity-60 ${
               isStudentProgram
                 ? 'bg-emerald-500 text-[#07110d]'
-                : 'bg-sineoda-gold text-sineoda-bg'
+                : 'bg-plooy-gold text-plooy-bg'
             }`}
           >
             {loading
@@ -327,9 +327,9 @@ export function CreatorRegisterPage() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-sineoda-muted">
+        <p className="mt-6 text-center text-sm text-plooy-muted">
           Zaten hesabınız var mı?{' '}
-          <Link to="/creator/giris" className="text-sineoda-gold hover:underline">
+          <Link to="/creator/giris" className="text-plooy-gold hover:underline">
             Giriş yap
           </Link>
         </p>

@@ -78,7 +78,7 @@ export function AdminUserDetailPanel({ user, onClose, onUpdated }: AdminUserDeta
         <div className="flex items-start justify-between border-b border-white/10 px-5 py-4">
           <div>
             <h2 className="text-lg font-bold text-white">{user.name}</h2>
-            <p className="text-sm text-sineoda-muted">{roleLabel(user.role)} · {subscriptionLabel(user)}</p>
+            <p className="text-sm text-plooy-muted">{roleLabel(user.role)} · {subscriptionLabel(user)}</p>
           </div>
           <button
             type="button"
@@ -106,25 +106,25 @@ export function AdminUserDetailPanel({ user, onClose, onUpdated }: AdminUserDeta
             <h3 className="text-sm font-semibold text-white">Hesap bilgileri</h3>
             <dl className="space-y-2 text-sm">
               <div>
-                <dt className="text-sineoda-muted">E-posta</dt>
+                <dt className="text-plooy-muted">E-posta</dt>
                 <dd className="text-white">{user.email}</dd>
               </div>
               <div>
-                <dt className="text-sineoda-muted">Telefon</dt>
+                <dt className="text-plooy-muted">Telefon</dt>
                 <dd className="text-white">{user.phone?.trim() || '—'}</dd>
               </div>
               <div>
-                <dt className="text-sineoda-muted">Kayıt tarihi</dt>
+                <dt className="text-plooy-muted">Kayıt tarihi</dt>
                 <dd className="text-white">
                   {user.createdAt ? new Date(user.createdAt).toLocaleDateString('tr-TR') : '—'}
                 </dd>
               </div>
               <div>
-                <dt className="text-sineoda-muted">Üyelik</dt>
+                <dt className="text-plooy-muted">Üyelik</dt>
                 <dd className="text-white">
                   {subscriptionLabel(user)}
                   {user.subscription?.expiresAt && user.subscription.status === 'active' && (
-                    <span className="text-sineoda-muted">
+                    <span className="text-plooy-muted">
                       {' '}
                       · Bitiş: {new Date(user.subscription.expiresAt).toLocaleDateString('tr-TR')}
                     </span>
@@ -137,7 +137,7 @@ export function AdminUserDetailPanel({ user, onClose, onUpdated }: AdminUserDeta
           <section className="space-y-3">
             <h3 className="text-sm font-semibold text-white">Profiller ({user.profiles.length})</h3>
             {user.profiles.length === 0 ? (
-              <p className="text-sm text-sineoda-muted">Profil yok.</p>
+              <p className="text-sm text-plooy-muted">Profil yok.</p>
             ) : (
               <ul className="space-y-2">
                 {user.profiles.map((profile) => (
@@ -148,7 +148,7 @@ export function AdminUserDetailPanel({ user, onClose, onUpdated }: AdminUserDeta
                     <span className="text-xl">{profile.avatar}</span>
                     <div>
                       <p className="text-sm font-medium text-white">{profile.name}</p>
-                      {profile.isKids && <p className="text-xs text-sineoda-muted">Çocuk profili</p>}
+                      {profile.isKids && <p className="text-xs text-plooy-muted">Çocuk profili</p>}
                     </div>
                   </li>
                 ))}
@@ -160,7 +160,7 @@ export function AdminUserDetailPanel({ user, onClose, onUpdated }: AdminUserDeta
             <>
               <section className="space-y-3">
                 <h3 className="text-sm font-semibold text-white">Hediye abonelik</h3>
-                <p className="text-xs text-sineoda-muted">
+                <p className="text-xs text-plooy-muted">
                   Mevcut abonelik varsa süre uzatılır; yoksa yeni dönem başlatılır.
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -170,7 +170,7 @@ export function AdminUserDetailPanel({ user, onClose, onUpdated }: AdminUserDeta
                       type="button"
                       disabled={gifting}
                       onClick={() => void handleGift(months)}
-                      className="rounded-lg border border-sineoda-gold/40 bg-sineoda-gold/10 px-4 py-2 text-sm font-medium text-sineoda-gold hover:bg-sineoda-gold/20 disabled:opacity-50"
+                      className="rounded-lg border border-plooy-gold/40 bg-plooy-gold/10 px-4 py-2 text-sm font-medium text-plooy-gold hover:bg-plooy-gold/20 disabled:opacity-50"
                     >
                       +{months} ay
                     </button>
@@ -186,7 +186,7 @@ export function AdminUserDetailPanel({ user, onClose, onUpdated }: AdminUserDeta
                     value={messageForm.subject}
                     onChange={(event) => setMessageForm({ ...messageForm, subject: event.target.value })}
                     placeholder="Konu"
-                    className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold"
+                    className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-plooy-gold"
                   />
                   <textarea
                     required
@@ -194,12 +194,12 @@ export function AdminUserDetailPanel({ user, onClose, onUpdated }: AdminUserDeta
                     value={messageForm.body}
                     onChange={(event) => setMessageForm({ ...messageForm, body: event.target.value })}
                     placeholder="Mesaj metni..."
-                    className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold"
+                    className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-plooy-gold"
                   />
                   <button
                     type="submit"
                     disabled={sending}
-                    className="rounded-lg bg-sineoda-gold px-4 py-2 text-sm font-semibold text-sineoda-bg disabled:opacity-50"
+                    className="rounded-lg bg-plooy-gold px-4 py-2 text-sm font-semibold text-plooy-bg disabled:opacity-50"
                   >
                     {sending ? 'Gönderiliyor...' : 'Mesaj gönder'}
                   </button>

@@ -56,11 +56,11 @@ export function SeriesEpisodeSection({
               key={episode.id}
               type="button"
               onClick={() => onPlay(item, episode)}
-              className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left transition hover:border-sineoda-gold/40 hover:bg-sineoda-gold/10"
+              className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left transition hover:border-plooy-gold/40 hover:bg-plooy-gold/10"
             >
-              <p className="text-lg font-bold text-sineoda-gold">{episode.episode}</p>
+              <p className="text-lg font-bold text-plooy-gold">{episode.episode}</p>
               <p className="mt-1 max-w-[120px] truncate text-xs text-white">{episode.title}</p>
-              <p className="text-[10px] text-sineoda-muted">{episode.duration}</p>
+              <p className="text-[10px] text-plooy-muted">{episode.duration}</p>
             </button>
           ))}
         </div>
@@ -73,7 +73,7 @@ export function SeriesEpisodeSection({
       <h2 className={`${compact ? 'text-sm' : 'text-lg'} mb-1 font-semibold text-white`}>
         Sezonlar ve Bölümler
       </h2>
-      <p className="mb-4 text-sm text-sineoda-muted">
+      <p className="mb-4 text-sm text-plooy-muted">
         {seasonGroups.length} sezon · {episodes.length} bölüm
       </p>
 
@@ -87,12 +87,12 @@ export function SeriesEpisodeSection({
               onClick={() => setSeason(seasonNum)}
               className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${
                 selected
-                  ? 'bg-sineoda-gold text-sineoda-bg shadow-md shadow-sineoda-gold/20'
+                  ? 'bg-plooy-gold text-plooy-bg shadow-md shadow-plooy-gold/20'
                   : 'bg-white/10 text-white/85 hover:bg-white/15'
               }`}
             >
               Sezon {seasonNum}
-              <span className={`ml-1.5 text-xs ${selected ? 'text-sineoda-bg/80' : 'text-white/60'}`}>
+              <span className={`ml-1.5 text-xs ${selected ? 'text-plooy-bg/80' : 'text-white/60'}`}>
                 ({seasonItems.length})
               </span>
             </button>
@@ -103,7 +103,7 @@ export function SeriesEpisodeSection({
       <div>
         <h3 className={`${compact ? 'text-sm' : 'text-base'} mb-3 font-semibold text-white`}>
           Sezon {activeSeason}
-          <span className="ml-2 text-sm font-normal text-sineoda-muted">
+          <span className="ml-2 text-sm font-normal text-plooy-muted">
             · {activeEpisodes.length} bölüm
           </span>
         </h3>
@@ -113,11 +113,11 @@ export function SeriesEpisodeSection({
               key={episode.id}
               type="button"
               onClick={() => onPlay(item, episode)}
-              className={`flex w-full items-start gap-4 rounded-xl border border-white/10 bg-white/5 text-left transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sineoda-gold ${
+              className={`flex w-full items-start gap-4 rounded-xl border border-white/10 bg-white/5 text-left transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-plooy-gold ${
                 compact ? 'p-3' : 'p-4'
               }`}
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sineoda-gold/15 text-sm font-bold text-sineoda-gold">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-plooy-gold/15 text-sm font-bold text-plooy-gold">
                 {episode.episode}
               </span>
               <div className="min-w-0 flex-1">
@@ -125,9 +125,9 @@ export function SeriesEpisodeSection({
                   Bölüm {episode.episode}: {episode.title}
                 </p>
                 {episode.description && !compact && (
-                  <p className="mt-1 line-clamp-2 text-xs text-sineoda-muted">{episode.description}</p>
+                  <p className="mt-1 line-clamp-2 text-xs text-plooy-muted">{episode.description}</p>
                 )}
-                <p className="mt-1 text-xs text-sineoda-muted">{episode.duration}</p>
+                <p className="mt-1 text-xs text-plooy-muted">{episode.duration}</p>
               </div>
               <PlaySmallIcon />
             </button>

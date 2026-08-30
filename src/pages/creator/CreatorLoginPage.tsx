@@ -40,7 +40,7 @@ export function CreatorLoginPage() {
         <div className="rounded-2xl border border-white/10 bg-[#11141c] p-6 sm:p-8">
           <div className="mb-6 text-center">
             <h1 className="text-xl font-bold text-white">Yapımcı Girişi</h1>
-            <p className="mt-1 text-sm text-sineoda-muted">Plooy Creator Paneli</p>
+            <p className="mt-1 text-sm text-plooy-muted">Plooy Creator Paneli</p>
           </div>
 
           {error && (
@@ -57,7 +57,7 @@ export function CreatorLoginPage() {
                 required
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-sineoda-gold"
+                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-plooy-gold"
               />
             </label>
             <label className="block">
@@ -67,21 +67,21 @@ export function CreatorLoginPage() {
                 required
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-sineoda-gold"
+                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-plooy-gold"
               />
             </label>
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-sineoda-gold py-3 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
+              className="w-full rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg disabled:opacity-60"
             >
               {loading ? 'Giriş yapılıyor...' : 'Panele Gir'}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-sineoda-muted">
+          <p className="mt-6 text-center text-sm text-plooy-muted">
             Hesabınız yok mu?{' '}
-            <Link to="/creator/kayit" className="text-sineoda-gold hover:underline">
+            <Link to="/creator/kayit" className="text-plooy-gold hover:underline">
               Yapımcı kaydı
             </Link>
           </p>

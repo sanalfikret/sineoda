@@ -93,7 +93,7 @@ export function Header() {
   const exploreActive = exploreNavItems.some((item) => isActive(item.match))
 
   const navLinkClass = (item: (typeof navItems)[number], active: boolean) =>
-    `whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold lg:px-3 lg:text-sm xl:text-[15px] tv:px-4 tv:py-3 tv:text-base ${
+    `whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold lg:px-3 lg:text-sm xl:text-[15px] tv:px-4 tv:py-3 tv:text-base ${
       item.isStudentCinema
         ? active
           ? 'bg-emerald-500/15 text-emerald-300'
@@ -107,7 +107,7 @@ export function Header() {
     <header
       className={`safe-top fixed inset-x-0 top-0 z-40 transition-colors duration-300 ${
         scrolled || menuOpen
-          ? 'bg-sineoda-bg/95 backdrop-blur-md'
+          ? 'bg-plooy-bg/95 backdrop-blur-md'
           : 'bg-gradient-to-b from-black/80 to-transparent'
       }`}
     >
@@ -135,7 +135,7 @@ export function Header() {
                   onMouseEnter={() => prefetchCekimNotlariSections()}
                   onFocus={() => prefetchCekimNotlariSections()}
                   onBlur={() => window.setTimeout(() => setExploreOpen(false), 150)}
-                  className={`whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold lg:px-3 lg:text-sm xl:text-[15px] ${
+                  className={`whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold lg:px-3 lg:text-sm xl:text-[15px] ${
                     exploreActive || exploreOpen
                       ? 'bg-white/10 text-white'
                       : 'text-white/75 hover:bg-white/5 hover:text-white'
@@ -144,7 +144,7 @@ export function Header() {
                   Keşfet <span className="text-[10px] opacity-70">▾</span>
                 </button>
                 {exploreOpen && (
-                  <div className="absolute left-0 top-full z-50 mt-1 min-w-[11rem] overflow-hidden rounded-xl border border-white/10 bg-sineoda-elevated py-1 shadow-xl">
+                  <div className="absolute left-0 top-full z-50 mt-1 min-w-[11rem] overflow-hidden rounded-xl border border-white/10 bg-plooy-elevated py-1 shadow-xl">
                     {exploreNavItems.map((item) => (
                       <Link
                         key={item.to}
@@ -178,18 +178,18 @@ export function Header() {
               <Link
                 to="/mesajlar"
                 aria-label={unreadMessages > 0 ? `${unreadMessages} okunmamış mesaj` : 'Mesajlarım'}
-                className="relative rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold sm:hidden tv:p-3"
+                className="relative rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold sm:hidden tv:p-3"
               >
                 <MessagesIcon />
                 {unreadMessages > 0 && (
-                  <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-sineoda-gold px-1 text-[10px] font-bold text-sineoda-bg">
+                  <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-plooy-gold px-1 text-[10px] font-bold text-plooy-bg">
                     {unreadMessages > 9 ? '9+' : unreadMessages}
                   </span>
                 )}
               </Link>
               <Link
                 to="/mesajlar"
-                className={`hidden items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold sm:inline-flex lg:px-3 lg:text-sm ${
+                className={`hidden items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold sm:inline-flex lg:px-3 lg:text-sm ${
                   isActive((path) => path === '/mesajlar')
                     ? 'bg-white/10 text-white'
                     : 'text-white/75 hover:bg-white/5 hover:text-white'
@@ -197,7 +197,7 @@ export function Header() {
               >
                 Mesajlarım
                 {unreadMessages > 0 && (
-                  <span className="rounded-full bg-sineoda-gold px-1.5 py-0.5 text-[10px] font-bold leading-none text-sineoda-bg">
+                  <span className="rounded-full bg-plooy-gold px-1.5 py-0.5 text-[10px] font-bold leading-none text-plooy-bg">
                     {unreadMessages > 9 ? '9+' : unreadMessages}
                   </span>
                 )}
@@ -209,7 +209,7 @@ export function Header() {
             <Link
               to="/iletisim"
               aria-label="İletişim"
-              className="rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold tv:p-3"
+              className="rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold tv:p-3"
             >
               <MessagesIcon />
             </Link>
@@ -220,7 +220,7 @@ export function Header() {
               type="button"
               aria-label="Ara"
               onClick={openSearch}
-              className="rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold tv:p-3"
+              className="rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold tv:p-3"
             >
               <SearchIcon />
             </button>
@@ -229,7 +229,7 @@ export function Header() {
           {showListemLink && user && activeProfile && (
             <Link
               to="/listem"
-              className={`hidden whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold sm:inline-flex lg:px-3 lg:text-sm ${
+              className={`hidden whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold sm:inline-flex lg:px-3 lg:text-sm ${
                 isActive((path) => path === '/listem')
                   ? 'bg-white/10 text-white'
                   : 'text-white/75 hover:bg-white/5 hover:text-white'
@@ -244,7 +244,7 @@ export function Header() {
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((open) => !open)}
-                className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm text-white transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold tv:px-4 tv:py-2.5 tv:text-base"
+                className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm text-white transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold tv:px-4 tv:py-2.5 tv:text-base"
               >
                 {isCreator ? (
                   <span className="hidden max-w-[140px] truncate sm:inline">
@@ -265,7 +265,7 @@ export function Header() {
               </button>
 
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-52 overflow-hidden rounded-xl border border-white/10 bg-sineoda-elevated py-1 shadow-xl">
+                <div className="absolute right-0 mt-2 w-52 overflow-hidden rounded-xl border border-white/10 bg-plooy-elevated py-1 shadow-xl">
                   {isCreator ? (
                     <>
                       <Link
@@ -297,7 +297,7 @@ export function Header() {
                         >
                           <span>Mesajlarım</span>
                           {unreadMessages > 0 && (
-                            <span className="rounded-full bg-sineoda-gold px-2 py-0.5 text-xs font-semibold text-sineoda-bg">
+                            <span className="rounded-full bg-plooy-gold px-2 py-0.5 text-xs font-semibold text-plooy-bg">
                               {unreadMessages}
                             </span>
                           )}
@@ -348,7 +348,7 @@ export function Header() {
           ) : (
             <Link
               to="/giris"
-              className="hidden rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold sm:inline-flex tv:px-5 tv:py-2.5 tv:text-base"
+              className="hidden rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold sm:inline-flex tv:px-5 tv:py-2.5 tv:text-base"
             >
               Giriş Yap
             </Link>
@@ -401,7 +401,7 @@ export function Header() {
                 >
                   <span>Mesajlarım</span>
                   {unreadMessages > 0 && (
-                    <span className="rounded-full bg-sineoda-gold px-2 py-0.5 text-xs font-semibold text-sineoda-bg">
+                    <span className="rounded-full bg-plooy-gold px-2 py-0.5 text-xs font-semibold text-plooy-bg">
                       {unreadMessages}
                     </span>
                   )}
@@ -433,7 +433,7 @@ export function Header() {
                 <li>
                   <Link
                     to="/giris"
-                    className="mt-2 block w-full rounded-lg bg-sineoda-gold px-3 py-3 text-center text-sm font-semibold text-sineoda-bg"
+                    className="mt-2 block w-full rounded-lg bg-plooy-gold px-3 py-3 text-center text-sm font-semibold text-plooy-bg"
                     onClick={() => setMenuOpen(false)}
                   >
                     Giriş Yap

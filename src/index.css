@@ -2,13 +2,13 @@
 
 @theme {
   --font-sans: 'Outfit', system-ui, sans-serif;
-  --color-sineoda-bg: #090a0e;
-  --color-sineoda-surface: #111318;
-  --color-sineoda-elevated: #181b24;
-  --color-sineoda-gold: #c9a962;
-  --color-sineoda-accent: #c9a962;
-  --color-sineoda-blue: #6b8fc7;
-  --color-sineoda-muted: #9aa3b5;
+  --color-plooy-bg: #090a0e;
+  --color-plooy-surface: #111318;
+  --color-plooy-elevated: #181b24;
+  --color-plooy-gold: #c9a962;
+  --color-plooy-accent: #c9a962;
+  --color-plooy-blue: #6b8fc7;
+  --color-plooy-muted: #9aa3b5;
   --breakpoint-tv: 120rem;
 }
 
@@ -27,7 +27,7 @@
     margin: 0;
     min-height: 100dvh;
     font-family: var(--font-sans);
-    background: var(--color-sineoda-bg);
+    background: var(--color-plooy-bg);
     color: #e8eaef;
     overflow-x: hidden;
     -webkit-text-size-adjust: 100%;
@@ -72,7 +72,7 @@
   }
 
   .focus-ring {
-    @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sineoda-gold;
+    @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold;
   }
 
   .landing-hero-image {
@@ -92,7 +92,7 @@
   html[data-tv='true'] .focus-ring,
   html[data-tv='true'] a:focus-visible,
   html[data-tv='true'] button:focus-visible {
-    outline: 3px solid var(--color-sineoda-gold);
+    outline: 3px solid var(--color-plooy-gold);
     outline-offset: 3px;
   }
 

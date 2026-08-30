@@ -1,5 +1,5 @@
 @echo off
-REM Sineoda tam paket: site + API zip
+REM Plooy tam paket: site + API zip
 REM Site API: .env.cpanel icindeki VITE_API_URL
 
 setlocal
@@ -22,7 +22,7 @@ if errorlevel 1 exit /b 1
 
 echo === 2/3 Site zip ===
 set SITE_STAGE=deploy\cpanel\_site_stage
-set SITE_OUT=deploy\cpanel\sineoda-site.zip
+set SITE_OUT=deploy\cpanel\Plooy-site.zip
 if exist "%SITE_STAGE%" rmdir /s /q "%SITE_STAGE%"
 mkdir "%SITE_STAGE%\site"
 xcopy /E /I /Y /Q dist\* "%SITE_STAGE%\site\" >nul
@@ -39,6 +39,6 @@ if errorlevel 1 exit /b 1
 echo.
 echo TAMAM:
 echo   %SITE_OUT%
-echo   deploy\cpanel\sineoda-api.zip
+echo   deploy\cpanel\Plooy-api.zip
 echo.
 endlocal

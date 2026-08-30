@@ -11,7 +11,7 @@ import {
 import { createEmptyFestivalEntry } from '../../utils/duration'
 
 const inputClass =
-  'w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-sineoda-gold'
+  'w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-plooy-gold'
 
 export function FestivalCreditsEditor({
   entries,
@@ -40,13 +40,13 @@ export function FestivalCreditsEditor({
     <section className="space-y-4 rounded-xl border border-white/10 bg-white/[0.02] p-4">
       <div>
         <h3 className="text-sm font-semibold text-white">Festivaller & Ödüller</h3>
-        <p className="mt-1 text-xs text-sineoda-muted">
+        <p className="mt-1 text-xs text-plooy-muted">
           Resmi seçkiler ve aldığı ödülleri ekleyin. İzleyici künyesinde laurel rozetleri olarak görünür.
         </p>
       </div>
 
       {entries.length === 0 ? (
-        <p className="text-sm text-sineoda-muted">Henüz festival kaydı yok.</p>
+        <p className="text-sm text-plooy-muted">Henüz festival kaydı yok.</p>
       ) : (
         <div className="space-y-4">
           {entries.map((entry, index) => (
@@ -162,7 +162,7 @@ export function FestivalCreditsEditor({
         <button
           type="button"
           onClick={addEntry}
-          className="rounded-lg border border-sineoda-gold/40 px-4 py-2 text-sm font-medium text-sineoda-gold hover:bg-sineoda-gold/10"
+          className="rounded-lg border border-plooy-gold/40 px-4 py-2 text-sm font-medium text-plooy-gold hover:bg-plooy-gold/10"
         >
           + Festival / ödül ekle
         </button>

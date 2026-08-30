@@ -132,11 +132,11 @@ export function PricingPage() {
   }, [loading, user, autoCheckout, planParam, subscription?.status, handleCheckout])
 
   return (
-    <div className="min-h-dvh bg-sineoda-bg">
+    <div className="min-h-dvh bg-plooy-bg">
       <header className="safe-top border-b border-white/5 px-4 py-5 sm:px-6">
         <div className="mx-auto flex max-w-5xl items-center justify-between">
           <PlooyLogo tone="on-dark" linked linkTo="/" className="h-8" />
-          <Link to={user ? '/hesap' : '/giris'} className="text-sm text-sineoda-gold hover:underline">
+          <Link to={user ? '/hesap' : '/giris'} className="text-sm text-plooy-gold hover:underline">
             {user ? 'Hesabım' : 'Giriş Yap'}
           </Link>
         </div>
@@ -144,21 +144,21 @@ export function PricingPage() {
 
       <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
         <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-sineoda-gold">Abonelik</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-plooy-gold">Abonelik</p>
           <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">Planını seç</h1>
-          <p className="mt-2 text-sm text-sineoda-muted">
+          <p className="mt-2 text-sm text-plooy-muted">
             Kredi kartınla güvenli ödeme — PayTR veya iyzico ile.
           </p>
           {(subscription?.status === 'active' || subscription?.status === 'expired') && (
             <div className="mt-3 space-y-1 text-sm text-emerald-300">
               <p>{subscription.status === 'active' ? 'Aktif abonelik' : 'Abonelik süresi doldu'}</p>
               {subscription.startedAt && (
-                <p className="text-sineoda-muted">
+                <p className="text-plooy-muted">
                   Başlangıç: {new Date(subscription.startedAt).toLocaleDateString('tr-TR')}
                 </p>
               )}
               {subscription.expiresAt && (
-                <p className="text-sineoda-muted">
+                <p className="text-plooy-muted">
                   Bitiş: {new Date(subscription.expiresAt).toLocaleDateString('tr-TR')}
                 </p>
               )}
@@ -172,7 +172,7 @@ export function PricingPage() {
             disabled={!providers.paytr}
             onClick={() => setProvider('paytr')}
             className={`rounded-full px-5 py-2 text-sm font-medium ${
-              provider === 'paytr' ? 'bg-sineoda-gold text-sineoda-bg' : 'bg-white/10 text-white'
+              provider === 'paytr' ? 'bg-plooy-gold text-plooy-bg' : 'bg-white/10 text-white'
             } disabled:opacity-40`}
           >
             PayTR
@@ -182,21 +182,21 @@ export function PricingPage() {
             disabled={!providers.iyzico}
             onClick={() => setProvider('iyzico')}
             className={`rounded-full px-5 py-2 text-sm font-medium ${
-              provider === 'iyzico' ? 'bg-sineoda-gold text-sineoda-bg' : 'bg-white/10 text-white'
+              provider === 'iyzico' ? 'bg-plooy-gold text-plooy-bg' : 'bg-white/10 text-white'
             } disabled:opacity-40`}
           >
             iyzico
           </button>
         </div>
         {!providers.paytr && !providers.iyzico && (
-          <p className="mt-3 text-center text-sm text-sineoda-muted">
+          <p className="mt-3 text-center text-sm text-plooy-muted">
             Demo modu: ödeme anahtarları yok, plan seçince abonelik otomatik aktif olur.
           </p>
         )}
 
         {loading ? (
           <div className="flex justify-center py-16">
-            <div className="h-10 w-10 animate-spin rounded-full border-2 border-sineoda-gold border-t-transparent" />
+            <div className="h-10 w-10 animate-spin rounded-full border-2 border-plooy-gold border-t-transparent" />
           </div>
         ) : (
           <div className="mt-10 grid gap-6 md:grid-cols-2">
@@ -205,19 +205,19 @@ export function PricingPage() {
                 key={plan.id}
                 className={`rounded-2xl border p-8 ${
                   plan.popular
-                    ? 'border-sineoda-gold/40 bg-sineoda-gold/5'
+                    ? 'border-plooy-gold/40 bg-plooy-gold/5'
                     : 'border-white/10 bg-[#11141c]'
                 }`}
               >
                 {plan.popular && (
-                  <span className="mb-3 inline-block rounded-full bg-sineoda-gold px-3 py-1 text-xs font-semibold text-sineoda-bg">
+                  <span className="mb-3 inline-block rounded-full bg-plooy-gold px-3 py-1 text-xs font-semibold text-plooy-bg">
                     Öğrencilere özel
                   </span>
                 )}
                 <h2 className="text-lg font-semibold text-white">{plan.name}</h2>
                 <p className="mt-2 text-4xl font-bold text-white">
                   ₺{plan.price}
-                  <span className="text-sm font-normal text-sineoda-muted">
+                  <span className="text-sm font-normal text-plooy-muted">
                     {plan.interval === 'once' ? '' : ' '}
                     {planPriceSuffix(plan.interval)}
                   </span>
@@ -235,7 +235,7 @@ export function PricingPage() {
                       type="file"
                       accept="image/*,application/pdf"
                       onChange={(event) => setStudentIdFile(event.target.files?.[0] ?? null)}
-                      className="w-full rounded-lg border border-white/10 bg-sineoda-bg px-3 py-2 text-sm text-white file:mr-3 file:rounded-md file:border-0 file:bg-sineoda-gold file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sineoda-bg"
+                      className="w-full rounded-lg border border-white/10 bg-plooy-bg px-3 py-2 text-sm text-white file:mr-3 file:rounded-md file:border-0 file:bg-plooy-gold file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-plooy-bg"
                     />
                   </label>
                 )}
@@ -248,7 +248,7 @@ export function PricingPage() {
                   type="button"
                   disabled={checkoutPlan === plan.id}
                   onClick={() => void handleCheckout(plan.id)}
-                  className="mt-8 w-full rounded-lg bg-sineoda-gold py-3.5 text-sm font-semibold text-sineoda-bg disabled:opacity-60"
+                  className="mt-8 w-full rounded-lg bg-plooy-gold py-3.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
                 >
                   {checkoutPlan === plan.id ? 'Yönlendiriliyor...' : 'Kredi Kartı ile Öde'}
                 </button>
@@ -258,9 +258,9 @@ export function PricingPage() {
         )}
 
         {!user && (
-          <p className="mt-8 text-center text-sm text-sineoda-muted">
+          <p className="mt-8 text-center text-sm text-plooy-muted">
             Henüz hesabın yok mu?{' '}
-            <Link to="/kayit" className="font-medium text-sineoda-gold hover:underline">
+            <Link to="/kayit" className="font-medium text-plooy-gold hover:underline">
               Kayıt ol
             </Link>
           </p>

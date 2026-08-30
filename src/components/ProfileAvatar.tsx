@@ -18,7 +18,7 @@ export function ProfileAvatar({
 }: ProfileAvatarProps) {
   if (isProfilePhoto(avatar)) {
     return (
-      <div className={`overflow-hidden rounded-2xl bg-sineoda-elevated ${className}`}>
+      <div className={`overflow-hidden rounded-2xl bg-plooy-elevated ${className}`}>
         <img src={resolveMediaUrl(avatar)} alt={name} className={imageClassName} />
       </div>
     )
@@ -26,7 +26,7 @@ export function ProfileAvatar({
 
   return (
     <div
-      className={`flex items-center justify-center rounded-2xl bg-sineoda-elevated ${emojiClassName} ${className}`}
+      className={`flex items-center justify-center rounded-2xl bg-plooy-elevated ${emojiClassName} ${className}`}
     >
       {avatar}
     </div>
