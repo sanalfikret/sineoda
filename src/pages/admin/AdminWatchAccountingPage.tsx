@@ -30,6 +30,20 @@ function programLabel(program: MonthlyAccountingItem['program']) {
   return 'Bağımsız yapımcı'
 }
 
+function completionTone(percent: number) {
+  if (percent >= 70) return 'text-emerald-300'
+  if (percent >= 40) return 'text-amber-300'
+  return 'text-red-300'
+}
+
+function completionInsight(percent: number) {
+  if (percent >= 85) return 'Güçlü tutma'
+  if (percent >= 70) return 'İyi izleniyor'
+  if (percent >= 40) return 'Orta — erken terk var'
+  if (percent > 0) return 'Zayıf — çoğu erken bırakıyor'
+  return '—'
+}
+
 export function AdminWatchAccountingPage() {
   const [periods, setPeriods] = useState<Array<{ month: string; status: string }>>([])
   const [month, setMonth] = useState('')
@@ -90,7 +104,7 @@ export function AdminWatchAccountingPage() {
       <div>
         <h1 className="text-2xl font-bold text-white">Aylık İzlenme Muhasebesi</h1>
         <p className="mt-1 text-sm text-plooy-muted">
-          Her ayın 1&apos;inde sıfırlanır, ay sonunda arşivlenir. Ödeme hesapları nitelikli izlenme dakikasına göre yapılır.
+          Her ayın 1&apos;inde sıfırlanır, ay sonunda arşivlenir. Nitelikli izlenme paylaşımı ve ortalama tamamlanma analizi burada görünür.
         </p>
       </div>
 
@@ -186,6 +200,8 @@ export function AdminWatchAccountingPage() {
                   <th className="px-4 py-3 font-medium">Yapımcı / Öğrenci</th>
                   <th className="px-4 py-3 font-medium">Program</th>
                   <th className="px-4 py-3 font-medium">Nitelikli dk</th>
+                  <th className="px-4 py-3 font-medium">Ort. tamamlanma</th>
+                  <th className="px-4 py-3 font-medium">Nitelikli izleyici</th>
                   <th className="px-4 py-3 font-medium">Pay %</th>
                   <th className="px-4 py-3 font-medium">İzleyici</th>
                 </tr>
@@ -206,6 +222,20 @@ export function AdminWatchAccountingPage() {
                     </td>
                     <td className="px-4 py-3 text-plooy-muted">{programLabel(item.program)}</td>
                     <td className="px-4 py-3 text-emerald-300">{item.qualifiedMinutes} dk</td>
+                    <td className="px-4 py-3">
+                      <p className={`font-semibold ${completionTone(item.avgCompletionPercent)}`}>
+                        %{item.avgCompletionPercent}
+                      </p>
+                      <p className="text-xs text-plooy-muted">{completionInsight(item.avgCompletionPercent)}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className={`font-semibold ${completionTone(item.qualifiedViewerPercent)}`}>
+                        %{item.qualifiedViewerPercent}
+                      </p>
+                      {item.completionViewerCount > 0 ? (
+                        <p className="text-xs text-plooy-muted">{item.completionViewerCount} izleyici</p>
+                      ) : null}
+                    </td>
                     <td className="px-4 py-3 font-semibold text-plooy-gold">%{item.sharePercent}</td>
                     <td className="px-4 py-3 text-white/80">{item.viewerCount}</td>
                   </tr>

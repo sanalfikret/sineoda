@@ -1,5 +1,6 @@
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { BRAND_NAME } from '../constants/brand.js'
+import { getWatchThreshold } from './watchQualification.js'
 
 export interface MonthlyContentStat {
   contentId: string
@@ -15,6 +16,9 @@ export interface MonthlyContentStat {
   qualifiedMinutes: number
   watchMinutes: number
   sharePercent: number
+  avgCompletionPercent: number
+  qualifiedViewerPercent: number
+  completionViewerCount: number
 }
 
 export interface MonthlyReport {
@@ -141,6 +145,76 @@ function aggregateWatchByContent(month: string) {
   )
 }
 
+export interface ContentCompletionStat {
+  avgCompletionPercent: number
+  qualifiedViewerPercent: number
+  completionViewerCount: number
+}
+
+function aggregateCompletionByContent(month: string): Map<string, ContentCompletionStat> {
+  const { start, endExclusive } = monthDateRange(month)
+  const rows = dbAll<{
+    content_id: string
+    type: string
+    program: string
+    position_seconds: number
+    duration_seconds: number
+  }>(
+    `SELECT
+      wp.content_id,
+      c.type,
+      c.program,
+      wp.position_seconds,
+      wp.duration_seconds
+    FROM watch_progress wp
+    JOIN content c ON c.id = wp.content_id
+    WHERE wp.duration_seconds > 0
+      AND wp.position_seconds > 0
+      AND EXISTS (
+        SELECT 1
+        FROM watch_activity wa
+        WHERE wa.profile_id = wp.profile_id
+          AND wa.content_id = wp.content_id
+          AND wa.activity_date >= ?
+          AND wa.activity_date < ?
+      )`,
+    [start, endExclusive],
+  )
+
+  const buckets = new Map<
+    string,
+    { totalCompletion: number; viewers: number; qualifiedViewers: number; type: string; program: string }
+  >()
+
+  for (const row of rows) {
+    const completion = row.position_seconds / row.duration_seconds
+    const threshold = getWatchThreshold(row.type, row.program)
+    const bucket = buckets.get(row.content_id) ?? {
+      totalCompletion: 0,
+      viewers: 0,
+      qualifiedViewers: 0,
+      type: row.type,
+      program: row.program,
+    }
+    bucket.totalCompletion += completion
+    bucket.viewers += 1
+    if (completion >= threshold) bucket.qualifiedViewers += 1
+    buckets.set(row.content_id, bucket)
+  }
+
+  const result = new Map<string, ContentCompletionStat>()
+  for (const [contentId, bucket] of buckets) {
+    result.set(contentId, {
+      avgCompletionPercent:
+        bucket.viewers > 0 ? Math.round((bucket.totalCompletion / bucket.viewers) * 1000) / 10 : 0,
+      qualifiedViewerPercent:
+        bucket.viewers > 0 ? Math.round((bucket.qualifiedViewers / bucket.viewers) * 1000) / 10 : 0,
+      completionViewerCount: bucket.viewers,
+    })
+  }
+  return result
+}
+
 function readArchivedMonth(month: string) {
   return dbAll<{
     content_id: string
@@ -190,11 +264,13 @@ function buildReportItems(
   }>,
   watchByContent: Map<string, number>,
   totalQualifiedSeconds: number,
+  completionByContent: Map<string, ContentCompletionStat>,
 ) {
   return qualifiedRows
     .map((row) => {
       const qualifiedSeconds = row.qualified_seconds ?? 0
       const watchSeconds = row.watch_seconds ?? watchByContent.get(row.content_id) ?? 0
+      const completion = completionByContent.get(row.content_id)
       return {
         contentId: row.content_id,
         title: row.title ?? row.content_id,
@@ -212,6 +288,9 @@ function buildReportItems(
           totalQualifiedSeconds > 0
             ? Math.round((qualifiedSeconds / totalQualifiedSeconds) * 1000) / 10
             : 0,
+        avgCompletionPercent: completion?.avgCompletionPercent ?? 0,
+        qualifiedViewerPercent: completion?.qualifiedViewerPercent ?? 0,
+        completionViewerCount: completion?.completionViewerCount ?? 0,
       }
     })
     .sort((a, b) => b.qualifiedSeconds - a.qualifiedSeconds)
@@ -379,6 +458,7 @@ export function getMonthlyReport(month: string, options?: { creatorId?: string; 
     const totalQualified =
       options?.creatorId || programFilter ? filteredQualified : period.total_qualified_seconds
     const totalWatch = options?.creatorId || programFilter ? filteredWatch : period.total_watch_seconds
+    const completionByContent = aggregateCompletionByContent(month)
 
     const items = buildReportItems(
       rows.map((row) => ({
@@ -395,6 +475,7 @@ export function getMonthlyReport(month: string, options?: { creatorId?: string; 
       })),
       new Map(rows.map((row) => [row.content_id, row.watch_seconds])),
       totalQualified,
+      completionByContent,
     )
 
     return {
@@ -470,8 +551,9 @@ export function getMonthlyReport(month: string, options?: { creatorId?: string; 
 
   const totalQualifiedSeconds = combined.reduce((sum, row) => sum + row.qualified_seconds, 0)
   const totalWatchSeconds = combined.reduce((sum, row) => sum + (row.watch_seconds ?? 0), 0)
+  const completionByContent = aggregateCompletionByContent(month)
 
-  const items = buildReportItems(combined, watchByContent, totalQualifiedSeconds)
+  const items = buildReportItems(combined, watchByContent, totalQualifiedSeconds, completionByContent)
 
   ensurePeriodRow(month)
 

@@ -488,13 +488,13 @@ export function CreatorDashboardPage() {
         <section className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {(program === 'student_cinema'
             ? [
+                { label: 'Nitelikli izlenme', value: `${totals.qualifiedMinutes} dk` },
                 { label: 'Toplam izlenme', value: `${totals.watchMinutes} dk` },
                 { label: 'İzleyici', value: String(totals.viewers) },
                 { label: 'Beğeni', value: String(totals.likes) },
-                { label: 'Yayında', value: String(totals.publishedCount) },
               ]
             : [
-                { label: 'Hesaplanan izlenme', value: `${totals.qualifiedMinutes} dk` },
+                { label: 'Nitelikli izlenme', value: `${totals.qualifiedMinutes} dk` },
                 { label: 'Beğeni', value: String(totals.likes) },
                 { label: 'Yayında', value: String(totals.publishedCount) },
                 { label: 'İncelemede', value: String(totals.pendingCount) },
@@ -513,7 +513,7 @@ export function CreatorDashboardPage() {
               <div>
                 <h2 className="text-lg font-semibold text-plooy-gold">Bu ayın izlenme özeti</h2>
                 <p className="mt-1 text-sm text-plooy-muted">
-                  Her ayın 1&apos;inde sıfırlanır. Yalnızca kendi filmlerinizin nitelikli izlenme dakikalarını görürsünüz.
+                  Her ayın 1&apos;inde sıfırlanır. Yalnızca nitelikli izlenme dakikalarını görürsünüz — eşiği geçen izlenmeler sayılır.
                 </p>
               </div>
               {accountingMonths.length > 0 && (
@@ -574,14 +574,6 @@ export function CreatorDashboardPage() {
             )}
           </section>
         )}
-
-        <section className="mb-8 rounded-xl border border-white/10 bg-[#11141c] p-6">
-          <h2 className="text-lg font-semibold">Gelir paylaşımı</h2>
-          <p className="mt-2 text-sm text-plooy-muted">
-            Kazançlar, yapımcı anlaşmasında tanımlanan adil paylaşım modeline göre hesaplanır.
-            Detaylı oranlar ve koşullar anlaşma metninde yer alır.
-          </p>
-        </section>
 
         <section className="mb-8 rounded-xl border border-white/10 bg-[#11141c] p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
