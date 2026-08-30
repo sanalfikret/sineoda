@@ -1,3 +1,4 @@
+import type { LegalDocument, LegalSlug } from '../constants/legal'
 import type { Profile, User } from '../types/auth'
 import type { AdCampaign, AdCampaignFormInput, AdPlayback } from '../types/ads'
 import { NAV_CATEGORY_SYNC, SITE_NAV_IDS, SITE_NAV_ITEMS, type SiteNavConfig, type SiteNavId } from '../constants/siteNav'
@@ -707,6 +708,30 @@ export interface LegalConsentRecord {
   ipAddress: string
   acceptedAt: string
   consentText: string
+}
+
+export async function fetchLegalDocuments() {
+  return api<{ version: string; documents: Record<LegalSlug, LegalDocument> }>('/api/legal/documents')
+}
+
+export async function fetchAdminLegalDocuments() {
+  return api<{ version: string; documents: Record<LegalSlug, LegalDocument> }>('/api/admin/legal')
+}
+
+export async function updateAdminLegalDocument(
+  slug: LegalSlug,
+  data: { title: string; sections: Array<{ heading: string; body: string }> },
+) {
+  return api<{ document: LegalDocument; version: string }>(`/api/admin/legal/${slug}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function resetAdminLegalDocument(slug: LegalSlug) {
+  return api<{ document: LegalDocument; version: string }>(`/api/admin/legal/${slug}/reset`, {
+    method: 'POST',
+  })
 }
 
 export async function fetchLegalConsents() {

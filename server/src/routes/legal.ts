@@ -1,15 +1,36 @@
 import { Router } from 'express'
-import { LEGAL_VERSION } from '../constants/legal.js'
 import { dbGet } from '../db.js'
 import { optionalAuth, requireAuth, type AuthRequest } from '../middleware/auth.js'
 import { listUserLegalConsents, recordLegalConsent } from '../services/legalConsent.js'
+import {
+  getLegalDocument,
+  getLegalDocuments,
+  getLegalVersion,
+  validateLegalSlug,
+} from '../services/legalDocuments.js'
 import type { UserRow } from '../types.js'
 import { getClientIp, getUserAgent } from '../utils/clientIp.js'
 
 const router = Router()
 
 router.get('/version', (_req, res) => {
-  res.json({ version: LEGAL_VERSION })
+  res.json({ version: getLegalVersion() })
+})
+
+router.get('/documents', (_req, res) => {
+  res.json({
+    version: getLegalVersion(),
+    documents: getLegalDocuments(),
+  })
+})
+
+router.get('/documents/:slug', (req, res) => {
+  const slug = req.params.slug
+  if (!validateLegalSlug(slug)) {
+    res.status(404).json({ error: 'Yasal metin bulunamadı.' })
+    return
+  }
+  res.json({ document: getLegalDocument(slug) })
 })
 
 router.get('/consents', requireAuth, (req: AuthRequest, res) => {

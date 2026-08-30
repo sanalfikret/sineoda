@@ -24,6 +24,7 @@ import adminContentRoutes from './routes/adminContent.js'
 import analyticsPublicRoutes from './routes/analyticsPublic.js'
 import landingRoutes, { getLandingConfig } from './routes/landing.js'
 import contactRoutes from './routes/contact.js'
+import adminLegalRoutes from './routes/adminLegal.js'
 import legalRoutes from './routes/legal.js'
 import journalRoutes from './routes/journal.js'
 import adminJournalRoutes from './routes/adminJournal.js'
@@ -248,6 +249,7 @@ app.use('/api/analytics', analyticsPublicRoutes)
 app.use('/api/landing', landingRoutes)
 app.use('/api/contact', contactRoutes)
 app.use('/api/legal', legalRoutes)
+app.use('/api/admin/legal', adminLegalRoutes)
 app.use('/api/journal', journalRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/billing', billingRoutes)
