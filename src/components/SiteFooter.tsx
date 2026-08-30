@@ -1,9 +1,14 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { BRAND_NAME } from '../constants/brand'
 import { InstallAppButton } from './InstallAppButton'
-import { LEGAL_LINKS } from '../constants/legal'
+import { LEGAL_LINKS, legalPageHref } from '../constants/legal'
 
 export function SiteFooter() {
+  const location = useLocation()
+  const returnTo = location.pathname.startsWith('/yasal')
+    ? undefined
+    : `${location.pathname}${location.search}`
+
   return (
     <footer className="border-t border-white/5 bg-plooy-bg px-4 py-10 sm:px-6">
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
@@ -25,7 +30,7 @@ export function SiteFooter() {
           {LEGAL_LINKS.map((link) => (
             <Link
               key={link.slug}
-              to={`/yasal/${link.slug}`}
+              to={legalPageHref(link.slug, returnTo)}
               className="text-plooy-muted transition hover:text-white"
             >
               {link.label}

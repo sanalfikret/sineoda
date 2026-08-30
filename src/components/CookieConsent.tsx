@@ -1,11 +1,30 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import { recordCookieConsent } from '../api/client'
+import { legalPageHref } from '../constants/legal'
+import { useAuth } from '../context/AuthContext'
+import { getSessionId } from '../utils/sessionId'
 
 const STORAGE_KEY = 'plooy_cookie_consent'
 const LEGACY_STORAGE_KEY = 'sineoda_cookie_consent'
 
+async function persistCookieChoice(choice: 'accepted' | 'essential-only', userName?: string) {
+  try {
+    await recordCookieConsent({
+      choice,
+      sessionId: getSessionId(),
+      userName,
+    })
+  } catch {
+    /* Ağ hatası — yerel kayıt yeterli */
+  }
+}
+
 export function CookieConsent() {
+  const { user } = useAuth()
+  const location = useLocation()
   const [visible, setVisible] = useState(false)
+  const returnTo = `${location.pathname}${location.search}`
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY)
@@ -14,11 +33,13 @@ export function CookieConsent() {
 
   const accept = () => {
     localStorage.setItem(STORAGE_KEY, 'accepted')
+    void persistCookieChoice('accepted', user?.name)
     setVisible(false)
   }
 
   const rejectOptional = () => {
     localStorage.setItem(STORAGE_KEY, 'essential-only')
+    void persistCookieChoice('essential-only', user?.name)
     setVisible(false)
   }
 
@@ -31,10 +52,10 @@ export function CookieConsent() {
           <p className="font-medium text-white">Çerez kullanımı</p>
           <p className="mt-1 text-plooy-muted">
             Deneyimi iyileştirmek için çerezler kullanıyoruz. Detaylar için{' '}
-            <Link to="/yasal/cerez-politikasi" className="text-plooy-gold hover:underline">
+            <Link to={legalPageHref('cerez-politikasi', returnTo)} className="text-plooy-gold hover:underline">
               Çerez Politikası
             </Link>
-            &apos;nı inceleyebilirsiniz.
+            &apos;nı inceleyebilirsiniz. Tercihiniz IP adresi ve zaman damgası ile kayıt altına alınır.
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">

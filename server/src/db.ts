@@ -531,6 +531,23 @@ function runMigrations() {
       viewed_at TEXT NOT NULL
     );
   `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS legal_consents (
+      id TEXT PRIMARY KEY,
+      user_id TEXT,
+      session_id TEXT,
+      consent_type TEXT NOT NULL,
+      document_slug TEXT NOT NULL,
+      document_version TEXT NOT NULL,
+      user_name TEXT NOT NULL,
+      user_email TEXT,
+      ip_address TEXT NOT NULL,
+      user_agent TEXT,
+      consent_text TEXT NOT NULL,
+      accepted_at TEXT NOT NULL
+    );
+  `)
 }
 
 function ensureColumn(table: string, column: string, definition: string) {

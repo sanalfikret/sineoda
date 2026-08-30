@@ -1,12 +1,22 @@
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { LEGAL_DOCUMENTS, type LegalSlug } from '../constants/legal'
 import { PageFooter } from '../components/PageFooter'
 import { PlooyLogo } from '../components/PlooyLogo'
 
 const SLUGS = new Set(Object.keys(LEGAL_DOCUMENTS))
 
+function returnLabel(path: string) {
+  if (path.startsWith('/kayit')) return 'Kayda dön'
+  if (path.startsWith('/giris')) return 'Girişe dön'
+  if (path.startsWith('/creator/kayit')) return 'Başvuruya dön'
+  if (path.startsWith('/hesap')) return 'Hesaba dön'
+  return 'Geri dön'
+}
+
 export function LegalPage() {
   const { slug } = useParams<{ slug: string }>()
+  const [searchParams] = useSearchParams()
+  const returnTo = searchParams.get('geri')
   const key = slug && SLUGS.has(slug) ? (slug as LegalSlug) : null
   const doc = key ? LEGAL_DOCUMENTS[key] : null
 
@@ -14,17 +24,40 @@ export function LegalPage() {
     return (
       <div className="min-h-dvh bg-plooy-bg px-4 py-24 text-center text-white sm:px-6">
         <h1 className="text-2xl font-bold">Sayfa bulunamadı</h1>
-        <Link to="/" className="mt-4 inline-block text-plooy-gold hover:underline">
-          Ana sayfaya dön
-        </Link>
+        {returnTo ? (
+          <Link to={returnTo} className="mt-4 inline-block text-plooy-gold hover:underline">
+            ← {returnLabel(returnTo)}
+          </Link>
+        ) : (
+          <Link to="/" className="mt-4 inline-block text-plooy-gold hover:underline">
+            Ana sayfaya dön
+          </Link>
+        )}
       </div>
     )
   }
 
+  const backLabel = returnTo ? returnLabel(returnTo) : 'Ana sayfa'
+
   return (
     <div className="min-h-dvh bg-plooy-bg">
       <header className="safe-top border-b border-white/5 px-4 py-5 sm:px-6">
-        <div className="mx-auto flex max-w-3xl items-center justify-between">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
+          {returnTo ? (
+            <Link
+              to={returnTo}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-sm font-medium text-plooy-gold hover:bg-white/5"
+            >
+              ← {backLabel}
+            </Link>
+          ) : (
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-sm text-white/80 hover:bg-white/5"
+            >
+              ← Ana sayfa
+            </Link>
+          )}
           <PlooyLogo tone="on-dark" linked linkTo="/" className="h-7" />
         </div>
       </header>
@@ -42,6 +75,17 @@ export function LegalPage() {
             </section>
           ))}
         </div>
+
+        {returnTo && (
+          <div className="mt-10 border-t border-white/10 pt-8">
+            <Link
+              to={returnTo}
+              className="inline-flex w-full items-center justify-center rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg hover:brightness-110 sm:w-auto sm:px-8"
+            >
+              ← {backLabel}
+            </Link>
+          </div>
+        )}
       </main>
 
       <PageFooter />

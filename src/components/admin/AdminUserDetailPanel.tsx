@@ -1,9 +1,12 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import {
+  fetchAdminUserLegalConsents,
   giftAdminUserSubscription,
   sendAdminUserMessage,
   type AdminUser,
+  type LegalConsentRecord,
 } from '../../api/client'
+import { CONSENT_TYPE_LABELS } from '../../constants/legal'
 import { planDisplayName } from '../../utils/billing'
 
 function subscriptionLabel(user: AdminUser) {
@@ -34,7 +37,19 @@ export function AdminUserDetailPanel({ user, onClose, onUpdated }: AdminUserDeta
   const [success, setSuccess] = useState('')
   const [gifting, setGifting] = useState(false)
   const [sending, setSending] = useState(false)
+  const [legalConsents, setLegalConsents] = useState<LegalConsentRecord[]>([])
+  const [expandedConsentId, setExpandedConsentId] = useState<string | null>(null)
   const [messageForm, setMessageForm] = useState({ subject: '', body: '' })
+
+  useEffect(() => {
+    if (user.role !== 'user') {
+      setLegalConsents([])
+      return
+    }
+    void fetchAdminUserLegalConsents(user.id)
+      .then(({ consents }) => setLegalConsents(consents))
+      .catch(() => setLegalConsents([]))
+  }, [user.id, user.role])
 
   const handleGift = async (months: number) => {
     setError('')
@@ -155,6 +170,52 @@ export function AdminUserDetailPanel({ user, onClose, onUpdated }: AdminUserDeta
               </ul>
             )}
           </section>
+
+          {user.role === 'user' && (
+            <section className="space-y-3">
+              <h3 className="text-sm font-semibold text-white">Yasal onay kayıtları</h3>
+              {legalConsents.length === 0 ? (
+                <p className="text-sm text-plooy-muted">Kayıtlı onay bulunamadı.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {legalConsents.map((consent) => (
+                    <li key={consent.id} className="rounded-lg border border-white/10 bg-[#0d0f14] p-3">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-medium text-white">
+                            {CONSENT_TYPE_LABELS[consent.consentType]}
+                          </p>
+                          <p className="mt-1 text-xs text-plooy-muted">
+                            {consent.userName}
+                            {consent.userEmail ? ` · ${consent.userEmail}` : ''}
+                          </p>
+                          <p className="mt-1 text-xs text-plooy-muted">
+                            {new Date(consent.acceptedAt).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}
+                            {' · IP: '}
+                            {consent.ipAddress}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedConsentId((current) => (current === consent.id ? null : consent.id))
+                          }
+                          className="text-xs text-plooy-gold hover:underline"
+                        >
+                          {expandedConsentId === consent.id ? 'Gizle' : 'Metin'}
+                        </button>
+                      </div>
+                      {expandedConsentId === consent.id && (
+                        <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap rounded bg-black/30 p-2 text-xs text-white/75">
+                          {consent.consentText}
+                        </pre>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
 
           {user.role === 'user' && (
             <>

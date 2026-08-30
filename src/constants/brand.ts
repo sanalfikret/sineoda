@@ -15,7 +15,7 @@ export const BRAND_HERO = {
     'Dünyanın dört bir yanından bağımsız yapımcıların özgün hikâyeleri. Ticari blockbuster değil — küratörlü seçki, sakin arayüz, sinemaseverlere özel bir izleme deneyimi.',
   ctaPrimary: 'Ücretsiz Dene',
   ctaSecondary: 'Giriş Yap',
-  legalNote: 'Üye olarak Kullanım Koşulları ve Gizlilik Politikası\'nı kabul etmiş olursun.',
+  legalNote: 'Üye olarak Kullanım Koşulları, Gizlilik Politikası, KVKK ve Çerez Politikası\'nı kabul etmiş olursun.',
 } as const
 
 export const BRAND_CREATOR = {

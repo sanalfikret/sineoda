@@ -12,6 +12,8 @@ import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
 import { sendPasswordResetEmail, sendEmailVerificationEmail } from '../services/email.js'
 import { getPlan, normalizePlanId, planRequiresStudentId } from '../services/plans.js'
 import { isValidTurkishMobile, normalizePhone, sendVerificationSms } from '../services/sms.js'
+import { recordSignupConsents } from '../services/legalConsent.js'
+import { getClientIp, getUserAgent } from '../utils/clientIp.js'
 import type { JwtPayload, ProfileRow, UserRow } from '../types.js'
 
 const router = Router()
@@ -92,7 +94,7 @@ router.post('/sms/send', async (req, res) => {
 })
 
 router.post('/signup', async (req, res) => {
-  const { name, email, password, phone, smsCode, planId, studentIdUrl } = req.body as {
+  const { name, email, password, phone, smsCode, planId, studentIdUrl, acceptTerms, acceptPrivacy, acceptKvkk } = req.body as {
     name?: string
     email?: string
     password?: string
@@ -100,10 +102,20 @@ router.post('/signup', async (req, res) => {
     smsCode?: string
     planId?: string
     studentIdUrl?: string
+    acceptTerms?: boolean
+    acceptPrivacy?: boolean
+    acceptKvkk?: boolean
   }
 
   if (!name?.trim() || !email?.trim() || !password || password.length < 6) {
     res.status(400).json({ error: 'Geçerli ad, e-posta ve en az 6 karakterli şifre gerekli.' })
+    return
+  }
+
+  if (!acceptTerms || !acceptPrivacy || !acceptKvkk) {
+    res.status(400).json({
+      error: 'Kayıt için Kullanım Koşulları, Gizlilik Politikası ve KVKK / Açık Rıza onayı zorunludur.',
+    })
     return
   }
 
@@ -186,6 +198,26 @@ router.post('/signup', async (req, res) => {
   dbRun('INSERT INTO profiles (id, user_id, name, avatar, is_kids) VALUES (?, ?, ?, ?, ?)', [
     uuid(), userId, 'Çocuk', '🚀', 1,
   ])
+
+  try {
+    recordSignupConsents({
+      userId,
+      userName: name.trim(),
+      userEmail: normalizedEmail,
+      ipAddress: getClientIp(req),
+      userAgent: getUserAgent(req),
+      acceptTerms: Boolean(acceptTerms),
+      acceptPrivacy: Boolean(acceptPrivacy),
+      acceptKvkk: Boolean(acceptKvkk),
+    })
+  } catch (consentError) {
+    dbRun('DELETE FROM profiles WHERE user_id = ?', [userId])
+    dbRun('DELETE FROM users WHERE id = ?', [userId])
+    res.status(400).json({
+      error: consentError instanceof Error ? consentError.message : 'Yasal onay kaydedilemedi.',
+    })
+    return
+  }
 
   const emailResult = await createEmailVerificationToken(userId, normalizedEmail)
 

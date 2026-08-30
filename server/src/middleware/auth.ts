@@ -67,6 +67,25 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   next()
 }
 
+/** Oturum varsa doğrular; yoksa anonim isteğe izin verir. */
+export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunction) {
+  const header = req.headers.authorization
+  if (!header?.startsWith('Bearer ')) {
+    next()
+    return
+  }
+
+  const payload = readAuthPayload(header.slice(7))
+  if (!payload) {
+    next()
+    return
+  }
+
+  const user = dbGet<UserRow>('SELECT id FROM users WHERE id = ?', [payload.userId])
+  if (user) req.auth = payload
+  next()
+}
+
 export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
   requireAuth(req, res, () => {
     const user = dbGet<UserRow>('SELECT role FROM users WHERE id = ?', [req.auth!.userId])
