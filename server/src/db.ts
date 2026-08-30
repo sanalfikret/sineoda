@@ -296,6 +296,17 @@ function runMigrations() {
   `)
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS payment_settlement_periods (
+      period_id TEXT PRIMARY KEY,
+      net_revenue REAL NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'open',
+      confirmed_at TEXT,
+      paid_at TEXT,
+      updated_at TEXT
+    );
+  `)
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS content_reactions (
       profile_id TEXT NOT NULL,
       content_id TEXT NOT NULL,
