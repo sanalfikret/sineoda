@@ -6,6 +6,7 @@ import {
   type MonthlyAccountingReport,
 } from '../../api/client'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
+import { AdminSettlementPanel } from './AdminSettlementPanel'
 import { fuzzySearchMatch } from '../../utils/search'
 import { BRAND_NAME } from '../../constants/brand'
 
@@ -45,6 +46,7 @@ function completionInsight(percent: number) {
 }
 
 export function AdminWatchAccountingPage() {
+  const [tab, setTab] = useState<'monthly' | 'settlement'>('monthly')
   const [periods, setPeriods] = useState<Array<{ month: string; status: string }>>([])
   const [month, setMonth] = useState('')
   const [program, setProgram] = useState<ProgramFilter>('all')
@@ -102,7 +104,39 @@ export function AdminWatchAccountingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Aylık İzlenme Muhasebesi</h1>
+        <h1 className="text-2xl font-bold text-white">Muhasebe</h1>
+        <p className="mt-1 text-sm text-plooy-muted">
+          Aylık izlenme analizi ve 6 aylık ödeme dönemleri (Ocak–Haziran / Temmuz–Aralık).
+        </p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setTab('monthly')}
+          className={`rounded-full px-4 py-2 text-sm font-medium ${
+            tab === 'monthly' ? 'bg-plooy-gold/15 text-plooy-gold' : 'bg-white/5 text-white/70 hover:bg-white/10'
+          }`}
+        >
+          Aylık izlenme
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('settlement')}
+          className={`rounded-full px-4 py-2 text-sm font-medium ${
+            tab === 'settlement' ? 'bg-plooy-gold/15 text-plooy-gold' : 'bg-white/5 text-white/70 hover:bg-white/10'
+          }`}
+        >
+          6 aylık ödeme
+        </button>
+      </div>
+
+      {tab === 'settlement' ? (
+        <AdminSettlementPanel />
+      ) : (
+        <>
+      <div>
+        <h2 className="text-xl font-bold text-white">Aylık İzlenme</h2>
         <p className="mt-1 text-sm text-plooy-muted">
           Her ayın 1&apos;inde sıfırlanır, ay sonunda arşivlenir. Nitelikli izlenme paylaşımı ve ortalama tamamlanma analizi burada görünür.
         </p>
@@ -244,6 +278,8 @@ export function AdminWatchAccountingPage() {
             </table>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   )
