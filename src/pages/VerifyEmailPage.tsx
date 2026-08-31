@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { resendVerificationRequest, verifyEmailRequest } from '../api/client'
 import { AuthLayout } from '../components/AuthLayout'
+import { useLocale } from '../i18n/LocaleContext'
 
 export function VerifyEmailPage() {
+  const { t } = useTranslation('auth')
+  const { localizePath } = useLocale()
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token') ?? ''
   const emailParam = searchParams.get('email') ?? ''
@@ -26,7 +30,7 @@ export function VerifyEmailPage() {
         if (!cancelled) setMessage(result.message)
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Doğrulama başarısız.')
+        if (!cancelled) setError(err instanceof Error ? err.message : t('verifyFailed'))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -35,11 +39,11 @@ export function VerifyEmailPage() {
     return () => {
       cancelled = true
     }
-  }, [token])
+  }, [token, t])
 
   const handleResend = async () => {
     if (!email.trim()) {
-      setError('Yeniden göndermek için e-posta adresini gir.')
+      setError(t('resendNeedsEmail'))
       return
     }
 
@@ -50,10 +54,10 @@ export function VerifyEmailPage() {
       const result = await resendVerificationRequest(email.trim())
       setMessage(result.message)
       if (result.devVerifyUrl) {
-        setMessage(`${result.message} Geliştirme bağlantısı: ${result.devVerifyUrl}`)
+        setMessage(`${result.message} ${t('devVerifyLink')} ${result.devVerifyUrl}`)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'E-posta gönderilemedi.')
+      setError(err instanceof Error ? err.message : t('emailSendFailed'))
     } finally {
       setResending(false)
     }
@@ -61,15 +65,11 @@ export function VerifyEmailPage() {
 
   return (
     <AuthLayout
-      title={token ? 'E-posta doğrulanıyor' : 'E-postanı doğrula'}
-      subtitle={
-        token
-          ? 'Hesabın etkinleştiriliyor…'
-          : 'Kayıt sonrası gönderilen bağlantıya tıklamadan giriş yapamazsın.'
-      }
+      title={token ? t('verifyEmailVerifying') : t('verifyEmailTitle')}
+      subtitle={token ? t('verifyEmailActivating') : t('verifyEmailSubtitle')}
     >
       {loading ? (
-        <p className="text-sm text-plooy-muted">Doğrulama bağlantısı kontrol ediliyor…</p>
+        <p className="text-sm text-plooy-muted">{t('checkingLink')}</p>
       ) : null}
 
       {error ? (
@@ -81,12 +81,10 @@ export function VerifyEmailPage() {
       {message ? (
         <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
           {message}
-          <p className="mt-3 text-white/85">
-            Giriş yaptıktan sonra seçtiğin plan için kredi kartı ödeme adımına yönlendirileceksin.
-          </p>
+          <p className="mt-3 text-white/85">{t('redirectAfterVerify')}</p>
           <p className="mt-3">
-            <Link to="/giris" className="font-medium text-plooy-gold hover:underline">
-              Giriş yap ve ödemeye geç
+            <Link to={localizePath('/giris')} className="font-medium text-plooy-gold hover:underline">
+              {t('loginAndPayShort')}
             </Link>
           </p>
         </div>
@@ -94,12 +92,9 @@ export function VerifyEmailPage() {
 
       {!loading && !message ? (
         <div className="space-y-4">
-          <p className="text-sm text-plooy-muted">
-            E-postandaki &quot;E-postamı Doğrula&quot; bağlantısına tıkla. Bağlantı gelmediyse aşağıdan yeniden
-            gönderebilirsin.
-          </p>
+          <p className="text-sm text-plooy-muted">{t('verifyInstructions')}</p>
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-white/90">E-posta</span>
+            <span className="mb-1.5 block text-sm font-medium text-white/90">{t('email')}</span>
             <input
               type="email"
               value={email}
@@ -114,14 +109,14 @@ export function VerifyEmailPage() {
             onClick={() => void handleResend()}
             className="w-full rounded-lg border border-plooy-gold/40 bg-plooy-gold/10 py-3 text-sm font-semibold text-plooy-gold disabled:opacity-60"
           >
-            {resending ? 'Gönderiliyor…' : 'Doğrulama E-postasını Yeniden Gönder'}
+            {resending ? t('resending') : t('resendVerification')}
           </button>
         </div>
       ) : null}
 
       <p className="mt-6 text-center text-sm text-plooy-muted">
-        <Link to="/giris" className="font-medium text-plooy-gold hover:underline">
-          Giriş sayfasına dön
+        <Link to={localizePath('/giris')} className="font-medium text-plooy-gold hover:underline">
+          {t('backToLogin')}
         </Link>
       </p>
     </AuthLayout>

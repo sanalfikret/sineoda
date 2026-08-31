@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { ContentItem, SearchFilters } from '../types/content'
 import { getAllGenres, getAllYears, searchContent } from '../utils/search'
 import { isContentAllowedForKids } from '../utils/contentRating'
@@ -13,6 +14,9 @@ interface SearchModalProps {
 }
 
 export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
+  const { t } = useTranslation('content')
+  const { t: tb } = useTranslation('browse')
+  const { t: tc } = useTranslation()
   const { visibleCatalog } = useContent()
   const { isOpen, closeSearch } = useSearchUI()
   const [query, setQuery] = useState('')
@@ -69,7 +73,7 @@ export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
       className="safe-top safe-bottom fixed inset-0 z-50 bg-plooy-bg/95 backdrop-blur-md"
       role="dialog"
       aria-modal="true"
-      aria-label="İçerik ara"
+      aria-label={t('search.ariaLabel')}
     >
       <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6">
         <div className="flex items-center gap-3">
@@ -80,7 +84,7 @@ export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
               autoFocus
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Film, dizi veya tür ara..."
+              placeholder={t('search.placeholder')}
               className="w-full rounded-xl border border-white/10 bg-plooy-surface py-3.5 pl-12 pr-4 text-white outline-none transition focus:border-plooy-gold"
             />
           </div>
@@ -89,16 +93,16 @@ export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
             onClick={closeSearch}
             className="rounded-xl px-4 py-3.5 text-sm text-plooy-muted transition hover:text-white"
           >
-            Kapat
+            {tc('actions.close')}
           </button>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <FilterChip label="Tümü" active={type === null} onClick={() => setType(null)} />
+          <FilterChip label={t('search.allTypes')} active={type === null} onClick={() => setType(null)} />
           {CONTENT_TYPES.map((entry) => (
             <FilterChip
               key={entry.value}
-              label={entry.label}
+              label={tb(`types.${entry.value}`)}
               active={type === entry.value}
               onClick={() => setType(entry.value)}
             />
@@ -111,7 +115,7 @@ export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
             onChange={(event) => setGenre(event.target.value || null)}
             className="rounded-lg border border-white/10 bg-plooy-surface px-3 py-2 text-sm text-white outline-none focus:border-plooy-gold"
           >
-            <option value="">Tüm türler</option>
+            <option value="">{t('search.allGenres')}</option>
             {genres.map((entry) => (
               <option key={entry} value={entry}>
                 {entry}
@@ -124,7 +128,7 @@ export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
             onChange={(event) => setYear(event.target.value ? Number(event.target.value) : null)}
             className="rounded-lg border border-white/10 bg-plooy-surface px-3 py-2 text-sm text-white outline-none focus:border-plooy-gold"
           >
-            <option value="">Tüm yıllar</option>
+            <option value="">{t('search.allYears')}</option>
             {years.map((entry) => (
               <option key={entry} value={entry}>
                 {entry}
@@ -134,7 +138,7 @@ export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
         </div>
 
         <div className="mt-6">
-          <p className="mb-4 text-sm text-plooy-muted">{results.length} sonuç bulundu</p>
+          <p className="mb-4 text-sm text-plooy-muted">{t('search.resultsCount', { count: results.length })}</p>
 
           {results.length > 0 ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
@@ -144,10 +148,8 @@ export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
             </div>
           ) : (
             <div className="rounded-2xl border border-white/10 bg-plooy-surface px-6 py-12 text-center">
-              <p className="text-lg font-medium text-white">Sonuç bulunamadı</p>
-              <p className="mt-2 text-sm text-plooy-muted">
-                Farklı bir arama terimi veya filtre dene.
-              </p>
+              <p className="text-lg font-medium text-white">{t('search.noResults')}</p>
+              <p className="mt-2 text-sm text-plooy-muted">{t('search.noResultsHint')}</p>
             </div>
           )}
         </div>

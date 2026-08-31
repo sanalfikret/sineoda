@@ -1,0 +1,102 @@
+{
+  "hero": {
+    "featured": "Öne Çıkan",
+    "newBadge": "YENİ",
+    "verticalSeries": "Dikey Dizi",
+    "play": "Oynat",
+    "playVertical": "Dikey İzle",
+    "trailerAndDetails": "Fragman & Detay",
+    "details": "Detaylar"
+  },
+  "paywall": {
+    "eyebrow": "Abonelik gerekli",
+    "title": "İzlemeye devam et",
+    "body": "Bu içeriği izlemek için aktif bir Plooy aboneliğine ihtiyacın var. Öğrenci (₺49/ay) veya standart (₺69/ay) plan seçip ödeme yapmalısın.",
+    "viewPlans": "Planları Gör"
+  },
+  "search": {
+    "ariaLabel": "İçerik ara",
+    "placeholder": "Film, dizi veya tür ara...",
+    "close": "Kapat",
+    "allTypes": "Tümü",
+    "allGenres": "Tüm türler",
+    "allYears": "Tüm yıllar",
+    "resultsCount": "{{count}} sonuç bulundu",
+    "noResults": "Sonuç bulunamadı",
+    "noResultsHint": "Farklı bir arama terimi veya filtre dene."
+  },
+  "detail": {
+    "back": "Geri",
+    "newBadge": "YENİ",
+    "vertical": "Dikey",
+    "seasonsEpisodes": "{{seasons}} Sezon · {{episodes}} Bölüm",
+    "kidsBlocked": "Bu içerik çocuk profili için uygun değil ({{rating}}).",
+    "resumeSeries": "Kaldığın Yerden Devam · S{{season}} B{{episode}}",
+    "resumeFilm": "Kaldığın Yerden Devam ({{time}})",
+    "startVertical": "Dikey İzlemeye Başla",
+    "playFirstEpisode": "1. Bölümü Oynat",
+    "play": "Oynat",
+    "playVertical": "Dikey İzle",
+    "noVideo": "Bu içerik için henüz video eklenmemiş.",
+    "tabOverview": "Özet",
+    "tabDetails": "Ayrıntılar",
+    "episodesCount": "Bölümler ({{count}})",
+    "creditsHeading": "Yapımcılar ve Oyuncular",
+    "directors": "Yönetmenler",
+    "producers": "Yapımcılar",
+    "cast": "Oyuncu Kadrosu",
+    "school": "Okul",
+    "studio": "Stüdyo",
+    "audioLanguages": "Seslendirme Dilleri",
+    "subtitles": "Alt Yazılar",
+    "structure": "Yapı",
+    "relatedContent": "İlgili içerik",
+    "watch": "İzle",
+    "loginToWatch": "İzlemek için giriş yap",
+    "feedback": "Geri bildirim",
+    "feedbackCta": "Geri bildirimde bulunun",
+    "feedbackSubject": "{{brand}} geri bildirim: {{title}}",
+    "resumeMinutes": "{{mins}} dk"
+  },
+  "actions": {
+    "toolbar": "İçerik işlemleri",
+    "inWatchlist": "Listemde",
+    "addToWatchlist": "Listeme ekle",
+    "like": "Beğen",
+    "dislike": "Beğenme",
+    "share": "Paylaş",
+    "watchlistFailed": "Liste güncellenemedi."
+  },
+  "share": {
+    "menuAria": "Paylaşım seçenekleri",
+    "title": "Paylaş",
+    "copied": "Bağlantı kopyalandı — platform seç",
+    "preparing": "Bağlantı hazırlanıyor...",
+    "otherApps": "Diğer uygulamalar",
+    "copyAgain": "Linki tekrar kopyala"
+  },
+  "player": {
+    "back": "Geri",
+    "play": "Oynat",
+    "pause": "Duraklat",
+    "unmute": "Sesi aç",
+    "mute": "Sessize al",
+    "captionsOn": "Altyazıyı aç",
+    "captionsOff": "Altyazıyı kapat",
+    "nextEpisode": "Sonraki Bölüm",
+    "nextEpisodeCountdown": "{{count}} saniye içinde başlıyor",
+    "nextEpisodePlay": "Şimdi oynat",
+    "nextEpisodeCancel": "İptal",
+    "jingleAria": "Plooy açılış"
+  },
+  "rating": {
+    "general": "Genel",
+    "generalAudience": "Genel izleyici kitlesi",
+    "ageAndUp": "{{age}} yaş ve üzeri için uygundur",
+    "ariaLabel": "Yaş sınırı: {{badge}}"
+  },
+  "playbackGuard": {
+    "kidsBlockedTitle": "Çocuk profili",
+    "kidsBlockedBody": "Bu içerik çocuk profili için uygun değil."
+  }
+}

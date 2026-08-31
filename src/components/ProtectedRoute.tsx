@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
+import { useLocale } from '../i18n/LocaleContext'
 import { getToken } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { needsSubscriptionPayment, subscriptionCheckoutPath } from '../utils/billing'
@@ -16,6 +17,7 @@ export function ProtectedRoute({
   requireSubscription = false,
 }: ProtectedRouteProps) {
   const { user, activeProfile, isLoading, refreshUser } = useAuth()
+  const { localizePath } = useLocale()
   const [recovering, setRecovering] = useState(false)
   const token = getToken()
 
@@ -37,15 +39,15 @@ export function ProtectedRoute({
   }
 
   if (!token || !user) {
-    return <Navigate to="/giris" replace />
+    return <Navigate to={localizePath('/giris')} replace />
   }
 
   if (requireSubscription && needsSubscriptionPayment(user)) {
-    return <Navigate to={subscriptionCheckoutPath(user)} replace />
+    return <Navigate to={localizePath(subscriptionCheckoutPath(user))} replace />
   }
 
   if (requireProfile && !activeProfile) {
-    return <Navigate to="/profiller" replace />
+    return <Navigate to={localizePath('/profiller')} replace />
   }
 
   return children

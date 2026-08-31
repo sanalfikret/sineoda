@@ -1,12 +1,14 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import type { LandingSectionsConfig } from '../../constants/landingDefaults'
+import { useLocale } from '../../i18n/LocaleContext'
 
 export function LandingStudentCinemaSection({
   section,
 }: {
   section: LandingSectionsConfig['studentCinema']
 }) {
+  const { localizePath } = useLocale()
   const stepsRef = useRef<HTMLDivElement>(null)
 
   return (
@@ -49,7 +51,7 @@ export function LandingStudentCinemaSection({
 
         <div className="mt-14 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
-            to={section.ctaPrimaryLink || '/creator/kayit?program=genc-sinema'}
+            to={localizePath(section.ctaPrimaryLink || '/creator/kayit?program=genc-sinema')}
             className="inline-flex h-14 min-w-[240px] items-center justify-center rounded-lg bg-emerald-500 px-10 text-base font-bold text-[#07110d] shadow-lg shadow-emerald-500/20 transition hover:brightness-110"
           >
             {section.ctaPrimary}

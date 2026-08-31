@@ -1,0 +1,15 @@
+{
+  "notFound": "Sayfa bulunamadı",
+  "backHome": "Ana sayfaya dön",
+  "home": "Ana sayfa",
+  "legalEyebrow": "Yasal",
+  "updatedAt": "Son güncelleme:",
+  "loading": "Yükleniyor...",
+  "returnLabels": {
+    "signup": "Kayda dön",
+    "login": "Girişe dön",
+    "creatorSignup": "Başvuruya dön",
+    "account": "Hesaba dön",
+    "default": "Geri dön"
+  }
+}

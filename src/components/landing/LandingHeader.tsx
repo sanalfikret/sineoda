@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { InstallAppButton } from '../InstallAppButton'
 import { PlooyLogo } from '../PlooyLogo'
 import { SITE_NAV_ITEMS, type SiteNavId } from '../../constants/siteNav'
+import { useLocale } from '../../i18n/LocaleContext'
+import { LanguageSwitcher } from '../LanguageSwitcher'
 
 interface LandingHeaderProps {
   scrolled: boolean
@@ -17,7 +20,18 @@ const GUEST_NAV_IDS = new Set<SiteNavId>([
   'dergi',
 ])
 
+const NAV_I18N: Partial<Record<SiteNavId, string>> = {
+  diziler: 'nav.diziler',
+  filmler: 'nav.filmler',
+  belgeseller: 'nav.belgeseller',
+  dikey: 'nav.dikey',
+  gencSinema: 'nav.gencSinema',
+  dergi: 'nav.dergi',
+}
+
 export function LandingHeader({ scrolled, hiddenNavIds = [] }: LandingHeaderProps) {
+  const { t } = useTranslation()
+  const { localizePath } = useLocale()
   const hidden = new Set(hiddenNavIds)
   const browseLinks = SITE_NAV_ITEMS.filter(
     (item) => GUEST_NAV_IDS.has(item.id) && !hidden.has(item.id),
@@ -32,47 +46,52 @@ export function LandingHeader({ scrolled, hiddenNavIds = [] }: LandingHeaderProp
       }`}
     >
       <div className="mx-auto flex max-w-[1400px] items-center justify-between px-5 py-4 sm:px-8">
-        <Link to="/" className="flex items-center gap-2.5">
-          <PlooyLogo tone="on-dark" className="h-7 sm:h-8" linked linkTo="/" />
-        </Link>
+        <PlooyLogo tone="on-dark" className="h-7 sm:h-8" linked linkTo={localizePath('/')} />
 
         <nav className="hidden items-center gap-6 lg:gap-8 md:flex">
           {browseLinks.map((item) => (
             <Link
               key={item.id}
-              to={item.path}
+              to={localizePath(item.path)}
               className={`text-sm font-medium transition hover:text-white ${
                 item.id === 'gencSinema' ? 'text-emerald-300/90 hover:text-emerald-200' : 'text-white/70'
               }`}
             >
-              {item.label}
+              {t(NAV_I18N[item.id] ?? item.label)}
             </Link>
           ))}
-          <Link to="/planlar" className="text-sm font-medium text-white/70 transition hover:text-white">
-            Planlar
+          <Link
+            to={localizePath('/planlar')}
+            className="text-sm font-medium text-white/70 transition hover:text-white"
+          >
+            {t('nav.plans')}
           </Link>
-          <Link to="/giris" className="text-sm font-medium text-white/70 transition hover:text-white">
-            Giriş Yap
+          <Link
+            to={localizePath('/giris')}
+            className="text-sm font-medium text-white/70 transition hover:text-white"
+          >
+            {t('nav.login')}
           </Link>
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <LanguageSwitcher className="hidden md:inline-flex" />
           <InstallAppButton
             variant="ghost"
             className="hidden sm:inline-flex"
-            label="Yükle"
+            label={t('nav.install')}
           />
           <Link
-            to="/giris"
+            to={localizePath('/giris')}
             className="rounded-md px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/10 md:hidden"
           >
-            Giriş
+            {t('nav.loginShort')}
           </Link>
           <Link
-            to="/kayit"
+            to={localizePath('/kayit')}
             className="rounded-md bg-plooy-gold px-4 py-2 text-sm font-bold text-plooy-bg transition hover:brightness-110 sm:px-6 sm:py-2.5"
           >
-            Üye Ol
+            {t('nav.signup')}
           </Link>
         </div>
       </div>

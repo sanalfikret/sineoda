@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import type { ContentItem, ContentType } from '../types/content'
 import { fetchAllWatchProgress, fetchEpisodes } from '../api/client'
 import { AppShell, useContentUI } from '../components/AppShell'
@@ -15,9 +16,8 @@ import { BRAND_STUDENT_CINEMA } from '../constants/brand'
 import { FeaturedShowcaseRow, usesFeaturedShowcaseRow } from '../components/FeaturedShowcaseRow'
 import { restoreBrowseScroll } from '../utils/browseState'
 import { isVerticalContent } from '../utils/vertical'
-import { getContentTypeLabel } from '../constants/contentTypes'
 import { isContentAllowedForKids } from '../utils/contentRating'
-import { CEKIM_NOTLARI_SECTION_TITLE } from '../constants/cekimNotlari'
+import { useLocale } from '../i18n/LocaleContext'
 
 interface BrowsePageProps {
   contentType?: ContentType | null
@@ -30,12 +30,14 @@ interface BrowsePageProps {
 
 function BrowseContent({
   contentType = null,
-  pageTitle,
+  pageTitle: _pageTitle,
   verticalOnly = false,
   studentCinemaOnly = false,
   cekimNotlariOnly = false,
   classicsOnly = false,
 }: BrowsePageProps) {
+  const { t } = useTranslation('browse')
+  const { localizePath } = useLocale()
   const { openDetail, openPlayer } = useContentUI()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -256,6 +258,22 @@ function BrowseContent({
   const isBrowseList = Boolean(activeGenre || contentType || verticalOnly || studentCinemaOnly || classicsOnly)
   const showSectionExtras = !cekimNotlariOnly && !classicsOnly
 
+  const resolvedPageTitle = useMemo(() => {
+    if (verticalOnly) return t('dikey')
+    if (studentCinemaOnly) return t('gencSinema')
+    if (cekimNotlariOnly) return t('cekimNotlari')
+    if (classicsOnly) return t('klasikler')
+    if (contentType === 'dizi') return t('diziler')
+    if (contentType === 'film') return t('filmler')
+    if (contentType === 'belgesel') return t('belgeseller')
+    if (contentType === 'stand-up') return t('standup')
+    if (contentType === 'kisa-film') return t('kisaFilmler')
+    return t('forYou')
+  }, [verticalOnly, studentCinemaOnly, cekimNotlariOnly, classicsOnly, contentType, t])
+
+  const contentTypeLabel = (type: ContentType | string) =>
+    t(`contentTypes.${type}`, { defaultValue: type })
+
   if (isLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -264,19 +282,7 @@ function BrowseContent({
     )
   }
 
-  const browseMetaTitle =
-    pageTitle ??
-    (verticalOnly
-      ? 'Dikey Diziler'
-      : contentType
-        ? getContentTypeLabel(contentType)
-        : cekimNotlariOnly
-          ? 'Çekim Notları'
-          : studentCinemaOnly
-            ? 'Genç Sinema'
-            : classicsOnly
-              ? 'Klasikler'
-              : 'Senin İçin')
+  const browseMetaTitle = resolvedPageTitle
 
   return (
     <main className="bg-plooy-bg">
@@ -288,20 +294,22 @@ function BrowseContent({
         onDetails={verticalOnly ? (item) => void openPlayer(item) : openDetail}
         eyebrow={
           cekimNotlariOnly
-            ? CEKIM_NOTLARI_SECTION_TITLE
+            ? t('cekimSectionTitle')
             : studentCinemaOnly
-            ? 'Genç Sinema'
+            ? t('gencSinema')
             : classicsOnly
-            ? 'Klasikler'
+            ? t('klasikler')
             : activeGenre
             ? activeGenre
-            : pageTitle ?? (verticalOnly ? 'Dikey Diziler' : contentType ? getContentTypeLabel(contentType) : 'Senin İçin')
+            : contentType
+            ? contentTypeLabel(contentType)
+            : resolvedPageTitle
         }
       />
       ) : (
         <div className="px-4 pb-4 pt-28 sm:px-6 lg:px-8">
           <h1 className="text-2xl font-bold text-white sm:text-3xl">
-            {pageTitle ?? (verticalOnly ? 'Dikey Diziler' : contentType ? getContentTypeLabel(contentType) : cekimNotlariOnly ? 'Çekim Notları' : classicsOnly ? 'Klasikler' : 'Senin İçin')}
+            {resolvedPageTitle}
           </h1>
         </div>
       )}
@@ -314,26 +322,26 @@ function BrowseContent({
 
       {studentCinemaOnly && (
         <p className="mx-auto max-w-3xl px-4 pb-2 text-center text-sm text-emerald-100/70 sm:px-6">
-          Sinema okullarından mezun ve öğrenci filmleri — yalnızca Genç Sinema seçkisinde.
+          {t('studentCinemaDesc')}
         </p>
       )}
 
       {cekimNotlariOnly && (
         <p className="mx-auto max-w-3xl px-4 pb-2 text-center text-sm text-plooy-muted sm:px-6">
-          Alanında uzman isimlerden eğitici videolar — setten post prodüksiyona.
+          {t('cekimNotlariDesc')}
         </p>
       )}
 
       {classicsOnly && (
         <p className="mx-auto max-w-3xl px-4 pb-2 text-center text-sm text-plooy-muted sm:px-6">
-          Plooy kataloğundaki klasik uzun metraj filmler — sinema tarihinden seçki.
+          {t('classicsDesc')}
         </p>
       )}
 
       <div className="mobile-page-bottom pb-8">
         {showSectionExtras && !activeGenre && !contentType && continueWatching.length > 0 && (
           <ContentRow
-            title="Kaldığın Yerden Devam Et"
+            title={t('continueWatching')}
             items={continueWatching}
             onSelect={(item) => void handleContinue(item)}
             progressMap={progressMap}
@@ -342,7 +350,7 @@ function BrowseContent({
 
         {rows.length === 0 ? (
           <p className="px-4 py-12 text-center text-plooy-muted sm:px-6">
-            Bu filtrede içerik bulunamadı.
+            {t('noContent')}
           </p>
         ) : (
           rows.map((row) => {
@@ -351,17 +359,17 @@ function BrowseContent({
               !contentType &&
               row.id === BRAND_STUDENT_CINEMA.id &&
               !hiddenNavIds.includes('gencSinema')
-                ? '/genc-sinema'
+                ? localizePath('/genc-sinema')
                 : !activeGenre &&
                     !contentType &&
                     row.id === STUDENT_MONTHLY_WINNERS_ROW_ID &&
                     !hiddenNavIds.includes('gencSinema')
-                  ? '/genc-sinema'
+                  ? localizePath('/genc-sinema')
                   : !activeGenre &&
                       !contentType &&
                       row.title === 'Dikey Diziler' &&
                       !hiddenNavIds.includes('dikey')
-                    ? '/dikey-diziler'
+                    ? localizePath('/dikey-diziler')
                     : undefined
 
             if (!isBrowseList && usesFeaturedShowcaseRow(row.title, row.id)) {
@@ -395,7 +403,7 @@ function BrowseContent({
         )}
 
         {showSectionExtras && !activeGenre && !contentType && !hiddenNavIds.includes('listem') && filteredWatchlist.length > 0 && (
-          <ContentRow title="Listem" items={filteredWatchlist} onSelect={openDetail} />
+          <ContentRow title={t('myList')} items={filteredWatchlist} onSelect={openDetail} />
         )}
       </div>
     </main>

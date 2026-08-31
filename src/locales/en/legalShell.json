@@ -1,0 +1,15 @@
+{
+  "notFound": "Page not found",
+  "backHome": "Back to home",
+  "home": "Home",
+  "legalEyebrow": "Legal",
+  "updatedAt": "Last updated:",
+  "loading": "Loading...",
+  "returnLabels": {
+    "signup": "Back to signup",
+    "login": "Back to sign in",
+    "creatorSignup": "Back to application",
+    "account": "Back to account",
+    "default": "Go back"
+  }
+}

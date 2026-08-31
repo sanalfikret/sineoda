@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useSiteMode } from '../context/SiteModeContext'
+import { useLocale } from '../i18n/LocaleContext'
 
 interface SiteModeGuardProps {
   children: ReactNode
@@ -10,6 +11,7 @@ interface SiteModeGuardProps {
 
 export function SiteModeGuard({ children, mode = 'browse' }: SiteModeGuardProps) {
   const { loading, siteMode, canBypassComingSoon } = useSiteMode()
+  const { localizePath } = useLocale()
 
   if (loading) {
     return (
@@ -23,7 +25,7 @@ export function SiteModeGuard({ children, mode = 'browse' }: SiteModeGuardProps)
     if (mode === 'signup' && siteMode.allowViewerSignup) {
       return children
     }
-    return <Navigate to="/" replace />
+    return <Navigate to={localizePath('/')} replace />
   }
 
   return children

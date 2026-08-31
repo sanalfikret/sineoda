@@ -1,0 +1,13 @@
+{
+  "title": "Messages",
+  "subtitle": "Announcements and notifications from the Plooy team",
+  "backHome": "← Home",
+  "loading": "Loading...",
+  "viewerOnlyTitle": "This page is for viewer accounts only.",
+  "viewerOnlyBody": "You are signed in with an admin or creator account. To see a message sent to a member, sign in with that member's email and password — a private window is easiest.",
+  "adminLink": "Admin → Viewers",
+  "empty": "No messages yet. When an announcement is sent from the admin panel, it will appear here.",
+  "backToList": "← Message list",
+  "selectMessage": "Select a message.",
+  "loadFailed": "Could not load messages."
+}

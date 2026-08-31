@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation, Trans } from 'react-i18next'
 import { creatorCheckoutPath } from '../../utils/billing'
 import {
   creatorAddDocument,
@@ -21,7 +22,6 @@ import { PlooyLogo } from '../../components/PlooyLogo'
 import { useAuth } from '../../context/AuthContext'
 import { BRAND_NAME } from '../../constants/brand'
 import { CREATOR_DOC_TYPES } from '../../constants/creatorLegal'
-import { CREATOR_FILM_UPLOAD_REQUIREMENTS } from '../../constants/creatorUpload'
 import {
   FilmApplicationRightsPanel,
   isFilmApplicationReady,
@@ -35,6 +35,7 @@ import { buildCredits } from '../../utils/credits'
 import { buildFestivals } from '../../utils/duration'
 import { FestivalCreditsEditor } from '../../components/admin/FestivalCreditsEditor'
 import type { FestivalEntry } from '../../constants/festivals'
+import { useLocale } from '../../i18n/LocaleContext'
 
 interface CreatorDocument {
   id: string
@@ -53,32 +54,38 @@ interface DashboardContent extends ContentItem {
   viewers: number
 }
 
-const FORMAT_LABELS: Record<string, string> = {
-  main: 'Ana film',
-  bts: 'Kamera arkası',
-  teacher_note: 'Hoca notu',
+const FORMAT_LABEL_KEYS: Record<string, string> = {
+  main: 'formatLabels.main',
+  bts: 'formatLabels.bts',
+  teacher_note: 'formatLabels.teacher_note',
 }
 
-const SCHOOL_REVIEW_LABELS: Record<string, string> = {
-  none: '—',
-  pending: 'Okul onayı bekliyor',
-  approved: 'Okul onaylı',
-  rejected: 'Okul reddi',
+const SCHOOL_REVIEW_KEYS: Record<string, string> = {
+  none: 'schoolReviewStatus.none',
+  pending: 'schoolReviewStatus.pending',
+  approved: 'schoolReviewStatus.approved',
+  rejected: 'schoolReviewStatus.rejected',
 }
 
-const REVIEW_LABELS: Record<string, string> = {
-  draft: 'Taslak',
-  pending: 'İncelemede',
-  published: 'Yayında',
-  rejected: 'Reddedildi',
+const REVIEW_KEYS: Record<string, string> = {
+  draft: 'reviewStatus.draft',
+  pending: 'reviewStatus.pending',
+  published: 'reviewStatus.published',
+  rejected: 'reviewStatus.rejected',
 }
 
-function formatMonthLabel(month: string) {
+function formatMonthLabel(month: string, locale: string) {
   const [year, mon] = month.split('-').map(Number)
-  return new Date(year, mon - 1, 1).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })
+  return new Date(year, mon - 1, 1).toLocaleDateString(locale === 'en' ? 'en-US' : 'tr-TR', {
+    month: 'long',
+    year: 'numeric',
+  })
 }
 
 export function CreatorDashboardPage() {
+  const { t } = useTranslation('creator', { keyPrefix: 'dashboard' })
+  const uploadRequirements = t('applications.uploadRequirements', { returnObjects: true }) as string[]
+  const { locale, localizePath } = useLocale()
   const { user, logout } = useAuth()
   const [documents, setDocuments] = useState<CreatorDocument[]>([])
   const [content, setContent] = useState<DashboardContent[]>([])
@@ -150,7 +157,7 @@ export function CreatorDashboardPage() {
       setProgram((dashboard.creator.program as 'standard' | 'student_cinema') ?? 'standard')
       setDocumentCount(dashboard.creator.documentCount)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Veriler yüklenemedi.')
+      setError(err instanceof Error ? err.message : t('errors.loadFailed'))
     } finally {
       setLoading(false)
     }
@@ -194,7 +201,7 @@ export function CreatorDashboardPage() {
       await creatorAddDocument(docType, url)
       await load()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Belge yüklenemedi.')
+      setError(err instanceof Error ? err.message : t('errors.documentUploadFailed'))
     } finally {
       setDocUploading(false)
     }
@@ -205,7 +212,7 @@ export function CreatorDashboardPage() {
       await creatorDeleteDocument(id)
       await load()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Belge silinemedi.')
+      setError(err instanceof Error ? err.message : t('errors.documentDeleteFailed'))
     }
   }
 
@@ -214,7 +221,7 @@ export function CreatorDashboardPage() {
       const url = await creatorUploadImage(file)
       setForm((prev) => ({ ...prev, poster: url }))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Poster yüklenemedi.')
+      setError(err instanceof Error ? err.message : t('errors.posterUploadFailed'))
     }
   }
 
@@ -223,7 +230,7 @@ export function CreatorDashboardPage() {
       const url = await creatorUploadVideo(file)
       setForm((prev) => ({ ...prev, videoUrl: url }))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Video yüklenemedi.')
+      setError(err instanceof Error ? err.message : t('errors.videoUploadFailed'))
     }
   }
 
@@ -279,7 +286,7 @@ export function CreatorDashboardPage() {
         { id: document.id, docType: document.docType, fileUrl: document.fileUrl },
       ])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Belge yüklenemedi.')
+      setError(err instanceof Error ? err.message : t('errors.documentUploadFailed'))
     } finally {
       setUploadingDocType(null)
     }
@@ -290,7 +297,7 @@ export function CreatorDashboardPage() {
       await creatorDeleteDocument(id)
       setApplicationDocs((current) => current.filter((entry) => entry.id !== id))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Belge silinemedi.')
+      setError(err instanceof Error ? err.message : t('errors.documentDeleteFailed'))
     }
   }
 
@@ -299,19 +306,19 @@ export function CreatorDashboardPage() {
     const isMainApplication = program !== 'student_cinema' || form.contentFormat === 'main'
     if (isMainApplication) {
       if (!form.downloadLink.trim()) {
-        setError('Film indirme linki zorunludur.')
+        setError(t('errors.downloadLinkRequired'))
         return
       }
       if (!form.directors.trim()) {
-        setError('Yönetmen bilgisi zorunludur.')
+        setError(t('errors.directorsRequired'))
         return
       }
       if (!form.producers.trim()) {
-        setError('Yapımcı bilgisi zorunludur.')
+        setError(t('errors.producersRequired'))
         return
       }
       if (!form.cast.trim()) {
-        setError('Oyuncu kadrosu zorunludur.')
+        setError(t('errors.castRequired'))
         return
       }
       const missing = missingApplicationMessage(rightsDeclaration, applicationDocs)
@@ -353,13 +360,13 @@ export function CreatorDashboardPage() {
       resetApplicationForm()
       await load()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Film başvurusu gönderilemedi.')
+      setError(err instanceof Error ? err.message : t('errors.submitFailed'))
     } finally {
       setSubmitting(false)
     }
   }
 
-  const studioName = user?.creator?.studioName ?? 'Yapımcı'
+  const studioName = user?.creator?.studioName ?? t('defaultStudio')
   const mainFilms = content.filter((item) => item.contentFormat === 'main' || !item.contentFormat)
 
   return (
@@ -370,19 +377,23 @@ export function CreatorDashboardPage() {
             <PlooyLogo tone="on-dark" className="h-8" />
             <div>
               <p className="text-lg font-bold">{studioName}</p>
-              <p className="text-xs text-plooy-muted">{BRAND_NAME} Creator · {registrationPaid ? 'Aktif' : 'Ödeme bekleniyor'}</p>
+              <p className="text-xs text-plooy-muted">
+                {registrationPaid
+                  ? t('headerSubtitleActive', { brand: BRAND_NAME })
+                  : t('headerSubtitlePending', { brand: BRAND_NAME })}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Link to="/" className="text-sm text-plooy-muted hover:text-white">
-              Ana site
+            <Link to={localizePath('/')} className="text-sm text-plooy-muted hover:text-white">
+              {t('mainSite')}
             </Link>
             <button
               type="button"
               onClick={logout}
               className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-plooy-muted hover:text-white"
             >
-              Çıkış
+              {t('logout')}
             </button>
           </div>
         </div>
@@ -397,43 +408,45 @@ export function CreatorDashboardPage() {
 
         {program === 'student_cinema' && registrationPaid && (
           <div className="mb-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 text-sm text-emerald-100">
-            Genç Sinema programındasınız. Ana filminizi ve kamera arkası görüntülerinizi yükleyebilirsiniz.
-            Okul onayından sonra {BRAND_NAME} incelemesine alınır.
+            {t('studentPaidBanner', { brand: BRAND_NAME })}
           </div>
         )}
 
         {program === 'student_cinema' && !registrationPaid && status !== 'rejected' && status !== 'suspended' && (
           <div className="mb-6 rounded-xl border border-plooy-gold/30 bg-plooy-gold/10 px-4 py-4 text-sm text-amber-100">
-            Film başvurunuzu tamamlamak için{' '}
-            <strong className="text-plooy-gold">₺49 Genç Sinema başvuru ücreti</strong> ödemeniz gerekir.
-            Ödeme sonrası filminiz okul ve admin incelemesine alınır.{' '}
-            <Link to={creatorCheckoutPath()} className="font-semibold text-plooy-gold underline">
-              Ödeme yap
+            <Trans
+              i18nKey="dashboard.studentUnpaidBanner"
+              ns="creator"
+              components={{ strong: <strong className="text-plooy-gold" /> }}
+            />{' '}
+            <Link to={localizePath(creatorCheckoutPath())} className="font-semibold text-plooy-gold underline">
+              {t('payNow')}
             </Link>
           </div>
         )}
 
         {program === 'standard' && registrationPaid && status !== 'rejected' && status !== 'suspended' && (
           <div className="mb-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 text-sm text-emerald-100">
-            Yapımcı üyeliğiniz aktiftir. Film başvurunuzu gönderin; yayına alma kararı yalnızca {BRAND_NAME}
-            admin ekibi tarafından verilir.
+            {t('standardPaidBanner', { brand: BRAND_NAME })}
           </div>
         )}
 
         {program === 'standard' && !registrationPaid && status !== 'rejected' && status !== 'suspended' && (
           <div className="mb-6 rounded-xl border border-plooy-gold/30 bg-plooy-gold/10 px-4 py-4 text-sm text-amber-100">
-            Film başvurusu göndermek için{' '}
-            <strong className="text-plooy-gold">₺69 yapımcı başvuru ücreti</strong> ödemeniz gerekir. Yapımcı
-            üyeliğiniz otomatik açılır; filminizin onayı admin tarafından yapılır.{' '}
-            <Link to={creatorCheckoutPath()} className="font-semibold text-plooy-gold underline">
-              Ödeme yap
+            <Trans
+              i18nKey="dashboard.standardUnpaidBanner"
+              ns="creator"
+              components={{ strong: <strong className="text-plooy-gold" /> }}
+            />{' '}
+            <Link to={localizePath(creatorCheckoutPath())} className="font-semibold text-plooy-gold underline">
+              {t('payNow')}
             </Link>
           </div>
         )}
 
         {messages.length > 0 && (
           <section className="mb-6 rounded-xl border border-white/10 bg-[#11141c] p-5">
-            <h2 className="text-lg font-semibold">Bildirimler</h2>
+            <h2 className="text-lg font-semibold">{t('notifications')}</h2>
             <ul className="mt-3 space-y-3">
               {messages.slice(0, 5).map((message) => (
                 <li
@@ -460,7 +473,7 @@ export function CreatorDashboardPage() {
                       }}
                       className="mt-2 text-xs text-plooy-gold hover:underline"
                     >
-                      Okundu işaretle
+                      {t('markRead')}
                     </button>
                   )}
                 </li>
@@ -471,33 +484,35 @@ export function CreatorDashboardPage() {
 
         {status === 'pending' && program === 'student_cinema' && (
           <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-4 text-sm text-amber-100">
-            Hesabınız inceleniyor. Onaylandıktan sonra ek içerik gönderebilirsiniz.
+            {t('pendingReviewBanner')}
           </div>
         )}
 
         {status === 'rejected' && (
           <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-4 text-sm text-red-200">
-            Hesabınız reddedildi. Detaylar için{' '}
-            <Link to="/iletisim" className="underline">
-              iletişime
-            </Link>{' '}
-            geçin.
+            <Trans
+              i18nKey="dashboard.rejectedBanner"
+              ns="creator"
+              components={{
+                link: <Link to={localizePath('/iletisim')} className="underline" />,
+              }}
+            />
           </div>
         )}
 
         <section className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {(program === 'student_cinema'
             ? [
-                { label: 'Nitelikli izlenme', value: `${totals.qualifiedMinutes} dk` },
-                { label: 'Toplam izlenme', value: `${totals.watchMinutes} dk` },
-                { label: 'İzleyici', value: String(totals.viewers) },
-                { label: 'Beğeni', value: String(totals.likes) },
+                { label: t('stats.qualifiedWatch'), value: t('stats.minutes', { count: totals.qualifiedMinutes }) },
+                { label: t('stats.totalWatch'), value: t('stats.minutes', { count: totals.watchMinutes }) },
+                { label: t('stats.viewers'), value: String(totals.viewers) },
+                { label: t('stats.likes'), value: String(totals.likes) },
               ]
             : [
-                { label: 'Nitelikli izlenme', value: `${totals.qualifiedMinutes} dk` },
-                { label: 'Beğeni', value: String(totals.likes) },
-                { label: 'Yayında', value: String(totals.publishedCount) },
-                { label: 'İncelemede', value: String(totals.pendingCount) },
+                { label: t('stats.qualifiedWatch'), value: t('stats.minutes', { count: totals.qualifiedMinutes }) },
+                { label: t('stats.likes'), value: String(totals.likes) },
+                { label: t('stats.published'), value: String(totals.publishedCount) },
+                { label: t('stats.pending'), value: String(totals.pendingCount) },
               ]
           ).map((stat) => (
             <div key={stat.label} className="rounded-xl border border-white/10 bg-[#11141c] p-4">
@@ -511,10 +526,8 @@ export function CreatorDashboardPage() {
           <section className="mb-8 rounded-xl border border-plooy-gold/20 bg-plooy-gold/5 p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold text-plooy-gold">Bu ayın izlenme özeti</h2>
-                <p className="mt-1 text-sm text-plooy-muted">
-                  Her ayın 1&apos;inde sıfırlanır. Yalnızca nitelikli izlenme dakikalarını görürsünüz — eşiği geçen izlenmeler sayılır.
-                </p>
+                <h2 className="text-lg font-semibold text-plooy-gold">{t('accounting.title')}</h2>
+                <p className="mt-1 text-sm text-plooy-muted">{t('accounting.description')}</p>
               </div>
               {accountingMonths.length > 0 && (
                 <select
@@ -524,8 +537,8 @@ export function CreatorDashboardPage() {
                 >
                   {accountingMonths.map((entry) => (
                     <option key={entry.month} value={entry.month}>
-                      {formatMonthLabel(entry.month)}
-                      {entry.status === 'open' ? ' (bu ay)' : ''}
+                      {formatMonthLabel(entry.month, locale)}
+                      {entry.status === 'open' ? t('accounting.currentMonth') : ''}
                     </option>
                   ))}
                 </select>
@@ -536,12 +549,16 @@ export function CreatorDashboardPage() {
               <>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   <div className="rounded-lg border border-white/10 bg-[#11141c] p-4">
-                    <p className="text-xs text-plooy-muted">Nitelikli izlenme</p>
-                    <p className="mt-1 text-2xl font-bold text-plooy-gold">{accounting.totalQualifiedMinutes} dk</p>
+                    <p className="text-xs text-plooy-muted">{t('accounting.qualifiedWatch')}</p>
+                    <p className="mt-1 text-2xl font-bold text-plooy-gold">
+                      {t('stats.minutes', { count: accounting.totalQualifiedMinutes })}
+                    </p>
                   </div>
                   <div className="rounded-lg border border-white/10 bg-[#11141c] p-4">
-                    <p className="text-xs text-plooy-muted">Toplam izlenme</p>
-                    <p className="mt-1 text-2xl font-bold text-white">{accounting.totalWatchMinutes} dk</p>
+                    <p className="text-xs text-plooy-muted">{t('accounting.totalWatch')}</p>
+                    <p className="mt-1 text-2xl font-bold text-white">
+                      {t('stats.minutes', { count: accounting.totalWatchMinutes })}
+                    </p>
                   </div>
                 </div>
                 {accounting.items.length > 0 ? (
@@ -549,16 +566,18 @@ export function CreatorDashboardPage() {
                     <table className="min-w-full text-left text-sm">
                       <thead className="bg-[#11141c] text-plooy-muted">
                         <tr>
-                          <th className="px-4 py-2 font-medium">Film</th>
-                          <th className="px-4 py-2 font-medium">Nitelikli dk</th>
-                          <th className="px-4 py-2 font-medium">İzleyici</th>
+                          <th className="px-4 py-2 font-medium">{t('accounting.filmColumn')}</th>
+                          <th className="px-4 py-2 font-medium">{t('accounting.qualifiedColumn')}</th>
+                          <th className="px-4 py-2 font-medium">{t('accounting.viewersColumn')}</th>
                         </tr>
                       </thead>
                       <tbody>
                         {accounting.items.map((item) => (
                           <tr key={item.contentId} className="border-t border-white/5">
                             <td className="px-4 py-2 text-white">{item.title}</td>
-                            <td className="px-4 py-2 text-plooy-gold">{item.qualifiedMinutes} dk</td>
+                            <td className="px-4 py-2 text-plooy-gold">
+                              {t('stats.minutes', { count: item.qualifiedMinutes })}
+                            </td>
                             <td className="px-4 py-2 text-plooy-muted">{item.viewerCount}</td>
                           </tr>
                         ))}
@@ -566,11 +585,11 @@ export function CreatorDashboardPage() {
                     </table>
                   </div>
                 ) : (
-                  <p className="mt-4 text-sm text-plooy-muted">Bu dönemde henüz izlenme kaydı yok.</p>
+                  <p className="mt-4 text-sm text-plooy-muted">{t('accounting.noData')}</p>
                 )}
               </>
             ) : (
-              <p className="mt-4 text-sm text-plooy-muted">Muhasebe verisi yüklenemedi.</p>
+              <p className="mt-4 text-sm text-plooy-muted">{t('accounting.loadFailed')}</p>
             )}
           </section>
         )}
@@ -578,18 +597,15 @@ export function CreatorDashboardPage() {
         <section className="mb-8 rounded-xl border border-white/10 bg-[#11141c] p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-semibold">Yönetmen ve yapımcı belgeleri</h2>
-              <p className="mt-1 text-sm text-plooy-muted">
-                Yönetmen ve yapımcı olarak telif hakkının size ait olduğunu kanıtlayan belgeler.
-                Tüm yasal sorumluluk size aittir.
-              </p>
+              <h2 className="text-lg font-semibold">{t('documents.title')}</h2>
+              <p className="mt-1 text-sm text-plooy-muted">{t('documents.description')}</p>
             </div>
-            <span className="text-sm text-plooy-muted">{documentCount} belge</span>
+            <span className="text-sm text-plooy-muted">{t('documents.count', { count: documentCount })}</span>
           </div>
 
           <div className="mt-4 flex flex-wrap items-end gap-3">
             <label className="block">
-              <span className="mb-1 block text-xs text-plooy-muted">Belge türü</span>
+              <span className="mb-1 block text-xs text-plooy-muted">{t('documents.typeLabel')}</span>
               <select
                 value={docType}
                 onChange={(event) => setDocType(event.target.value)}
@@ -597,13 +613,13 @@ export function CreatorDashboardPage() {
               >
                 {CREATOR_DOC_TYPES.map((type) => (
                   <option key={type.value} value={type.value}>
-                    {type.label}
+                    {t(`documents.types.${type.value}`)}
                   </option>
                 ))}
               </select>
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs text-plooy-muted">PDF veya görsel</span>
+              <span className="mb-1 block text-xs text-plooy-muted">{t('documents.fileLabel')}</span>
               <input
                 type="file"
                 accept=".pdf,image/*"
@@ -626,9 +642,9 @@ export function CreatorDashboardPage() {
                   className="flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-[#0d0f14] px-3 py-2 text-sm"
                 >
                   <span>
-                    {CREATOR_DOC_TYPES.find((t) => t.value === doc.docType)?.label ?? doc.docType} ·{' '}
+                    {t(`documents.types.${doc.docType}`, { defaultValue: doc.docType })} ·{' '}
                     <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="text-plooy-gold hover:underline">
-                      Görüntüle
+                      {t('documents.view')}
                     </a>
                   </span>
                   <button
@@ -636,7 +652,7 @@ export function CreatorDashboardPage() {
                     onClick={() => void handleDeleteDocument(doc.id)}
                     className="text-xs text-red-400 hover:text-red-300"
                   >
-                    Sil
+                    {t('documents.delete')}
                   </button>
                 </li>
               ))}
@@ -646,7 +662,7 @@ export function CreatorDashboardPage() {
 
         <section className="mb-8">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">Film başvurularım</h2>
+            <h2 className="text-lg font-semibold">{t('applications.title')}</h2>
             {canSubmitFilms && (
               <button
                 type="button"
@@ -660,7 +676,7 @@ export function CreatorDashboardPage() {
                 }}
                 className="rounded-lg bg-plooy-gold px-4 py-2 text-sm font-semibold text-plooy-bg"
               >
-                {showForm ? 'Başvuruyu kapat' : 'Film Başvurusu Yap'}
+                {showForm ? t('applications.closeForm') : t('applications.openForm')}
               </button>
             )}
           </div>
@@ -671,19 +687,16 @@ export function CreatorDashboardPage() {
               className="mb-6 space-y-4 rounded-xl border border-plooy-gold/20 bg-[#11141c] p-6"
             >
               <div>
-                <h3 className="text-lg font-semibold text-white">Film Başvurusu</h3>
-                <p className="mt-1 text-sm text-plooy-muted">
-                  Film indirme linki, künye, ödüller ve yönetmen/yapımcı belgelerinizi gönderin. İnceleme
-                  sonrası yayına alınır.
-                </p>
+                <h3 className="text-lg font-semibold text-white">{t('applications.formTitle')}</h3>
+                <p className="mt-1 text-sm text-plooy-muted">{t('applications.formDescription')}</p>
               </div>
 
               <div className="rounded-xl border border-plooy-gold/25 bg-plooy-gold/5 p-4">
                 <p className="text-sm font-semibold text-plooy-gold">
-                  {CREATOR_FILM_UPLOAD_REQUIREMENTS.title}
+                  {t('applications.uploadRequirementsTitle')}
                 </p>
                 <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-white/80">
-                  {CREATOR_FILM_UPLOAD_REQUIREMENTS.items.map((item) => (
+                  {uploadRequirements.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
@@ -692,7 +705,7 @@ export function CreatorDashboardPage() {
                 {program === 'student_cinema' && (
                   <>
                     <label className="block">
-                      <span className="mb-1 block text-sm">İçerik türü</span>
+                      <span className="mb-1 block text-sm">{t('applications.contentFormatLabel')}</span>
                       <select
                         value={form.contentFormat}
                         onChange={(e) =>
@@ -704,21 +717,21 @@ export function CreatorDashboardPage() {
                         }
                         className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
                       >
-                        <option value="main">Ana film / proje</option>
-                        <option value="bts">Kamera arkası</option>
-                        <option value="teacher_note">Hoca notu</option>
+                        <option value="main">{t('applications.contentFormatMain')}</option>
+                        <option value="bts">{t('applications.contentFormatBts')}</option>
+                        <option value="teacher_note">{t('applications.contentFormatTeacher')}</option>
                       </select>
                     </label>
                     {form.contentFormat !== 'main' && (
                       <label className="block">
-                        <span className="mb-1 block text-sm">Bağlı ana film</span>
+                        <span className="mb-1 block text-sm">{t('applications.parentFilmLabel')}</span>
                         <select
                           required
                           value={form.parentContentId}
                           onChange={(e) => setForm({ ...form, parentContentId: e.target.value })}
                           className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
                         >
-                          <option value="">Ana film seçin</option>
+                          <option value="">{t('applications.parentFilmPlaceholder')}</option>
                           {mainFilms.map((item) => (
                             <option key={item.id} value={item.id}>
                               {item.title}
@@ -730,7 +743,7 @@ export function CreatorDashboardPage() {
                   </>
                 )}
                 <label className="block sm:col-span-2">
-                  <span className="mb-1 block text-sm">Başlık</span>
+                  <span className="mb-1 block text-sm">{t('applications.titleLabel')}</span>
                   <input
                     required
                     value={form.title}
@@ -739,7 +752,7 @@ export function CreatorDashboardPage() {
                   />
                 </label>
                 <label className="block sm:col-span-2">
-                  <span className="mb-1 block text-sm">Açıklama</span>
+                  <span className="mb-1 block text-sm">{t('applications.descriptionLabel')}</span>
                   <textarea
                     rows={3}
                     value={form.description}
@@ -748,20 +761,20 @@ export function CreatorDashboardPage() {
                   />
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-sm">Tür</span>
+                  <span className="mb-1 block text-sm">{t('applications.typeLabel')}</span>
                   <select
                     value={form.type}
                     onChange={(e) => setForm({ ...form, type: e.target.value as ContentItem['type'] })}
                     className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
                   >
-                    <option value="film">Uzun metraj film</option>
-                    <option value="belgesel">Belgesel</option>
-                    <option value="kisa-film">Kısa film</option>
-                    <option value="dizi">Dizi</option>
+                    <option value="film">{t('applications.typeFilm')}</option>
+                    <option value="belgesel">{t('applications.typeDocumentary')}</option>
+                    <option value="kisa-film">{t('applications.typeShort')}</option>
+                    <option value="dizi">{t('applications.typeSeries')}</option>
                   </select>
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-sm">Yaş sınırı</span>
+                  <span className="mb-1 block text-sm">{t('applications.ratingLabel')}</span>
                   <select
                     value={form.rating}
                     onChange={(e) => setForm({ ...form, rating: e.target.value })}
@@ -775,7 +788,7 @@ export function CreatorDashboardPage() {
                   </select>
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-sm">Yıl</span>
+                  <span className="mb-1 block text-sm">{t('applications.yearLabel')}</span>
                   <input
                     type="number"
                     value={form.year}
@@ -785,7 +798,7 @@ export function CreatorDashboardPage() {
                 </label>
                 <label className="block">
                   <span className="mb-1 block text-sm">
-                    {form.type === 'dizi' ? 'Süre (ör. 8 bölüm)' : 'Süre (dakika) *'}
+                    {form.type === 'dizi' ? t('applications.durationSeriesLabel') : t('applications.durationFilmLabel')}
                   </span>
                   {form.type === 'dizi' ? (
                     <input
@@ -806,53 +819,53 @@ export function CreatorDashboardPage() {
                   )}
                 </label>
                 <label className="block sm:col-span-2">
-                  <span className="mb-1 block text-sm">Türler (virgülle)</span>
+                  <span className="mb-1 block text-sm">{t('applications.genresLabel')}</span>
                   <input
                     value={form.genres}
                     onChange={(e) => setForm({ ...form, genres: e.target.value })}
-                    placeholder="Drama, Bağımsız"
+                    placeholder={t('applications.genresPlaceholder')}
                     className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
                   />
                 </label>
                 <label className="block sm:col-span-2">
-                  <span className="mb-1 block text-sm">Yönetmen(ler) *</span>
+                  <span className="mb-1 block text-sm">{t('applications.directorsLabel')}</span>
                   <textarea
                     required
                     rows={2}
                     value={form.directors}
                     onChange={(e) => setForm({ ...form, directors: e.target.value })}
-                    placeholder="Her satıra bir isim veya virgülle ayırın"
+                    placeholder={t('applications.directorsPlaceholder')}
                     className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
                   />
                 </label>
                 <label className="block sm:col-span-2">
-                  <span className="mb-1 block text-sm">Yapımcı(lar) *</span>
+                  <span className="mb-1 block text-sm">{t('applications.producersLabel')}</span>
                   <textarea
                     required
                     rows={2}
                     value={form.producers}
                     onChange={(e) => setForm({ ...form, producers: e.target.value })}
-                    placeholder="Her satıra bir isim veya virgülle ayırın"
+                    placeholder={t('applications.producersPlaceholder')}
                     className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
                   />
                 </label>
                 <label className="block sm:col-span-2">
-                  <span className="mb-1 block text-sm">Oyuncu kadrosu / ekip *</span>
+                  <span className="mb-1 block text-sm">{t('applications.castLabel')}</span>
                   <textarea
                     required
                     rows={3}
                     value={form.cast}
                     onChange={(e) => setForm({ ...form, cast: e.target.value })}
-                    placeholder="Başrol, yan rol ve önemli ekip üyeleri"
+                    placeholder={t('applications.castPlaceholder')}
                     className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
                   />
                 </label>
                 <label className="block sm:col-span-2">
-                  <span className="mb-1 block text-sm">Yapım / stüdyo</span>
+                  <span className="mb-1 block text-sm">{t('applications.studioLabel')}</span>
                   <input
                     value={form.studio}
                     onChange={(e) => setForm({ ...form, studio: e.target.value })}
-                    placeholder="Örn: Bağımsız yapım, stüdyo adı"
+                    placeholder={t('applications.studioPlaceholder')}
                     className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
                   />
                 </label>
@@ -866,21 +879,19 @@ export function CreatorDashboardPage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block sm:col-span-2">
-                  <span className="mb-1 block text-sm">Film indirme linki *</span>
+                  <span className="mb-1 block text-sm">{t('applications.downloadLinkLabel')}</span>
                   <input
                     required
                     type="url"
                     value={form.downloadLink}
                     onChange={(e) => setForm({ ...form, downloadLink: e.target.value })}
-                    placeholder="https://drive.google.com/... (H.265, Full HD)"
+                    placeholder={t('applications.downloadLinkPlaceholder')}
                     className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white"
                   />
-                  <p className="mt-1 text-xs text-plooy-muted">
-                    Filmin tam dosyası — H.265 codec, kaliteden ödün vermeden Full HD (1080p+)
-                  </p>
+                  <p className="mt-1 text-xs text-plooy-muted">{t('applications.downloadLinkHint')}</p>
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-sm">Poster</span>
+                  <span className="mb-1 block text-sm">{t('applications.posterLabel')}</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -892,7 +903,7 @@ export function CreatorDashboardPage() {
                   />
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-sm">Video (isteğe bağlı — önizleme)</span>
+                  <span className="mb-1 block text-sm">{t('applications.videoLabel')}</span>
                   <input
                     type="file"
                     accept="video/*"
@@ -905,7 +916,7 @@ export function CreatorDashboardPage() {
                 </label>
                 {form.videoUrl && form.videoUrl !== form.downloadLink && (
                   <label className="block sm:col-span-2">
-                    <span className="mb-1 block text-sm">Yüklenen video URL</span>
+                    <span className="mb-1 block text-sm">{t('applications.videoUrlLabel')}</span>
                     <input
                       readOnly
                       value={form.videoUrl}
@@ -935,36 +946,34 @@ export function CreatorDashboardPage() {
                 }
                 className="rounded-lg bg-plooy-gold px-5 py-2.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
               >
-                {submitting ? 'Gönderiliyor...' : 'Film Başvurusu Yap'}
+                {submitting ? t('applications.submitting') : t('applications.submit')}
               </button>
             </form>
           )}
 
           {loading ? (
-            <p className="text-sm text-plooy-muted">Yükleniyor...</p>
+            <p className="text-sm text-plooy-muted">{t('applications.loading')}</p>
           ) : content.length === 0 ? (
             <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-plooy-muted">
-              {canSubmitFilms
-                ? 'Henüz film başvurunuz yok. Yukarıdaki düğmeden başvuru yapabilirsiniz.'
-                : 'Henüz film başvurunuz yok. Başvuru ücretini ödedikten sonra film gönderebilirsiniz.'}
+              {canSubmitFilms ? t('applications.emptyCanSubmit') : t('applications.emptyNeedPayment')}
             </p>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-white/10">
               <table className="min-w-full text-left text-sm">
                 <thead className="bg-[#11141c] text-plooy-muted">
                   <tr>
-                    <th className="px-4 py-3 font-medium">Başlık</th>
+                    <th className="px-4 py-3 font-medium">{t('applications.columns.title')}</th>
                     {program === 'student_cinema' && (
-                      <th className="px-4 py-3 font-medium">Tür</th>
+                      <th className="px-4 py-3 font-medium">{t('applications.columns.format')}</th>
                     )}
-                    <th className="px-4 py-3 font-medium">Durum</th>
+                    <th className="px-4 py-3 font-medium">{t('applications.columns.status')}</th>
                     {program === 'student_cinema' && (
-                      <th className="px-4 py-3 font-medium">Okul</th>
+                      <th className="px-4 py-3 font-medium">{t('applications.columns.school')}</th>
                     )}
-                    <th className="px-4 py-3 font-medium">İzlenme (dk)</th>
-                    <th className="px-4 py-3 font-medium">İzleyici</th>
-                    <th className="px-4 py-3 font-medium">Beğeni</th>
-                    <th className="px-4 py-3 font-medium">Paylaş</th>
+                    <th className="px-4 py-3 font-medium">{t('applications.columns.watchMinutes')}</th>
+                    <th className="px-4 py-3 font-medium">{t('applications.columns.viewers')}</th>
+                    <th className="px-4 py-3 font-medium">{t('applications.columns.likes')}</th>
+                    <th className="px-4 py-3 font-medium">{t('applications.columns.share')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -973,13 +982,15 @@ export function CreatorDashboardPage() {
                       <td className="px-4 py-3">{item.title}</td>
                       {program === 'student_cinema' && (
                         <td className="px-4 py-3 text-plooy-muted">
-                          {FORMAT_LABELS[item.contentFormat ?? 'main'] ?? item.contentFormat}
+                          {t(FORMAT_LABEL_KEYS[item.contentFormat ?? 'main'] ?? item.contentFormat ?? 'formatLabels.main')}
                         </td>
                       )}
-                      <td className="px-4 py-3">{REVIEW_LABELS[item.reviewStatus] ?? item.reviewStatus}</td>
+                      <td className="px-4 py-3">
+                        {t(REVIEW_KEYS[item.reviewStatus] ?? item.reviewStatus)}
+                      </td>
                       {program === 'student_cinema' && (
                         <td className="px-4 py-3 text-plooy-muted">
-                          {SCHOOL_REVIEW_LABELS[item.schoolReviewStatus ?? 'none'] ?? item.schoolReviewStatus}
+                          {t(SCHOOL_REVIEW_KEYS[item.schoolReviewStatus ?? 'none'] ?? item.schoolReviewStatus ?? 'schoolReviewStatus.none')}
                         </td>
                       )}
                       <td className="px-4 py-3">{item.watchMinutes || item.qualifiedMinutes}</td>

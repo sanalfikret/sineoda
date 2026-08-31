@@ -1,8 +1,12 @@
 import { useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { PlooyLogo } from '../components/PlooyLogo'
+import { useLocale } from '../i18n/LocaleContext'
 
 export function PaytrCheckoutPage() {
+  const { t } = useTranslation('payment')
+  const { localizePath } = useLocale()
   const [params] = useSearchParams()
   const token = params.get('token') ?? ''
 
@@ -21,9 +25,9 @@ export function PaytrCheckoutPage() {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-plooy-bg px-4 text-center text-white">
         <div>
-          <p>Ödeme oturumu bulunamadı.</p>
-          <Link to="/planlar" className="mt-4 inline-block text-plooy-gold hover:underline">
-            Planlara dön
+          <p>{t('sessionNotFound')}</p>
+          <Link to={localizePath('/planlar')} className="mt-4 inline-block text-plooy-gold hover:underline">
+            {t('backToPlansLower')}
           </Link>
         </div>
       </div>
@@ -38,8 +42,8 @@ export function PaytrCheckoutPage() {
             <PlooyLogo tone="on-dark" className="h-6" />
             <span className="text-sm text-plooy-muted">· PayTR</span>
           </div>
-          <Link to="/planlar" className="text-sm text-plooy-muted hover:text-white">
-            İptal
+          <Link to={localizePath('/planlar')} className="text-sm text-plooy-muted hover:text-white">
+            {t('cancel')}
           </Link>
         </div>
       </header>
@@ -47,7 +51,7 @@ export function PaytrCheckoutPage() {
         <iframe
           src={`https://www.paytr.com/odeme/guvenli/${token}`}
           id="paytriframe"
-          title="PayTR Ödeme"
+          title={t('iframeTitle')}
           className="h-[720px] w-full rounded-2xl border border-white/10 bg-white"
         />
       </main>

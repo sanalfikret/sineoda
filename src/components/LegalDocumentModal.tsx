@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { fetchLegalDocuments } from '../api/client'
 import { LEGAL_DOCUMENTS, type LegalDocument, type LegalSlug } from '../constants/legal'
 
@@ -14,9 +15,12 @@ export function LegalDocumentModal({
   slug,
   open,
   onClose,
-  closeLabel = 'Kapat',
+  closeLabel,
   document,
 }: LegalDocumentModalProps) {
+  const { t } = useTranslation('content')
+  const { t: tc } = useTranslation()
+  const resolvedCloseLabel = closeLabel ?? tc('actions.close')
   const [doc, setDoc] = useState<LegalDocument>(document ?? LEGAL_DOCUMENTS[slug])
 
   useEffect(() => {
@@ -56,18 +60,18 @@ export function LegalDocumentModal({
       >
         <div className="flex shrink-0 items-start justify-between gap-4 border-b border-white/10 px-5 py-4 sm:px-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-plooy-gold">Yasal</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-plooy-gold">{t('legalModal.eyebrow')}</p>
             <h2 id="legal-modal-title" className="mt-1 text-xl font-bold text-white sm:text-2xl">
               {doc.title}
             </h2>
-            <p className="mt-1 text-xs text-plooy-muted">Son güncelleme: {doc.updatedAt}</p>
+            <p className="mt-1 text-xs text-plooy-muted">{t('legalModal.updatedAt', { date: doc.updatedAt })}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="shrink-0 rounded-lg border border-white/10 px-3 py-1.5 text-sm text-white/80 hover:bg-white/5"
           >
-            {closeLabel}
+            {resolvedCloseLabel}
           </button>
         </div>
 
@@ -88,7 +92,7 @@ export function LegalDocumentModal({
             onClick={onClose}
             className="w-full rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg"
           >
-            {closeLabel}
+            {resolvedCloseLabel}
           </button>
         </div>
       </div>

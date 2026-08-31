@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { fetchEpisodes, getProfileId, getToken, resolveMediaUrl, saveWatchProgress } from '../api/client'
 import type { Episode, PlayTarget } from '../types/content'
 import { isSeriesContent } from '../constants/contentTypes'
@@ -37,6 +38,7 @@ async function loadHls() {
 }
 
 export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps) {
+  const { t } = useTranslation('content')
   const videoRef = useRef<HTMLVideoElement>(null)
   const hlsRef = useRef<{ destroy: () => void } | null>(null)
   const lastSavedRef = useRef(0)
@@ -458,7 +460,7 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
       {!youtubeEmbedUrl && !playing && (
         <button
           type="button"
-          aria-label="Oynat"
+          aria-label={t('player.play')}
           onClick={togglePlay}
           className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-plooy-gold/90 text-plooy-bg shadow-xl transition hover:scale-105"
         >
@@ -515,16 +517,16 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
 
         <div className="pointer-events-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <button type="button" aria-label={playing ? 'Duraklat' : 'Oynat'} onClick={togglePlay} className="rounded-full p-2 text-white transition hover:bg-white/10">
+            <button type="button" aria-label={playing ? t('player.pause') : t('player.play')} onClick={togglePlay} className="rounded-full p-2 text-white transition hover:bg-white/10">
               {playing ? <PauseIcon /> : <PlayIcon />}
             </button>
-            <button type="button" aria-label={muted ? 'Sesi aç' : 'Sessize al'} onClick={() => setMuted((value) => !value)} className="rounded-full p-2 text-white transition hover:bg-white/10">
+            <button type="button" aria-label={muted ? t('player.unmute') : t('player.mute')} onClick={() => setMuted((value) => !value)} className="rounded-full p-2 text-white transition hover:bg-white/10">
               {muted ? <MutedIcon /> : <VolumeIcon />}
             </button>
             {hasCaptions && (
               <button
                 type="button"
-                aria-label={captionsOn ? 'Altyazıyı kapat' : 'Altyazıyı aç'}
+                aria-label={captionsOn ? t('player.captionsOff') : t('player.captionsOn')}
                 onClick={() => setCaptionsOn((value) => !value)}
                 className={`rounded-full px-2.5 py-2 text-xs font-semibold transition hover:bg-white/10 ${
                   captionsOn ? 'text-plooy-gold' : 'text-white'

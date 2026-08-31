@@ -1,0 +1,16 @@
+{
+  "loading": "Loading...",
+  "empty": "No published posts yet.",
+  "postNotFound": "Post not found.",
+  "backToJournal": "Back to journal",
+  "journalNav": "Journal",
+  "relatedContent": "Related content",
+  "watch": "Watch",
+  "loginToWatch": "Sign in to watch",
+  "pagination": {
+    "ariaLabel": "Pagination",
+    "summary": "{{total}} posts total · Page {{page}} of {{totalPages}}",
+    "previous": "Previous",
+    "next": "Next"
+  }
+}

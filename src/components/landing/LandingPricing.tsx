@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import { resolveMediaUrl } from '../../api/client'
 import type { LandingCampaignSection } from '../../constants/landingDefaults'
+import { useLocale } from '../../i18n/LocaleContext'
 
 export function LandingPricing({ section }: { section: LandingCampaignSection }) {
+  const { localizePath } = useLocale()
   return (
     <section className="px-5 py-20 sm:px-8">
       <div className="mx-auto max-w-[1400px]">
@@ -24,13 +26,13 @@ export function LandingPricing({ section }: { section: LandingCampaignSection })
               </div>
 
               <Link
-                to={section.ctaPrimaryLink}
+                to={localizePath(section.ctaPrimaryLink)}
                 className="mt-8 inline-flex rounded-md bg-white px-8 py-3.5 text-sm font-bold text-black transition hover:bg-white/90"
               >
                 {section.ctaPrimary}
               </Link>
               <Link
-                to={section.ctaSecondaryLink}
+                to={localizePath(section.ctaSecondaryLink)}
                 className="ml-4 inline-flex text-sm font-semibold text-white/70 underline-offset-4 hover:text-white hover:underline"
               >
                 {section.ctaSecondary}

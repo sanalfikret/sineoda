@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
+import { Trans, useTranslation } from 'react-i18next'
 import { fetchFilmSchools, uploadStudentId } from '../../api/client'
 import { CreatorAuthLayout } from '../../components/creator/CreatorAuthLayout'
 import { PlooyLogo } from '../../components/PlooyLogo'
 import { useAuth } from '../../context/AuthContext'
 import { BRAND_STUDENT_CINEMA, BRAND_NAME } from '../../constants/brand'
 import { CREATOR_LEGAL_TERMS } from '../../constants/creatorLegal'
+import { useLocale } from '../../i18n/LocaleContext'
 import { groupSchoolsByUniversity, splitSchoolName } from '../../utils/filmSchools'
 
 export function CreatorRegisterPage() {
+  const { t } = useTranslation('creator')
+  const { localizePath } = useLocale()
   const { creatorSignup, isCreator, isLoading } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -40,7 +44,7 @@ export function CreatorRegisterPage() {
   const groupedSchools = useMemo(() => groupSchoolsByUniversity(schools), [schools])
 
   if (!isLoading && isCreator) {
-    return <Navigate to="/creator" replace />
+    return <Navigate to={localizePath('/creator')} replace />
   }
 
   const handleStudentIdChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -52,27 +56,27 @@ export function CreatorRegisterPage() {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     if (!acceptLegal) {
-      setError('Yasal şartları kabul etmelisiniz.')
+      setError(t('legalRequired'))
       return
     }
     if (isStudentProgram && !schoolId) {
-      setError('Sinema okulunuzu seçmelisiniz.')
+      setError(t('schoolRequired'))
       return
     }
     if (isStudentProgram && !phone.trim()) {
-      setError('Telefon numaranızı girmelisiniz.')
+      setError(t('phoneRequired'))
       return
     }
     if (isStudentProgram && !projectCrew.trim()) {
-      setError('Yönetmen ve yapım ekibi bilgisini girmelisiniz.')
+      setError(t('crewRequired'))
       return
     }
     if (isStudentProgram && !filmLink.trim()) {
-      setError('Filminizin izlenebilir linkini girmelisiniz.')
+      setError(t('filmLinkRequired'))
       return
     }
     if (isStudentProgram && !studentIdFile) {
-      setError('Öğrenci kimliği yüklemeniz zorunludur.')
+      setError(t('studentIdRequired'))
       return
     }
     setError('')
@@ -97,9 +101,9 @@ export function CreatorRegisterPage() {
         filmLink: isStudentProgram ? filmLink : undefined,
         studentIdFileUrl,
       })
-      navigate('/creator/odeme?checkout=1', { replace: true })
+      navigate(`${localizePath('/creator/odeme')}?checkout=1`, { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Kayıt başarısız.')
+      setError(err instanceof Error ? err.message : t('registerFailed'))
     } finally {
       setLoading(false)
     }
@@ -113,12 +117,12 @@ export function CreatorRegisterPage() {
           <PlooyLogo tone="on-dark" className="h-8" />
           <div>
             <h1 className="text-2xl font-bold text-white">
-              {isStudentProgram ? 'Genç Sinema Başvurusu' : 'Yapımcı Kaydı'}
+              {isStudentProgram ? t('studentRegisterTitle') : t('registerTitle')}
             </h1>
             <p className="text-sm text-plooy-muted">
               {isStudentProgram
-                ? 'Mezun veya öğrenci projenizi yüklemek için hesap oluşturun'
-                : `Bağımsız sinemanızı ${BRAND_NAME}'da yayınlayın — yapımcı üyeliği otomatik açılır, film onayı admin tarafından verilir`}
+                ? t('studentRegisterSubtitle')
+                : t('registerSubtitle', { brand: BRAND_NAME })}
             </p>
           </div>
         </div>
@@ -138,14 +142,14 @@ export function CreatorRegisterPage() {
         <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-white/10 bg-[#11141c] p-6 sm:p-8">
           {isStudentProgram && (
             <label className="block">
-              <span className="mb-1.5 block text-sm text-white/90">Sinema okulunuz</span>
+              <span className="mb-1.5 block text-sm text-white/90">{t('schoolLabel')}</span>
               <select
                 required
                 value={schoolId}
                 onChange={(event) => setSchoolId(event.target.value)}
                 className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-emerald-400"
               >
-                <option value="">Okul seçin</option>
+                <option value="">{t('selectSchool')}</option>
                 {groupedSchools.map((group) => (
                   <optgroup key={group.university} label={group.university}>
                     {group.schools.map((school) => {
@@ -164,7 +168,7 @@ export function CreatorRegisterPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-1.5 block text-sm text-white/90">Ad Soyad</span>
+              <span className="mb-1.5 block text-sm text-white/90">{t('fullName')}</span>
               <input
                 required
                 value={name}
@@ -174,7 +178,7 @@ export function CreatorRegisterPage() {
             </label>
             <label className="block">
               <span className="mb-1.5 block text-sm text-white/90">
-                {isStudentProgram ? 'Proje / yapım adı' : 'Stüdyo / Yapım Adı'}
+                {isStudentProgram ? t('projectName') : t('studioName')}
               </span>
               <input
                 required
@@ -188,52 +192,45 @@ export function CreatorRegisterPage() {
           {isStudentProgram && (
             <>
               <label className="block">
-                <span className="mb-1.5 block text-sm text-white/90">Telefon</span>
+                <span className="mb-1.5 block text-sm text-white/90">{t('phone')}</span>
                 <input
                   type="tel"
                   required
                   value={phone}
                   onChange={(event) => setPhone(event.target.value)}
-                  placeholder="05XX XXX XX XX"
+                  placeholder={t('phonePlaceholder')}
                   className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-emerald-400"
                 />
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-sm text-white/90">
-                  Yönetmen ve yapım ekibi
-                </span>
+                <span className="mb-1.5 block text-sm text-white/90">{t('projectCrew')}</span>
                 <textarea
                   required
                   rows={4}
                   value={projectCrew}
                   onChange={(event) => setProjectCrew(event.target.value)}
-                  placeholder={'Yönetmen: ...\nYapımcı: ...\nGörüntü yönetmeni: ...\nKurgu: ...'}
+                  placeholder={t('projectCrewPlaceholder')}
                   className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-emerald-400"
                 />
-                <span className="mt-1.5 block text-xs text-white/40">
-                  Her satıra bir isim ve rol yazabilirsiniz.
-                </span>
+                <span className="mt-1.5 block text-xs text-white/40">{t('projectCrewHint')}</span>
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-sm text-white/90">Film linki</span>
+                <span className="mb-1.5 block text-sm text-white/90">{t('filmLink')}</span>
                 <input
                   type="url"
                   required
                   value={filmLink}
                   onChange={(event) => setFilmLink(event.target.value)}
-                  placeholder="https://vimeo.com/... veya Google Drive / WeTransfer"
+                  placeholder={t('filmLinkPlaceholder')}
                   className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-emerald-400"
                 />
-                <span className="mt-1.5 block text-xs text-white/40">
-                  Filminizin izlenebilir bağlantısını paylaşın. Vimeo, YouTube (gizli), Google Drive veya WeTransfer
-                  kabul edilir.
-                </span>
+                <span className="mt-1.5 block text-xs text-white/40">{t('filmLinkHint')}</span>
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-sm text-white/90">Öğrenci kimliği</span>
+                <span className="mb-1.5 block text-sm text-white/90">{t('studentId')}</span>
                 <input
                   type="file"
                   required
@@ -244,15 +241,13 @@ export function CreatorRegisterPage() {
                 {studentIdPreview && (
                   <span className="mt-1.5 block text-xs text-emerald-300/80">{studentIdPreview}</span>
                 )}
-                <span className="mt-1.5 block text-xs text-white/40">
-                  Öğrenci veya mezun olduğunuzu gösteren kimlik kartı fotoğrafı veya PDF (en fazla 10 MB).
-                </span>
+                <span className="mt-1.5 block text-xs text-white/40">{t('studentIdHint')}</span>
               </label>
             </>
           )}
 
           <label className="block">
-            <span className="mb-1.5 block text-sm text-white/90">E-posta</span>
+            <span className="mb-1.5 block text-sm text-white/90">{t('email')}</span>
             <input
               type="email"
               required
@@ -263,7 +258,7 @@ export function CreatorRegisterPage() {
           </label>
 
           <label className="block">
-            <span className="mb-1.5 block text-sm text-white/90">Şifre (en az 6 karakter)</span>
+            <span className="mb-1.5 block text-sm text-white/90">{t('passwordHint')}</span>
             <input
               type="password"
               required
@@ -275,7 +270,7 @@ export function CreatorRegisterPage() {
           </label>
 
           <label className="block">
-            <span className="mb-1.5 block text-sm text-white/90">Kısa biyografi (isteğe bağlı)</span>
+            <span className="mb-1.5 block text-sm text-white/90">{t('bioOptional')}</span>
             <textarea
               rows={3}
               value={bio}
@@ -286,13 +281,16 @@ export function CreatorRegisterPage() {
 
           {!isStudentProgram && (
             <div className="rounded-xl border border-plooy-gold/25 bg-plooy-gold/5 px-4 py-4 text-sm text-white/85">
-              Kayıt sonrası <strong className="text-plooy-gold">₺69</strong> yapımcı başvuru ücreti
-              ödenir. Üyeliğiniz otomatik onaylanır; filminizin yayına alınması admin incelemesine tabidir.
+              <Trans
+                ns="creator"
+                i18nKey="feeNotice"
+                components={{ strong: <strong className="text-plooy-gold" /> }}
+              />
             </div>
           )}
 
           <div className="rounded-xl border border-white/10 bg-[#0d0f14] p-4">
-            <p className="text-sm font-medium text-white">Yasal şartlar ve sorumluluk beyanı</p>
+            <p className="text-sm font-medium text-white">{t('legalTitle')}</p>
             <pre className="mt-3 max-h-48 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-plooy-muted">
               {CREATOR_LEGAL_TERMS}
             </pre>
@@ -303,10 +301,7 @@ export function CreatorRegisterPage() {
                 onChange={(event) => setAcceptLegal(event.target.checked)}
                 className="mt-1 h-4 w-4 rounded border-white/20 accent-plooy-gold"
               />
-              <span className="text-sm text-white/90">
-                Filminin bana ait olduğunu belgeleyeceğimi, tüm yasal sorumluluğun bana ait olduğunu
-                ve gelir paylaşımı koşullarının yapımcı anlaşmasında belirtildiğini kabul ediyorum.
-              </span>
+              <span className="text-sm text-white/90">{t('legalAccept')}</span>
             </label>
           </div>
 
@@ -320,17 +315,17 @@ export function CreatorRegisterPage() {
             }`}
           >
             {loading
-              ? 'Kayıt oluşturuluyor...'
+              ? t('creatingAccount')
               : isStudentProgram
                 ? BRAND_STUDENT_CINEMA.registerCta
-                : 'Yapımcı Hesabı Oluştur'}
+                : t('createAccount')}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-plooy-muted">
-          Zaten hesabınız var mı?{' '}
-          <Link to="/creator/giris" className="text-plooy-gold hover:underline">
-            Giriş yap
+          {t('hasAccount')}{' '}
+          <Link to={localizePath('/creator/giris')} className="text-plooy-gold hover:underline">
+            {t('loginLink')}
           </Link>
         </p>
       </div>

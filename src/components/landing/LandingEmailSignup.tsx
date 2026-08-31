@@ -1,15 +1,19 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import type { LandingSectionsConfig } from '../../constants/landingDefaults'
+import { useLocale } from '../../i18n/LocaleContext'
 
 export function LandingEmailSignup({ section }: { section: LandingSectionsConfig['emailSignup'] }) {
+  const { t } = useTranslation('landing')
+  const { localizePath } = useLocale()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
     const query = email.trim() ? `?email=${encodeURIComponent(email.trim())}` : ''
-    navigate(`/kayit${query}`)
+    navigate(`${localizePath('/kayit')}${query}`)
   }
 
   return (
@@ -26,7 +30,7 @@ export function LandingEmailSignup({ section }: { section: LandingSectionsConfig
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            placeholder="E-posta adresin"
+            placeholder={t('emailSignup.placeholder')}
             className="h-14 flex-1 rounded-md border border-white/20 bg-black/50 px-4 text-base text-white outline-none backdrop-blur-sm placeholder:text-white/40 focus:border-plooy-gold"
           />
           <button

@@ -1,10 +1,14 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { CreatorAuthLayout } from '../../components/creator/CreatorAuthLayout'
 import { PlooyLogo } from '../../components/PlooyLogo'
 import { useAuth } from '../../context/AuthContext'
+import { useLocale } from '../../i18n/LocaleContext'
 
 export function CreatorLoginPage() {
+  const { t } = useTranslation('creator')
+  const { localizePath } = useLocale()
   const { creatorLogin, isCreator, isLoading } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
@@ -13,7 +17,7 @@ export function CreatorLoginPage() {
   const [loading, setLoading] = useState(false)
 
   if (!isLoading && isCreator) {
-    return <Navigate to="/creator" replace />
+    return <Navigate to={localizePath('/creator')} replace />
   }
 
   const handleSubmit = async (event: FormEvent) => {
@@ -22,9 +26,9 @@ export function CreatorLoginPage() {
     setLoading(true)
     try {
       await creatorLogin(email, password)
-      navigate('/creator', { replace: true })
+      navigate(localizePath('/creator'), { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Giriş başarısız.')
+      setError(err instanceof Error ? err.message : t('loginFailed'))
     } finally {
       setLoading(false)
     }
@@ -39,8 +43,8 @@ export function CreatorLoginPage() {
 
         <div className="rounded-2xl border border-white/10 bg-[#11141c] p-6 sm:p-8">
           <div className="mb-6 text-center">
-            <h1 className="text-xl font-bold text-white">Yapımcı Girişi</h1>
-            <p className="mt-1 text-sm text-plooy-muted">Plooy Creator Paneli</p>
+            <h1 className="text-xl font-bold text-white">{t('loginTitle')}</h1>
+            <p className="mt-1 text-sm text-plooy-muted">{t('loginSubtitle')}</p>
           </div>
 
           {error && (
@@ -51,7 +55,7 @@ export function CreatorLoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <label className="block">
-              <span className="mb-1.5 block text-sm text-white/90">E-posta</span>
+              <span className="mb-1.5 block text-sm text-white/90">{t('email')}</span>
               <input
                 type="email"
                 required
@@ -61,7 +65,7 @@ export function CreatorLoginPage() {
               />
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-sm text-white/90">Şifre</span>
+              <span className="mb-1.5 block text-sm text-white/90">{t('password')}</span>
               <input
                 type="password"
                 required
@@ -75,14 +79,14 @@ export function CreatorLoginPage() {
               disabled={loading}
               className="w-full rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg disabled:opacity-60"
             >
-              {loading ? 'Giriş yapılıyor...' : 'Panele Gir'}
+              {loading ? t('loggingIn') : t('enterPanel')}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-plooy-muted">
-            Hesabınız yok mu?{' '}
-            <Link to="/creator/kayit" className="text-plooy-gold hover:underline">
-              Yapımcı kaydı
+            {t('noAccount')}{' '}
+            <Link to={localizePath('/creator/kayit')} className="text-plooy-gold hover:underline">
+              {t('registerLink')}
             </Link>
           </p>
         </div>

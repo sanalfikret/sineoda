@@ -1,8 +1,10 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useLocale } from '../../i18n/LocaleContext'
 
 export function CreatorRoute({ children }: { children?: React.ReactNode }) {
   const { user, isLoading, isCreator } = useAuth()
+  const { localizePath } = useLocale()
 
   if (isLoading) {
     return (
@@ -13,7 +15,7 @@ export function CreatorRoute({ children }: { children?: React.ReactNode }) {
   }
 
   if (!user || !isCreator) {
-    return <Navigate to="/creator/giris" replace />
+    return <Navigate to={localizePath('/creator/giris')} replace />
   }
 
   return children ?? <Outlet />

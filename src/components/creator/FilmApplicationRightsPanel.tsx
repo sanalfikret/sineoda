@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+import i18n from '../../i18n'
 import { CREATOR_DOC_TYPES } from '../../constants/creatorLegal'
 import {
   FILM_LEGAL_DECLARATIONS,
@@ -33,14 +35,13 @@ export function FilmApplicationRightsPanel({
   onUploadDocument,
   onRemoveDocument,
 }: FilmApplicationRightsPanelProps) {
+  const { t } = useTranslation('creator')
+
   return (
     <div className="space-y-6 rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
       <div>
-        <h3 className="text-base font-semibold text-amber-100">Yönetmen ve yapımcı — hak beyanı</h3>
-        <p className="mt-1 text-sm text-plooy-muted">
-          Yönetmen ve yapımcı olarak telif haklarınızı beyan edin; her kategori için destekleyici belge
-          yükleyin (PDF veya görsel). Tüm yasal sorumluluk size aittir.
-        </p>
+        <h3 className="text-base font-semibold text-amber-100">{t('rights.title')}</h3>
+        <p className="mt-1 text-sm text-plooy-muted">{t('rights.subtitle')}</p>
       </div>
 
       <div className="space-y-4">
@@ -68,10 +69,10 @@ export function FilmApplicationRightsPanel({
                       rel="noreferrer"
                       className="text-sm text-plooy-gold hover:underline"
                     >
-                      Belge yüklendi — görüntüle
+                      {t('rights.docUploaded')}
                     </a>
                   ) : (
-                    <p className="text-xs text-red-300/80">Belge gerekli</p>
+                    <p className="text-xs text-red-300/80">{t('rights.docRequired')}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
@@ -81,11 +82,15 @@ export function FilmApplicationRightsPanel({
                       onClick={() => onRemoveDocument(uploaded.id)}
                       className="text-xs text-red-400 hover:text-red-300"
                     >
-                      Kaldır
+                      {t('rights.remove')}
                     </button>
                   )}
                   <label className="cursor-pointer rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/5">
-                    {uploadingDocType === entry.docType ? 'Yükleniyor…' : uploaded ? 'Değiştir' : 'Belge yükle'}
+                    {uploadingDocType === entry.docType
+                      ? t('rights.uploading')
+                      : uploaded
+                        ? t('rights.replace')
+                        : t('rights.uploadDoc')}
                     <input
                       type="file"
                       accept=".pdf,image/*"
@@ -106,7 +111,7 @@ export function FilmApplicationRightsPanel({
       </div>
 
       <div className="space-y-2 border-t border-white/10 pt-4">
-        <p className="text-sm font-medium text-white">Yasal uygunluk beyanları</p>
+        <p className="text-sm font-medium text-white">{t('rights.legalDeclarations')}</p>
         {FILM_LEGAL_DECLARATIONS.map((entry) => (
           <label key={entry.id} className="flex cursor-pointer items-start gap-3 rounded-lg px-1 py-1.5">
             <input
@@ -140,13 +145,15 @@ export function missingApplicationMessage(
   applicationDocs: ApplicationDocument[],
 ) {
   for (const entry of FILM_RIGHTS_CATEGORIES) {
-    if (!rightsDeclaration[entry.id]) return `${entry.docLabel} için beyanı onaylayın.`
+    if (!rightsDeclaration[entry.id]) {
+      return i18n.t('creator:validation.approveDeclaration', { label: entry.docLabel })
+    }
     if (!applicationDocs.some((doc) => doc.docType === entry.docType)) {
-      return `${entry.docLabel} yükleyin.`
+      return i18n.t('creator:validation.uploadDocument', { label: entry.docLabel })
     }
   }
   for (const entry of FILM_LEGAL_DECLARATIONS) {
-    if (!rightsDeclaration[entry.id]) return 'Tüm yasal uygunluk beyanlarını onaylayın.'
+    if (!rightsDeclaration[entry.id]) return i18n.t('creator:validation.approveLegal')
   }
   return null
 }

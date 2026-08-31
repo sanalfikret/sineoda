@@ -1,0 +1,102 @@
+{
+  "hero": {
+    "featured": "Featured",
+    "newBadge": "NEW",
+    "verticalSeries": "Vertical Series",
+    "play": "Play",
+    "playVertical": "Watch Vertical",
+    "trailerAndDetails": "Trailer & Details",
+    "details": "Details"
+  },
+  "paywall": {
+    "eyebrow": "Subscription required",
+    "title": "Keep watching",
+    "body": "You need an active Plooy subscription to watch this content. Choose a student (₺49/mo) or standard (₺69/mo) plan and complete payment.",
+    "viewPlans": "View Plans"
+  },
+  "search": {
+    "ariaLabel": "Search content",
+    "placeholder": "Search films, series, or genres...",
+    "close": "Close",
+    "allTypes": "All",
+    "allGenres": "All genres",
+    "allYears": "All years",
+    "resultsCount": "{{count}} results found",
+    "noResults": "No results found",
+    "noResultsHint": "Try a different search term or filter."
+  },
+  "detail": {
+    "back": "Back",
+    "newBadge": "NEW",
+    "vertical": "Vertical",
+    "seasonsEpisodes": "{{seasons}} Seasons · {{episodes}} Episodes",
+    "kidsBlocked": "This content is not suitable for kids profiles ({{rating}}).",
+    "resumeSeries": "Continue · S{{season}} E{{episode}}",
+    "resumeFilm": "Continue from {{time}}",
+    "startVertical": "Start Vertical Watch",
+    "playFirstEpisode": "Play Episode 1",
+    "play": "Play",
+    "playVertical": "Watch Vertical",
+    "noVideo": "No video has been added for this content yet.",
+    "tabOverview": "Overview",
+    "tabDetails": "Details",
+    "episodesCount": "Episodes ({{count}})",
+    "creditsHeading": "Cast & Crew",
+    "directors": "Directors",
+    "producers": "Producers",
+    "cast": "Cast",
+    "school": "School",
+    "studio": "Studio",
+    "audioLanguages": "Audio Languages",
+    "subtitles": "Subtitles",
+    "structure": "Structure",
+    "relatedContent": "Related content",
+    "watch": "Watch",
+    "loginToWatch": "Sign in to watch",
+    "feedback": "Feedback",
+    "feedbackCta": "Send feedback",
+    "feedbackSubject": "{{brand}} feedback: {{title}}",
+    "resumeMinutes": "{{mins}} min"
+  },
+  "actions": {
+    "toolbar": "Content actions",
+    "inWatchlist": "In My List",
+    "addToWatchlist": "Add to My List",
+    "like": "Like",
+    "dislike": "Dislike",
+    "share": "Share",
+    "watchlistFailed": "Could not update list."
+  },
+  "share": {
+    "menuAria": "Share options",
+    "title": "Share",
+    "copied": "Link copied — choose a platform",
+    "preparing": "Preparing link...",
+    "otherApps": "Other apps",
+    "copyAgain": "Copy link again"
+  },
+  "player": {
+    "back": "Back",
+    "play": "Play",
+    "pause": "Pause",
+    "unmute": "Unmute",
+    "mute": "Mute",
+    "captionsOn": "Turn on captions",
+    "captionsOff": "Turn off captions",
+    "nextEpisode": "Next Episode",
+    "nextEpisodeCountdown": "Starting in {{count}} seconds",
+    "nextEpisodePlay": "Play now",
+    "nextEpisodeCancel": "Cancel",
+    "jingleAria": "Plooy intro"
+  },
+  "rating": {
+    "general": "General",
+    "generalAudience": "Suitable for general audiences",
+    "ageAndUp": "Suitable for ages {{age}} and up",
+    "ariaLabel": "Age rating: {{badge}}"
+  },
+  "playbackGuard": {
+    "kidsBlockedTitle": "Kids profile",
+    "kidsBlockedBody": "This content is not suitable for kids profiles."
+  }
+}

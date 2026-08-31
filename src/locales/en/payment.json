@@ -1,0 +1,14 @@
+{
+  "successTitle": "Payment successful",
+  "successViewerBody": "Your subscription is active. Choose a profile and start watching.",
+  "successCreatorBody": "Your creator application fee was received. You can now submit films; publishing is subject to admin review.",
+  "selectProfile": "Choose Profile and Watch",
+  "goToCreatorPanel": "Go to Creator Dashboard",
+  "failTitle": "Payment not completed",
+  "failBody": "The transaction was cancelled or failed. You can try again.",
+  "backToPlans": "Back to Plans",
+  "sessionNotFound": "Payment session not found.",
+  "backToPlansLower": "Back to plans",
+  "cancel": "Cancel",
+  "iframeTitle": "PayTR Payment"
+}

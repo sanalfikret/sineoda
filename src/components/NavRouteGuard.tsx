@@ -2,6 +2,8 @@ import { useMemo, type ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { SITE_NAV_ITEMS, type SiteNavId } from '../constants/siteNav'
 import { useContent } from '../context/ContentContext'
+import { useLocale } from '../i18n/LocaleContext'
+import { toTrPathname } from '../i18n/paths'
 import { navIdForBrowseRoute } from '../utils/navVisibility'
 
 interface NavRouteGuardProps {
@@ -34,10 +36,12 @@ function resolveNavId(
 export function NavRouteGuard({ children, ...props }: NavRouteGuardProps) {
   const location = useLocation()
   const { hiddenNavIds, isLoading } = useContent()
+  const { localizePath } = useLocale()
+  const trPath = toTrPathname(location.pathname)
 
   const navId = useMemo(
-    () => resolveNavId(location.pathname, props),
-    [location.pathname, props.contentType, props.verticalOnly, props.studentCinemaOnly, props.cekimNotlariOnly, props.classicsOnly],
+    () => resolveNavId(trPath, props),
+    [trPath, props.contentType, props.verticalOnly, props.studentCinemaOnly, props.cekimNotlariOnly, props.classicsOnly],
   )
 
   if (isLoading) {
@@ -49,7 +53,7 @@ export function NavRouteGuard({ children, ...props }: NavRouteGuardProps) {
   }
 
   if (navId && hiddenNavIds.includes(navId)) {
-    return <Navigate to="/" replace />
+    return <Navigate to={localizePath('/')} replace />
   }
 
   return children

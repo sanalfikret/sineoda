@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom'
 import type { LandingSectionsConfig } from '../../constants/landingDefaults'
+import { useLocale } from '../../i18n/LocaleContext'
 
 export function LandingManifesto({
   section,
 }: {
   section: LandingSectionsConfig['manifesto']
 }) {
+  const { localizePath } = useLocale()
   return (
     <section className="border-y border-white/[0.06] bg-plooy-surface px-5 py-20 sm:px-8 sm:py-24">
       <div className="mx-auto max-w-[1400px]">
@@ -31,7 +33,7 @@ export function LandingManifesto({
             {section.body}
           </p>
           <Link
-            to={section.ctaLink}
+            to={localizePath(section.ctaLink)}
             className="mt-8 inline-flex h-12 items-center rounded-md bg-plooy-accent px-8 text-sm font-semibold text-plooy-bg transition hover:brightness-105"
           >
             {section.ctaLabel}

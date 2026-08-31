@@ -1,0 +1,20 @@
+{
+  "prompt": {
+    "title": "Install Plooy on your phone",
+    "descriptionNative": "No app store needed — install and open it from your home screen like an app.",
+    "descriptionIos": "Install with Safari for a full-screen experience without the browser bar.",
+    "descriptionAndroid": "Install with Chrome; an app icon appears on your home screen.",
+    "install": "Install",
+    "later": "Later"
+  },
+  "button": {
+    "install": "Install",
+    "menuInstall": "Install"
+  },
+  "statusCard": {
+    "title": "Mobile app",
+    "installed": "Plooy is installed on your phone. Open it from your home screen like an app.",
+    "notInstalled": "Install Plooy on your phone as an app — no store or APK required.",
+    "install": "Install"
+  }
+}

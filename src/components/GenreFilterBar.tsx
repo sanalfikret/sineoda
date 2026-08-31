@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { BROWSE_GENRES, type BrowseGenre } from '../constants/genres'
 
 interface GenreFilterBarProps {
@@ -7,7 +8,8 @@ interface GenreFilterBarProps {
 }
 
 export function GenreFilterBar({ activeGenre, genres = BROWSE_GENRES, onChange }: GenreFilterBarProps) {
-  const chips = [{ id: null, label: 'Tümü' }, ...genres.map((g) => ({ id: g, label: g }))]
+  const { t } = useTranslation('browse')
+  const chips = [{ id: null, label: t('all') }, ...genres.map((g) => ({ id: g, label: g }))]
 
   return (
     <div className="sticky top-[4.5rem] z-30 -mx-4 border-b border-white/5 bg-plooy-bg/95 px-4 py-3 backdrop-blur-md sm:top-20 sm:-mx-6 sm:px-6 lg:px-8">

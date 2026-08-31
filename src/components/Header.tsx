@@ -1,26 +1,42 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { fetchUnreadMessageCount, prefetchCekimNotlariSections } from '../api/client'
 import { SITE_NAV_ITEMS, EXPLORE_NAV_IDS, PRIMARY_NAV_IDS, type SiteNavId } from '../constants/siteNav'
 import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
 import { useSearchUI } from '../context/SearchContext'
+import { useLocale } from '../i18n/LocaleContext'
+import { toTrPathname } from '../i18n/paths'
 import { ProfileAvatar } from './ProfileAvatar'
 import { PlooyLogo } from './PlooyLogo'
 import { InstallAppMenuItem } from './InstallAppButton'
+import { LanguageSwitcher } from './LanguageSwitcher'
 import { PROFILE_AVATARS } from '../types/auth'
 
-const creatorNavItems = [
-  { label: 'Yapımcı Paneli', to: '/creator', match: (path: string) => path.startsWith('/creator') },
-  { label: 'Ana Site', to: '/', match: (path: string) => path === '/' },
-]
+const NAV_I18N: Record<SiteNavId, { label: string; shortLabel?: string }> = {
+  home: { label: 'nav.home' },
+  diziler: { label: 'nav.diziler' },
+  filmler: { label: 'nav.filmler' },
+  belgeseller: { label: 'nav.belgeseller', shortLabel: 'nav.belgeselShort' },
+  standup: { label: 'nav.standup' },
+  klasikler: { label: 'nav.klasikler' },
+  dikey: { label: 'nav.dikey', shortLabel: 'nav.dikeyShort' },
+  gencSinema: { label: 'nav.gencSinema', shortLabel: 'nav.gencSinemaShort' },
+  cekimNotlari: { label: 'nav.cekimNotlari', shortLabel: 'nav.cekimShort' },
+  listem: { label: 'nav.listem' },
+  dergi: { label: 'nav.dergi' },
+}
 
 export function Header() {
+  const { t } = useTranslation()
   const { user, activeProfile, logout, isCreator, clearActiveProfile } = useAuth()
   const { hiddenNavIds } = useContent()
   const { openSearch } = useSearchUI()
+  const { localizePath } = useLocale()
   const navigate = useNavigate()
   const location = useLocation()
+  const trPath = toTrPathname(location.pathname)
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
@@ -59,6 +75,22 @@ export function Header() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  const creatorNavItems = useMemo(
+    () => [
+      {
+        label: t('nav.creatorPanel'),
+        to: localizePath('/creator'),
+        match: (path: string) => toTrPathname(path).startsWith('/creator') && toTrPathname(path) !== '/creator/giris',
+      },
+      {
+        label: t('nav.mainSite'),
+        to: localizePath('/'),
+        match: (path: string) => toTrPathname(path) === '/',
+      },
+    ],
+    [localizePath, t],
+  )
+
   const navItems = useMemo(() => {
     if (isCreator) {
       return creatorNavItems.map((item) => ({
@@ -68,15 +100,18 @@ export function Header() {
         isStudentCinema: false,
       }))
     }
-    return SITE_NAV_ITEMS.filter((item) => !hiddenNavIds.includes(item.id)).map((item) => ({
-      id: item.id,
-      label: item.label,
-      shortLabel: item.shortLabel,
-      to: item.path,
-      match: item.match,
-      isStudentCinema: item.id === 'gencSinema',
-    }))
-  }, [isCreator, hiddenNavIds])
+    return SITE_NAV_ITEMS.filter((item) => !hiddenNavIds.includes(item.id)).map((item) => {
+      const keys = NAV_I18N[item.id]
+      return {
+        id: item.id,
+        label: t(keys.label),
+        shortLabel: keys.shortLabel ? t(keys.shortLabel) : undefined,
+        to: localizePath(item.path),
+        match: item.match,
+        isStudentCinema: item.id === 'gencSinema',
+      }
+    })
+  }, [isCreator, hiddenNavIds, creatorNavItems, localizePath, t])
 
   const primaryNavItems = useMemo(
     () => (isCreator ? navItems : navItems.filter((item) => PRIMARY_NAV_IDS.includes(item.id as SiteNavId))),
@@ -89,7 +124,7 @@ export function Header() {
   )
 
   const showListemLink = !isCreator && !hiddenNavIds.includes('listem')
-  const isActive = (match: (path: string) => boolean) => match(location.pathname)
+  const isActive = (match: (path: string) => boolean) => match(trPath)
   const exploreActive = exploreNavItems.some((item) => isActive(item.match))
 
   const navLinkClass = (item: (typeof navItems)[number], active: boolean) =>
@@ -103,6 +138,8 @@ export function Header() {
           : 'text-white/75 hover:bg-white/5 hover:text-white'
     }`
 
+  const homePath = localizePath(isCreator ? '/creator' : '/')
+
   return (
     <header
       className={`safe-top fixed inset-x-0 top-0 z-40 transition-colors duration-300 ${
@@ -113,7 +150,7 @@ export function Header() {
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2.5 sm:px-6 sm:py-3 lg:px-8 tv:py-5">
         <div className="flex min-w-0 items-center gap-2 sm:gap-4 lg:gap-8">
-          <PlooyLogo tone="on-dark" className="h-7 sm:h-8 tv:h-9" linked linkTo={isCreator ? '/creator' : '/'} />
+          <PlooyLogo tone="on-dark" className="h-7 sm:h-8 tv:h-9" linked linkTo={homePath} />
 
           <nav className="hidden min-w-0 flex-nowrap items-center gap-0.5 md:flex lg:gap-1">
             {primaryNavItems.map((item) => (
@@ -141,7 +178,7 @@ export function Header() {
                       : 'text-white/75 hover:bg-white/5 hover:text-white'
                   }`}
                 >
-                  Keşfet <span className="text-[10px] opacity-70">▾</span>
+                  {t('nav.explore')} <span className="text-[10px] opacity-70">▾</span>
                 </button>
                 {exploreOpen && (
                   <div className="absolute left-0 top-full z-50 mt-1 min-w-[11rem] overflow-hidden rounded-xl border border-white/10 bg-plooy-elevated py-1 shadow-xl">
@@ -173,11 +210,17 @@ export function Header() {
         </div>
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-2 md:gap-3">
+          <LanguageSwitcher className="hidden sm:inline-flex" />
+
           {showMemberInbox && (
             <>
               <Link
-                to="/mesajlar"
-                aria-label={unreadMessages > 0 ? `${unreadMessages} okunmamış mesaj` : 'Mesajlarım'}
+                to={localizePath('/mesajlar')}
+                aria-label={
+                  unreadMessages > 0
+                    ? t('nav.unreadMessages', { count: unreadMessages })
+                    : t('nav.messagesAria')
+                }
                 className="relative rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold sm:hidden tv:p-3"
               >
                 <MessagesIcon />
@@ -188,14 +231,14 @@ export function Header() {
                 )}
               </Link>
               <Link
-                to="/mesajlar"
+                to={localizePath('/mesajlar')}
                 className={`hidden items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold sm:inline-flex lg:px-3 lg:text-sm ${
-                  isActive((path) => path === '/mesajlar')
+                  trPath === '/mesajlar'
                     ? 'bg-white/10 text-white'
                     : 'text-white/75 hover:bg-white/5 hover:text-white'
                 }`}
               >
-                Mesajlarım
+                {t('nav.messages')}
                 {unreadMessages > 0 && (
                   <span className="rounded-full bg-plooy-gold px-1.5 py-0.5 text-[10px] font-bold leading-none text-plooy-bg">
                     {unreadMessages > 9 ? '9+' : unreadMessages}
@@ -207,8 +250,8 @@ export function Header() {
 
           {!isCreator && !user && (
             <Link
-              to="/iletisim"
-              aria-label="İletişim"
+              to={localizePath('/iletisim')}
+              aria-label={t('nav.contact')}
               className="rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold tv:p-3"
             >
               <MessagesIcon />
@@ -218,7 +261,7 @@ export function Header() {
           {!isCreator && (
             <button
               type="button"
-              aria-label="Ara"
+              aria-label={t('nav.search')}
               onClick={openSearch}
               className="rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold tv:p-3"
             >
@@ -228,14 +271,14 @@ export function Header() {
 
           {showListemLink && user && activeProfile && (
             <Link
-              to="/listem"
+              to={localizePath('/listem')}
               className={`hidden whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold sm:inline-flex lg:px-3 lg:text-sm ${
-                isActive((path) => path === '/listem')
+                trPath === '/listem'
                   ? 'bg-white/10 text-white'
                   : 'text-white/75 hover:bg-white/5 hover:text-white'
               }`}
             >
-              Listem
+              {t('nav.listem')}
             </Link>
           )}
 
@@ -248,7 +291,7 @@ export function Header() {
               >
                 {isCreator ? (
                   <span className="hidden max-w-[140px] truncate sm:inline">
-                    {user.creator?.studioName ?? 'Yapımcı'}
+                    {user.creator?.studioName ?? t('nav.creator')}
                   </span>
                 ) : (
                   <>
@@ -269,11 +312,11 @@ export function Header() {
                   {isCreator ? (
                     <>
                       <Link
-                        to="/creator"
+                        to={localizePath('/creator')}
                         className="block px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
                         onClick={() => setUserMenuOpen(false)}
                       >
-                        Yapımcı Paneli
+                        {t('nav.creatorPanel')}
                       </Link>
                       <button
                         type="button"
@@ -281,21 +324,21 @@ export function Header() {
                         onClick={() => {
                           logout()
                           setUserMenuOpen(false)
-                          navigate('/')
+                          navigate(localizePath('/'))
                         }}
                       >
-                        Çıkış Yap
+                        {t('nav.logout')}
                       </button>
                     </>
                   ) : (
                     <>
                       {showMemberInbox && (
                         <Link
-                          to="/mesajlar"
+                          to={localizePath('/mesajlar')}
                           className="flex items-center justify-between px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
                           onClick={() => setUserMenuOpen(false)}
                         >
-                          <span>Mesajlarım</span>
+                          <span>{t('nav.messages')}</span>
                           {unreadMessages > 0 && (
                             <span className="rounded-full bg-plooy-gold px-2 py-0.5 text-xs font-semibold text-plooy-bg">
                               {unreadMessages}
@@ -304,11 +347,11 @@ export function Header() {
                         </Link>
                       )}
                       <Link
-                        to="/hesap"
+                        to={localizePath('/hesap')}
                         className="block px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
                         onClick={() => setUserMenuOpen(false)}
                       >
-                        Hesabım
+                        {t('nav.account')}
                       </Link>
                       <button
                         type="button"
@@ -316,17 +359,17 @@ export function Header() {
                         onClick={() => {
                           clearActiveProfile()
                           setUserMenuOpen(false)
-                          navigate('/profiller')
+                          navigate(localizePath('/profiller'))
                         }}
                       >
-                        Profil Değiştir
+                        {t('nav.switchProfile')}
                       </button>
                       <Link
-                        to="/planlar"
+                        to={localizePath('/planlar')}
                         className="block px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
                         onClick={() => setUserMenuOpen(false)}
                       >
-                        Abonelik
+                        {t('nav.subscription')}
                       </Link>
                       <InstallAppMenuItem onNavigate={() => setUserMenuOpen(false)} />
                       <button
@@ -335,10 +378,10 @@ export function Header() {
                         onClick={() => {
                           logout()
                           setUserMenuOpen(false)
-                          navigate('/')
+                          navigate(localizePath('/'))
                         }}
                       >
-                        Çıkış Yap
+                        {t('nav.logout')}
                       </button>
                     </>
                   )}
@@ -347,16 +390,16 @@ export function Header() {
             </div>
           ) : (
             <Link
-              to="/giris"
+              to={localizePath('/giris')}
               className="hidden rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold sm:inline-flex tv:px-5 tv:py-2.5 tv:text-base"
             >
-              Giriş Yap
+              {t('nav.login')}
             </Link>
           )}
 
           <button
             type="button"
-            aria-label="Menü"
+            aria-label={t('nav.menu')}
             className="rounded-full p-2.5 text-white md:hidden"
             onClick={() => setMenuOpen((open) => !open)}
           >
@@ -367,6 +410,9 @@ export function Header() {
 
       {menuOpen && (
         <nav className="safe-bottom max-h-[calc(100dvh-3.5rem)] overflow-y-auto border-t border-white/10 px-3 py-3 md:hidden">
+          <div className="mb-3 flex justify-end">
+            <LanguageSwitcher />
+          </div>
           <ul className="space-y-1">
             {navItems.map((item) => (
               <li key={item.to}>
@@ -384,22 +430,22 @@ export function Header() {
             {showListemLink && user && activeProfile && (
               <li>
                 <Link
-                  to="/listem"
+                  to={localizePath('/listem')}
                   className="block w-full rounded-lg px-3 py-3.5 text-base font-medium text-white/90 hover:bg-white/5"
                   onClick={() => setMenuOpen(false)}
                 >
-                  Listem
+                  {t('nav.listem')}
                 </Link>
               </li>
             )}
             {showMemberInbox && (
               <li>
                 <Link
-                  to="/mesajlar"
+                  to={localizePath('/mesajlar')}
                   className="flex items-center justify-between rounded-lg px-3 py-3.5 text-base font-medium text-white/90 hover:bg-white/5"
                   onClick={() => setMenuOpen(false)}
                 >
-                  <span>Mesajlarım</span>
+                  <span>{t('nav.messages')}</span>
                   {unreadMessages > 0 && (
                     <span className="rounded-full bg-plooy-gold px-2 py-0.5 text-xs font-semibold text-plooy-bg">
                       {unreadMessages}
@@ -411,11 +457,11 @@ export function Header() {
             {user && !isCreator && (
               <li>
                 <Link
-                  to="/planlar"
+                  to={localizePath('/planlar')}
                   className="block w-full rounded-lg px-3 py-3.5 text-base font-medium text-white/90 hover:bg-white/5"
                   onClick={() => setMenuOpen(false)}
                 >
-                  Abonelik
+                  {t('nav.subscription')}
                 </Link>
               </li>
             )}
@@ -423,20 +469,20 @@ export function Header() {
               <>
                 <li>
                   <Link
-                    to="/iletisim"
+                    to={localizePath('/iletisim')}
                     className="block w-full rounded-lg px-3 py-3.5 text-base font-medium text-white/90 hover:bg-white/5"
                     onClick={() => setMenuOpen(false)}
                   >
-                    Mesaj Gönder
+                    {t('nav.sendMessage')}
                   </Link>
                 </li>
                 <li>
                   <Link
-                    to="/giris"
+                    to={localizePath('/giris')}
                     className="mt-2 block w-full rounded-lg bg-plooy-gold px-3 py-3 text-center text-sm font-semibold text-plooy-bg"
                     onClick={() => setMenuOpen(false)}
                   >
-                    Giriş Yap
+                    {t('nav.login')}
                   </Link>
                 </li>
               </>

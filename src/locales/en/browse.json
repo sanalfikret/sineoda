@@ -1,0 +1,31 @@
+{
+  "diziler": "Series",
+  "filmler": "Films",
+  "belgeseller": "Documentaries",
+  "standup": "Stand-up",
+  "klasikler": "Classics",
+  "dikey": "Vertical Series",
+  "gencSinema": "Student Cinema",
+  "kisaFilmler": "Short Films",
+  "cekimNotlari": "Production Notes",
+  "cekimSectionTitle": "Production Notes",
+  "forYou": "For You",
+  "studentCinemaDesc": "Graduate and student films from film schools — in the Student Cinema selection only.",
+  "cekimNotlariDesc": "Educational videos from industry experts — from set to post-production.",
+  "classicsDesc": "Classic feature films from the Plooy catalog — a selection from cinema history.",
+  "continueWatching": "Continue Watching",
+  "myList": "My List",
+  "noContent": "No content matches this filter.",
+  "loadFailed": "Could not load content.",
+  "collapse": "Collapse",
+  "videoCount": "{{count}} videos",
+  "showAll": "Show all ({{count}} videos)",
+  "sectionEmpty": "No videos added to this section yet.",
+  "contentTypes": {
+    "film": "Film",
+    "dizi": "Series",
+    "belgesel": "Documentary",
+    "kisa-film": "Short Film",
+    "stand-up": "Stand-up"
+  }
+}

@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { uploadProfileAvatar } from '../api/client'
 import { ProfileAvatar } from './ProfileAvatar'
 import { PROFILE_AVATARS } from '../types/auth'
@@ -11,6 +12,7 @@ interface ProfileAvatarPickerProps {
 }
 
 export function ProfileAvatarPicker({ value, onChange, name = '' }: ProfileAvatarPickerProps) {
+  const { t } = useTranslation('account')
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
@@ -21,11 +23,11 @@ export function ProfileAvatarPicker({ value, onChange, name = '' }: ProfileAvata
     if (!file) return
 
     if (!file.type.startsWith('image/')) {
-      setUploadError('Lütfen bir görsel dosyası seç.')
+      setUploadError(t('avatar.invalidImage'))
       return
     }
     if (file.size > 2 * 1024 * 1024) {
-      setUploadError('Görsel en fazla 2 MB olabilir.')
+      setUploadError(t('avatar.tooLarge'))
       return
     }
 
@@ -35,7 +37,7 @@ export function ProfileAvatarPicker({ value, onChange, name = '' }: ProfileAvata
       const url = await uploadProfileAvatar(file)
       onChange(url)
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : 'Fotoğraf yüklenemedi.')
+      setUploadError(err instanceof Error ? err.message : t('avatar.uploadFailed'))
     } finally {
       setUploading(false)
     }
@@ -57,16 +59,16 @@ export function ProfileAvatarPicker({ value, onChange, name = '' }: ProfileAvata
             onClick={() => inputRef.current?.click()}
             className="rounded-lg border border-white/15 px-3 py-2 text-sm hover:bg-white/5 disabled:opacity-60"
           >
-            {uploading ? 'Yükleniyor…' : 'Fotoğraf Yükle'}
+            {uploading ? t('avatar.uploading') : t('avatar.uploadPhoto')}
           </button>
-          <p className="mt-1 text-xs text-plooy-muted">JPG, PNG veya WebP · en fazla 2 MB</p>
+          <p className="mt-1 text-xs text-plooy-muted">{t('avatar.photoHint')}</p>
           {isProfilePhoto(value) && (
             <button
               type="button"
               onClick={() => onChange(PROFILE_AVATARS[0])}
               className="mt-1 text-xs text-plooy-gold hover:underline"
             >
-              Emoji avatar kullan
+              {t('avatar.useEmoji')}
             </button>
           )}
         </div>

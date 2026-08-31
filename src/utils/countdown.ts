@@ -26,8 +26,12 @@ export function getCountdownParts(targetIso: string | null | undefined, now = Da
 }
 
 export function formatLaunchDateTr(iso: string | null | undefined) {
+  return formatLaunchDate(iso, 'tr')
+}
+
+export function formatLaunchDate(iso: string | null | undefined, locale: 'tr' | 'en' = 'tr') {
   if (!iso) return null
-  return new Date(iso).toLocaleString('tr-TR', {
+  return new Date(iso).toLocaleString(locale === 'en' ? 'en-GB' : 'tr-TR', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',

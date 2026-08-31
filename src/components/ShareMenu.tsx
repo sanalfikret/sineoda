@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   buildShareMessage,
   buildShareUrl,
@@ -14,6 +15,7 @@ interface ShareMenuProps {
 }
 
 export function ShareMenu({ contentId, title, onClose }: ShareMenuProps) {
+  const { t } = useTranslation('content')
   const menuRef = useRef<HTMLDivElement>(null)
   const [copied, setCopied] = useState(false)
   const url = buildShareUrl(contentId)
@@ -59,12 +61,12 @@ export function ShareMenu({ contentId, title, onClose }: ShareMenuProps) {
       ref={menuRef}
       className="absolute right-0 top-full z-50 mt-2 w-[min(92vw,280px)] overflow-hidden rounded-xl border border-white/15 bg-[#141820] shadow-2xl"
       role="menu"
-      aria-label="Paylaşım seçenekleri"
+      aria-label={t('share.menuAria')}
     >
       <div className="border-b border-white/10 px-4 py-3">
-        <p className="text-sm font-semibold text-white">Paylaş</p>
+        <p className="text-sm font-semibold text-white">{t('share.title')}</p>
         <p className="mt-0.5 text-xs text-plooy-muted">
-          {copied ? 'Bağlantı kopyalandı — platform seç' : 'Bağlantı hazırlanıyor...'}
+          {copied ? t('share.copied') : t('share.preparing')}
         </p>
       </div>
 
@@ -79,7 +81,7 @@ export function ShareMenu({ contentId, title, onClose }: ShareMenuProps) {
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-plooy-gold/20 text-plooy-gold">
               ↗
             </span>
-            Diğer uygulamalar
+            {t('share.otherApps')}
           </button>
         )}
 
@@ -113,7 +115,7 @@ export function ShareMenu({ contentId, title, onClose }: ShareMenuProps) {
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-base">
             ⧉
           </span>
-          Linki tekrar kopyala
+          {t('share.copyAgain')}
         </button>
       </div>
     </div>

@@ -1,21 +1,34 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { fetchLegalDocuments } from '../api/client'
 import { LEGAL_DOCUMENTS, type LegalDocument, type LegalSlug } from '../constants/legal'
 import { PageFooter } from '../components/PageFooter'
 import { PlooyLogo } from '../components/PlooyLogo'
+import { useLocale } from '../i18n/LocaleContext'
+import { toTrPathname } from '../i18n/paths'
 
 const SLUGS = new Set(Object.keys(LEGAL_DOCUMENTS))
 
-function returnLabel(path: string) {
-  if (path.startsWith('/kayit')) return 'Kayda dön'
-  if (path.startsWith('/giris')) return 'Girişe dön'
-  if (path.startsWith('/creator/kayit')) return 'Başvuruya dön'
-  if (path.startsWith('/hesap')) return 'Hesaba dön'
-  return 'Geri dön'
+type ReturnLabelKey =
+  | 'returnToSignup'
+  | 'returnToLogin'
+  | 'returnToCreatorSignup'
+  | 'returnToAccount'
+  | 'returnBack'
+
+function returnLabelKey(path: string): ReturnLabelKey {
+  const trPath = toTrPathname(path)
+  if (trPath.startsWith('/kayit')) return 'returnToSignup'
+  if (trPath.startsWith('/giris')) return 'returnToLogin'
+  if (trPath.startsWith('/creator/kayit')) return 'returnToCreatorSignup'
+  if (trPath.startsWith('/hesap')) return 'returnToAccount'
+  return 'returnBack'
 }
 
 export function LegalPage() {
+  const { t } = useTranslation('legalShell')
+  const { localizePath } = useLocale()
   const { slug } = useParams<{ slug: string }>()
   const [searchParams] = useSearchParams()
   const returnTo = searchParams.get('geri')
@@ -35,21 +48,21 @@ export function LegalPage() {
   if (!key || !doc) {
     return (
       <div className="min-h-dvh bg-plooy-bg px-4 py-24 text-center text-white sm:px-6">
-        <h1 className="text-2xl font-bold">Sayfa bulunamadı</h1>
+        <h1 className="text-2xl font-bold">{t('notFound')}</h1>
         {returnTo ? (
           <Link to={returnTo} className="mt-4 inline-block text-plooy-gold hover:underline">
-            ← {returnLabel(returnTo)}
+            ← {t(returnLabelKey(returnTo))}
           </Link>
         ) : (
-          <Link to="/" className="mt-4 inline-block text-plooy-gold hover:underline">
-            Ana sayfaya dön
+          <Link to={localizePath('/')} className="mt-4 inline-block text-plooy-gold hover:underline">
+            {t('backHome')}
           </Link>
         )}
       </div>
     )
   }
 
-  const backLabel = returnTo ? returnLabel(returnTo) : 'Ana sayfa'
+  const backLabel = returnTo ? t(returnLabelKey(returnTo)) : t('home')
 
   return (
     <div className="min-h-dvh bg-plooy-bg">
@@ -64,10 +77,10 @@ export function LegalPage() {
             </Link>
           ) : (
             <Link
-              to="/"
+              to={localizePath('/')}
               className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-sm text-white/80 hover:bg-white/5"
             >
-              ← Ana sayfa
+              ← {t('home')}
             </Link>
           )}
           <PlooyLogo tone="on-dark" linked linkTo="/" className="h-7" />
@@ -75,12 +88,12 @@ export function LegalPage() {
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-plooy-gold">Yasal</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-plooy-gold">{t('eyebrow')}</p>
         <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">{doc.title}</h1>
-        <p className="mt-2 text-sm text-plooy-muted">Son güncelleme: {doc.updatedAt}</p>
+        <p className="mt-2 text-sm text-plooy-muted">{t('lastUpdated')} {doc.updatedAt}</p>
 
         {loading ? (
-          <p className="mt-10 text-sm text-plooy-muted">Yükleniyor...</p>
+          <p className="mt-10 text-sm text-plooy-muted">{t('loading')}</p>
         ) : (
           <div className="mt-10 space-y-8">
             {doc.sections.map((section) => (
