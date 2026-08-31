@@ -111,6 +111,10 @@ const GENRE_TITLES: Partial<Record<(typeof FEATURED_BROWSE_GENRES)[number], stri
     'Sahne Işıkları', 'Mikrofon Önünde', 'Kahkaha Sahnesi', 'Komedyen Gecesi', 'Tek Kişilik Show',
     'Gülmek Serbest', 'Son Skeç', 'Perde Arkası', 'Komik Anılar', 'Sahne Tozu',
   ],
+  Klasik: [
+    'Altın Çağ', 'Siyah Beyaz', 'Unutulmaz Kareler', 'Sinema Tarihi', 'Efsane Yapım',
+    'Vefat Eden Yıldız', 'Klasik Aşk', 'Eski İstanbul', 'Yeşilçam', 'Sinema Arşivi',
+  ],
   'Din Temalı': [
     'İman Yolu', 'Kutsal Topraklar', 'Hac Yolculuğu', 'Dualı Günler', 'Manevi Yolculuk',
     'İlahi Işık', 'İbadet Vakti', 'Peygamber Yolu', 'Kutsal Metin', 'Ruhani Huzur',
@@ -155,6 +159,7 @@ function backdropUrl(photoId: string) {
 function pickType(genre: string, index: number): ContentItem['type'] {
   if (genre === 'Belgesel') return 'belgesel'
   if (genre === 'Stand-up') return 'stand-up'
+  if (genre === 'Klasik') return 'film'
   if (index % 3 === 0) return 'dizi'
   return 'film'
 }

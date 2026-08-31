@@ -23,6 +23,7 @@ export const BROWSE_GENRES_EXTRA = [
   'Müzikal',
   'Reality',
   'Yerli',
+  'Klasik',
   'Spor',
 ] as const
 
@@ -71,6 +72,7 @@ export const EDITORIAL_CATEGORY_LABELS = [
   'Popüler Diziler',
   'Belgeseller',
   'Stand-up',
+  'Klasikler',
   'Aile Filmleri',
   'Anime + Animasyon',
   'Dikey Diziler',

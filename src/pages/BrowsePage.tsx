@@ -25,6 +25,7 @@ interface BrowsePageProps {
   verticalOnly?: boolean
   studentCinemaOnly?: boolean
   cekimNotlariOnly?: boolean
+  classicsOnly?: boolean
 }
 
 function BrowseContent({
@@ -33,6 +34,7 @@ function BrowseContent({
   verticalOnly = false,
   studentCinemaOnly = false,
   cekimNotlariOnly = false,
+  classicsOnly = false,
 }: BrowsePageProps) {
   const { openDetail, openPlayer } = useContentUI()
   const location = useLocation()
@@ -52,18 +54,18 @@ function BrowseContent({
   }
 
   useEffect(() => {
-    if (contentType || verticalOnly || cekimNotlariOnly) return
+    if (contentType || verticalOnly || cekimNotlariOnly || classicsOnly) return
     void refresh()
-  }, [contentType, verticalOnly, cekimNotlariOnly, refresh])
+  }, [contentType, verticalOnly, cekimNotlariOnly, classicsOnly, refresh])
 
   useEffect(() => {
     const onFocus = () => {
-      if (contentType || verticalOnly || cekimNotlariOnly) return
+      if (contentType || verticalOnly || cekimNotlariOnly || classicsOnly) return
       void refresh()
     }
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
-  }, [contentType, verticalOnly, cekimNotlariOnly, refresh])
+  }, [contentType, verticalOnly, cekimNotlariOnly, classicsOnly, refresh])
 
   const genreOptions = useMemo(
     () =>
@@ -122,14 +124,15 @@ function BrowseContent({
 
   const browseOptions = useMemo(
     () => ({
-      type: studentCinemaOnly || cekimNotlariOnly ? null : contentType,
-      genre: studentCinemaOnly || cekimNotlariOnly ? null : activeGenre,
-      verticalOnly: studentCinemaOnly || cekimNotlariOnly ? false : verticalOnly,
+      type: studentCinemaOnly || cekimNotlariOnly || classicsOnly ? null : contentType,
+      genre: studentCinemaOnly || cekimNotlariOnly || classicsOnly ? null : activeGenre,
+      verticalOnly: studentCinemaOnly || cekimNotlariOnly || classicsOnly ? false : verticalOnly,
       kidsSafe: Boolean(activeProfile?.isKids),
       studentOnly: studentCinemaOnly,
       cekimNotlariOnly,
+      classicsOnly,
     }),
-    [contentType, activeGenre, verticalOnly, activeProfile?.isKids, studentCinemaOnly, cekimNotlariOnly],
+    [contentType, activeGenre, verticalOnly, activeProfile?.isKids, studentCinemaOnly, cekimNotlariOnly, classicsOnly],
   )
 
   const filteredCatalog = useMemo(() => {
@@ -166,6 +169,9 @@ function BrowseContent({
     if (studentCinemaOnly) {
       return filteredCatalog[0] ?? null
     }
+    if (classicsOnly) {
+      return filteredCatalog[0] ?? null
+    }
     if (activeGenre) {
       return filteredCatalog[0] ?? null
     }
@@ -186,6 +192,7 @@ function BrowseContent({
     activeProfile?.isKids,
     studentCinemaOnly,
     cekimNotlariOnly,
+    classicsOnly,
     rows,
   ])
 
@@ -246,8 +253,8 @@ function BrowseContent({
     : activeGenre
       ? filteredCatalog[0]
       : heroItem ?? filteredCatalog[0] ?? null
-  const isBrowseList = Boolean(activeGenre || contentType || verticalOnly || studentCinemaOnly)
-  const showSectionExtras = !cekimNotlariOnly
+  const isBrowseList = Boolean(activeGenre || contentType || verticalOnly || studentCinemaOnly || classicsOnly)
+  const showSectionExtras = !cekimNotlariOnly && !classicsOnly
 
   if (isLoading) {
     return (
@@ -267,7 +274,9 @@ function BrowseContent({
           ? 'Çekim Notları'
           : studentCinemaOnly
             ? 'Genç Sinema'
-            : 'Senin İçin')
+            : classicsOnly
+              ? 'Klasikler'
+              : 'Senin İçin')
 
   return (
     <main className="bg-plooy-bg">
@@ -282,6 +291,8 @@ function BrowseContent({
             ? CEKIM_NOTLARI_SECTION_TITLE
             : studentCinemaOnly
             ? 'Genç Sinema'
+            : classicsOnly
+            ? 'Klasikler'
             : activeGenre
             ? activeGenre
             : pageTitle ?? (verticalOnly ? 'Dikey Diziler' : contentType ? getContentTypeLabel(contentType) : 'Senin İçin')
@@ -290,14 +301,14 @@ function BrowseContent({
       ) : (
         <div className="px-4 pb-4 pt-28 sm:px-6 lg:px-8">
           <h1 className="text-2xl font-bold text-white sm:text-3xl">
-            {pageTitle ?? (verticalOnly ? 'Dikey Diziler' : contentType ? getContentTypeLabel(contentType) : cekimNotlariOnly ? 'Çekim Notları' : 'Senin İçin')}
+            {pageTitle ?? (verticalOnly ? 'Dikey Diziler' : contentType ? getContentTypeLabel(contentType) : cekimNotlariOnly ? 'Çekim Notları' : classicsOnly ? 'Klasikler' : 'Senin İçin')}
           </h1>
         </div>
       )}
 
       <GenreFilterBar
-        activeGenre={studentCinemaOnly || cekimNotlariOnly ? null : activeGenre}
-        genres={studentCinemaOnly || cekimNotlariOnly ? [] : genreOptions}
+        activeGenre={studentCinemaOnly || cekimNotlariOnly || classicsOnly ? null : activeGenre}
+        genres={studentCinemaOnly || cekimNotlariOnly || classicsOnly ? [] : genreOptions}
         onChange={setActiveGenre}
       />
 
@@ -310,6 +321,12 @@ function BrowseContent({
       {cekimNotlariOnly && (
         <p className="mx-auto max-w-3xl px-4 pb-2 text-center text-sm text-plooy-muted sm:px-6">
           Alanında uzman isimlerden eğitici videolar — setten post prodüksiyona.
+        </p>
+      )}
+
+      {classicsOnly && (
+        <p className="mx-auto max-w-3xl px-4 pb-2 text-center text-sm text-plooy-muted sm:px-6">
+          Plooy kataloğundaki klasik uzun metraj filmler — sinema tarihinden seçki.
         </p>
       )}
 

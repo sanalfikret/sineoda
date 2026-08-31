@@ -43,5 +43,6 @@ export function guestItemHref(item: ContentItem) {
   if (item.type === 'dizi') return '/diziler'
   if (item.type === 'belgesel') return '/belgeseller'
   if (item.type === 'stand-up') return '/stand-up'
+  if (item.type === 'film' && item.genres.includes('Klasik')) return '/klasikler'
   return '/kayit'
 }
