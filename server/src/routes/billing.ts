@@ -50,6 +50,7 @@ router.get('/plans', (_req, res) => {
       iyzico: config.isIyzicoConfigured(),
       default: config.paymentProvider,
       paymentRequired: isSubscriptionRequired(),
+      paymentReady: config.isPaymentConfigured(),
     },
   })
 })
@@ -207,21 +208,28 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
   dbRun('UPDATE users SET pending_plan_id = ? WHERE id = ?', [normalizedPlanId, user.id])
 
   if (!config.isPaymentConfigured()) {
-    if (isCreatorApplicationPlan(normalizedPlanId)) {
-      const { paidAt } = activateCreatorRegistration(user.id)
+    if (!config.isProduction) {
+      if (isCreatorApplicationPlan(normalizedPlanId)) {
+        const { paidAt } = activateCreatorRegistration(user.id)
+        res.json({
+          message: 'Demo modu: yapımcı başvuru ücreti otomatik onaylandı.',
+          demoMode: true,
+          paidAt,
+        })
+        return
+      }
+      const { startedAt, expiresAt } = activateUserSubscription(user.id, normalizedPlanId)
       res.json({
-        message: 'Demo modu: yapımcı başvuru ücreti otomatik onaylandı.',
+        message: 'Demo modu: ödeme sağlayıcısı yapılandırılmadı, abonelik otomatik aktif edildi.',
         demoMode: true,
-        paidAt,
+        startedAt,
+        expiresAt,
       })
       return
     }
-    const { startedAt, expiresAt } = activateUserSubscription(user.id, normalizedPlanId)
-    res.json({
-      message: 'Demo modu: ödeme sağlayıcısı yapılandırılmadı, abonelik otomatik aktif edildi.',
-      demoMode: true,
-      startedAt,
-      expiresAt,
+    res.status(503).json({
+      error: 'Ödeme sistemi henüz aktif değil. PayTR entegrasyonu tamamlandığında tekrar deneyin.',
+      code: 'PAYMENT_NOT_READY',
     })
     return
   }

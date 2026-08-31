@@ -34,7 +34,12 @@ export function PricingPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [plans, setPlans] = useState<Plan[]>([])
   const [provider, setProvider] = useState<'paytr' | 'iyzico'>('paytr')
-  const [providers, setProviders] = useState({ paytr: false, iyzico: false, paymentRequired: false })
+  const [providers, setProviders] = useState({
+    paytr: false,
+    iyzico: false,
+    paymentRequired: false,
+    paymentReady: false,
+  })
   const [subscription, setSubscription] = useState<{
     status: string
     startedAt: string | null
@@ -62,7 +67,7 @@ export function PricingPage() {
       .then(([billing, sub]) => {
         setPlans(billing.plans.filter((plan) => plan.enabled !== false))
         setProviders(billing.providers)
-        setProvider(billing.providers.default)
+        setProvider('paytr')
         if (sub) setSubscription({ status: sub.status, startedAt: sub.startedAt, expiresAt: sub.expiresAt })
       })
       .finally(() => setLoading(false))
@@ -147,7 +152,7 @@ export function PricingPage() {
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-plooy-gold">Abonelik</p>
           <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">Planını seç</h1>
           <p className="mt-2 text-sm text-plooy-muted">
-            Kredi kartınla güvenli ödeme — PayTR veya iyzico ile.
+            Kredi kartınla güvenli ödeme — PayTR ile.
           </p>
           {(subscription?.status === 'active' || subscription?.status === 'expired') && (
             <div className="mt-3 space-y-1 text-sm text-emerald-300">
@@ -166,31 +171,9 @@ export function PricingPage() {
           )}
         </div>
 
-        <div className="mx-auto mt-8 flex max-w-md justify-center gap-2">
-          <button
-            type="button"
-            disabled={!providers.paytr}
-            onClick={() => setProvider('paytr')}
-            className={`rounded-full px-5 py-2 text-sm font-medium ${
-              provider === 'paytr' ? 'bg-plooy-gold text-plooy-bg' : 'bg-white/10 text-white'
-            } disabled:opacity-40`}
-          >
-            PayTR
-          </button>
-          <button
-            type="button"
-            disabled={!providers.iyzico}
-            onClick={() => setProvider('iyzico')}
-            className={`rounded-full px-5 py-2 text-sm font-medium ${
-              provider === 'iyzico' ? 'bg-plooy-gold text-plooy-bg' : 'bg-white/10 text-white'
-            } disabled:opacity-40`}
-          >
-            iyzico
-          </button>
-        </div>
-        {!providers.paytr && !providers.iyzico && (
-          <p className="mt-3 text-center text-sm text-plooy-muted">
-            Demo modu: ödeme anahtarları yok, plan seçince abonelik otomatik aktif olur.
+        {!providers.paymentReady && (
+          <p className="mt-3 text-center text-sm text-amber-200/90">
+            Ödeme altyapısı (PayTR) kısa süre içinde aktif olacak. Siteyi kullanmaya devam edebilirsiniz.
           </p>
         )}
 
@@ -246,11 +229,15 @@ export function PricingPage() {
 
                 <button
                   type="button"
-                  disabled={checkoutPlan === plan.id}
+                  disabled={checkoutPlan === plan.id || !providers.paymentReady}
                   onClick={() => void handleCheckout(plan.id)}
                   className="mt-8 w-full rounded-lg bg-plooy-gold py-3.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
                 >
-                  {checkoutPlan === plan.id ? 'Yönlendiriliyor...' : 'Kredi Kartı ile Öde'}
+                  {checkoutPlan === plan.id
+                    ? 'Yönlendiriliyor...'
+                    : providers.paymentReady
+                      ? 'Kredi Kartı ile Öde'
+                      : 'Ödeme yakında'}
                 </button>
               </article>
             ))}

@@ -26,6 +26,7 @@ export const config = {
   uploadsDir: process.env.UPLOADS_DIR ?? path.join(__dirname, '..', 'uploads'),
   /** Production: build edilmiş React dosyalarının yolu (tek sunucu kurulumu) */
   webDistDir: process.env.WEB_DIST_DIR ?? '',
+  isProduction: process.env.NODE_ENV === 'production',
   paymentProvider: (process.env.PAYMENT_PROVIDER ?? 'paytr') as 'paytr' | 'iyzico',
   requireSubscription: process.env.REQUIRE_SUBSCRIPTION !== 'false',
   smtp: {

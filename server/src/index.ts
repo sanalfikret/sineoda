@@ -187,6 +187,11 @@ app.get('/api/health', (_req, res) => {
     auth: {
       jwtExpiresIn: resolveJwtExpiresIn(),
     },
+    billing: {
+      requireSubscription: config.requireSubscription,
+      paytrConfigured: config.isPaytrConfigured(),
+      paymentReady: config.isPaymentConfigured(),
+    },
   })
 })
 
