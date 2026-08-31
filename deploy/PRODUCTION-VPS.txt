@@ -16,8 +16,8 @@ Zorunlu .env (/opt/Plooy/.env)
 --------------------------------
   PERSIST_DIR=/opt/Plooy/persistent
   JWT_SECRET=<uzun rastgele, deploy sonrası değiştirmeyin>
-  FRONTEND_URL=https://sizin-domain.com
-  PUBLIC_URL=https://sizin-domain.com
+  FRONTEND_URL=https://plooy.tv
+  PUBLIC_URL=https://plooy.tv
   VITE_API_URL=                    (BOŞ — same-origin /api)
   NODE_ENV=production
 

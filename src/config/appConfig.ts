@@ -4,7 +4,7 @@
  */
 import { BRAND_NAME } from '../constants/brand'
 
-const emailDomain = String(import.meta.env.VITE_EMAIL_DOMAIN ?? 'plooy.com').replace(/^@/, '')
+const emailDomain = String(import.meta.env.VITE_EMAIL_DOMAIN ?? 'plooy.tv').replace(/^@/, '')
 
 export const appConfig = {
   brandName: BRAND_NAME,
