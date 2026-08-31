@@ -13,6 +13,7 @@ import {
   tryClaimPlaybackSession,
 } from '../services/playbackSessions.js'
 import { getProfileId, requireAuth, type AuthRequest } from '../middleware/auth.js'
+import { assertSiteOpenForViewers } from '../services/siteMode.js'
 
 const router = Router()
 
@@ -35,6 +36,12 @@ router.get('/usage', requireAuth, (req: AuthRequest, res) => {
 })
 
 router.post('/start', requireAuth, (req: AuthRequest, res) => {
+  const blocked = assertSiteOpenForViewers(req.user?.role)
+  if (blocked) {
+    res.status(blocked.status).json(blocked.body)
+    return
+  }
+
   const userId = req.user!.id
   const sessionId = String(req.body.sessionId ?? '').trim()
   const contentId = String(req.body.contentId ?? '').trim()

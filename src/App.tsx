@@ -53,6 +53,10 @@ import { CreatorLoginPage } from './pages/creator/CreatorLoginPage'
 import { CreatorRegisterPage } from './pages/creator/CreatorRegisterPage'
 import { CreatorDashboardPage } from './pages/creator/CreatorDashboardPage'
 import { CreatorPaymentPage } from './pages/creator/CreatorPaymentPage'
+import { ComingSoonPage } from './pages/ComingSoonPage'
+import { SiteModeGuard } from './components/SiteModeGuard'
+import { useSiteMode } from './context/SiteModeContext'
+import { AdminSiteModePage } from './pages/admin/AdminSiteModePage'
 
 function AuthenticatedProviders({ children }: { children: ReactNode }) {
   return (
@@ -78,13 +82,21 @@ function LegacyContentRedirect() {
 
 function HomeRoute() {
   const { user, activeProfile, isLoading, isCreator } = useAuth()
+  const { loading: siteModeLoading, siteMode, canBypassComingSoon } = useSiteMode()
 
-  if (isLoading) {
+  if (isLoading || siteModeLoading) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-plooy-bg">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-plooy-gold border-t-transparent" />
       </div>
     )
+  }
+
+  if (siteMode?.enabled && !canBypassComingSoon) {
+    if (user && isCreator) {
+      return <Navigate to="/creator" replace />
+    }
+    return <ComingSoonPage />
   }
 
   if (user && isCreator) {
@@ -115,20 +127,47 @@ function HomeRoute() {
   )
 }
 
+function TanitimRoute() {
+  const { loading, siteMode, canBypassComingSoon } = useSiteMode()
+
+  if (loading) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-plooy-bg">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-plooy-gold border-t-transparent" />
+      </div>
+    )
+  }
+
+  if (siteMode?.enabled && !canBypassComingSoon) {
+    return <ComingSoonPage />
+  }
+
+  return <LandingPage />
+}
+
 function App() {
   return (
     <Routes>
       <Route path="/" element={<HomeRoute />} />
-      <Route path="/tanitim" element={<LandingPage />} />
-      <Route path="/giris" element={<LoginPage />} />
-      <Route path="/kayit" element={<SignupPage />} />
+      <Route path="/tanitim" element={<TanitimRoute />} />
+      <Route path="/giris" element={<SiteModeGuard><LoginPage /></SiteModeGuard>} />
+      <Route path="/kayit" element={<SiteModeGuard mode="signup"><SignupPage /></SiteModeGuard>} />
       <Route path="/eposta-dogrula" element={<VerifyEmailPage />} />
       <Route path="/sifremi-unuttum" element={<ForgotPasswordPage />} />
       <Route path="/sifre-sifirla" element={<ResetPasswordPage />} />
-      <Route path="/planlar" element={<PricingPage />} />
+      <Route path="/planlar" element={<SiteModeGuard mode="signup"><PricingPage /></SiteModeGuard>} />
       <Route path="/yasal/:slug" element={<LegalPage />} />
       <Route path="/iletisim" element={<ContactPage />} />
-      <Route path="/dergi" element={<NavRouteGuard><JournalLayout /></NavRouteGuard>}>
+      <Route
+        path="/dergi"
+        element={
+          <SiteModeGuard>
+            <NavRouteGuard>
+              <JournalLayout />
+            </NavRouteGuard>
+          </SiteModeGuard>
+        }
+      >
         <Route index element={<JournalListPage />} />
         <Route path=":slug" element={<JournalPostPage />} />
       </Route>
@@ -146,9 +185,11 @@ function App() {
       <Route
         path="/profiller"
         element={
-          <ProtectedRoute requireSubscription>
-            <ProfilesPage />
-          </ProtectedRoute>
+          <SiteModeGuard>
+            <ProtectedRoute requireSubscription>
+              <ProfilesPage />
+            </ProtectedRoute>
+          </SiteModeGuard>
         }
       />
       <Route
@@ -164,105 +205,123 @@ function App() {
       <Route
         path="/listem"
         element={
-          <ProtectedRoute requireProfile requireSubscription>
-            <AuthenticatedProviders>
-              <NavRouteGuard>
-                <MyListPage />
-              </NavRouteGuard>
-            </AuthenticatedProviders>
-          </ProtectedRoute>
+          <SiteModeGuard>
+            <ProtectedRoute requireProfile requireSubscription>
+              <AuthenticatedProviders>
+                <NavRouteGuard>
+                  <MyListPage />
+                </NavRouteGuard>
+              </AuthenticatedProviders>
+            </ProtectedRoute>
+          </SiteModeGuard>
         }
       />
       <Route
         path="/icerik/:id"
         element={
-          <ProtectedRoute requireProfile requireSubscription>
-            <AuthenticatedProviders>
-              <ContentDetailPage />
-            </AuthenticatedProviders>
-          </ProtectedRoute>
+          <SiteModeGuard>
+            <ProtectedRoute requireProfile requireSubscription>
+              <AuthenticatedProviders>
+                <ContentDetailPage />
+              </AuthenticatedProviders>
+            </ProtectedRoute>
+          </SiteModeGuard>
         }
       />
       <Route
         path="/diziler"
         element={
-          <ProtectedRoute requireProfile requireSubscription>
-            <AuthenticatedProviders>
-              <NavRouteGuard contentType="dizi">
-                <BrowsePage contentType="dizi" pageTitle="Diziler" />
-              </NavRouteGuard>
-            </AuthenticatedProviders>
-          </ProtectedRoute>
+          <SiteModeGuard>
+            <ProtectedRoute requireProfile requireSubscription>
+              <AuthenticatedProviders>
+                <NavRouteGuard contentType="dizi">
+                  <BrowsePage contentType="dizi" pageTitle="Diziler" />
+                </NavRouteGuard>
+              </AuthenticatedProviders>
+            </ProtectedRoute>
+          </SiteModeGuard>
         }
       />
       <Route
         path="/filmler"
         element={
-          <ProtectedRoute requireProfile requireSubscription>
-            <AuthenticatedProviders>
-              <NavRouteGuard contentType="film">
-                <BrowsePage contentType="film" pageTitle="Filmler" />
-              </NavRouteGuard>
-            </AuthenticatedProviders>
-          </ProtectedRoute>
+          <SiteModeGuard>
+            <ProtectedRoute requireProfile requireSubscription>
+              <AuthenticatedProviders>
+                <NavRouteGuard contentType="film">
+                  <BrowsePage contentType="film" pageTitle="Filmler" />
+                </NavRouteGuard>
+              </AuthenticatedProviders>
+            </ProtectedRoute>
+          </SiteModeGuard>
         }
       />
       <Route
         path="/belgeseller"
         element={
-          <ProtectedRoute requireProfile requireSubscription>
-            <AuthenticatedProviders>
-              <NavRouteGuard contentType="belgesel">
-                <BrowsePage contentType="belgesel" pageTitle="Belgeseller" />
-              </NavRouteGuard>
-            </AuthenticatedProviders>
-          </ProtectedRoute>
+          <SiteModeGuard>
+            <ProtectedRoute requireProfile requireSubscription>
+              <AuthenticatedProviders>
+                <NavRouteGuard contentType="belgesel">
+                  <BrowsePage contentType="belgesel" pageTitle="Belgeseller" />
+                </NavRouteGuard>
+              </AuthenticatedProviders>
+            </ProtectedRoute>
+          </SiteModeGuard>
         }
       />
       <Route
         path="/dikey-diziler"
         element={
-          <ProtectedRoute requireProfile requireSubscription>
-            <AuthenticatedProviders>
-              <NavRouteGuard verticalOnly>
-                <BrowsePage verticalOnly pageTitle="Dikey Diziler" />
-              </NavRouteGuard>
-            </AuthenticatedProviders>
-          </ProtectedRoute>
+          <SiteModeGuard>
+            <ProtectedRoute requireProfile requireSubscription>
+              <AuthenticatedProviders>
+                <NavRouteGuard verticalOnly>
+                  <BrowsePage verticalOnly pageTitle="Dikey Diziler" />
+                </NavRouteGuard>
+              </AuthenticatedProviders>
+            </ProtectedRoute>
+          </SiteModeGuard>
         }
       />
       <Route
         path="/genc-sinema"
         element={
-          <ProtectedRoute requireProfile requireSubscription>
-            <AuthenticatedProviders>
-              <NavRouteGuard studentCinemaOnly>
-                <BrowsePage studentCinemaOnly pageTitle="Genç Sinema" />
-              </NavRouteGuard>
-            </AuthenticatedProviders>
-          </ProtectedRoute>
+          <SiteModeGuard>
+            <ProtectedRoute requireProfile requireSubscription>
+              <AuthenticatedProviders>
+                <NavRouteGuard studentCinemaOnly>
+                  <BrowsePage studentCinemaOnly pageTitle="Genç Sinema" />
+                </NavRouteGuard>
+              </AuthenticatedProviders>
+            </ProtectedRoute>
+          </SiteModeGuard>
         }
       />
       <Route
         path="/cekim-notlari"
         element={
-          <ProtectedRoute requireProfile requireSubscription>
-            <AuthenticatedProviders>
-              <NavRouteGuard cekimNotlariOnly>
-                <CekimNotlariPage />
-              </NavRouteGuard>
-            </AuthenticatedProviders>
-          </ProtectedRoute>
+          <SiteModeGuard>
+            <ProtectedRoute requireProfile requireSubscription>
+              <AuthenticatedProviders>
+                <NavRouteGuard cekimNotlariOnly>
+                  <CekimNotlariPage />
+                </NavRouteGuard>
+              </AuthenticatedProviders>
+            </ProtectedRoute>
+          </SiteModeGuard>
         }
       />
       <Route
         path="/kisa-filmler"
         element={
-          <ProtectedRoute requireProfile requireSubscription>
-            <AuthenticatedProviders>
-              <BrowsePage contentType="kisa-film" pageTitle="Kısa Filmler" />
-            </AuthenticatedProviders>
-          </ProtectedRoute>
+          <SiteModeGuard>
+            <ProtectedRoute requireProfile requireSubscription>
+              <AuthenticatedProviders>
+                <BrowsePage contentType="kisa-film" pageTitle="Kısa Filmler" />
+              </AuthenticatedProviders>
+            </ProtectedRoute>
+          </SiteModeGuard>
         }
       />
 
@@ -300,6 +359,7 @@ function App() {
         <Route path="kategoriler" element={<AdminCategoriesPage />} />
         <Route path="reklamlar" element={<AdminAdsPage />} />
         <Route path="ana-sayfa" element={<AdminLandingPage />} />
+        <Route path="yakinda" element={<AdminSiteModePage />} />
         <Route path="dergi" element={<AdminJournalListPage />} />
         <Route path="yasal" element={<AdminLegalPage />} />
         <Route path="dergi/yeni" element={<AdminJournalFormPage />} />
