@@ -50,6 +50,7 @@ export function isContentBlockedByNav(item: ContentItem, hiddenNav: SiteNavId[])
   if (hiddenNav.includes('filmler') && item.type === 'film') return true
   if (hiddenNav.includes('belgeseller') && item.type === 'belgesel') return true
   if (hiddenNav.includes('standup') && item.type === 'stand-up') return true
+  if (hiddenNav.includes('klasikler') && item.type === 'film' && item.genres.includes('Klasik')) return true
   return false
 }
 
@@ -67,9 +68,11 @@ export function navIdForBrowseRoute(options: {
   verticalOnly?: boolean
   studentCinemaOnly?: boolean
   cekimNotlariOnly?: boolean
+  classicsOnly?: boolean
   path?: string
 }): SiteNavId | null {
   if (options.cekimNotlariOnly) return 'cekimNotlari'
+  if (options.classicsOnly) return 'klasikler'
   if (options.studentCinemaOnly) return 'gencSinema'
   if (options.verticalOnly) return 'dikey'
   if (options.contentType === 'dizi') return 'diziler'

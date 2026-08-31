@@ -45,15 +45,21 @@ export const EDITORIAL_CATEGORY_ROWS: readonly EditorialCategoryRow[] = [
   },
   { id: 'standup', title: 'Stand-up', sortOrder: 4, seedItems: ['stage-lights'] },
   {
+    id: 'classics',
+    title: 'Klasikler',
+    sortOrder: 5,
+    seedItems: ['wind-road', 'midnight-istanbul'],
+  },
+  {
     id: 'family',
     title: 'Aile Filmleri',
-    sortOrder: 5,
+    sortOrder: 6,
     seedItems: ['little-stars'],
   },
   {
     id: 'anime-animation',
     title: 'Anime + Animasyon',
-    sortOrder: 6,
+    sortOrder: 7,
     seedItems: ['little-stars', 'anime-horizon'],
   },
   {
@@ -144,6 +150,12 @@ export const EDITORIAL_GENRE_MERGE_RULES: readonly EditorialGenreMergeRule[] = [
     mergeIds: ['genre-row-stand-up'],
   },
   {
+    keepId: 'classics',
+    canonicalTitle: 'Klasikler',
+    mergeTitles: ['Klasik'],
+    mergeIds: ['genre-row-klasik'],
+  },
+  {
     keepId: 'scifi-fantasy',
     canonicalTitle: 'Bilim Kurgu ve Fantastik',
     mergeTitles: ['Bilim Kurgu', 'Fantastik'],
@@ -197,6 +209,7 @@ export function matchesEditorialFillRule(
     return genres.some((g) => ['Anime', 'Animasyon'].includes(g))
   }
   if (is('Stand-up')) return row.type === 'stand-up' || genres.includes('Stand-up')
+  if (is('Klasikler')) return row.type === 'film' && genres.includes('Klasik')
   if (is('Yerli Yapımlar')) return genres.includes('Yerli')
   if (is('Suç-Gizem') || is('Suç ve Gizem')) {
     return genres.some((g) => ['Suç', 'Gizem', 'Gerilim'].includes(g))

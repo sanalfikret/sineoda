@@ -16,6 +16,7 @@ export type BrowseFilterOptions = {
   excludeStudent?: boolean
   studentOnly?: boolean
   cekimNotlariOnly?: boolean
+  classicsOnly?: boolean
 }
 
 export type BrowseRow = {
@@ -146,6 +147,10 @@ export function filterCatalog(catalog: ContentItem[], options: BrowseFilterOptio
     if (options.verticalOnly && item.videoFormat !== 'vertical') return false
     if (!options.verticalOnly && item.videoFormat === 'vertical') return false
     if (options.type && item.type !== options.type) return false
+    if (options.classicsOnly) {
+      if (item.type !== 'film') return false
+      if (!item.genres.includes('Klasik')) return false
+    }
     if (options.genre && !item.genres.includes(options.genre)) return false
     return true
   })
@@ -297,6 +302,19 @@ export function buildBrowseRows(
       {
         id: BRAND_STUDENT_CINEMA.id,
         title: 'Genç Sinema',
+        itemIds: items.map((item) => item.id),
+        items,
+      },
+    ]
+  }
+
+  if (options.classicsOnly) {
+    const items = filterCatalog(catalog, options).sort((a, b) => a.title.localeCompare(b.title, 'tr'))
+    if (items.length === 0) return []
+    return [
+      {
+        id: 'classics',
+        title: 'Klasikler',
         itemIds: items.map((item) => item.id),
         items,
       },

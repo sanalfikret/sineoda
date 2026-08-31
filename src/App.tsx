@@ -288,6 +288,20 @@ function App() {
         }
       />
       <Route
+        path="/klasikler"
+        element={
+          <SiteModeGuard>
+            <ProtectedRoute requireProfile requireSubscription>
+              <AuthenticatedProviders>
+                <NavRouteGuard classicsOnly>
+                  <BrowsePage classicsOnly pageTitle="Klasikler" />
+                </NavRouteGuard>
+              </AuthenticatedProviders>
+            </ProtectedRoute>
+          </SiteModeGuard>
+        }
+      />
+      <Route
         path="/dikey-diziler"
         element={
           <SiteModeGuard>

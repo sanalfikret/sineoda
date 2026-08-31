@@ -4,7 +4,7 @@ import { buildGenreToEditorialIdMap } from './editorialCategories.js'
 const FEATURED_BROWSE_GENRES = [
   'Aksiyon', 'Dram', 'Suç', 'Gerilim', 'Komedi', 'Romantik', 'Aile', 'Belgesel',
   'Gizem', 'Stand-up', 'Din Temalı', 'Korku', 'Bilim Kurgu', 'Fantastik',
-  'Macera', 'Animasyon', 'Anime', 'Müzikal', 'Reality', 'Yerli', 'Spor',
+  'Macera', 'Animasyon', 'Anime', 'Müzikal', 'Reality', 'Yerli', 'Klasik', 'Spor',
 ] as const
 
 const POSTERS = [
@@ -52,6 +52,7 @@ const GENRE_TITLES: Record<(typeof FEATURED_BROWSE_GENRES)[number], string[]> = 
   Gizem: ['Kayıp Anahtar', 'Sır Dolu Ev', 'Gizli Şifre', 'Karanlık Geçmiş', 'Son İz', 'Bulmaca Odası', 'Sessiz Suç', 'Gölge Oyunu', 'Gizemli Ada', 'Şifreli Mesaj'],
   'Stand-up': ['Sahne Işıkları', 'Mikrofon Önünde', 'Kahkaha Sahnesi', 'Komedyen Gecesi', 'Tek Kişilik Show', 'Gülmek Serbest', 'Son Skeç', 'Perde Arkası', 'Komik Anılar', 'Sahne Tozu'],
   'Din Temalı': ['İman Yolu', 'Kutsal Topraklar', 'Hac Yolculuğu', 'Dualı Günler', 'Manevi Yolculuk', 'İlahi Işık', 'İbadet Vakti', 'Peygamber Yolu', 'Kutsal Metin', 'Ruhani Huzur'],
+  Klasik: ['Altın Çağ', 'Siyah Beyaz', 'Unutulmaz Kareler', 'Sinema Tarihi', 'Efsane Yapım', 'Vefat Eden Yıldız', 'Klasik Aşk', 'Eski İstanbul', 'Yeşilçam', 'Sinema Arşivi'],
   Korku: ['Gece Kâbusu', 'Lanetli Ev', 'Karanlık Orman', 'Son Çığlık', 'Ölümcül Gece', 'Kanlı Ay', 'Korku Koridoru', 'Gizli Mahzen', 'Hayalet Hikayesi', 'Son Kapı'],
   'Bilim Kurgu': ['Yıldız Geçidi', 'Uzay Kolonisi', 'Zaman Paradoksu', 'Robot İsyanı', 'Galaksi Savaşı', 'Yeni Dünya', 'Yapay Zeka', 'Uzay Gemisi', 'Gelecek Şehri', 'Mars Yolu'],
   Fantastik: ['Ejderha Efsanesi', 'Sihirli Krallık', 'Kayıp Harita', 'Büyücü Okulu', 'Peri Masalı', 'Karanlık Kale', 'Efsanevi Kılıç', 'Büyülü Orman', 'Gölge Kral', 'Sonsuz Destan'],
@@ -77,6 +78,7 @@ function backdropUrl(photoId: string) {
 function pickType(genre: string, index: number) {
   if (genre === 'Belgesel') return 'belgesel'
   if (genre === 'Stand-up') return 'stand-up'
+  if (genre === 'Klasik') return 'film'
   if (index % 3 === 0) return 'dizi'
   return 'film'
 }

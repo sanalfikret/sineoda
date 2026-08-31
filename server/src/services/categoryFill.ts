@@ -27,6 +27,7 @@ function matchesCategory(categoryTitle: string, categoryId: string, row: Content
   if (title === 'filmler') return row.type === 'film'
   if (title === 'kısa filmler') return row.type === 'kisa-film'
   if (title === 'stand-up') return row.type === 'stand-up'
+  if (title === 'klasikler') return row.type === 'film' && genres.includes('Klasik')
 
   if (genres.includes(categoryTitle)) return true
   if (categoryId.startsWith('genre-') && title) {
