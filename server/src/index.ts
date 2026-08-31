@@ -336,6 +336,7 @@ if (config.webDistDir) {
 
   app.use(express.static(distPath, { index: false }))
   app.get(/^(?!\/api\/|\/uploads\/).*/, (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
     if (indexHtml) {
       res.type('html').send(indexHtml)
       return

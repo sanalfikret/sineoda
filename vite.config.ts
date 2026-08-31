@@ -92,8 +92,18 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // index.html precache etme — deploy sonrası eski JS hash'i siyah ekran yapıyordu
+        globPatterns: ['**/*.{js,css,ico,png,svg,woff2,webmanifest}'],
+        navigateFallback: undefined,
         runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'pages',
+              networkTimeoutSeconds: 5,
+            },
+          },
           {
             urlPattern: /^https:\/\/images\.unsplash\.com\/.*/i,
             handler: 'CacheFirst',
