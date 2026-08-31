@@ -11,7 +11,6 @@ import {
   listSettlementPeriods,
   markSettlementPaid,
   reopenSettlementPeriod,
-  updateSettlementNetRevenue,
 } from '../services/paymentSettlement.js'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
@@ -145,20 +144,6 @@ router.get('/settlement-report', requireAdmin, (req: AuthRequest, res) => {
     res.json({ report: getSettlementReport(periodId) })
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : 'Ödeme raporu oluşturulamadı.' })
-  }
-})
-
-router.put('/settlement-report', requireAdmin, (req: AuthRequest, res) => {
-  try {
-    const periodId = String(req.body.periodId ?? '').trim()
-    const netRevenue = Number(req.body.netRevenue)
-    if (!periodId) {
-      res.status(400).json({ error: 'periodId gerekli.' })
-      return
-    }
-    res.json({ report: updateSettlementNetRevenue(periodId, netRevenue) })
-  } catch (err) {
-    res.status(400).json({ error: err instanceof Error ? err.message : 'Net gelir kaydedilemedi.' })
   }
 })
 

@@ -1132,10 +1132,18 @@ export interface SettlementPeriod {
   periodId: string
   label: string
   status: 'open' | 'confirmed' | 'paid'
-  netRevenue: number
   isCurrent: boolean
   confirmedAt: string | null
   paidAt: string | null
+}
+
+export interface SettlementPoolSummary {
+  pool: 'short' | 'student' | 'documentary' | 'long' | 'plooy'
+  label: string
+  ratePercent: number
+  effectiveRatePercent: number
+  qualifiedMinutes: number
+  contentCount: number
 }
 
 export interface SettlementContentItem {
@@ -1143,8 +1151,9 @@ export interface SettlementContentItem {
   title: string
   type: string
   program: 'standard' | 'student_cinema'
-  pool: 'short' | 'student' | 'long'
+  pool: 'short' | 'student' | 'documentary' | 'long'
   poolLabel: string
+  poolRatePercent: number
   creatorId: string | null
   creatorName: string | null
   studioName: string | null
@@ -1154,7 +1163,7 @@ export interface SettlementContentItem {
   avgCompletionPercent: number
   qualifiedViewerPercent: number
   poolSharePercent: number
-  payoutAmount: number
+  profitSharePercent: number
 }
 
 export interface SettlementCreatorItem {
@@ -1162,7 +1171,7 @@ export interface SettlementCreatorItem {
   creatorName: string | null
   studioName: string | null
   qualifiedMinutes: number
-  payoutAmount: number
+  profitSharePercent: number
   contentCount: number
 }
 
@@ -1171,18 +1180,11 @@ export interface SettlementReport {
   label: string
   months: string[]
   status: 'open' | 'confirmed' | 'paid'
-  netRevenue: number
   isEditable: boolean
   totalQualifiedMinutes: number
   totalWatchMinutes: number
-  pools: {
-    plooy: number
-    short: number
-    student: number
-    long: number
-    unallocatedToPlooy: number
-  }
-  totalCreatorPayout: number
+  poolSummaries: SettlementPoolSummary[]
+  totalCreatorSharePercent: number
   items: SettlementContentItem[]
   creators: SettlementCreatorItem[]
   confirmedAt: string | null
@@ -1197,13 +1199,6 @@ export async function fetchAdminSettlementReport(periodId: string) {
   return api<{ report: SettlementReport }>(
     `/api/admin/analytics/settlement-report?period=${encodeURIComponent(periodId)}`,
   )
-}
-
-export async function saveAdminSettlementNetRevenue(periodId: string, netRevenue: number) {
-  return api<{ report: SettlementReport }>('/api/admin/analytics/settlement-report', {
-    method: 'PUT',
-    body: JSON.stringify({ periodId, netRevenue }),
-  })
 }
 
 export async function confirmAdminSettlementPeriod(periodId: string) {

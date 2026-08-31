@@ -5,20 +5,25 @@ import {
   fetchAdminSettlementReport,
   markAdminSettlementPaid,
   reopenAdminSettlementPeriod,
-  saveAdminSettlementNetRevenue,
+  type SettlementContentItem,
   type SettlementReport,
 } from '../../api/client'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { fuzzySearchMatch } from '../../utils/search'
-import { BRAND_NAME } from '../../constants/brand'
 
-function formatTry(amount: number) {
-  return `${amount.toLocaleString('tr-TR')} TL`
-}
+type PoolTab = SettlementContentItem['pool'] | 'creators'
+
+const POOL_TABS: Array<{ id: PoolTab; label: string }> = [
+  { id: 'short', label: 'Kısa film (%5)' },
+  { id: 'student', label: 'Genç Sinema (%5)' },
+  { id: 'documentary', label: 'Belgesel & dikey (%10)' },
+  { id: 'long', label: 'Uzun metraj (%30)' },
+  { id: 'creators', label: 'Yapımcı özeti' },
+]
 
 function statusLabel(status: SettlementReport['status']) {
-  if (status === 'open') return 'Açık — düzenlenebilir'
-  if (status === 'confirmed') return 'Onaylandı — ödeme bekliyor'
+  if (status === 'open') return 'Açık'
+  if (status === 'confirmed') return 'Onaylandı'
   return 'Ödendi'
 }
 
@@ -32,9 +37,8 @@ export function AdminSettlementPanel() {
   const [periods, setPeriods] = useState<Array<{ periodId: string; label: string; status: string }>>([])
   const [periodId, setPeriodId] = useState('')
   const [report, setReport] = useState<SettlementReport | null>(null)
-  const [netRevenueInput, setNetRevenueInput] = useState('')
+  const [poolTab, setPoolTab] = useState<PoolTab>('long')
   const [query, setQuery] = useState('')
-  const [view, setView] = useState<'content' | 'creators'>('content')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -56,9 +60,8 @@ export function AdminSettlementPanel() {
     try {
       const { report: data } = await fetchAdminSettlementReport(periodId)
       setReport(data)
-      setNetRevenueInput(data.netRevenue > 0 ? String(data.netRevenue) : '')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ödeme raporu yüklenemedi.')
+      setError(err instanceof Error ? err.message : 'Dağıtım raporu yüklenemedi.')
       setReport(null)
     } finally {
       setLoading(false)
@@ -75,12 +78,16 @@ export function AdminSettlementPanel() {
     void loadReport()
   }, [loadReport])
 
+  const poolItems = useMemo(() => {
+    if (!report || poolTab === 'creators') return []
+    return report.items.filter((item) => item.pool === poolTab)
+  }, [report, poolTab])
+
   const filteredItems = useMemo(() => {
-    if (!report) return []
-    return report.items.filter((item) =>
-      fuzzySearchMatch(query, item.title, item.creatorName ?? '', item.studioName ?? '', item.poolLabel),
+    return poolItems.filter((item) =>
+      fuzzySearchMatch(query, item.title, item.creatorName ?? '', item.studioName ?? ''),
     )
-  }, [report, query])
+  }, [poolItems, query])
 
   const filteredCreators = useMemo(() => {
     if (!report) return []
@@ -89,26 +96,13 @@ export function AdminSettlementPanel() {
     )
   }, [report, query])
 
-  async function handleSaveNetRevenue() {
-    if (!periodId) return
-    setSaving(true)
-    setError('')
-    setMessage('')
-    try {
-      const netRevenue = Number(netRevenueInput.replace(/\./g, '').replace(',', '.'))
-      const { report: data } = await saveAdminSettlementNetRevenue(periodId, netRevenue)
-      setReport(data)
-      setNetRevenueInput(data.netRevenue > 0 ? String(data.netRevenue) : '')
-      setMessage('Net gelir kaydedildi.')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Kaydedilemedi.')
-    } finally {
-      setSaving(false)
-    }
-  }
+  const activePoolSummary = useMemo(() => {
+    if (!report || poolTab === 'creators') return null
+    return report.poolSummaries.find((entry) => entry.pool === poolTab) ?? null
+  }, [report, poolTab])
 
   async function handleConfirm() {
-    if (!periodId || !window.confirm('Dönemi onaylamak istediğinize emin misiniz? Rakamlar kilitlenir.')) return
+    if (!periodId || !window.confirm('Dönemi onaylamak istediğinize emin misiniz? Pay oranları kilitlenir.')) return
     setSaving(true)
     setError('')
     setMessage('')
@@ -125,7 +119,7 @@ export function AdminSettlementPanel() {
   }
 
   async function handleMarkPaid() {
-    if (!periodId || !window.confirm('Ödemeler yapıldı olarak işaretlensin mi?')) return
+    if (!periodId || !window.confirm('Dağıtım yapıldı olarak işaretlensin mi?')) return
     setSaving(true)
     setError('')
     setMessage('')
@@ -161,10 +155,10 @@ export function AdminSettlementPanel() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-white">6 Aylık Ödeme Dönemi</h2>
+        <h2 className="text-xl font-bold text-white">6 Aylık Kar Dağıtımı</h2>
         <p className="mt-1 text-sm text-plooy-muted">
-          Ocak–Haziran ve Temmuz–Aralık dönemlerinde toplam nitelikli izlenmeye göre ödeme hesaplanır.
-          Aylık izlenme raporları ayrı sekmede kalır.
+          Giderler düşüldükten sonra kalan tutar bu yüzdelere göre dağıtılır. Panel yalnızca pay oranlarını gösterir;
+          gerçek TL hesabı muhasebe dışında yapılır.
         </p>
       </div>
 
@@ -195,31 +189,7 @@ export function AdminSettlementPanel() {
           </select>
         </label>
 
-        {report?.isEditable && (
-          <>
-            <label className="block">
-              <span className="mb-1 block text-xs text-plooy-muted">6 aylık net gelir (TL)</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={netRevenueInput}
-                onChange={(event) => setNetRevenueInput(event.target.value)}
-                placeholder="ör. 600000"
-                className="w-40 rounded-lg border border-white/10 bg-[#11141c] px-3 py-2 text-sm text-white"
-              />
-            </label>
-            <button
-              type="button"
-              disabled={saving}
-              onClick={() => void handleSaveNetRevenue()}
-              className="rounded-lg bg-plooy-gold/20 px-4 py-2 text-sm font-medium text-plooy-gold hover:bg-plooy-gold/30 disabled:opacity-50"
-            >
-              Net geliri kaydet
-            </button>
-          </>
-        )}
-
-        {report?.status === 'open' && report.netRevenue > 0 && (
+        {report?.status === 'open' && (
           <button
             type="button"
             disabled={saving}
@@ -236,7 +206,7 @@ export function AdminSettlementPanel() {
             onClick={() => void handleMarkPaid()}
             className="rounded-lg bg-emerald-500/20 px-4 py-2 text-sm font-medium text-emerald-300 hover:bg-emerald-500/30 disabled:opacity-50"
           >
-            Ödendi işaretle
+            Dağıtıldı işaretle
           </button>
         )}
         {report && report.status !== 'open' && (
@@ -253,64 +223,74 @@ export function AdminSettlementPanel() {
 
       {report && (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
-              <p className="text-xs text-plooy-muted">Durum</p>
+              <p className="text-xs text-plooy-muted">Durum · nitelikli izlenme</p>
               <p className="mt-1 text-sm font-semibold text-white">{statusLabel(report.status)}</p>
+              <p className="mt-1 text-lg font-bold text-plooy-gold">{report.totalQualifiedMinutes} dk</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
-              <p className="text-xs text-plooy-muted">6 aylık nitelikli izlenme</p>
-              <p className="mt-1 text-2xl font-bold text-plooy-gold">{report.totalQualifiedMinutes} dk</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
-              <p className="text-xs text-plooy-muted">Net gelir</p>
-              <p className="mt-1 text-2xl font-bold text-white">{formatTry(report.netRevenue)}</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
-              <p className="text-xs text-plooy-muted">{BRAND_NAME} payı (%50)</p>
-              <p className="mt-1 text-xl font-bold text-white">{formatTry(report.pools.plooy)}</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
-              <p className="text-xs text-plooy-muted">Yapımcı ödemeleri</p>
-              <p className="mt-1 text-xl font-bold text-emerald-300">{formatTry(report.totalCreatorPayout)}</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
-              <p className="text-xs text-plooy-muted">Havuzlar (kısa / genç / uzun)</p>
-              <p className="mt-1 text-sm font-semibold text-white">
-                {formatTry(report.pools.short)} / {formatTry(report.pools.student)} / {formatTry(report.pools.long)}
-              </p>
-            </div>
+            {report.poolSummaries.map((pool) => (
+              <div
+                key={pool.pool}
+                className={`rounded-xl border p-4 ${
+                  pool.pool === 'plooy'
+                    ? 'border-white/10 bg-[#11141c]'
+                    : poolTab === pool.pool
+                      ? 'border-plooy-gold/30 bg-plooy-gold/5'
+                      : 'border-white/10 bg-[#11141c]'
+                }`}
+              >
+                <p className="text-xs text-plooy-muted">{pool.label}</p>
+                <p className="mt-1 text-2xl font-bold text-white">%{pool.effectiveRatePercent}</p>
+                {pool.pool !== 'plooy' ? (
+                  <p className="mt-1 text-xs text-plooy-muted">
+                    {pool.contentCount} film · {pool.qualifiedMinutes} dk
+                  </p>
+                ) : pool.effectiveRatePercent > pool.ratePercent ? (
+                  <p className="mt-1 text-xs text-plooy-muted">Boş havuzlar dahil</p>
+                ) : null}
+              </div>
+            ))}
           </div>
 
+          <p className="text-sm text-plooy-muted">
+            Yapımcılara giden toplam pay:{' '}
+            <span className="font-semibold text-emerald-300">%{report.totalCreatorSharePercent}</span>
+          </p>
+
           <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setView('content')}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                view === 'content' ? 'bg-plooy-gold/15 text-plooy-gold' : 'bg-white/5 text-white/70'
-              }`}
-            >
-              Film bazında
-            </button>
-            <button
-              type="button"
-              onClick={() => setView('creators')}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                view === 'creators' ? 'bg-plooy-gold/15 text-plooy-gold' : 'bg-white/5 text-white/70'
-              }`}
-            >
-              Yapımcı özeti
-            </button>
+            {POOL_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setPoolTab(tab.id)}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+                  poolTab === tab.id ? 'bg-plooy-gold/15 text-plooy-gold' : 'bg-white/5 text-white/70'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
+
+          {activePoolSummary && (
+            <p className="text-sm text-plooy-muted">
+              {activePoolSummary.label} havuzu:{' '}
+              <span className="text-white">%{activePoolSummary.effectiveRatePercent}</span> ·{' '}
+              {activePoolSummary.contentCount} film · {activePoolSummary.qualifiedMinutes} nitelikli dk
+            </p>
+          )}
         </>
       )}
 
       <AdminSearchBar
         value={query}
         onChange={setQuery}
-        placeholder={view === 'content' ? 'Film veya yapımcı ara...' : 'Yapımcı ara...'}
-        resultCount={view === 'content' ? filteredItems.length : filteredCreators.length}
-        totalCount={view === 'content' ? report?.items.length ?? 0 : report?.creators.length ?? 0}
+        placeholder={poolTab === 'creators' ? 'Yapımcı ara...' : 'Film veya yapımcı ara...'}
+        resultCount={poolTab === 'creators' ? filteredCreators.length : filteredItems.length}
+        totalCount={
+          poolTab === 'creators' ? report?.creators.length ?? 0 : poolItems.length
+        }
       />
 
       {loading ? (
@@ -319,10 +299,10 @@ export function AdminSettlementPanel() {
         <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-plooy-muted">
           Rapor yüklenemedi.
         </p>
-      ) : view === 'creators' ? (
+      ) : poolTab === 'creators' ? (
         filteredCreators.length === 0 ? (
           <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-plooy-muted">
-            Bu dönem için ödeme kaydı yok.
+            Bu dönem için kayıt yok.
           </p>
         ) : (
           <div className="overflow-hidden rounded-xl border border-white/10 bg-[#11141c]">
@@ -330,9 +310,9 @@ export function AdminSettlementPanel() {
               <thead className="bg-[#11141c] text-plooy-muted">
                 <tr>
                   <th className="px-4 py-3 font-medium">Yapımcı / Öğrenci</th>
-                  <th className="px-4 py-3 font-medium">Film sayısı</th>
+                  <th className="px-4 py-3 font-medium">Film</th>
                   <th className="px-4 py-3 font-medium">Nitelikli dk</th>
-                  <th className="px-4 py-3 font-medium">Ödeme</th>
+                  <th className="px-4 py-3 font-medium">Kar payı</th>
                 </tr>
               </thead>
               <tbody>
@@ -346,7 +326,7 @@ export function AdminSettlementPanel() {
                     </td>
                     <td className="px-4 py-3 text-plooy-muted">{item.contentCount}</td>
                     <td className="px-4 py-3 text-plooy-gold">{item.qualifiedMinutes} dk</td>
-                    <td className="px-4 py-3 font-semibold text-emerald-300">{formatTry(item.payoutAmount)}</td>
+                    <td className="px-4 py-3 font-semibold text-emerald-300">%{item.profitSharePercent}</td>
                   </tr>
                 ))}
               </tbody>
@@ -355,7 +335,7 @@ export function AdminSettlementPanel() {
         )
       ) : filteredItems.length === 0 ? (
         <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-plooy-muted">
-          Bu dönem için nitelikli izlenme kaydı yok. Net gelir girildiğinde ödemeler otomatik hesaplanır.
+          Bu havuzda nitelikli izlenme kaydı yok.
         </p>
       ) : (
         <div className="overflow-hidden rounded-xl border border-white/10 bg-[#11141c]">
@@ -365,11 +345,10 @@ export function AdminSettlementPanel() {
                 <tr>
                   <th className="px-4 py-3 font-medium">Film</th>
                   <th className="px-4 py-3 font-medium">Yapımcı</th>
-                  <th className="px-4 py-3 font-medium">Havuz</th>
-                  <th className="px-4 py-3 font-medium">6 aylık nitelikli dk</th>
+                  <th className="px-4 py-3 font-medium">Nitelikli dk</th>
                   <th className="px-4 py-3 font-medium">Ort. tamamlanma</th>
-                  <th className="px-4 py-3 font-medium">Havuz payı</th>
-                  <th className="px-4 py-3 font-medium">Ödeme</th>
+                  <th className="px-4 py-3 font-medium">Havuz içi pay</th>
+                  <th className="px-4 py-3 font-medium">Kar payı</th>
                 </tr>
               </thead>
               <tbody>
@@ -379,13 +358,12 @@ export function AdminSettlementPanel() {
                     <td className="px-4 py-3 text-plooy-muted">
                       {item.creatorName ?? item.studioName ?? '—'}
                     </td>
-                    <td className="px-4 py-3 text-plooy-muted">{item.poolLabel}</td>
                     <td className="px-4 py-3 text-plooy-gold">{item.qualifiedMinutes} dk</td>
                     <td className={`px-4 py-3 font-semibold ${completionTone(item.avgCompletionPercent)}`}>
                       %{item.avgCompletionPercent}
                     </td>
                     <td className="px-4 py-3 text-white/80">%{item.poolSharePercent}</td>
-                    <td className="px-4 py-3 font-semibold text-emerald-300">{formatTry(item.payoutAmount)}</td>
+                    <td className="px-4 py-3 font-semibold text-emerald-300">%{item.profitSharePercent}</td>
                   </tr>
                 ))}
               </tbody>
