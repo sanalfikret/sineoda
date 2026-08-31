@@ -846,6 +846,7 @@ export interface BillingProviders {
   iyzico: boolean
   default: 'paytr' | 'iyzico'
   paymentRequired: boolean
+  paymentReady: boolean
 }
 
 export async function fetchBillingPlans(): Promise<{

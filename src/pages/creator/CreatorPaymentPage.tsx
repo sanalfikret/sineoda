@@ -13,7 +13,8 @@ export function CreatorPaymentPage() {
   const { user, isCreator, isLoading, refreshUser } = useAuth()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [provider, setProvider] = useState<'paytr' | 'iyzico'>('paytr')
+  const [provider] = useState<'paytr' | 'iyzico'>('paytr')
+  const [paymentReady, setPaymentReady] = useState(false)
   const [plan, setPlan] = useState<BillingPlan | null>(null)
   const [loading, setLoading] = useState(true)
   const [paying, setPaying] = useState(false)
@@ -29,7 +30,7 @@ export function CreatorPaymentPage() {
   useEffect(() => {
     fetchBillingPlans()
       .then((billing) => {
-        setProvider(billing.providers.default)
+        setPaymentReady(billing.providers.paymentReady)
         const match = billing.plans.find((entry) => entry.id === planId) ?? null
         setPlan(match)
       })
@@ -112,13 +113,19 @@ export function CreatorPaymentPage() {
             </div>
           )}
 
+          {!paymentReady && (
+            <p className="mt-4 text-sm text-amber-200/90">
+              PayTR ödeme altyapısı kısa süre içinde aktif olacak. Başvuru ücreti o zaman alınabilir.
+            </p>
+          )}
+
           <button
             type="button"
-            disabled={paying || loading || !plan}
+            disabled={paying || loading || !plan || !paymentReady}
             onClick={() => void handleCheckout()}
             className="mt-6 w-full rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg disabled:opacity-60"
           >
-            {paying ? 'Yönlendiriliyor...' : `₺${price} Öde ve Başvuruya Devam Et`}
+            {paying ? 'Yönlendiriliyor...' : paymentReady ? `₺${price} Öde ve Başvuruya Devam Et` : 'Ödeme yakında'}
           </button>
 
           <p className="mt-4 text-center text-sm text-plooy-muted">

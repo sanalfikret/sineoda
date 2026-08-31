@@ -7,7 +7,7 @@ export function isCreatorRegistrationPaid(
   creator: Pick<CreatorRow, 'program' | 'registration_paid_at'>,
 ) {
   if (creator.registration_paid_at) return true
-  if (!config.isPaymentConfigured()) return true
+  if (!config.isPaymentConfigured()) return !config.isProduction
   return false
 }
 
