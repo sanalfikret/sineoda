@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { fetchAllWatchProgress, fetchEpisodes, resolveMediaUrl } from '../api/client'
 import type { ContentItem, Episode } from '../types/content'
 import { FEEDBACK_EMAIL } from '../constants/site'
@@ -28,9 +29,9 @@ interface ResumeState {
   position: number
 }
 
-function formatResumeTime(seconds: number) {
+function formatResumeTime(seconds: number, t: (key: string, opts?: Record<string, unknown>) => string) {
   const mins = Math.floor(seconds / 60)
-  return `${mins} dk`
+  return t('detail.resumeMinutes', { mins })
 }
 
 function CreditList({ label, items }: { label: string; items: string[] }) {
@@ -50,6 +51,8 @@ export function ContentDetailView({
   mode = 'page',
   kidsProfileBlocked = false,
 }: ContentDetailViewProps) {
+  const { t } = useTranslation('content')
+  const { t: tb } = useTranslation('browse')
   const [episodes, setEpisodes] = useState<Episode[]>([])
   const [season, setSeason] = useState(1)
   const [resumeEpisode, setResumeEpisode] = useState<ResumeState | null>(null)
@@ -138,16 +141,19 @@ export function ContentDetailView({
   const credits = item.credits ?? {}
   const festivals = item.festivals ?? []
   const displayDuration = resolveContentDuration(item)
-  const audioLanguages = credits.audioLanguages ?? ['Türkçe']
+  const audioLanguages = credits.audioLanguages ?? [t('detail.defaultAudio')]
   const subtitleLanguages =
     credits.subtitleLanguages ??
     (item.subtitles?.length
       ? item.subtitles.map((track) => track.label || track.lang)
-      : ['Türkçe'])
+      : [t('detail.defaultAudio')])
 
   const seriesMeta =
     isSeries && episodes.length > 0
-      ? `${new Set(episodes.map((ep) => ep.season)).size} Sezon · ${episodes.length} Bölüm`
+      ? t('detail.seasonsMeta', {
+          seasons: new Set(episodes.map((ep) => ep.season)).size,
+          episodes: episodes.length,
+        })
       : null
 
   return (
@@ -158,7 +164,7 @@ export function ContentDetailView({
 
         {item.isNew && (
           <span className="absolute left-4 top-4 rounded bg-plooy-gold px-2.5 py-1 text-xs font-bold text-plooy-bg">
-            YENİ
+            {t('detail.new')}
           </span>
         )}
 
@@ -171,7 +177,7 @@ export function ContentDetailView({
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M15 6L9 12L15 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
-            Geri
+            {t('detail.back')}
           </button>
         )}
       </div>
@@ -190,11 +196,11 @@ export function ContentDetailView({
             {item.rating}
           </span>
           <span className="rounded bg-white/10 px-2 py-0.5 text-xs text-white">
-            {getContentTypeLabel(item.type)}
+            {tb(`types.${item.type}`, { defaultValue: getContentTypeLabel(item.type) })}
           </span>
           {item.videoFormat === 'vertical' && (
             <span className="rounded bg-plooy-gold/20 px-2 py-0.5 text-xs text-plooy-gold">
-              Dikey
+              {t('detail.vertical')}
             </span>
           )}
           <span>{item.year}</span>
@@ -225,7 +231,7 @@ export function ContentDetailView({
         <div className="mt-6 flex flex-wrap items-center gap-3">
           {kidsProfileBlocked && (
             <p className="w-full rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-              Bu içerik çocuk profili için uygun değil ({item.rating}).
+              {t('detail.kidsBlocked', { rating: item.rating })}
             </p>
           )}
 
@@ -236,7 +242,10 @@ export function ContentDetailView({
               className="inline-flex items-center gap-2 rounded-lg bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
             >
               <PlaySmallIcon />
-              Kaldığın Yerden Devam · S{seriesResume.episode.season} B{seriesResume.episode.episode}
+              {t('detail.resumeSeries', {
+                season: seriesResume.episode.season,
+                episode: seriesResume.episode.episode,
+              })}
             </button>
           )}
 
@@ -247,7 +256,7 @@ export function ContentDetailView({
               className="inline-flex items-center gap-2 rounded-lg bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
             >
               <PlaySmallIcon />
-              Kaldığın Yerden Devam ({formatResumeTime(filmResume)})
+              {t('detail.resumeFilm', { time: formatResumeTime(filmResume, t) })}
             </button>
           )}
 
@@ -258,7 +267,7 @@ export function ContentDetailView({
               className="inline-flex items-center gap-2 rounded-lg bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
             >
               <PlaySmallIcon />
-              {item.videoFormat === 'vertical' ? 'Dikey İzlemeye Başla' : '1. Bölümü Oynat'}
+              {item.videoFormat === 'vertical' ? t('detail.startVertical') : t('detail.playFirstEpisode')}
             </button>
           )}
 
@@ -269,7 +278,7 @@ export function ContentDetailView({
               className="inline-flex items-center gap-2 rounded-lg bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
             >
               <PlaySmallIcon />
-              {item.videoFormat === 'vertical' ? 'Dikey İzle' : 'Oynat'}
+              {item.videoFormat === 'vertical' ? t('hero.playVertical') : t('hero.play')}
             </button>
           )}
 
@@ -280,13 +289,13 @@ export function ContentDetailView({
               className="inline-flex items-center gap-2 rounded-lg bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
             >
               <PlaySmallIcon />
-              Oynat
+              {t('hero.play')}
             </button>
           )}
 
           {!canPlay && (
             <p className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-plooy-muted">
-              Bu içerik için henüz video eklenmemiş.
+              {t('detail.noVideo')}
             </p>
           )}
 
@@ -295,14 +304,14 @@ export function ContentDetailView({
 
         <div className="mt-6 flex gap-4 border-b border-white/10">
           <TabButton active={tab === 'overview'} onClick={() => setTab('overview')}>
-            Özet
+            {t('detail.tabOverview')}
           </TabButton>
           <TabButton active={tab === 'details'} onClick={() => setTab('details')}>
-            Ayrıntılar
+            {t('detail.tabDetails')}
           </TabButton>
           {isSeries && episodes.length > 0 && (
             <span className="border-b-2 border-transparent pb-2 text-sm font-medium text-white/60">
-              Bölümler ({episodes.length})
+              {t('detail.episodesCount', { count: episodes.length })}
             </span>
           )}
         </div>
@@ -331,19 +340,19 @@ export function ContentDetailView({
         {tab === 'details' && (
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-              <h3 className="text-sm font-semibold text-white">Yapımcılar ve Oyuncular</h3>
-              <CreditList label="Yönetmenler" items={credits.directors ?? []} />
-              <CreditList label="Yapımcılar" items={credits.producers ?? []} />
-              <CreditList label="Oyuncu Kadrosu" items={credits.cast ?? []} />
+              <h3 className="text-sm font-semibold text-white">{t('detail.creditsTitle')}</h3>
+              <CreditList label={t('detail.directors')} items={credits.directors ?? []} />
+              <CreditList label={t('detail.producers')} items={credits.producers ?? []} />
+              <CreditList label={t('detail.cast')} items={credits.cast ?? []} />
               {item.program === 'student_cinema' && item.schoolName ? (
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">Okul</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">{t('detail.school')}</p>
                   <p className="mt-1 text-sm text-white/90">{item.schoolName}</p>
                 </div>
               ) : null}
               {credits.studio && (
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">Stüdyo</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">{t('detail.studio')}</p>
                   <p className="mt-1 text-sm text-white/90">{credits.studio}</p>
                 </div>
               )}
@@ -357,18 +366,18 @@ export function ContentDetailView({
             <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">
-                  Seslendirme Dilleri
+                  {t('detail.audioLanguages')}
                 </p>
                 <p className="mt-1 text-sm text-white/90">{audioLanguages.join(', ')}</p>
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">Alt Yazılar</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">{t('detail.subtitles')}</p>
                 <p className="mt-1 text-sm text-white/90">{subtitleLanguages.join(', ')}</p>
               </div>
               <StudentCinemaMetaDetails item={item} />
               {isSeries && seriesMeta && (
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">Yapı</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">{t('detail.structure')}</p>
                   <p className="mt-1 text-sm text-white/90">{seriesMeta}</p>
                 </div>
               )}
@@ -379,12 +388,12 @@ export function ContentDetailView({
         <div className="mt-8 space-y-4 border-t border-white/10 pt-6">
           <TermsAcceptanceNote />
           <div>
-            <p className="text-sm font-medium text-white">Geri bildirim</p>
+            <p className="text-sm font-medium text-white">{t('detail.feedback')}</p>
             <a
-              href={`mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(`${BRAND_NAME} geri bildirim: ${item.title}`)}`}
+              href={`mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(t('detail.feedbackSubject', { brand: BRAND_NAME, title: item.title }))}`}
               className="mt-2 inline-flex rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white transition hover:bg-white/10"
             >
-              Geri bildirimde bulunun
+              {t('detail.feedbackCta')}
             </a>
           </div>
         </div>

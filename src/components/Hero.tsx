@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { TrailerBackdrop } from './TrailerBackdrop'
 import type { ContentItem } from '../types/content'
 
@@ -8,7 +9,10 @@ interface HeroProps {
   eyebrow?: string
 }
 
-export function Hero({ item, onPlay, onDetails, eyebrow = 'Öne Çıkan' }: HeroProps) {
+export function Hero({ item, onPlay, onDetails, eyebrow }: HeroProps) {
+  const { t } = useTranslation('content')
+  const eyebrowLabel = eyebrow ?? t('hero.featured')
+
   return (
     <section className="relative min-h-[58vh] overflow-hidden sm:min-h-[72vh] lg:min-h-[88vh] tv:min-h-[85vh]">
       <TrailerBackdrop item={item} />
@@ -21,10 +25,10 @@ export function Hero({ item, onPlay, onDetails, eyebrow = 'Öne Çıkan' }: Hero
         <div className="max-w-3xl">
           <p className="mb-3 inline-flex max-w-full flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-plooy-gold sm:mb-4 sm:text-sm sm:tracking-[0.28em]">
             <span className="h-px w-8 bg-plooy-gold/70" />
-            {eyebrow}
+            {eyebrowLabel}
             {item.isNew && (
               <span className="rounded-full bg-plooy-gold px-2.5 py-0.5 text-[10px] font-bold tracking-normal text-plooy-bg">
-                YENİ
+                {t('hero.new')}
               </span>
             )}
           </p>
@@ -43,7 +47,7 @@ export function Hero({ item, onPlay, onDetails, eyebrow = 'Öne Çıkan' }: Hero
             {item.videoFormat === 'vertical' && (
               <>
                 <span className="text-white/40">•</span>
-                <span className="text-plooy-gold">Dikey Dizi</span>
+                <span className="text-plooy-gold">{t('hero.verticalSeries')}</span>
               </>
             )}
           </div>
@@ -64,7 +68,7 @@ export function Hero({ item, onPlay, onDetails, eyebrow = 'Öne Çıkan' }: Hero
               className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-plooy-gold px-4 text-sm font-semibold text-plooy-bg shadow-lg shadow-plooy-gold/20 transition hover:brightness-110 sm:h-auto sm:min-h-11 sm:gap-2 sm:px-6 sm:py-3.5"
             >
               <PlayIcon />
-              {item.videoFormat === 'vertical' ? 'Dikey İzle' : 'Oynat'}
+              {item.videoFormat === 'vertical' ? t('hero.playVertical') : t('hero.play')}
             </button>
             {item.trailerUrl && (
               <button
@@ -73,7 +77,7 @@ export function Hero({ item, onPlay, onDetails, eyebrow = 'Öne Çıkan' }: Hero
                 className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-4 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/15 sm:h-auto sm:min-h-11 sm:gap-2 sm:px-6 sm:py-3.5"
               >
                 <InfoIcon />
-                Fragman & Detay
+                {t('hero.trailerAndDetails')}
               </button>
             )}
             {!item.trailerUrl && (
@@ -83,7 +87,7 @@ export function Hero({ item, onPlay, onDetails, eyebrow = 'Öne Çıkan' }: Hero
                 className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-4 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/15 sm:h-auto sm:min-h-11 sm:gap-2 sm:px-6 sm:py-3.5"
               >
                 <InfoIcon />
-                Detaylar
+                {t('hero.details')}
               </button>
             )}
           </div>

@@ -1,0 +1,14 @@
+{
+  "successTitle": "Ödeme başarılı",
+  "successViewerBody": "Aboneliğin aktif edildi. Profilini seçip hemen izlemeye başlayabilirsin.",
+  "successCreatorBody": "Yapımcı başvuru ücretiniz alındı. Artık film başvurusu gönderebilirsiniz; filminizin yayına alınması admin incelemesine tabidir.",
+  "selectProfile": "Profil Seç ve İzle",
+  "goToCreatorPanel": "Yapımcı Paneline Git",
+  "failTitle": "Ödeme tamamlanamadı",
+  "failBody": "İşlem iptal edildi veya başarısız oldu. Tekrar deneyebilirsin.",
+  "backToPlans": "Planlara Dön",
+  "sessionNotFound": "Ödeme oturumu bulunamadı.",
+  "backToPlansLower": "Planlara dön",
+  "cancel": "İptal",
+  "iframeTitle": "PayTR Ödeme"
+}

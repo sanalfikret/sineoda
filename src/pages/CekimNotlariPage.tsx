@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { AppShell, useContentUI } from '../components/AppShell'
 import { fetchCekimNotlariSections } from '../api/client'
 import { useContent } from '../context/ContentContext'
 import type { ContentItem } from '../types/content'
-import { CEKIM_NOTLARI_NAV_LABEL, CEKIM_NOTLARI_SECTION_TITLE } from '../constants/cekimNotlari'
 import { CekimNotlariCard } from '../components/cekimNotlari/CekimNotlariCard'
 import { Hero } from '../components/Hero'
 
@@ -12,6 +12,7 @@ const PREVIEW_COUNT = 3
 const SKELETON_SECTIONS = 4
 
 function CekimNotlariContent() {
+  const { t } = useTranslation('browse')
   const [searchParams] = useSearchParams()
   const focusCategoryId = searchParams.get('kategori')?.trim() || ''
   const { openDetail, openPlayer } = useContentUI()
@@ -50,9 +51,9 @@ function CekimNotlariContent() {
     setLoadingFallback(true)
     void fetchCekimNotlariSections()
       .then((data) => setSections(data.sections))
-      .catch((err) => setError(err instanceof Error ? err.message : 'İçerik yüklenemedi.'))
+      .catch((err) => setError(err instanceof Error ? err.message : t('loadFailed')))
       .finally(() => setLoadingFallback(false))
-  }, [bootstrapLoading, sections.length])
+  }, [bootstrapLoading, sections.length, t])
 
   useEffect(() => {
     if (!bootstrapLoading && cekimNotlariSections.length === 0 && sections.length === 0) {
@@ -85,19 +86,19 @@ function CekimNotlariContent() {
           item={heroItem}
           onPlay={openPlayer}
           onDetails={openDetail}
-          eyebrow={CEKIM_NOTLARI_SECTION_TITLE}
+          eyebrow={t('cekimSectionTitle')}
         />
       ) : (
         <div className="px-4 pb-4 pt-28 sm:px-6 lg:px-8">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-plooy-accent">
-            {CEKIM_NOTLARI_SECTION_TITLE}
+            {t('cekimSectionTitle')}
           </p>
-          <h1 className="mt-3 text-2xl font-bold text-white sm:text-3xl">{CEKIM_NOTLARI_NAV_LABEL}</h1>
+          <h1 className="mt-3 text-2xl font-bold text-white sm:text-3xl">{t('cekimNotlari')}</h1>
         </div>
       )}
 
       <p className="mx-auto max-w-3xl px-4 pb-8 pt-2 text-center text-sm text-plooy-muted sm:px-6">
-        Alanında uzman isimlerden eğitici videolar — setten post prodüksiyona.
+        {t('cekimNotlariDesc')}
       </p>
 
       <div className="mx-auto max-w-[1400px] space-y-6 px-5 pb-24 sm:px-8">
@@ -145,7 +146,9 @@ function CekimNotlariContent() {
                   </span>
                   <span className="flex shrink-0 items-center gap-2 text-sm text-plooy-muted">
                     {section.items.length > 0 && (
-                      <span className="hidden sm:inline">{expanded ? 'Daralt' : `${section.items.length} video`}</span>
+                      <span className="hidden sm:inline">
+                        {expanded ? t('collapse') : t('videoCount', { count: section.items.length })}
+                      </span>
                     )}
                     <ChevronIcon expanded={expanded} />
                   </span>
@@ -164,12 +167,12 @@ function CekimNotlariContent() {
                         onClick={() => toggleSection(section.id)}
                         className="mt-3 text-sm font-medium text-plooy-accent transition hover:text-white"
                       >
-                        Tümünü gör ({section.items.length} video)
+                        {t('showAll', { count: section.items.length })}
                       </button>
                     )}
                   </>
                 ) : (
-                  <p className="text-sm text-plooy-muted">Bu bölüm için henüz video eklenmedi.</p>
+                  <p className="text-sm text-plooy-muted">{t('sectionEmpty')}</p>
                 )}
               </section>
             )

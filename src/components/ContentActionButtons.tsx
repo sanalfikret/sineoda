@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useWatchlist } from '../context/WatchlistContext'
 import { useContentReactions } from '../hooks/useContentReactions'
 import { ShareMenu } from './ShareMenu'
@@ -18,6 +19,7 @@ export function ContentActionButtons({
   showLabels = false,
   className = '',
 }: ContentActionButtonsProps) {
+  const { t } = useTranslation('content')
   const { isInWatchlist, toggleWatchlist, actionError, clearActionError } = useWatchlist()
   const { reaction, reactionLoading, reactionError, clearReactionError, handleReaction } =
     useContentReactions(contentId)
@@ -34,7 +36,7 @@ export function ContentActionButtons({
     try {
       await toggleWatchlist(contentId)
     } catch (error) {
-      setLocalError(error instanceof Error ? error.message : 'Liste güncellenemedi.')
+      setLocalError(error instanceof Error ? error.message : t('actions.watchlistFailed'))
     }
   }
 
@@ -47,10 +49,10 @@ export function ContentActionButtons({
 
   return (
     <div className={`relative ${className}`}>
-      <div className="flex flex-wrap items-center gap-2.5" role="toolbar" aria-label="İçerik işlemleri">
+      <div className="flex flex-wrap items-center gap-2.5" role="toolbar" aria-label={t('actions.toolbar')}>
         {showWatchlist && (
           <ClassicButton
-            label={inList ? 'Listemde' : 'Listeme ekle'}
+            label={inList ? t('actions.inWatchlist') : t('actions.addToWatchlist')}
             active={inList}
             showLabel={showLabels}
             onClick={() => void runWatchlist()}
@@ -60,7 +62,7 @@ export function ContentActionButtons({
         )}
 
         <ClassicButton
-          label="Beğen"
+          label={t('actions.like')}
           active={reaction === 'like'}
           disabled={reactionLoading}
           showLabel={showLabels}
@@ -70,7 +72,7 @@ export function ContentActionButtons({
         </ClassicButton>
 
         <ClassicButton
-          label="Beğenme"
+          label={t('actions.dislike')}
           active={reaction === 'dislike'}
           disabled={reactionLoading}
           showLabel={showLabels}
@@ -80,7 +82,7 @@ export function ContentActionButtons({
         </ClassicButton>
 
         <ClassicButton
-          label="Paylaş"
+          label={t('actions.share')}
           active={shareOpen}
           showLabel={showLabels}
           onClick={() => setShareOpen((open) => !open)}

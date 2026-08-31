@@ -1,0 +1,158 @@
+{
+  "tagline": "Where independent cinema meets",
+  "hero": {
+    "line1": "Where independent cinema meets",
+    "line2": "Festival films, series, and documentaries",
+    "description": "Original stories from independent filmmakers around the world. Not commercial blockbusters — a curated selection, a calm interface, and a viewing experience built for cinephiles.",
+    "ctaPrimary": "Start Free Trial",
+    "ctaSecondary": "Sign In",
+    "legalNote": "By signing up, you accept the Terms of Use, Privacy Policy, KVKK notice, and Cookie Policy."
+  },
+  "manifesto": {
+    "eyebrow": "What is Plooy?",
+    "title": "A gateway to the world's independent filmmakers.",
+    "body": "Beyond Hollywood and commercial productions: independent films, series, documentaries, and short films from Cannes, Berlin, Sundance, Rotterdam, and local festivals. Distinct voices, carefully selected — a calm, focused viewing experience for cinephiles.",
+    "ctaLabel": "Explore the catalog"
+  },
+  "pillars": [
+    {
+      "title": "Independent work from around the world",
+      "text": "Films and series from independent filmmakers across Europe, Asia, the Americas, and Africa in one catalog."
+    },
+    {
+      "title": "Watch on your schedule",
+      "text": "Festival-winning films and independent series — on any device, picking up where you left off."
+    }
+  ],
+  "features": {
+    "eyebrow": "Why Plooy",
+    "title": "Built for world independent cinema.\nEasy on the eyes.",
+    "items": [
+      {
+        "title": "World independent cinema",
+        "text": "Films and series from independent producers across continents — local stories, universal emotions."
+      },
+      {
+        "title": "Festival selection",
+        "text": "Award-winning festival films and independent series — chosen by our curation team."
+      },
+      {
+        "title": "Calm interface",
+        "text": "A cinematic design that doesn't strain the eyes or pull focus from the story."
+      },
+      {
+        "title": "Every device",
+        "text": "The same quality experience on TV, tablet, or phone."
+      }
+    ]
+  },
+  "campaign": {
+    "eyebrow": "Subscription",
+    "title": "Start watching today",
+    "description": "Student or standard plan. Billed monthly, cancel anytime.",
+    "price": "₺49",
+    "priceSuffix": " from /mo",
+    "priceNote": "Student plan ₺49/mo (ID required) · Standard plan ₺69/mo",
+    "ctaPrimary": "Sign Up",
+    "ctaSecondary": "Compare plans"
+  },
+  "studentCinema": {
+    "eyebrow": "With film schools",
+    "title": "A digital stage for young cinema",
+    "subtitle": "Upload graduate and student films, share behind-the-scenes footage. Your school selects, Plooy gives final approval — together we support emerging filmmakers.",
+    "stepsHeading": "How it works",
+    "steps": [
+      {
+        "title": "Upload your film and BTS",
+        "text": "Short film, graduation project, or documentary — plus set footage and short making-of videos."
+      },
+      {
+        "title": "Get school approval",
+        "text": "Your instructor or school representative nominates the project on behalf of the school."
+      },
+      {
+        "title": "Plooy publishes",
+        "text": "If it meets content and platform standards, it joins the Student Cinema selection."
+      }
+    ],
+    "ctaPrimary": "Submit a Film",
+    "ctaSecondary": "How It Works",
+    "footnote": "Your school selects · Plooy gives final approval · Film + BTS published together"
+  },
+  "creator": {
+    "eyebrow": "For independent producers",
+    "title": "Upload your film, earn through fair revenue sharing",
+    "subtitle": "Plooy isn't just for viewers — it's built for independent filmmakers too. Upload your work, join the curated catalog, and find revenue-sharing terms clearly stated in the creator agreement.",
+    "perks": [
+      {
+        "title": "A real audience",
+        "text": "A focused community of independent cinema fans — real viewing, not random clicks."
+      },
+      {
+        "title": "Fair revenue model",
+        "text": "Transparent sharing terms. How earnings are calculated is clear in the agreement — no surprises."
+      },
+      {
+        "title": "Curated spotlight",
+        "text": "Your film passes editorial review and is positioned with care in the catalog — real showcase value."
+      },
+      {
+        "title": "One platform, one home",
+        "text": "Feature, short, documentary, and series — manage your independent work in one place."
+      }
+    ],
+    "ctaPrimary": "Submit a Film",
+    "ctaSecondary": "Creator Sign In",
+    "footnote": "Where independent cinema meets — discover as a viewer, publish as a creator."
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "items": [
+      {
+        "question": "What is Plooy?",
+        "answer": "Plooy is a curated streaming platform where you can watch films, series, and documentaries from independent filmmakers around the world."
+      },
+      {
+        "question": "How much does Plooy cost?",
+        "answer": "We offer monthly plans from ₺49 and an annual plan at ₺490. The annual plan includes two months free."
+      },
+      {
+        "question": "Where can I watch?",
+        "answer": "Watch Plooy in your web browser, on Android, iOS, Samsung Tizen, LG webOS, Android TV, and Google TV. You can also add it to your TV as an app."
+      },
+      {
+        "question": "How do I cancel?",
+        "answer": "Cancel anytime from the Subscription section in your account."
+      },
+      {
+        "question": "What can I watch on Plooy?",
+        "answer": "Films, series, documentaries, and short films from world independent cinema."
+      },
+      {
+        "question": "Is Plooy suitable for children?",
+        "answer": "Yes. A kids profile serves age-appropriate content."
+      }
+    ],
+    "footerText": "Ready to watch?",
+    "footerLinkLabel": "Enter your email to sign up"
+  },
+  "emailSignup": {
+    "title": "Ready to watch?",
+    "description": "Enter your email, create your membership, and start unlimited streaming right away.",
+    "buttonLabel": "Get Started"
+  },
+  "journal": {
+    "eyebrow": "Plooy Journal",
+    "title": "Writing on independent cinema",
+    "description": "Festival notes, curator picks, and news from world independent cinema.",
+    "viewAll": "All articles →"
+  },
+  "slider": {
+    "prev": "Previous",
+    "next": "Next",
+    "slide": "Slide {{n}}"
+  },
+  "showcase": {
+    "emptyCategory": "No content in this category yet."
+  }
+}

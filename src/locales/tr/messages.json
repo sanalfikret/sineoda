@@ -1,0 +1,13 @@
+{
+  "title": "Mesajlarım",
+  "subtitle": "Plooy ekibinden duyurular ve bildirimler",
+  "backHome": "← Ana sayfa",
+  "loading": "Yükleniyor...",
+  "viewerOnlyTitle": "Bu sayfa yalnızca izleyici hesapları içindir.",
+  "viewerOnlyBody": "Admin veya yapımcı hesabıyla giriş yaptınız. Üyeye gönderdiğiniz mesajı görmek için o üyenin e-posta ve şifresiyle giriş yapın — gizli pencerede denemeniz en kolayı.",
+  "adminLink": "Admin → İzleyiciler",
+  "empty": "Henüz mesajınız yok. Admin panelinden size duyuru gönderildiğinde burada görünür.",
+  "backToList": "← Mesaj listesi",
+  "selectMessage": "Bir mesaj seçin.",
+  "loadFailed": "Mesajlar yüklenemedi."
+}

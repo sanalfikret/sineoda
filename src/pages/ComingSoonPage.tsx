@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { PageMeta } from '../components/PageMeta'
 import { PlooyLogo } from '../components/PlooyLogo'
 import { SiteFooter } from '../components/SiteFooter'
+import { LanguageSwitcher } from '../components/LanguageSwitcher'
 import { useSiteMode } from '../context/SiteModeContext'
+import { useLocale } from '../i18n/LocaleContext'
 import { BRAND_NAME, BRAND_TAGLINE } from '../constants/brand'
-import { formatLaunchDateTr, getCountdownParts } from '../utils/countdown'
+import { formatLaunchDate, getCountdownParts } from '../utils/countdown'
 
 function CountdownUnit({ value, label }: { value: number; label: string }) {
   return (
@@ -17,6 +20,8 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
 }
 
 export function ComingSoonPage() {
+  const { t } = useTranslation()
+  const { locale, localizePath } = useLocale()
   const { siteMode, loading } = useSiteMode()
   const [now, setNow] = useState(Date.now())
 
@@ -34,12 +39,12 @@ export function ComingSoonPage() {
   }
 
   const countdown = getCountdownParts(siteMode.launchAt, now)
-  const launchLabel = formatLaunchDateTr(siteMode.launchAt)
+  const launchLabel = formatLaunchDate(siteMode.launchAt, locale)
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-plooy-bg text-white">
       <PageMeta
-        title="Yakında"
+        title={t('comingSoon.badge')}
         description={`${BRAND_NAME} — ${siteMode.subheadline}`}
         path="/"
       />
@@ -51,17 +56,20 @@ export function ComingSoonPage() {
 
       <div className="safe-top relative mx-auto flex min-h-dvh max-w-4xl flex-col px-5 py-10 sm:px-8">
         <header className="flex items-center justify-between gap-4">
-          <PlooyLogo tone="on-dark" className="h-8" linked linkTo="/" />
-          <Link
-            to="/creator/giris"
-            className="rounded-lg border border-white/15 px-4 py-2 text-sm text-white/80 hover:bg-white/5"
-          >
-            Yapımcı Girişi
-          </Link>
+          <PlooyLogo tone="on-dark" className="h-8" linked linkTo={localizePath('/')} />
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher />
+            <Link
+              to={localizePath('/creator/giris')}
+              className="rounded-lg border border-white/15 px-4 py-2 text-sm text-white/80 hover:bg-white/5"
+            >
+              {t('comingSoon.creatorLogin')}
+            </Link>
+          </div>
         </header>
 
         <main className="flex flex-1 flex-col items-center justify-center py-12 text-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.35em] text-plooy-gold">Coming Soon</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.35em] text-plooy-gold">{t('comingSoon.badge')}</p>
           <h1 className="mt-4 text-4xl font-bold leading-tight sm:text-5xl md:text-6xl">
             {siteMode.headline}
           </h1>
@@ -71,48 +79,43 @@ export function ComingSoonPage() {
           {!countdown.expired && siteMode.launchAt ? (
             <div className="mt-10 w-full">
               <p className="mb-4 text-sm text-plooy-muted">
-                Üyelik ve izleme {launchLabel ? `${launchLabel} tarihinde` : 'yakında'} açılacak
+                {launchLabel
+                  ? t('comingSoon.membershipOpens', { date: launchLabel })
+                  : t('comingSoon.membershipOpensSoon')}
               </p>
               <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-                <CountdownUnit value={countdown.days} label="Gün" />
-                <CountdownUnit value={countdown.hours} label="Saat" />
-                <CountdownUnit value={countdown.minutes} label="Dakika" />
-                <CountdownUnit value={countdown.seconds} label="Saniye" />
+                <CountdownUnit value={countdown.days} label={t('comingSoon.day')} />
+                <CountdownUnit value={countdown.hours} label={t('comingSoon.hour')} />
+                <CountdownUnit value={countdown.minutes} label={t('comingSoon.minute')} />
+                <CountdownUnit value={countdown.seconds} label={t('comingSoon.second')} />
               </div>
             </div>
           ) : (
             <p className="mt-10 rounded-xl border border-plooy-gold/30 bg-plooy-gold/10 px-5 py-4 text-sm text-plooy-gold">
-              Açılış tarihi çok yakında duyurulacak.
+              {t('comingSoon.launchPending')}
             </p>
           )}
 
           <div className="mt-12 grid w-full max-w-xl gap-4 sm:grid-cols-2">
             <Link
-              to="/creator/kayit"
+              to={localizePath('/creator/kayit')}
               className="rounded-2xl border border-plooy-gold/40 bg-plooy-gold/10 px-6 py-5 text-left transition hover:bg-plooy-gold/15"
             >
-              <p className="text-xs uppercase tracking-[0.2em] text-plooy-gold">Yapımcılar</p>
-              <p className="mt-2 text-lg font-semibold text-white">Film Başvurusu</p>
-              <p className="mt-2 text-sm text-white/65">
-                Bağımsız filmini yükle, küratörlü katalogda yerini al.
-              </p>
+              <p className="text-xs uppercase tracking-[0.2em] text-plooy-gold">{t('comingSoon.creators')}</p>
+              <p className="mt-2 text-lg font-semibold text-white">{t('comingSoon.filmApply')}</p>
+              <p className="mt-2 text-sm text-white/65">{t('comingSoon.filmApplyDesc')}</p>
             </Link>
             <Link
-              to="/creator/kayit?program=genc-sinema"
+              to={`${localizePath('/creator/kayit')}?program=genc-sinema`}
               className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-6 py-5 text-left transition hover:bg-emerald-500/15"
             >
-              <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">Öğrenci sineması</p>
-              <p className="mt-2 text-lg font-semibold text-white">Genç Sinema Başvurusu</p>
-              <p className="mt-2 text-sm text-white/65">
-                Sinema okulu filmini başvur; seçki ve inceleme sürecine gir.
-              </p>
+              <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">{t('comingSoon.studentCinema')}</p>
+              <p className="mt-2 text-lg font-semibold text-white">{t('comingSoon.studentApply')}</p>
+              <p className="mt-2 text-sm text-white/65">{t('comingSoon.studentApplyDesc')}</p>
             </Link>
           </div>
 
-          <p className="mt-8 max-w-lg text-sm text-plooy-muted">
-            İzleyici üyeliği açılışa kadar kapalıdır. Yapımcı başvuruları reklam kampanyamız için şimdiden
-            toplanıyor.
-          </p>
+          <p className="mt-8 max-w-lg text-sm text-plooy-muted">{t('comingSoon.viewerClosed')}</p>
         </main>
 
         <SiteFooter />

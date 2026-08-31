@@ -1,0 +1,80 @@
+{
+  "title": "Hesabım",
+  "switchProfile": "Profil Değiştir",
+  "home": "Ana Sayfa",
+  "sections": {
+    "accountInfo": "Hesap Bilgileri",
+    "subscription": "Abonelik",
+    "paymentHistory": "Ödeme geçmişi",
+    "watchStats": "İzleme İstatistikleri",
+    "legal": "Yasal Bilgiler",
+    "profiles": "Profiller",
+    "mobileApp": "Mobil uygulama"
+  },
+  "fields": {
+    "name": "Ad Soyad",
+    "status": "Durum",
+    "plan": "Plan",
+    "startedAt": "Başlangıç",
+    "expiresAt": "Bitiş",
+    "cancelledAt": "İptal tarihi",
+    "activeProfile": "Aktif profil:",
+    "date": "Tarih",
+    "amount": "Tutar",
+    "reference": "Referans"
+  },
+  "subscription": {
+    "viewPlans": "Planları Gör",
+    "cancel": "Aboneliği İptal Et",
+    "cancelling": "İptal ediliyor…",
+    "cancelledNotice": "Aboneliğiniz iptal edildi. {{date}} tarihine kadar izlemeye devam edebilirsiniz.",
+    "cancelConfirm": "Aboneliğinizi iptal etmek istediğinize emin misiniz? Ödediğiniz dönem sonuna kadar izlemeye devam edebilirsiniz; otomatik yenileme yapılmaz.",
+    "cancelSuccess": "Abonelik iptal edildi. Bitiş tarihine kadar izlemeye devam edebilirsiniz."
+  },
+  "status": {
+    "active": "Aktif",
+    "expired": "Süresi doldu",
+    "cancelled": "İptal edildi",
+    "free": "Ücretsiz"
+  },
+  "profile": {
+    "add": "+ Profil Ekle",
+    "new": "Yeni profil",
+    "namePlaceholder": "Profil adı",
+    "kidsProfile": "Çocuk profili",
+    "standardProfile": "Standart profil",
+    "currentlyActive": " · Şu an aktif",
+    "edit": "Düzenle",
+    "save": "Kaydet",
+    "delete": "Sil",
+    "deleteConfirm": "Bu profili silmek istediğine emin misin?",
+    "addBtn": "Ekle"
+  },
+  "paymentHistory": {
+    "description": "PayTR ile yapılan ödemeler için platform makbuzu. Resmi e-fatura ayrı muhasebe sürecinde düzenlenir.",
+    "empty": "Henüz kayıtlı ödeme bulunmuyor."
+  },
+  "watchStats": {
+    "description": "Aktif profilin için film, dizi ve diğer içeriklerde geçirdiğin süre."
+  },
+  "legal": {
+    "versionNote": "Platform kullanımına ilişkin metinler. Güncel sürüm: {{version}}.",
+    "consentRecords": "Onay kayıtlarım",
+    "consentDescription": "Kayıt ve çerez tercihlerinizde adınız, IP adresiniz ve zaman damgası saklanır.",
+    "showText": "Metni gör",
+    "hideText": "Gizle",
+    "ipLabel": "IP:",
+    "versionLabel": "Sürüm:"
+  },
+  "messages": {
+    "accountUpdated": "Hesap bilgileri güncellendi.",
+    "profileUpdated": "Profil güncellendi.",
+    "profileDeleted": "Profil silindi.",
+    "profileAdded": "Profil eklendi.",
+    "saveFailed": "Kayıt başarısız.",
+    "profileUpdateFailed": "Profil güncellenemedi.",
+    "profileDeleteFailed": "Profil silinemedi.",
+    "profileAddFailed": "Profil eklenemedi.",
+    "cancelFailed": "Abonelik iptal edilemedi."
+  }
+}

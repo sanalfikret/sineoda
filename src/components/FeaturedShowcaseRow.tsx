@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import type { ContentItem } from '../types/content'
+import { useLocale } from '../i18n/LocaleContext'
 import { ContentCard } from './ContentCard'
 
 export const FEATURED_SHOWCASE_MAX_ITEMS = 6
@@ -26,15 +28,15 @@ interface FeaturedShowcaseRowProps {
 function ShowcaseCard({
   item,
   onSelect,
-  guestMode,
   progressMap,
   variant,
+  guestHref,
 }: {
   item: ContentItem
   onSelect?: (item: ContentItem) => void
-  guestMode: boolean
   progressMap?: Record<string, number>
   variant: 'carousel' | 'grid'
+  guestHref?: string
 }) {
   return (
     <ContentCard
@@ -44,7 +46,7 @@ function ShowcaseCard({
       layout="landscape"
       forceLandscape
       variant={variant}
-      guestHref={guestMode ? '/giris' : undefined}
+      guestHref={guestHref}
     />
   )
 }
@@ -58,11 +60,14 @@ export function FeaturedShowcaseRow({
   className = '',
   progressMap,
 }: FeaturedShowcaseRowProps) {
+  const { t } = useTranslation('browse')
+  const { localizePath } = useLocale()
+
   if (items.length === 0) return null
 
   const visible = items.slice(0, FEATURED_SHOWCASE_MAX_ITEMS)
   const hasMore = items.length > FEATURED_SHOWCASE_MAX_ITEMS
-  const loginHref = guestMode ? '/giris' : viewAllHref
+  const loginHref = guestMode ? localizePath('/giris') : viewAllHref ? localizePath(viewAllHref) : undefined
   const showMoreLink = guestMode || Boolean(viewAllHref && hasMore)
 
   return (
@@ -72,35 +77,33 @@ export function FeaturedShowcaseRow({
           <h2 className="whitespace-pre-line text-lg font-semibold text-white sm:text-xl">{title}</h2>
           {loginHref && (guestMode || hasMore) && (
             <Link to={loginHref} className="shrink-0 text-sm font-medium text-plooy-gold hover:underline">
-              Tümünü gör
+              {t('viewAll')}
             </Link>
           )}
         </div>
 
-        {/* Mobil: alt alta tam genişlik kartlar */}
         <div className="grid grid-cols-1 gap-3 sm:hidden">
           {visible.map((item) => (
             <ShowcaseCard
               key={item.id}
               item={item}
               onSelect={onSelect}
-              guestMode={guestMode}
               progressMap={progressMap}
               variant="grid"
+              guestHref={guestMode ? localizePath('/giris') : undefined}
             />
           ))}
         </div>
 
-        {/* Tablet+ : 2 sütun, geniş ekranda 3 sütun vitrin */}
         <div className="hidden gap-3 sm:grid sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-5">
           {visible.map((item) => (
             <ShowcaseCard
               key={item.id}
               item={item}
               onSelect={onSelect}
-              guestMode={guestMode}
               progressMap={progressMap}
               variant="grid"
+              guestHref={guestMode ? localizePath('/giris') : undefined}
             />
           ))}
         </div>
@@ -111,7 +114,7 @@ export function FeaturedShowcaseRow({
               to={loginHref}
               className="inline-flex items-center justify-center rounded-lg border border-plooy-gold/40 bg-plooy-gold/10 px-5 py-2.5 text-sm font-semibold text-plooy-gold transition hover:bg-plooy-gold/20"
             >
-              {guestMode ? 'Daha fazlasını görmek için giriş yap' : 'Tümünü gör'}
+              {guestMode ? t('loginToSeeMore') : t('viewAll')}
             </Link>
           </div>
         )}

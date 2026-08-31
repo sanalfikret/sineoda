@@ -1,6 +1,8 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import type { ContentItem } from '../types/content'
+import { useLocale } from '../i18n/LocaleContext'
 import { ContentCard } from './ContentCard'
 
 /** Ana sayfa carousel + kategori grid ortak yatay aralık (12px) */
@@ -41,6 +43,8 @@ export function ContentRow({
   gridFixedWidth = false,
   guestMode = false,
 }: ContentRowProps) {
+  const { t } = useTranslation('browse')
+  const { localizePath } = useLocale()
   const rowRef = useRef<HTMLDivElement>(null)
   const isGrid = variant === 'grid'
 
@@ -57,8 +61,8 @@ export function ContentRow({
         <h2 className="text-lg font-semibold text-white sm:text-xl">{title}</h2>
         <div className="flex items-center gap-2">
           {viewAllHref && (
-            <Link to={viewAllHref} className="text-sm font-medium text-plooy-gold hover:underline">
-              Tümünü gör
+            <Link to={localizePath(viewAllHref)} className="text-sm font-medium text-plooy-gold hover:underline">
+              {t('viewAll')}
             </Link>
           )}
           {!isGrid && (
@@ -84,7 +88,7 @@ export function ContentRow({
                   layout={layout}
                   variant={variant}
                   gridFixedWidth
-                  guestHref={guestMode ? '/giris' : undefined}
+                  guestHref={guestMode ? localizePath('/giris') : undefined}
                 />
               ))}
             </div>
@@ -100,7 +104,7 @@ export function ContentRow({
                 size={prominent ? 'large' : 'default'}
                 layout={layout}
                 variant={variant}
-                guestHref={guestMode ? '/giris' : undefined}
+                guestHref={guestMode ? localizePath('/giris') : undefined}
               />
             ))}
           </div>
@@ -120,7 +124,7 @@ export function ContentRow({
                 size={prominent ? 'large' : 'default'}
                 layout={layout}
                 variant={variant}
-                guestHref={guestMode ? '/giris' : undefined}
+                guestHref={guestMode ? localizePath('/giris') : undefined}
               />
             ))}
           </div>
@@ -137,10 +141,12 @@ function ScrollButton({
   direction: 'left' | 'right'
   onClick: () => void
 }) {
+  const { t } = useTranslation('browse')
+
   return (
     <button
       type="button"
-      aria-label={direction === 'left' ? 'Sola kaydır' : 'Sağa kaydır'}
+      aria-label={direction === 'left' ? t('scrollLeft') : t('scrollRight')}
       onClick={onClick}
       className="rounded-full border border-white/10 bg-plooy-elevated p-2 text-white/80 transition hover:bg-white/10 hover:text-white"
     >

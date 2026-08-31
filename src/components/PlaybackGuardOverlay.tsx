@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { isTvDevice } from '../utils/tvDevice'
 
 interface PlaybackGuardOverlayProps {
@@ -9,6 +10,8 @@ interface PlaybackGuardOverlayProps {
 }
 
 export function PlaybackGuardOverlay({ mode, message, onContinue, onClose }: PlaybackGuardOverlayProps) {
+  const { t } = useTranslation('content')
+  const { t: tc } = useTranslation()
   const primaryRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -17,18 +20,18 @@ export function PlaybackGuardOverlay({ mode, message, onContinue, onClose }: Pla
 
   const title =
     mode === 'idle_prompt'
-      ? 'Hâlâ orada mısın?'
+      ? t('playbackGuard.idleTitle')
       : mode === 'daily_limit'
-        ? 'Bugünlük hakkın doldu'
-        : 'Başka cihazda izleniyor'
+        ? t('playbackGuard.dailyLimitTitle')
+        : t('playbackGuard.otherDeviceTitle')
 
   const body =
     message ??
     (mode === 'idle_prompt'
-      ? 'Bir süredir hareket yok — içeriği durdurduk. Devam etmek ister misin?'
+      ? t('playbackGuard.idleBody')
       : mode === 'daily_limit'
-        ? 'Biraz dinlen; İstanbul saatiyle yarın yeni izleme hakkın açılacak.'
-        : 'Hesabın şu an başka bir cihazda izleniyor. Aynı anda yalnızca bir cihazdan devam edebilirsin.')
+        ? t('playbackGuard.dailyLimitBody')
+        : t('playbackGuard.otherDeviceBody'))
 
   return (
     <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/75 px-6 backdrop-blur-sm">
@@ -43,7 +46,7 @@ export function PlaybackGuardOverlay({ mode, message, onContinue, onClose }: Pla
               onClick={onContinue}
               className="rounded-xl bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold tv:px-8 tv:py-4 tv:text-lg"
             >
-              Evet, devam et
+              {t('playbackGuard.continue')}
             </button>
           ) : null}
           <button
@@ -51,7 +54,7 @@ export function PlaybackGuardOverlay({ mode, message, onContinue, onClose }: Pla
             onClick={onClose}
             className="rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold tv:px-8 tv:py-4 tv:text-lg"
           >
-            Kapat
+            {tc('actions.close')}
           </button>
         </div>
       </div>

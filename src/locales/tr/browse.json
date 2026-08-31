@@ -1,0 +1,31 @@
+{
+  "diziler": "Diziler",
+  "filmler": "Filmler",
+  "belgeseller": "Belgeseller",
+  "standup": "Stand-up",
+  "klasikler": "Klasikler",
+  "dikey": "Dikey Diziler",
+  "gencSinema": "Genç Sinema",
+  "kisaFilmler": "Kısa Filmler",
+  "cekimNotlari": "Çekim Notları",
+  "cekimSectionTitle": "Çekim İçin Notlar",
+  "forYou": "Senin İçin",
+  "studentCinemaDesc": "Sinema okullarından mezun ve öğrenci filmleri — yalnızca Genç Sinema seçkisinde.",
+  "cekimNotlariDesc": "Alanında uzman isimlerden eğitici videolar — setten post prodüksiyona.",
+  "classicsDesc": "Plooy kataloğundaki klasik uzun metraj filmler — sinema tarihinden seçki.",
+  "continueWatching": "Kaldığın Yerden Devam Et",
+  "myList": "Listem",
+  "noContent": "Bu filtrede içerik bulunamadı.",
+  "loadFailed": "İçerik yüklenemedi.",
+  "collapse": "Daralt",
+  "videoCount": "{{count}} video",
+  "showAll": "Tümünü gör ({{count}} video)",
+  "sectionEmpty": "Bu bölüm için henüz video eklenmedi.",
+  "contentTypes": {
+    "film": "Film",
+    "dizi": "Dizi",
+    "belgesel": "Belgesel",
+    "kisa-film": "Kısa Film",
+    "stand-up": "Stand-up"
+  }
+}

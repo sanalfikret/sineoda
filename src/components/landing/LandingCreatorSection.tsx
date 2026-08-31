@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
 import type { LandingSectionsConfig } from '../../constants/landingDefaults'
+import { useLocale } from '../../i18n/LocaleContext'
 
 export function LandingCreatorSection({ section }: { section: LandingSectionsConfig['creator'] }) {
+  const { localizePath } = useLocale()
   return (
     <section id="yapimcilar" className="relative overflow-hidden border-t border-plooy-gold/30 bg-[#0a0c10]">
       <div className="relative mx-auto max-w-[1400px] px-5 py-20 sm:px-8 sm:py-28">
@@ -34,13 +36,13 @@ export function LandingCreatorSection({ section }: { section: LandingSectionsCon
 
         <div className="mt-16 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
-            to={section.ctaPrimaryLink || '/creator/kayit'}
+            to={localizePath(section.ctaPrimaryLink || '/creator/kayit')}
             className="inline-flex h-14 min-w-[240px] items-center justify-center rounded-lg bg-plooy-gold px-10 text-base font-bold text-plooy-bg shadow-lg shadow-plooy-gold/20 transition hover:brightness-110"
           >
             {section.ctaPrimary}
           </Link>
           <Link
-            to={section.ctaSecondaryLink || '/creator/giris'}
+            to={localizePath(section.ctaSecondaryLink || '/creator/giris')}
             className="inline-flex h-14 min-w-[240px] items-center justify-center rounded-lg border border-white/20 bg-white/5 px-10 text-base font-semibold text-white backdrop-blur-sm transition hover:border-plooy-gold/50 hover:bg-white/10"
           >
             {section.ctaSecondary}

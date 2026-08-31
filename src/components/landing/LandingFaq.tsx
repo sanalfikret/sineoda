@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { LandingSectionsConfig } from '../../constants/landingDefaults'
+import { useLocale } from '../../i18n/LocaleContext'
 
 export function LandingFaq({ section }: { section: LandingSectionsConfig['faq'] }) {
+  const { localizePath } = useLocale()
   const [openIndex, setOpenIndex] = useState<number | null>(0)
 
   return (
@@ -35,7 +37,7 @@ export function LandingFaq({ section }: { section: LandingSectionsConfig['faq'] 
 
         <p className="mt-10 text-center text-lg text-white/80">
           {section.footerText}{' '}
-          <Link to={section.footerLink} className="underline underline-offset-4 hover:text-plooy-gold">
+          <Link to={localizePath(section.footerLink)} className="underline underline-offset-4 hover:text-plooy-gold">
             {section.footerLinkLabel}
           </Link>
           .

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { resolveMediaUrl } from '../../api/client'
+import { useLocale } from '../../i18n/LocaleContext'
 import type { ContentItem } from '../../types/content'
 
 export interface LandingShowcase {
@@ -74,6 +76,8 @@ function posterSizeClass(item: ContentItem) {
 }
 
 export function LandingCategoryShowcase({ showcases }: LandingCategoryShowcaseProps) {
+  const { t } = useTranslation('landing')
+  const { localizePath } = useLocale()
   const visibleShowcases = useMemo(
     () => showcases.filter((showcase) => showcase.items.length > 0),
     [showcases],
@@ -223,7 +227,7 @@ export function LandingCategoryShowcase({ showcases }: LandingCategoryShowcasePr
                 currentPageItems.map((item) => (
                   <Link
                     key={item.id}
-                    to="/kayit"
+                    to={localizePath('/kayit')}
                     className="group relative shrink-0 overflow-hidden rounded-lg transition hover:scale-[1.02] hover:ring-1 hover:ring-plooy-gold/40"
                   >
                     <img
@@ -240,7 +244,7 @@ export function LandingCategoryShowcase({ showcases }: LandingCategoryShowcasePr
                 ))
               ) : (
                 <div className="flex h-[220px] w-full items-center justify-center rounded-xl border border-dashed border-white/10 text-sm text-white/40">
-                  Bu kategoride henüz içerik yok.
+                  {t('showcase.emptyCategory')}
                 </div>
               )}
             </div>

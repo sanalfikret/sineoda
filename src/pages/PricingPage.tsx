@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   fetchBillingPlans,
   fetchSubscription,
@@ -9,6 +10,7 @@ import {
 import { PageFooter } from '../components/PageFooter'
 import { PlooyLogo } from '../components/PlooyLogo'
 import { useAuth } from '../context/AuthContext'
+import { useLocale } from '../i18n/LocaleContext'
 
 interface Plan {
   id: string
@@ -22,13 +24,9 @@ interface Plan {
   enabled?: boolean
 }
 
-function planPriceSuffix(interval: Plan['interval']) {
-  if (interval === 'once') return 'tek seferlik'
-  if (interval === 'year') return '/yıl'
-  return '/ay'
-}
-
 export function PricingPage() {
+  const { t } = useTranslation('pricing')
+  const { localizePath, locale } = useLocale()
   const { user, refreshUser } = useAuth()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -54,6 +52,13 @@ export function PricingPage() {
 
   const planParam = searchParams.get('plan')
   const autoCheckout = searchParams.get('checkout') === '1'
+  const dateLocale = locale === 'en' ? 'en-US' : 'tr-TR'
+
+  const planPriceSuffix = (interval: Plan['interval']) => {
+    if (interval === 'once') return t('intervalOnce')
+    if (interval === 'year') return t('intervalYear')
+    return t('intervalMonth')
+  }
 
   useEffect(() => {
     setStudentIdReady(Boolean(user?.studentIdUrl))
@@ -76,14 +81,14 @@ export function PricingPage() {
   const handleCheckout = useCallback(
     async (planId: string) => {
       if (!user) {
-        navigate(`/giris?plan=${encodeURIComponent(planId)}`)
+        navigate(`${localizePath('/giris')}?plan=${encodeURIComponent(planId)}`)
         return
       }
 
       const plan = plans.find((entry) => entry.id === planId)
       if (plan?.requiresStudentId && !studentIdReady) {
         if (!studentIdFile) {
-          setMessage('Öğrenci planı için öğrenci kimliği yükleyin.')
+          setMessage(t('studentIdRequired'))
           return
         }
         setCheckoutPlan(planId)
@@ -92,7 +97,7 @@ export function PricingPage() {
           await uploadBillingStudentId(studentIdFile)
           setStudentIdReady(true)
         } catch (err) {
-          setMessage(err instanceof Error ? err.message : 'Öğrenci kimliği yüklenemedi.')
+          setMessage(err instanceof Error ? err.message : t('studentIdUploadFailed'))
           setCheckoutPlan(null)
           return
         }
@@ -113,7 +118,7 @@ export function PricingPage() {
         }
 
         if ('iframeUrl' in result && result.iframeUrl) {
-          navigate(`/odeme/paytr?token=${encodeURIComponent(result.token)}`)
+          navigate(`${localizePath('/odeme/paytr')}?token=${encodeURIComponent(result.token)}`)
           return
         }
 
@@ -121,12 +126,12 @@ export function PricingPage() {
           window.location.href = result.paymentPageUrl
         }
       } catch (err) {
-        setMessage(err instanceof Error ? err.message : 'Ödeme başlatılamadı.')
+        setMessage(err instanceof Error ? err.message : t('checkoutFailed'))
       } finally {
         setCheckoutPlan(null)
       }
     },
-    [user, plans, studentIdReady, studentIdFile, provider, navigate, setSearchParams, refreshUser],
+    [user, plans, studentIdReady, studentIdFile, provider, navigate, setSearchParams, refreshUser, localizePath, t],
   )
 
   useEffect(() => {
@@ -141,30 +146,28 @@ export function PricingPage() {
       <header className="safe-top border-b border-white/5 px-4 py-5 sm:px-6">
         <div className="mx-auto flex max-w-5xl items-center justify-between">
           <PlooyLogo tone="on-dark" linked linkTo="/" className="h-8" />
-          <Link to={user ? '/hesap' : '/giris'} className="text-sm text-plooy-gold hover:underline">
-            {user ? 'Hesabım' : 'Giriş Yap'}
+          <Link to={localizePath(user ? '/hesap' : '/giris')} className="text-sm text-plooy-gold hover:underline">
+            {user ? t('accountLink') : t('loginLink')}
           </Link>
         </div>
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
         <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-plooy-gold">Abonelik</p>
-          <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">Planını seç</h1>
-          <p className="mt-2 text-sm text-plooy-muted">
-            Kredi kartınla güvenli ödeme — PayTR ile.
-          </p>
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-plooy-gold">{t('eyebrow')}</p>
+          <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">{t('title')}</h1>
+          <p className="mt-2 text-sm text-plooy-muted">{t('subtitle')}</p>
           {(subscription?.status === 'active' || subscription?.status === 'expired') && (
             <div className="mt-3 space-y-1 text-sm text-emerald-300">
-              <p>{subscription.status === 'active' ? 'Aktif abonelik' : 'Abonelik süresi doldu'}</p>
+              <p>{subscription.status === 'active' ? t('activeSubscription') : t('expiredSubscription')}</p>
               {subscription.startedAt && (
                 <p className="text-plooy-muted">
-                  Başlangıç: {new Date(subscription.startedAt).toLocaleDateString('tr-TR')}
+                  {t('startedAt')} {new Date(subscription.startedAt).toLocaleDateString(dateLocale)}
                 </p>
               )}
               {subscription.expiresAt && (
                 <p className="text-plooy-muted">
-                  Bitiş: {new Date(subscription.expiresAt).toLocaleDateString('tr-TR')}
+                  {t('expiresAt')} {new Date(subscription.expiresAt).toLocaleDateString(dateLocale)}
                 </p>
               )}
             </div>
@@ -172,9 +175,7 @@ export function PricingPage() {
         </div>
 
         {!providers.paymentReady && (
-          <p className="mt-3 text-center text-sm text-amber-200/90">
-            Ödeme altyapısı (PayTR) kısa süre içinde aktif olacak. Siteyi kullanmaya devam edebilirsiniz.
-          </p>
+          <p className="mt-3 text-center text-sm text-amber-200/90">{t('paymentPending')}</p>
         )}
 
         {loading ? (
@@ -194,7 +195,7 @@ export function PricingPage() {
               >
                 {plan.popular && (
                   <span className="mb-3 inline-block rounded-full bg-plooy-gold px-3 py-1 text-xs font-semibold text-plooy-bg">
-                    Öğrencilere özel
+                    {t('studentBadge')}
                   </span>
                 )}
                 <h2 className="text-lg font-semibold text-white">{plan.name}</h2>
@@ -213,7 +214,7 @@ export function PricingPage() {
 
                 {plan.requiresStudentId && user && !studentIdReady && (
                   <label className="mt-6 block">
-                    <span className="mb-1.5 block text-sm font-medium text-white/90">Öğrenci kimliği</span>
+                    <span className="mb-1.5 block text-sm font-medium text-white/90">{t('studentId')}</span>
                     <input
                       type="file"
                       accept="image/*,application/pdf"
@@ -224,7 +225,7 @@ export function PricingPage() {
                 )}
 
                 {plan.requiresStudentId && studentIdReady && (
-                  <p className="mt-6 text-xs text-emerald-300">Öğrenci kimliği yüklendi ✓</p>
+                  <p className="mt-6 text-xs text-emerald-300">{t('studentIdUploaded')}</p>
                 )}
 
                 <button
@@ -234,10 +235,10 @@ export function PricingPage() {
                   className="mt-8 w-full rounded-lg bg-plooy-gold py-3.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
                 >
                   {checkoutPlan === plan.id
-                    ? 'Yönlendiriliyor...'
+                    ? t('redirecting')
                     : providers.paymentReady
-                      ? 'Kredi Kartı ile Öde'
-                      : 'Ödeme yakında'}
+                      ? t('payWithCard')
+                      : t('paymentSoon')}
                 </button>
               </article>
             ))}
@@ -246,9 +247,9 @@ export function PricingPage() {
 
         {!user && (
           <p className="mt-8 text-center text-sm text-plooy-muted">
-            Henüz hesabın yok mu?{' '}
-            <Link to="/kayit" className="font-medium text-plooy-gold hover:underline">
-              Kayıt ol
+            {t('noAccount')}{' '}
+            <Link to={localizePath('/kayit')} className="font-medium text-plooy-gold hover:underline">
+              {t('signupLink')}
             </Link>
           </p>
         )}

@@ -7,6 +7,8 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { SearchProvider } from './context/SearchContext'
 import { WatchlistProvider } from './context/WatchlistContext'
 import { useAuth } from './context/AuthContext'
+import { useLocale } from './i18n/LocaleContext'
+import { LocaleRoute } from './i18n/LocaleRoute'
 import { AdminAdsPage } from './pages/admin/AdminAdsPage'
 import { AdminCategoriesPage } from './pages/admin/AdminCategoriesPage'
 import { AdminContentFormPage } from './pages/admin/AdminContentFormPage'
@@ -70,20 +72,27 @@ function AuthenticatedProviders({ children }: { children: ReactNode }) {
 function LegacyContentRedirect() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { localizePath } = useLocale()
   const contentId = searchParams.get('icerik')
 
   useEffect(() => {
     if (contentId) {
-      navigate(`/icerik/${contentId}`, { replace: true })
+      navigate(localizePath(`/icerik/${contentId}`), { replace: true })
     }
-  }, [contentId, navigate])
+  }, [contentId, localizePath, navigate])
 
   return null
+}
+
+function CatchAllRedirect() {
+  const { localizePath } = useLocale()
+  return <Navigate to={localizePath('/')} replace />
 }
 
 function HomeRoute() {
   const { user, activeProfile, isLoading, isCreator } = useAuth()
   const { loading: siteModeLoading, siteMode, canBypassComingSoon } = useSiteMode()
+  const { localizePath } = useLocale()
 
   if (isLoading || siteModeLoading) {
     return (
@@ -95,17 +104,17 @@ function HomeRoute() {
 
   if (siteMode?.enabled && !canBypassComingSoon) {
     if (user && isCreator) {
-      return <Navigate to="/creator" replace />
+      return <Navigate to={localizePath('/creator')} replace />
     }
     return <ComingSoonPage />
   }
 
   if (user && isCreator) {
-    return <Navigate to="/creator" replace />
+    return <Navigate to={localizePath('/creator')} replace />
   }
 
   if (user && needsSubscriptionPayment(user)) {
-    return <Navigate to={postLoginPath(user)} replace />
+    return <Navigate to={localizePath(postLoginPath(user))} replace />
   }
 
   if (user && activeProfile) {
@@ -117,7 +126,7 @@ function HomeRoute() {
   }
 
   if (user && !activeProfile) {
-    return <Navigate to="/profiller" replace />
+    return <Navigate to={localizePath('/profiller')} replace />
   }
 
   return (
@@ -151,18 +160,19 @@ function App() {
     <>
       <WebSiteStructuredData />
     <Routes>
-      <Route path="/" element={<HomeRoute />} />
-      <Route path="/tanitim" element={<TanitimRoute />} />
-      <Route path="/giris" element={<SiteModeGuard><LoginPage /></SiteModeGuard>} />
-      <Route path="/kayit" element={<SiteModeGuard mode="signup"><SignupPage /></SiteModeGuard>} />
-      <Route path="/eposta-dogrula" element={<VerifyEmailPage />} />
-      <Route path="/sifremi-unuttum" element={<ForgotPasswordPage />} />
-      <Route path="/sifre-sifirla" element={<ResetPasswordPage />} />
-      <Route path="/planlar" element={<SiteModeGuard mode="signup"><PricingPage /></SiteModeGuard>} />
-      <Route path="/yasal/:slug" element={<LegalPage />} />
-      <Route path="/iletisim" element={<ContactPage />} />
-      <Route
-        path="/dergi"
+      <LocaleRoute tr="/" en="/en" element={<HomeRoute />} />
+      <LocaleRoute tr="/tanitim" en="/en/about" element={<TanitimRoute />} />
+      <LocaleRoute tr="/giris" en="/en/login" element={<SiteModeGuard><LoginPage /></SiteModeGuard>} />
+      <LocaleRoute tr="/kayit" en="/en/signup" element={<SiteModeGuard mode="signup"><SignupPage /></SiteModeGuard>} />
+      <LocaleRoute tr="/eposta-dogrula" en="/en/verify-email" element={<VerifyEmailPage />} />
+      <LocaleRoute tr="/sifremi-unuttum" en="/en/forgot-password" element={<ForgotPasswordPage />} />
+      <LocaleRoute tr="/sifre-sifirla" en="/en/reset-password" element={<ResetPasswordPage />} />
+      <LocaleRoute tr="/planlar" en="/en/plans" element={<SiteModeGuard mode="signup"><PricingPage /></SiteModeGuard>} />
+      <LocaleRoute tr="/yasal/:slug" en="/en/legal/:slug" element={<LegalPage />} />
+      <LocaleRoute tr="/iletisim" en="/en/contact" element={<ContactPage />} />
+      <LocaleRoute
+        tr="/dergi"
+        en="/en/journal"
         element={
           <SiteModeGuard>
             <NavRouteGuard>
@@ -173,20 +183,22 @@ function App() {
       >
         <Route index element={<JournalListPage />} />
         <Route path=":slug" element={<JournalPostPage />} />
-      </Route>
-      <Route path="/odeme/paytr" element={<PaytrCheckoutPage />} />
-      <Route path="/odeme/basarili" element={<PaymentSuccessPage />} />
-      <Route path="/odeme/basarisiz" element={<PaymentFailPage />} />
-      <Route
-        path="/hesap"
+      </LocaleRoute>
+      <LocaleRoute tr="/odeme/paytr" en="/en/payment/paytr" element={<PaytrCheckoutPage />} />
+      <LocaleRoute tr="/odeme/basarili" en="/en/payment/success" element={<PaymentSuccessPage />} />
+      <LocaleRoute tr="/odeme/basarisiz" en="/en/payment/failed" element={<PaymentFailPage />} />
+      <LocaleRoute
+        tr="/hesap"
+        en="/en/account"
         element={
           <ProtectedRoute>
             <AccountPage />
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/profiller"
+      <LocaleRoute
+        tr="/profiller"
+        en="/en/profiles"
         element={
           <SiteModeGuard>
             <ProtectedRoute requireSubscription>
@@ -195,8 +207,9 @@ function App() {
           </SiteModeGuard>
         }
       />
-      <Route
-        path="/mesajlar"
+      <LocaleRoute
+        tr="/mesajlar"
+        en="/en/messages"
         element={
           <ProtectedRoute>
             <AuthenticatedProviders>
@@ -205,8 +218,9 @@ function App() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/listem"
+      <LocaleRoute
+        tr="/listem"
+        en="/en/my-list"
         element={
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
@@ -219,8 +233,9 @@ function App() {
           </SiteModeGuard>
         }
       />
-      <Route
-        path="/icerik/:id"
+      <LocaleRoute
+        tr="/icerik/:id"
+        en="/en/content/:id"
         element={
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
@@ -231,8 +246,9 @@ function App() {
           </SiteModeGuard>
         }
       />
-      <Route
-        path="/diziler"
+      <LocaleRoute
+        tr="/diziler"
+        en="/en/series"
         element={
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
@@ -245,8 +261,9 @@ function App() {
           </SiteModeGuard>
         }
       />
-      <Route
-        path="/filmler"
+      <LocaleRoute
+        tr="/filmler"
+        en="/en/films"
         element={
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
@@ -259,8 +276,9 @@ function App() {
           </SiteModeGuard>
         }
       />
-      <Route
-        path="/belgeseller"
+      <LocaleRoute
+        tr="/belgeseller"
+        en="/en/documentaries"
         element={
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
@@ -273,8 +291,9 @@ function App() {
           </SiteModeGuard>
         }
       />
-      <Route
-        path="/stand-up"
+      <LocaleRoute
+        tr="/stand-up"
+        en="/en/stand-up"
         element={
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
@@ -287,8 +306,9 @@ function App() {
           </SiteModeGuard>
         }
       />
-      <Route
-        path="/klasikler"
+      <LocaleRoute
+        tr="/klasikler"
+        en="/en/classics"
         element={
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
@@ -301,8 +321,9 @@ function App() {
           </SiteModeGuard>
         }
       />
-      <Route
-        path="/dikey-diziler"
+      <LocaleRoute
+        tr="/dikey-diziler"
+        en="/en/vertical-series"
         element={
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
@@ -315,8 +336,9 @@ function App() {
           </SiteModeGuard>
         }
       />
-      <Route
-        path="/genc-sinema"
+      <LocaleRoute
+        tr="/genc-sinema"
+        en="/en/student-cinema"
         element={
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
@@ -329,8 +351,9 @@ function App() {
           </SiteModeGuard>
         }
       />
-      <Route
-        path="/cekim-notlari"
+      <LocaleRoute
+        tr="/cekim-notlari"
+        en="/en/production-notes"
         element={
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
@@ -343,8 +366,9 @@ function App() {
           </SiteModeGuard>
         }
       />
-      <Route
-        path="/kisa-filmler"
+      <LocaleRoute
+        tr="/kisa-filmler"
+        en="/en/short-films"
         element={
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
@@ -357,18 +381,20 @@ function App() {
       />
 
       <Route path="/admin/giris" element={<AdminLoginPage />} />
-      <Route path="/creator/giris" element={<CreatorLoginPage />} />
-      <Route path="/creator/kayit" element={<CreatorRegisterPage />} />
-      <Route
-        path="/creator/odeme"
+      <LocaleRoute tr="/creator/giris" en="/en/creator/login" element={<CreatorLoginPage />} />
+      <LocaleRoute tr="/creator/kayit" en="/en/creator/register" element={<CreatorRegisterPage />} />
+      <LocaleRoute
+        tr="/creator/odeme"
+        en="/en/creator/payment"
         element={
           <CreatorRoute>
             <CreatorPaymentPage />
           </CreatorRoute>
         }
       />
-      <Route
-        path="/creator"
+      <LocaleRoute
+        tr="/creator"
+        en="/en/creator"
         element={
           <CreatorRoute>
             <CreatorDashboardPage />
@@ -405,7 +431,7 @@ function App() {
         <Route path="cekim-notlari/:id" element={<AdminCekimNotlariFormPage />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<CatchAllRedirect />} />
     </Routes>
     </>
   )

@@ -1,0 +1,144 @@
+{
+  "kullanim-kosullari": {
+    "title": "Terms of Use",
+    "updatedAt": "30 August 2026",
+    "sections": [
+      {
+        "heading": "1. Parties and Acceptance",
+        "body": "These Terms of Use (\"Terms\") govern the legal relationship between natural or legal persons using the Plooy digital streaming platform (\"Platform\") and the Platform operator. By registering, signing in, or using the service, you declare that you have read, understood, and accepted these Terms."
+      },
+      {
+        "heading": "2. Scope of Service",
+        "body": "Plooy is a digital streaming service that provides online viewing of independent cinema productions, series, documentaries, and related audiovisual content under a subscription model. The content catalog may change depending on region, device, license agreements, and technical conditions. The Platform reserves the right to add or remove content without prior notice."
+      },
+      {
+        "heading": "3. Membership and Account Security",
+        "body": "You are obliged to provide accurate and up-to-date information during registration. You are responsible for the confidentiality of your account credentials and for all activity under your account. Account sharing, unauthorized access, automated bot use, attempts to download or record content, or abuse may result in suspension or termination of your account."
+      },
+      {
+        "heading": "4. Subscription and Payment",
+        "body": "Paid plans are billed in advance or as recurring subscriptions for the selected period. Payments are processed through licensed payment institutions. Cancellation, renewal, and refund terms are stated in the plan descriptions presented at purchase. Except where required by law, the right of withdrawal may not apply once performance of the service has begun."
+      },
+      {
+        "heading": "5. Intellectual Property and Content Use",
+        "body": "All content, software, brands, logos, and designs on the Platform belong to the relevant rights holders. Unauthorized copying, recording, screenshots, distribution, rebroadcast, reverse engineering, or commercial use is prohibited. Content is provided solely for personal, non-commercial viewing."
+      },
+      {
+        "heading": "6. Prohibited Conduct",
+        "body": "Using the Platform for unlawful purposes, encouraging copyright infringement, distributing hate speech or violent material, harassing other users, threatening system security, or disrupting the service is prohibited. In such cases, accounts may be closed immediately and reported to authorities where necessary."
+      },
+      {
+        "heading": "7. Limitation of Liability",
+        "body": "The Platform is provided \"as is.\" To the extent permitted by law, no liability is accepted for interruptions, data loss, issues arising from third-party services, or indirect damages. The Platform does not guarantee the accuracy, quality, or fitness of content for any particular purpose."
+      },
+      {
+        "heading": "8. Changes and Contact",
+        "body": "These Terms may be updated. The current text takes effect on the date it is published on the Platform. Users may be notified of material changes by email or in-app notice. For questions: destek@plooy.tv"
+      }
+    ]
+  },
+  "gizlilik-politikasi": {
+    "title": "Privacy Policy",
+    "updatedAt": "30 August 2026",
+    "sections": [
+      {
+        "heading": "1. General Principles",
+        "body": "Plooy processes your personal data in accordance with Turkish Law No. 6698 on the Protection of Personal Data (\"KVKK\") and applicable legislation. This policy explains what data we collect, for what purposes we use it, and your rights."
+      },
+      {
+        "heading": "2. Data Collected",
+        "body": "Identity and contact information (name, email, phone), account and profile information, subscription/payment records, viewing history and preferences, device and session information, IP address, cookie data, support requests, and legal consent records (name, IP, timestamp) may be processed."
+      },
+      {
+        "heading": "3. Processing Purposes",
+        "body": "Data is processed for service delivery, authentication, SMS/email verification, billing, customer support, personalization, security, fraud prevention, fulfillment of legal obligations, and legitimate interests."
+      },
+      {
+        "heading": "4. Legal Bases",
+        "body": "Processing relies on contract establishment or performance, legal obligation, and legitimate interest under KVKK Art. 5/2; explicit consent where required. Marketing communications are sent only with explicit consent or where permitted by law."
+      },
+      {
+        "heading": "5. Transfers",
+        "body": "Data may be shared with payment institutions, SMS/email providers, hosting, CDN, and analytics providers only to the extent required by the service and under contractual safeguards. Cross-border transfers comply with KVKK Art. 9."
+      },
+      {
+        "heading": "6. Retention Period",
+        "body": "Data is retained for as long as required by the processing purpose and applicable limitation periods. Legal consent records may be kept for reasonable periods to serve as evidence in disputes."
+      },
+      {
+        "heading": "7. Your Rights",
+        "body": "Under KVKK, you have the right to access, rectify, erase, restrict processing, object, and withdraw explicit consent. You may submit requests to kvkk@plooy.tv."
+      }
+    ]
+  },
+  "kvkk-aydinlatma": {
+    "title": "KVKK Privacy Notice",
+    "updatedAt": "30 August 2026",
+    "sections": [
+      {
+        "heading": "Data Controller",
+        "body": "Under Law No. 6698 on the Protection of Personal Data (KVKK), the data controller is the operator of the Plooy platform. Contact: kvkk@plooy.tv · destek@plooy.tv"
+      },
+      {
+        "heading": "Categories of Personal Data Processed",
+        "body": "Identity, contact, customer transaction, financial, marketing (where consented), transaction security, audiovisual consumption data, log records (IP, session, device), and legal consent records may be processed."
+      },
+      {
+        "heading": "Purposes of Processing",
+        "body": "Membership creation, SMS/email verification, subscription management, content recommendations, technical support, fraud prevention, fulfillment of legal obligations, and compliance with statutory duties."
+      },
+      {
+        "heading": "Legal Bases",
+        "body": "Processing relies on contract establishment or performance, legal obligation, and legitimate interest under KVKK Art. 5/2; explicit consent (KVKK Art. 5/1) for marketing and optional cookies."
+      },
+      {
+        "heading": "Transfers and Cross-Border Processing",
+        "body": "Data may be processed on servers outside Türkiye due to hosting or CDN services. In such cases, safeguards required under KVKK Art. 9 are provided."
+      },
+      {
+        "heading": "Applications",
+        "body": "You may submit KVKK requests in writing to kvkk@plooy.tv or via registered electronic mail. Applications are concluded within 30 days at the latest."
+      }
+    ]
+  },
+  "acik-riza-metni": {
+    "title": "Explicit Consent Statement",
+    "updatedAt": "30 August 2026",
+    "sections": [
+      {
+        "heading": "Explicit Consent Declaration",
+        "body": "By registering for the Plooy platform, I declare that I have read and understood the KVKK Privacy Notice and that I give EXPLICIT CONSENT to the processing of my personal data for membership creation, authentication, subscription management, content viewing, technical support, security, and fulfillment of legal obligations."
+      },
+      {
+        "heading": "Consent Record",
+        "body": "This consent is given electronically. At the time of consent, your name, email address, IP address, and timestamp (Istanbul time) are recorded in the system. This record is retained to evidence the legal relationship between the parties."
+      },
+      {
+        "heading": "Withdrawal of Consent",
+        "body": "You may withdraw your explicit consent at any time via kvkk@plooy.tv. Withdrawal affects processing after the withdrawal date; lawful completion of consent-based processing before withdrawal remains unaffected."
+      }
+    ]
+  },
+  "cerez-politikasi": {
+    "title": "Cookie Policy",
+    "updatedAt": "30 August 2026",
+    "sections": [
+      {
+        "heading": "What Are Cookies?",
+        "body": "Cookies are small text files stored on your device when you visit a website. They are used for session management, remembering preferences, security, and measuring service quality."
+      },
+      {
+        "heading": "Types of Cookies We Use",
+        "body": "Essential cookies (session, security, authentication), functional cookies (profile preferences), analytics cookies (anonymous usage statistics), and marketing cookies (if you give consent) may be used."
+      },
+      {
+        "heading": "Management",
+        "body": "You can delete or block cookies in your browser settings. Disabling essential cookies may affect how the service works."
+      },
+      {
+        "heading": "Consent",
+        "body": "For non-essential cookies, you can set your preference via the cookie banner on your first visit. Your choice may be recorded with IP address and timestamp."
+      }
+    ]
+  }
+}

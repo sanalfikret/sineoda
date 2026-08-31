@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { fetchJournalPost, resolveMediaUrl } from '../api/client'
 import { useOptionalContentUI } from '../components/AppShell'
 import { PageMeta } from '../components/PageMeta'
@@ -9,8 +10,11 @@ import { useContent } from '../context/ContentContext'
 import type { JournalPost } from '../types/journal'
 import { formatJournalDate, journalBodyParagraphs } from '../utils/journal'
 import { BRAND_NAME } from '../constants/brand'
+import { useLocale } from '../i18n/LocaleContext'
 
 export function JournalPostPage() {
+  const { t } = useTranslation('journal')
+  const { localizePath } = useLocale()
   const { slug = '' } = useParams()
   const { user, activeProfile } = useAuth()
   const { catalog } = useContent()
@@ -31,7 +35,7 @@ export function JournalPostPage() {
   if (loading) {
     return (
       <div className="flex min-h-[50dvh] items-center justify-center text-plooy-muted">
-        Yükleniyor...
+        {t('loading')}
       </div>
     )
   }
@@ -39,9 +43,9 @@ export function JournalPostPage() {
   if (!post) {
     return (
       <div className="flex min-h-[50dvh] flex-col items-center justify-center gap-4 px-4 text-center">
-        <p className="text-lg text-white">Yazı bulunamadı.</p>
-        <Link to="/dergi" className="text-plooy-accent hover:underline">
-          Dergiye dön
+        <p className="text-lg text-white">{t('notFound')}</p>
+        <Link to={localizePath('/dergi')} className="text-plooy-accent hover:underline">
+          {t('backToJournal')}
         </Link>
       </div>
     )
@@ -58,10 +62,10 @@ export function JournalPostPage() {
       {!isMember && (
         <header className="safe-top border-b border-white/5 px-4 py-5 sm:px-6">
           <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
-            <Link to="/dergi" className="text-sm text-plooy-muted transition hover:text-white">
-              ← Dergi
+            <Link to={localizePath('/dergi')} className="text-sm text-plooy-muted transition hover:text-white">
+              {t('journalBack')}
             </Link>
-            <Link to="/" className="text-sm font-medium text-plooy-accent">
+            <Link to={localizePath('/')} className="text-sm font-medium text-plooy-accent">
               {BRAND_NAME}
             </Link>
           </div>
@@ -70,8 +74,8 @@ export function JournalPostPage() {
 
       <article className={`mx-auto max-w-3xl px-5 sm:px-8 ${isMember ? 'py-8' : 'py-10 sm:py-14'}`}>
         {isMember && (
-          <Link to="/dergi" className="text-sm text-plooy-muted transition hover:text-white">
-            ← Dergi
+          <Link to={localizePath('/dergi')} className="text-sm text-plooy-muted transition hover:text-white">
+            {t('journalBack')}
           </Link>
         )}
 
@@ -110,7 +114,7 @@ export function JournalPostPage() {
             />
             <div className="mt-4 sm:mt-0">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-plooy-accent">
-                İlgili içerik
+                {t('relatedContent')}
               </p>
               <p className="mt-2 text-lg font-medium">{linkedContent.title}</p>
               {isMember && contentUI ? (
@@ -119,14 +123,14 @@ export function JournalPostPage() {
                   onClick={() => void contentUI.openPlayer(linkedContent)}
                   className="mt-3 inline-flex rounded-md bg-plooy-accent px-4 py-2 text-sm font-semibold text-plooy-bg"
                 >
-                  İzle
+                  {t('watch')}
                 </button>
               ) : (
                 <Link
-                  to="/giris"
+                  to={localizePath('/giris')}
                   className="mt-3 inline-flex rounded-md bg-plooy-accent px-4 py-2 text-sm font-semibold text-plooy-bg"
                 >
-                  İzlemek için giriş yap
+                  {t('loginToWatch')}
                 </Link>
               )}
             </div>

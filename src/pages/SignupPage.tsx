@@ -1,12 +1,15 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { sendSmsCode, uploadStudentId } from '../api/client'
 import { AuthLayout } from '../components/AuthLayout'
 import { LegalDocumentModal } from '../components/LegalDocumentModal'
-import { LEGAL_LINKS, type LegalSlug } from '../constants/legal'
+import { type LegalSlug } from '../constants/legal'
 import { useAuth } from '../context/AuthContext'
 import { useLegalDocuments } from '../hooks/useLegalDocuments'
-import { planDisplayName, postLoginPath } from '../utils/billing'
+import { useLocale } from '../i18n/LocaleContext'
+import { useLocalizedLegalDocuments } from '../i18n/useLegalLocale'
+import { postLoginPath } from '../utils/billing'
 
 function LegalReadButton({
   slug,
@@ -30,31 +33,13 @@ function LegalReadButton({
 
 type SignupPlanId = 'standard' | 'student'
 
-const SIGNUP_PLANS: {
-  id: SignupPlanId
-  name: string
-  price: number
-  note: string
-  requiresStudentId?: boolean
-}[] = [
-  {
-    id: 'standard',
-    name: 'Standart Plan',
-    price: 69,
-    note: 'Tüm katalog, aylık yenilenir',
-  },
-  {
-    id: 'student',
-    name: 'Öğrenci Plan',
-    price: 49,
-    note: 'Geçerli öğrenci kimliği gerekir',
-    requiresStudentId: true,
-  },
-]
-
 export function SignupPage() {
+  const { t } = useTranslation('auth')
+  const { t: tCommon } = useTranslation('common')
+  const { localizePath } = useLocale()
   const { signup, user } = useAuth()
-  const { documents } = useLegalDocuments()
+  const { documents: baseDocuments } = useLegalDocuments()
+  const { documents, links: legalLinks } = useLocalizedLegalDocuments(baseDocuments)
   const [searchParams] = useSearchParams()
   const initialPlan = searchParams.get('plan') === 'student' ? 'student' : 'standard'
   const [selectedPlan, setSelectedPlan] = useState<SignupPlanId>(initialPlan)
@@ -81,8 +66,33 @@ export function SignupPage() {
 
   const legalAccepted = acceptTerms && acceptPrivacy && acceptKvkk
 
+  const signupPlans: {
+    id: SignupPlanId
+    name: string
+    price: number
+    note: string
+    requiresStudentId?: boolean
+  }[] = [
+    {
+      id: 'standard',
+      name: t('standardPlan'),
+      price: 69,
+      note: t('standardPlanNote'),
+    },
+    {
+      id: 'student',
+      name: t('studentPlan'),
+      price: 49,
+      note: t('studentPlanNote'),
+      requiresStudentId: true,
+    },
+  ]
+
+  const planLabel = (planId: SignupPlanId) =>
+    planId === 'student' ? t('planStudent') : t('planStandard')
+
   if (user) {
-    return <Navigate to={postLoginPath(user)} replace />
+    return <Navigate to={localizePath(postLoginPath(user))} replace />
   }
 
   const handleSendCode = async () => {
@@ -99,7 +109,7 @@ export function SignupPage() {
         setSmsCode(result.devCode)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'SMS gönderilemedi.')
+      setError(err instanceof Error ? err.message : t('smsSendFailed'))
     } finally {
       setSendingCode(false)
     }
@@ -111,17 +121,17 @@ export function SignupPage() {
     setInfo('')
 
     if (!codeSent) {
-      setError('Önce telefonunuza doğrulama kodu gönderin.')
+      setError(t('sendCodeFirst'))
       return
     }
 
     if (selectedPlan === 'student' && !studentIdFile) {
-      setError('Öğrenci planı için öğrenci kimliği yüklemeniz gerekir.')
+      setError(t('studentIdRequiredSignup'))
       return
     }
 
     if (!acceptTerms || !acceptPrivacy || !acceptKvkk) {
-      setError('Kayıt için Kullanım Koşulları, Gizlilik Politikası ve KVKK / Açık Rıza onayı zorunludur.')
+      setError(t('legalRequiredSignup'))
       return
     }
 
@@ -145,7 +155,7 @@ export function SignupPage() {
       setCompleted(true)
       setInfo(result.message)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Kayıt başarısız.')
+      setError(err instanceof Error ? err.message : t('signupFailed'))
     } finally {
       setLoading(false)
     }
@@ -153,49 +163,42 @@ export function SignupPage() {
 
   return (
     <AuthLayout
-      title={completed ? 'E-postanı kontrol et' : "Plooy'a katıl"}
-      subtitle={
-        completed
-          ? 'E-postanı doğrula, giriş yap — seçtiğin plan için kredi kartı ödeme adımına yönlendirileceksin.'
-          : 'Planını seç, hesabını oluştur ve ödeme adımına geç.'
-      }
+      title={completed ? t('signupTitleCompleted') : t('signupTitle')}
+      subtitle={completed ? t('signupSubtitleCompleted') : t('signupSubtitle')}
     >
       {completed ? (
         <div className="space-y-4">
           <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-            {info || 'Doğrulama e-postası gönderildi.'}
+            {info || t('verificationSentDefault')}
             {pendingEmail ? (
               <p className="mt-2 text-white/85">
-                Gönderilen adres: <strong>{pendingEmail}</strong>
+                {t('sentToAddress')} <strong>{pendingEmail}</strong>
               </p>
             ) : null}
             <p className="mt-2 text-white/85">
-              Seçilen plan: <strong>{planDisplayName(pendingPlan)}</strong>
+              {t('selectedPlan')} <strong>{planLabel(pendingPlan)}</strong>
             </p>
             {devVerifyUrl ? (
               <p className="mt-2 break-all text-xs text-white/70">
-                Geliştirme modu bağlantısı:{' '}
+                {t('devModeLink')}{' '}
                 <a href={devVerifyUrl} className="text-plooy-gold underline">
                   {devVerifyUrl}
                 </a>
               </p>
             ) : null}
           </div>
-          <p className="text-sm text-plooy-muted">
-            E-postayı doğruladıktan sonra giriş yap. Aktif aboneliğin yoksa doğrudan ödeme sayfasına
-            yönlendirileceksin.
-          </p>
+          <p className="text-sm text-plooy-muted">{t('afterVerifyPaymentNote')}</p>
           <Link
-            to={`/eposta-dogrula?email=${encodeURIComponent(pendingEmail || email)}`}
+            to={`${localizePath('/eposta-dogrula')}?email=${encodeURIComponent(pendingEmail || email)}`}
             className="block w-full rounded-lg border border-plooy-gold/40 bg-plooy-gold/10 py-3 text-center text-sm font-semibold text-plooy-gold"
           >
-            Doğrulama E-postasını Yeniden Gönder
+            {t('resendVerification')}
           </Link>
           <Link
-            to="/giris"
+            to={localizePath('/giris')}
             className="block w-full rounded-lg bg-plooy-gold py-3 text-center text-sm font-semibold text-plooy-bg"
           >
-            Giriş Yap ve Ödemeye Geç
+            {t('loginAndPay')}
           </Link>
         </div>
       ) : (
@@ -210,16 +213,16 @@ export function SignupPage() {
               {info}
               {devCode && (
                 <p className="mt-1 text-xs text-white/80">
-                  Geliştirme modu kodu: <strong>{devCode}</strong>
+                  {t('devModeCode')} <strong>{devCode}</strong>
                 </p>
               )}
             </div>
           )}
 
           <div className="space-y-2">
-            <p className="text-sm font-medium text-white/90">Abonelik planı</p>
+            <p className="text-sm font-medium text-white/90">{t('subscriptionPlan')}</p>
             <div className="grid gap-2 sm:grid-cols-2">
-              {SIGNUP_PLANS.map((plan) => {
+              {signupPlans.map((plan) => {
                 const active = selectedPlan === plan.id
                 return (
                   <button
@@ -238,7 +241,7 @@ export function SignupPage() {
                     <p className="font-semibold text-white">{plan.name}</p>
                     <p className="mt-1 text-lg font-bold text-plooy-gold">
                       ₺{plan.price}
-                      <span className="text-xs font-normal text-plooy-muted">/ay</span>
+                      <span className="text-xs font-normal text-plooy-muted">{t('perMonth')}</span>
                     </p>
                     <p className="mt-1 text-xs text-plooy-muted">{plan.note}</p>
                   </button>
@@ -249,7 +252,7 @@ export function SignupPage() {
 
           {selectedPlan === 'student' && (
             <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-white/90">Öğrenci kimliği</span>
+              <span className="mb-1.5 block text-sm font-medium text-white/90">{t('studentId')}</span>
               <input
                 type="file"
                 required
@@ -257,12 +260,12 @@ export function SignupPage() {
                 onChange={(event) => setStudentIdFile(event.target.files?.[0] ?? null)}
                 className="w-full rounded-lg border border-white/10 bg-plooy-bg px-3 py-2.5 text-sm text-white file:mr-3 file:rounded-md file:border-0 file:bg-plooy-gold file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-plooy-bg"
               />
-              <p className="mt-1 text-xs text-plooy-muted">JPG, PNG veya PDF — max 10 MB</p>
+              <p className="mt-1 text-xs text-plooy-muted">{t('studentIdFileHint')}</p>
             </label>
           )}
 
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-white/90">Ad Soyad</span>
+            <span className="mb-1.5 block text-sm font-medium text-white/90">{t('fullName')}</span>
             <input
               type="text"
               required
@@ -270,12 +273,12 @@ export function SignupPage() {
               value={name}
               onChange={(event) => setName(event.target.value)}
               className="w-full rounded-lg border border-white/10 bg-plooy-bg px-4 py-3 text-white outline-none transition focus:border-plooy-gold"
-              placeholder="Adın"
+              placeholder={t('namePlaceholder')}
             />
           </label>
 
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-white/90">E-posta</span>
+            <span className="mb-1.5 block text-sm font-medium text-white/90">{t('email')}</span>
             <input
               type="email"
               required
@@ -288,7 +291,7 @@ export function SignupPage() {
           </label>
 
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-white/90">Cep Telefonu</span>
+            <span className="mb-1.5 block text-sm font-medium text-white/90">{t('phone')}</span>
             <div className="flex gap-2">
               <input
                 type="tel"
@@ -300,7 +303,7 @@ export function SignupPage() {
                   setCodeSent(false)
                 }}
                 className="min-w-0 flex-1 rounded-lg border border-white/10 bg-plooy-bg px-4 py-3 text-white outline-none transition focus:border-plooy-gold"
-                placeholder="5xx xxx xx xx"
+                placeholder={t('phonePlaceholder')}
               />
               <button
                 type="button"
@@ -308,13 +311,13 @@ export function SignupPage() {
                 onClick={() => void handleSendCode()}
                 className="shrink-0 rounded-lg border border-plooy-gold/40 bg-plooy-gold/10 px-3 py-3 text-xs font-semibold text-plooy-gold disabled:opacity-50 sm:text-sm"
               >
-                {sendingCode ? '...' : 'Kod Gönder'}
+                {sendingCode ? '...' : t('sendCode')}
               </button>
             </div>
           </label>
 
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-white/90">SMS Doğrulama Kodu</span>
+            <span className="mb-1.5 block text-sm font-medium text-white/90">{t('smsVerificationCode')}</span>
             <input
               type="text"
               required
@@ -324,12 +327,12 @@ export function SignupPage() {
               value={smsCode}
               onChange={(event) => setSmsCode(event.target.value.replace(/\D/g, ''))}
               className="w-full rounded-lg border border-white/10 bg-plooy-bg px-4 py-3 text-white outline-none transition focus:border-plooy-gold"
-              placeholder="6 haneli kod"
+              placeholder={t('smsCodePlaceholder')}
             />
           </label>
 
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-white/90">Şifre</span>
+            <span className="mb-1.5 block text-sm font-medium text-white/90">{t('password')}</span>
             <input
               type="password"
               required
@@ -338,15 +341,13 @@ export function SignupPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               className="w-full rounded-lg border border-white/10 bg-plooy-bg px-4 py-3 text-white outline-none transition focus:border-plooy-gold"
-              placeholder="En az 6 karakter"
+              placeholder={t('passwordPlaceholder')}
             />
           </label>
 
           <div className="space-y-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-xs leading-relaxed text-plooy-muted">
-            <p className="font-medium text-white/90">Yasal onaylar (zorunlu)</p>
-            <p className="text-[11px] text-plooy-muted/90">
-              Metin adlarına tıklayarak okuyabilirsiniz; sayfadan çıkmadan geri dönersiniz.
-            </p>
+            <p className="font-medium text-white/90">{t('legalApprovalsTitle')}</p>
+            <p className="text-[11px] text-plooy-muted/90">{t('legalApprovalsHint')}</p>
             <label className="flex items-start gap-2.5">
               <input
                 type="checkbox"
@@ -356,8 +357,8 @@ export function SignupPage() {
                 className="mt-0.5 h-4 w-4 shrink-0 accent-plooy-gold"
               />
               <span>
-                <LegalReadButton slug="kullanim-kosullari" label="Kullanım Koşulları" onOpen={setLegalModalSlug} />
-                &apos;nı okudum ve kabul ediyorum.
+                <LegalReadButton slug="kullanim-kosullari" label={tCommon('footer.terms')} onOpen={setLegalModalSlug} />
+                {t('acceptTermsSuffix')}
               </span>
             </label>
             <label className="flex items-start gap-2.5">
@@ -369,8 +370,8 @@ export function SignupPage() {
                 className="mt-0.5 h-4 w-4 shrink-0 accent-plooy-gold"
               />
               <span>
-                <LegalReadButton slug="gizlilik-politikasi" label="Gizlilik Politikası" onOpen={setLegalModalSlug} />
-                &apos;nı okudum ve kabul ediyorum.
+                <LegalReadButton slug="gizlilik-politikasi" label={tCommon('footer.privacy')} onOpen={setLegalModalSlug} />
+                {t('acceptTermsSuffix')}
               </span>
             </label>
             <label className="flex items-start gap-2.5">
@@ -382,11 +383,10 @@ export function SignupPage() {
                 className="mt-0.5 h-4 w-4 shrink-0 accent-plooy-gold"
               />
               <span>
-                <LegalReadButton slug="kvkk-aydinlatma" label="KVKK Aydınlatma Metni" onOpen={setLegalModalSlug} />
-                {' '}ve{' '}
-                <LegalReadButton slug="acik-riza-metni" label="Açık Rıza Metni" onOpen={setLegalModalSlug} />
-                &apos;ni okudum; kişisel verilerimin işlenmesine açık rızam olduğunu, onayımın adım, IP adresim ve
-                zaman damgası ile kayıt altına alınacağını kabul ediyorum.
+                <LegalReadButton slug="kvkk-aydinlatma" label={tCommon('footer.kvkk')} onOpen={setLegalModalSlug} />
+                {' '}{t('acceptKvkkAnd')}{' '}
+                <LegalReadButton slug="acik-riza-metni" label={tCommon('footer.consent')} onOpen={setLegalModalSlug} />
+                {t('acceptKvkkRead')} {t('acceptKvkkPrefix')}
               </span>
             </label>
           </div>
@@ -396,7 +396,7 @@ export function SignupPage() {
             disabled={loading || !legalAccepted}
             className="w-full rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110 disabled:opacity-60"
           >
-            {loading ? 'Hesap oluşturuluyor...' : 'Kayıt Ol ve Ödemeye Geç'}
+            {loading ? t('creatingAccount') : t('signupSubmit')}
           </button>
         </form>
       )}
@@ -404,7 +404,7 @@ export function SignupPage() {
       {!completed ? (
         <>
           <div className="mt-4 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-plooy-muted">
-            {LEGAL_LINKS.map((link) => (
+            {legalLinks.map((link) => (
               <button
                 key={link.slug}
                 type="button"
@@ -417,9 +417,9 @@ export function SignupPage() {
           </div>
 
           <p className="mt-6 text-center text-sm text-plooy-muted">
-            Zaten hesabın var mı?{' '}
-            <Link to="/giris" className="font-medium text-plooy-gold hover:underline">
-              Giriş yap
+            {t('hasAccount')}{' '}
+            <Link to={localizePath('/giris')} className="font-medium text-plooy-gold hover:underline">
+              {t('loginLink')}
             </Link>
           </p>
         </>
@@ -431,7 +431,7 @@ export function SignupPage() {
           document={documents[legalModalSlug]}
           open
           onClose={() => setLegalModalSlug(null)}
-          closeLabel="Kayda dön"
+          closeLabel={t('backToSignup')}
         />
       )}
     </AuthLayout>

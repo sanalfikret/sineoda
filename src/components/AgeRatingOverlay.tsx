@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { formatRatingBadge, getRatingDescription, parseContentRatingAge } from '../utils/contentRating'
+import { useTranslation } from 'react-i18next'
+import { formatRatingBadge, parseContentRatingAge } from '../utils/contentRating'
 
 interface AgeRatingOverlayProps {
   rating: string
@@ -9,6 +10,7 @@ interface AgeRatingOverlayProps {
 }
 
 export function AgeRatingOverlay({ rating, playbackKey, visibleMs = 5000 }: AgeRatingOverlayProps) {
+  const { t } = useTranslation('content')
   const [visible, setVisible] = useState(true)
   const [fading, setFading] = useState(false)
 
@@ -30,6 +32,7 @@ export function AgeRatingOverlay({ rating, playbackKey, visibleMs = 5000 }: AgeR
   const badge = formatRatingBadge(rating)
   const age = parseContentRatingAge(rating)
   const isGeneral = age === 0
+  const description = isGeneral ? t('ageRating.general') : t('ageRating.agePlus', { age })
 
   return (
     <div
@@ -38,7 +41,7 @@ export function AgeRatingOverlay({ rating, playbackKey, visibleMs = 5000 }: AgeR
       }`}
       role="status"
       aria-live="polite"
-      aria-label={`Yaş sınırı: ${badge}`}
+      aria-label={t('ageRating.aria', { badge })}
     >
       <div
         className={`rounded-xl border-2 px-4 py-3 shadow-2xl backdrop-blur-md ${
@@ -53,7 +56,7 @@ export function AgeRatingOverlay({ rating, playbackKey, visibleMs = 5000 }: AgeR
       >
         <p className="text-3xl font-black leading-none tracking-tight sm:text-4xl">{badge}</p>
         <p className="mt-1.5 max-w-[11rem] text-[11px] font-medium leading-snug opacity-90 sm:text-xs">
-          {getRatingDescription(rating)}
+          {description}
         </p>
       </div>
     </div>

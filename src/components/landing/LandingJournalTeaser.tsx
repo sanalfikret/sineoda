@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { fetchJournalPosts } from '../../api/client'
 import { DEMO_JOURNAL_POSTS } from '../../data/demoJournal'
 import type { LandingSectionsConfig } from '../../constants/landingDefaults'
 import type { JournalPost } from '../../types/journal'
+import { useLocale } from '../../i18n/LocaleContext'
 import { JournalCard } from '../journal/JournalCard'
 
 const TEASER_COUNT = 3
@@ -13,6 +15,8 @@ export function LandingJournalTeaser({
 }: {
   section: LandingSectionsConfig['journal']
 }) {
+  const { t } = useTranslation('landing')
+  const { localizePath } = useLocale()
   const [posts, setPosts] = useState<JournalPost[]>(DEMO_JOURNAL_POSTS.slice(0, TEASER_COUNT))
 
   useEffect(() => {
@@ -39,10 +43,10 @@ export function LandingJournalTeaser({
             <p className="mt-3 max-w-2xl text-base text-plooy-muted">{section.description}</p>
           </div>
           <Link
-            to="/dergi"
+            to={localizePath('/dergi')}
             className="text-sm font-medium text-plooy-accent transition hover:text-white"
           >
-            Tüm yazılar →
+            {t('journal.viewAll')}
           </Link>
         </div>
 

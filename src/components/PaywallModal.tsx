@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { useLocale } from '../i18n/LocaleContext'
 
 interface PaywallModalProps {
   open: boolean
@@ -6,6 +8,10 @@ interface PaywallModalProps {
 }
 
 export function PaywallModal({ open, onClose }: PaywallModalProps) {
+  const { t } = useTranslation('content')
+  const { t: tc } = useTranslation()
+  const { localizePath } = useLocale()
+
   if (!open) return null
 
   return (
@@ -20,26 +26,23 @@ export function PaywallModal({ open, onClose }: PaywallModalProps) {
         role="dialog"
         aria-modal="true"
       >
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-plooy-gold">Abonelik gerekli</p>
-        <h2 className="mt-2 text-2xl font-bold text-white">İzlemeye devam et</h2>
-        <p className="mt-3 text-sm leading-relaxed text-plooy-muted">
-          Bu içeriği izlemek için aktif bir Plooy aboneliğine ihtiyacın var. Öğrenci (₺49/ay) veya
-          standart (₺69/ay) plan seçip ödeme yapmalısın.
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-plooy-gold">{t('paywall.eyebrow')}</p>
+        <h2 className="mt-2 text-2xl font-bold text-white">{t('paywall.title')}</h2>
+        <p className="mt-3 text-sm leading-relaxed text-plooy-muted">{t('paywall.body')}</p>
         <div className="mt-6 flex flex-col gap-2">
           <Link
-            to="/planlar"
+            to={localizePath('/planlar')}
             onClick={onClose}
             className="rounded-lg bg-plooy-gold py-3 text-center text-sm font-semibold text-plooy-bg"
           >
-            Planları Gör
+            {t('paywall.viewPlans')}
           </Link>
           <button
             type="button"
             onClick={onClose}
             className="rounded-lg border border-white/10 py-3 text-sm text-white/80 hover:bg-white/5"
           >
-            Kapat
+            {tc('actions.close')}
           </button>
         </div>
       </div>

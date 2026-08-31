@@ -1,0 +1,80 @@
+{
+  "title": "Account",
+  "switchProfile": "Switch Profile",
+  "home": "Home",
+  "sections": {
+    "accountInfo": "Account Information",
+    "subscription": "Subscription",
+    "paymentHistory": "Payment History",
+    "watchStats": "Watch Statistics",
+    "legal": "Legal Information",
+    "profiles": "Profiles",
+    "mobileApp": "Mobile app"
+  },
+  "fields": {
+    "name": "Full name",
+    "status": "Status",
+    "plan": "Plan",
+    "startedAt": "Started",
+    "expiresAt": "Expires",
+    "cancelledAt": "Cancelled on",
+    "activeProfile": "Active profile:",
+    "date": "Date",
+    "amount": "Amount",
+    "reference": "Reference"
+  },
+  "subscription": {
+    "viewPlans": "View Plans",
+    "cancel": "Cancel Subscription",
+    "cancelling": "Cancelling…",
+    "cancelledNotice": "Your subscription has been cancelled. You can keep watching until {{date}}.",
+    "cancelConfirm": "Are you sure you want to cancel your subscription? You can continue watching until the end of your paid period; automatic renewal will stop.",
+    "cancelSuccess": "Subscription cancelled. You can keep watching until the end date."
+  },
+  "status": {
+    "active": "Active",
+    "expired": "Expired",
+    "cancelled": "Cancelled",
+    "free": "Free"
+  },
+  "profile": {
+    "add": "+ Add Profile",
+    "new": "New profile",
+    "namePlaceholder": "Profile name",
+    "kidsProfile": "Kids profile",
+    "standardProfile": "Standard profile",
+    "currentlyActive": " · Currently active",
+    "edit": "Edit",
+    "save": "Save",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure you want to delete this profile?",
+    "addBtn": "Add"
+  },
+  "paymentHistory": {
+    "description": "Platform receipt for payments made via PayTR. Official e-invoices are issued through a separate accounting process.",
+    "empty": "No payment records yet."
+  },
+  "watchStats": {
+    "description": "Time spent watching films, series, and other content on your active profile."
+  },
+  "legal": {
+    "versionNote": "Platform terms and policies. Current version: {{version}}.",
+    "consentRecords": "My consent records",
+    "consentDescription": "Your name, IP address, and timestamp are stored for registration and cookie preferences.",
+    "showText": "View text",
+    "hideText": "Hide",
+    "ipLabel": "IP:",
+    "versionLabel": "Version:"
+  },
+  "messages": {
+    "accountUpdated": "Account information updated.",
+    "profileUpdated": "Profile updated.",
+    "profileDeleted": "Profile deleted.",
+    "profileAdded": "Profile added.",
+    "saveFailed": "Save failed.",
+    "profileUpdateFailed": "Could not update profile.",
+    "profileDeleteFailed": "Could not delete profile.",
+    "profileAddFailed": "Could not add profile.",
+    "cancelFailed": "Could not cancel subscription."
+  }
+}

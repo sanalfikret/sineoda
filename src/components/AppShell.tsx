@@ -17,7 +17,9 @@ import { SearchModal } from './SearchModal'
 import { PageFooter } from './PageFooter'
 import { VideoPlayer } from './VideoPlayer'
 import { VerticalPlayer } from './VerticalPlayer'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
+import { useLocale } from '../i18n/LocaleContext'
 import { isSeriesContent } from '../constants/contentTypes'
 import { isContentAllowedForKids } from '../utils/contentRating'
 import { isVerticalContent } from '../utils/vertical'
@@ -36,6 +38,9 @@ export function useOptionalContentUI() {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const { t } = useTranslation('content')
+  const { t: tc } = useTranslation()
+  const { localizePath } = useLocale()
   const { isAdmin, activeProfile } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -50,15 +55,15 @@ export function AppShell({ children }: { children: ReactNode }) {
       saveBrowseScroll(location.pathname, location.search)
       const from = `${location.pathname}${location.search}`
       sessionStorage.setItem('content-detail-from', from)
-      navigate(`/icerik/${item.id}`, { state: { from } })
+      navigate(localizePath(`/icerik/${item.id}`), { state: { from } })
     },
-    [navigate, location.pathname, location.search],
+    [navigate, location.pathname, location.search, localizePath],
   )
 
   const openPlayer = useCallback(
     async (item: ContentItem, episode?: Episode) => {
       if (activeProfile?.isKids && !isContentAllowedForKids(item.rating)) {
-        setKidsBlockMessage('Bu içerik çocuk profili için uygun değil.')
+        setKidsBlockMessage(t('kidsBlock.message'))
         return
       }
 
@@ -139,7 +144,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       setPlayingTarget(playTarget)
     },
-    [activeProfile?.isKids, isAdmin, openDetail],
+    [activeProfile?.isKids, isAdmin, openDetail, t],
   )
 
   const completeAdAndPlay = useCallback(async () => {
@@ -194,7 +199,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#11141c] p-6 shadow-2xl">
               <p id="kids-block-title" className="text-lg font-semibold text-white">
-                Çocuk profili
+                {t('kidsBlock.title')}
               </p>
               <p className="mt-2 text-sm text-plooy-muted">{kidsBlockMessage}</p>
               <button
@@ -202,7 +207,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 onClick={() => setKidsBlockMessage(null)}
                 className="mt-5 w-full rounded-lg bg-plooy-gold px-4 py-2.5 text-sm font-semibold text-plooy-bg"
               >
-                Tamam
+                {tc('actions.ok')}
               </button>
             </div>
           </div>

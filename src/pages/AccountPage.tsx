@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { fetchBillingPlans, fetchBillingInvoices, fetchLegalConsents, fetchSubscription, cancelSubscription, type BillingInvoice, type LegalConsentRecord } from '../api/client'
 import { PageFooter } from '../components/PageFooter'
 import { PageMeta } from '../components/PageMeta'
@@ -8,25 +9,36 @@ import { ProfileAvatar } from '../components/ProfileAvatar'
 import { ProfileAvatarPicker } from '../components/ProfileAvatarPicker'
 import { ProfileWatchStatsPanel } from '../components/ProfileWatchStatsPanel'
 import { useAuth } from '../context/AuthContext'
-import { CONSENT_TYPE_LABELS, LEGAL_LINKS, LEGAL_VERSION, legalPageHref } from '../constants/legal'
+import { LEGAL_LINKS, LEGAL_VERSION, legalPageHref, type LegalSlug } from '../constants/legal'
 import { PROFILE_AVATARS, type Profile } from '../types/auth'
+import { useLocale } from '../i18n/LocaleContext'
+import type { Locale } from '../i18n/paths'
 
-function formatDate(value: string | null | undefined) {
+const FOOTER_LEGAL_KEYS: Record<LegalSlug, string> = {
+  'kullanim-kosullari': 'footer.terms',
+  'gizlilik-politikasi': 'footer.privacy',
+  'kvkk-aydinlatma': 'footer.kvkk',
+  'acik-riza-metni': 'footer.consent',
+  'cerez-politikasi': 'footer.cookies',
+}
+
+function formatDate(value: string | null | undefined, locale: Locale) {
   if (!value) return '—'
-  return new Date(value).toLocaleDateString('tr-TR', {
+  return new Date(value).toLocaleDateString(locale === 'en' ? 'en-US' : 'tr-TR', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   })
 }
 
-function formatMoneyTl(value: number) {
-  return `${value.toLocaleString('tr-TR')} TL`
+function formatMoneyTl(value: number, locale: Locale) {
+  const formatted = value.toLocaleString(locale === 'en' ? 'en-US' : 'tr-TR')
+  return locale === 'en' ? `₺${formatted}` : `${formatted} TL`
 }
 
-function formatDateTime(value: string | null | undefined) {
+function formatDateTime(value: string | null | undefined, locale: Locale) {
   if (!value) return '—'
-  return new Date(value).toLocaleString('tr-TR', {
+  return new Date(value).toLocaleString(locale === 'en' ? 'en-US' : 'tr-TR', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -36,14 +48,10 @@ function formatDateTime(value: string | null | undefined) {
   })
 }
 
-function subscriptionStatusLabel(status: string) {
-  if (status === 'active') return 'Aktif'
-  if (status === 'expired') return 'Süresi doldu'
-  if (status === 'cancelled') return 'İptal edildi'
-  return 'Ücretsiz'
-}
-
 export function AccountPage() {
+  const { t } = useTranslation('account')
+  const { t: tc } = useTranslation()
+  const { locale, localizePath } = useLocale()
   const navigate = useNavigate()
   const {
     user,
@@ -121,9 +129,9 @@ export function AccountPage() {
     setMessage('')
     try {
       await updateAccount(accountName.trim())
-      setMessage('Hesap bilgileri güncellendi.')
+      setMessage(t('messages.accountUpdated'))
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Kayıt başarısız.')
+      setMessage(err instanceof Error ? err.message : t('messages.saveFailed'))
     } finally {
       setSavingAccount(false)
     }
@@ -139,21 +147,21 @@ export function AccountPage() {
         isKids: editKids,
       })
       setEditingProfileId(null)
-      setMessage('Profil güncellendi.')
+      setMessage(t('messages.profileUpdated'))
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Profil güncellenemedi.')
+      setMessage(err instanceof Error ? err.message : t('messages.profileUpdateFailed'))
     }
   }
 
   const handleDeleteProfile = async (profileId: string) => {
-    if (!window.confirm('Bu profili silmek istediğine emin misin?')) return
+    if (!window.confirm(t('messages.confirmDeleteProfile'))) return
     setMessage('')
     try {
       await deleteProfile(profileId)
       if (editingProfileId === profileId) setEditingProfileId(null)
-      setMessage('Profil silindi.')
+      setMessage(t('messages.profileDeleted'))
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Profil silinemedi.')
+      setMessage(err instanceof Error ? err.message : t('messages.profileDeleteFailed'))
     }
   }
 
@@ -166,17 +174,15 @@ export function AccountPage() {
       setNewAvatar(PROFILE_AVATARS[0])
       setNewKids(false)
       setShowAddForm(false)
-      setMessage('Profil eklendi.')
+      setMessage(t('messages.profileAdded'))
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Profil eklenemedi.')
+      setMessage(err instanceof Error ? err.message : t('messages.profileAddFailed'))
     }
   }
 
   const handleCancelSubscription = async () => {
     if (
-      !window.confirm(
-        'Aboneliğinizi iptal etmek istediğinize emin misiniz? Ödediğiniz dönem sonuna kadar izlemeye devam edebilirsiniz; otomatik yenileme yapılmaz.',
-      )
+      !window.confirm(t('messages.confirmCancelSubscription'))
     ) {
       return
     }
@@ -195,21 +201,26 @@ export function AccountPage() {
             }
           : current,
       )
-      setMessage('Abonelik iptal edildi. Bitiş tarihine kadar izlemeye devam edebilirsiniz.')
+      setMessage(t('messages.subscriptionCancelled'))
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Abonelik iptal edilemedi.')
+      setMessage(err instanceof Error ? err.message : t('messages.subscriptionCancelFailed'))
     } finally {
       setCancelling(false)
     }
   }
 
+  const subscriptionStatusLabel = (status: string) => {
+    const key = ['active', 'expired', 'cancelled'].includes(status) ? status : 'free'
+    return t(`subscriptionStatus.${key}`)
+  }
+
   return (
     <div className="min-h-dvh bg-plooy-bg px-4 py-8 text-white sm:px-6">
-      <PageMeta title="Hesabım" noIndex />
+      <PageMeta title={t('title')} description={t('metaDescription')} noIndex />
       <div className="safe-top mx-auto max-w-3xl">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold sm:text-3xl">Hesabım</h1>
+            <h1 className="text-2xl font-bold sm:text-3xl">{t('title')}</h1>
             <p className="mt-1 text-sm text-plooy-muted">{user.email}</p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -217,14 +228,14 @@ export function AccountPage() {
               type="button"
               onClick={() => {
                 clearActiveProfile()
-                navigate('/profiller')
+                navigate(localizePath('/profiller'))
               }}
               className="rounded-lg border border-white/15 px-4 py-2 text-sm hover:bg-white/5"
             >
-              Profil Değiştir
+              {tc('nav.switchProfile')}
             </button>
-            <Link to="/" className="rounded-lg bg-white/10 px-4 py-2 text-sm hover:bg-white/15">
-              Ana Sayfa
+            <Link to={localizePath('/')} className="rounded-lg bg-white/10 px-4 py-2 text-sm hover:bg-white/15">
+              {t('home')}
             </Link>
           </div>
         </div>
@@ -238,9 +249,9 @@ export function AccountPage() {
         </div>
 
         <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
-          <h2 className="text-lg font-semibold">Hesap Bilgileri</h2>
+          <h2 className="text-lg font-semibold">{t('accountInfo')}</h2>
           <label className="mt-4 block space-y-2">
-            <span className="text-xs font-medium uppercase tracking-wide text-plooy-muted">Ad Soyad</span>
+            <span className="text-xs font-medium uppercase tracking-wide text-plooy-muted">{t('fullName')}</span>
             <input
               value={accountName}
               onChange={(event) => setAccountName(event.target.value)}
@@ -253,49 +264,48 @@ export function AccountPage() {
             onClick={() => void handleSaveAccount()}
             className="mt-4 rounded-lg bg-plooy-gold px-4 py-2.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
           >
-            {savingAccount ? 'Kaydediliyor…' : 'Hesabı Kaydet'}
+            {savingAccount ? t('saving') : t('saveAccount')}
           </button>
         </section>
 
         <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <h2 className="text-lg font-semibold">Abonelik</h2>
-            <Link to="/planlar" className="text-sm text-plooy-gold hover:underline">
-              Planları Gör
+            <h2 className="text-lg font-semibold">{t('subscription')}</h2>
+            <Link to={localizePath('/planlar')} className="text-sm text-plooy-gold hover:underline">
+              {t('viewPlans')}
             </Link>
           </div>
 
           <dl className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
-              <dt className="text-xs uppercase tracking-wide text-plooy-muted">Durum</dt>
+              <dt className="text-xs uppercase tracking-wide text-plooy-muted">{t('status')}</dt>
               <dd className="mt-1 font-medium">
                 {subscription ? subscriptionStatusLabel(subscription.status) : '—'}
               </dd>
             </div>
             <div>
-              <dt className="text-xs uppercase tracking-wide text-plooy-muted">Plan</dt>
+              <dt className="text-xs uppercase tracking-wide text-plooy-muted">{t('plan')}</dt>
               <dd className="mt-1 font-medium">{planName ?? '—'}</dd>
             </div>
             <div>
-              <dt className="text-xs uppercase tracking-wide text-plooy-muted">Başlangıç</dt>
-              <dd className="mt-1 font-medium">{formatDate(subscription?.startedAt)}</dd>
+              <dt className="text-xs uppercase tracking-wide text-plooy-muted">{t('startedAt')}</dt>
+              <dd className="mt-1 font-medium">{formatDate(subscription?.startedAt, locale)}</dd>
             </div>
             <div>
-              <dt className="text-xs uppercase tracking-wide text-plooy-muted">Bitiş</dt>
-              <dd className="mt-1 font-medium">{formatDate(subscription?.expiresAt)}</dd>
+              <dt className="text-xs uppercase tracking-wide text-plooy-muted">{t('expiresAt')}</dt>
+              <dd className="mt-1 font-medium">{formatDate(subscription?.expiresAt, locale)}</dd>
             </div>
             {subscription?.cancelledAt && (
               <div className="sm:col-span-2">
-                <dt className="text-xs uppercase tracking-wide text-plooy-muted">İptal tarihi</dt>
-                <dd className="mt-1 font-medium">{formatDate(subscription.cancelledAt)}</dd>
+                <dt className="text-xs uppercase tracking-wide text-plooy-muted">{t('cancelledAt')}</dt>
+                <dd className="mt-1 font-medium">{formatDate(subscription.cancelledAt, locale)}</dd>
               </div>
             )}
           </dl>
 
           {subscription?.status === 'cancelled' && subscription.expiresAt && (
             <p className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-              Aboneliğiniz iptal edildi. {formatDate(subscription.expiresAt)} tarihine kadar izlemeye devam
-              edebilirsiniz.
+              {t('cancelledNotice', { date: formatDate(subscription.expiresAt, locale) })}
             </p>
           )}
 
@@ -306,13 +316,13 @@ export function AccountPage() {
               onClick={() => void handleCancelSubscription()}
               className="mt-4 rounded-lg border border-red-400/40 px-4 py-2.5 text-sm text-red-200 hover:bg-red-500/10 disabled:opacity-60"
             >
-              {cancelling ? 'İptal ediliyor…' : 'Aboneliği İptal Et'}
+              {cancelling ? t('cancelling') : t('cancelSubscription')}
             </button>
           )}
 
           {activeProfile && (
             <div className="mt-4 flex items-center gap-3 text-sm text-plooy-muted">
-              <span>Aktif profil:</span>
+              <span>{t('activeProfile')}</span>
               <ProfileAvatar avatar={activeProfile.avatar} name={activeProfile.name} className="h-8 w-8" emojiClassName="text-lg" />
               <span className="text-white">{activeProfile.name}</span>
             </div>
@@ -320,30 +330,28 @@ export function AccountPage() {
         </section>
 
         <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
-          <h2 className="text-lg font-semibold">Ödeme geçmişi</h2>
-          <p className="mt-1 text-sm text-plooy-muted">
-            PayTR ile yapılan ödemeler için platform makbuzu. Resmi e-fatura ayrı muhasebe sürecinde düzenlenir.
-          </p>
+          <h2 className="text-lg font-semibold">{t('paymentHistory')}</h2>
+          <p className="mt-1 text-sm text-plooy-muted">{t('paymentHistoryNote')}</p>
 
           {invoices.length === 0 ? (
-            <p className="mt-4 text-sm text-plooy-muted">Henüz kayıtlı ödeme bulunmuyor.</p>
+            <p className="mt-4 text-sm text-plooy-muted">{t('noPayments')}</p>
           ) : (
             <div className="mt-4 overflow-x-auto">
               <table className="min-w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-plooy-muted">
-                    <th className="px-2 py-2 font-medium">Tarih</th>
-                    <th className="px-2 py-2 font-medium">Plan</th>
-                    <th className="px-2 py-2 font-medium">Tutar</th>
-                    <th className="px-2 py-2 font-medium">Referans</th>
+                    <th className="px-2 py-2 font-medium">{t('invoiceDate')}</th>
+                    <th className="px-2 py-2 font-medium">{t('invoicePlan')}</th>
+                    <th className="px-2 py-2 font-medium">{t('invoiceAmount')}</th>
+                    <th className="px-2 py-2 font-medium">{t('invoiceReference')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {invoices.map((invoice) => (
                     <tr key={invoice.id} className="border-b border-white/5">
-                      <td className="px-2 py-3 whitespace-nowrap">{formatDateTime(invoice.paidAt)}</td>
+                      <td className="px-2 py-3 whitespace-nowrap">{formatDateTime(invoice.paidAt, locale)}</td>
                       <td className="px-2 py-3">{invoice.planName}</td>
-                      <td className="px-2 py-3 whitespace-nowrap">{formatMoneyTl(invoice.amountTl)}</td>
+                      <td className="px-2 py-3 whitespace-nowrap">{formatMoneyTl(invoice.amountTl, locale)}</td>
                       <td className="px-2 py-3 font-mono text-xs text-plooy-muted">{invoice.merchantOid}</td>
                     </tr>
                   ))}
@@ -355,10 +363,8 @@ export function AccountPage() {
 
         {activeProfile && (
           <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
-            <h2 className="text-lg font-semibold">İzleme İstatistikleri</h2>
-            <p className="mt-1 text-sm text-plooy-muted">
-              Aktif profilin için film, dizi ve diğer içeriklerde geçirdiğin süre.
-            </p>
+            <h2 className="text-lg font-semibold">{t('watchStats')}</h2>
+            <p className="mt-1 text-sm text-plooy-muted">{t('watchStatsNote')}</p>
             <div className="mt-4">
               <ProfileWatchStatsPanel profileId={activeProfile.id} profileName={activeProfile.name} />
             </div>
@@ -366,38 +372,40 @@ export function AccountPage() {
         )}
 
         <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
-          <h2 className="text-lg font-semibold">Yasal Bilgiler</h2>
-          <p className="mt-1 text-sm text-plooy-muted">
-            Platform kullanımına ilişkin metinler. Güncel sürüm: {LEGAL_VERSION}.
-          </p>
+          <h2 className="text-lg font-semibold">{t('legal')}</h2>
+          <p className="mt-1 text-sm text-plooy-muted">{t('legalNote', { version: LEGAL_VERSION })}</p>
           <nav className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
             {LEGAL_LINKS.map((link) => (
-              <Link key={link.slug} to={legalPageHref(link.slug, '/hesap')} className="text-plooy-gold hover:underline">
-                {link.label}
+              <Link
+                key={link.slug}
+                to={localizePath(legalPageHref(link.slug, '/hesap'))}
+                className="text-plooy-gold hover:underline"
+              >
+                {tc(FOOTER_LEGAL_KEYS[link.slug])}
               </Link>
             ))}
           </nav>
 
           {legalConsents.length > 0 && (
             <div className="mt-6 border-t border-white/10 pt-5">
-              <h3 className="text-sm font-semibold text-white">Onay kayıtlarım</h3>
-              <p className="mt-1 text-xs text-plooy-muted">
-                Kayıt ve çerez tercihlerinizde adınız, IP adresiniz ve zaman damgası saklanır.
-              </p>
+              <h3 className="text-sm font-semibold text-white">{t('consentRecords')}</h3>
+              <p className="mt-1 text-xs text-plooy-muted">{t('consentRecordsNote')}</p>
               <ul className="mt-4 space-y-3">
                 {legalConsents.map((consent) => (
                   <li key={consent.id} className="rounded-xl border border-white/10 bg-[#0d0f14] p-3">
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
                         <p className="text-sm font-medium text-white">
-                          {CONSENT_TYPE_LABELS[consent.consentType]}
+                          {t(`consentTypes.${consent.consentType}`)}
                         </p>
                         <p className="mt-1 text-xs text-plooy-muted">
-                          {new Date(consent.acceptedAt).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}
-                          {' · IP: '}
-                          {consent.ipAddress}
-                          {' · Sürüm: '}
-                          {consent.documentVersion}
+                          {t('consentMeta', {
+                            date: new Date(consent.acceptedAt).toLocaleString(locale === 'en' ? 'en-US' : 'tr-TR', {
+                              timeZone: 'Europe/Istanbul',
+                            }),
+                            ip: consent.ipAddress,
+                            version: consent.documentVersion,
+                          })}
                         </p>
                       </div>
                       <button
@@ -407,7 +415,7 @@ export function AccountPage() {
                         }
                         className="text-xs text-plooy-gold hover:underline"
                       >
-                        {expandedConsentId === consent.id ? 'Gizle' : 'Metni gör'}
+                        {expandedConsentId === consent.id ? t('hide') : t('viewText')}
                       </button>
                     </div>
                     {expandedConsentId === consent.id && (
@@ -424,14 +432,14 @@ export function AccountPage() {
 
         <section className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">Profiller</h2>
+            <h2 className="text-lg font-semibold">{t('profiles')}</h2>
             {user.profiles.length < 4 && (
               <button
                 type="button"
                 onClick={() => setShowAddForm((open) => !open)}
                 className="rounded-lg border border-plooy-gold/40 px-3 py-1.5 text-sm text-plooy-gold"
               >
-                + Profil Ekle
+                {t('addProfile')}
               </button>
             )}
           </div>
@@ -454,7 +462,7 @@ export function AccountPage() {
                         onChange={(event) => setEditKids(event.target.checked)}
                         className="accent-plooy-gold"
                       />
-                      Çocuk profili
+                      {t('kidsProfile')}
                     </label>
                     <div className="flex flex-wrap gap-2">
                       <button
@@ -462,14 +470,14 @@ export function AccountPage() {
                         onClick={() => void handleSaveProfile()}
                         className="rounded-lg bg-plooy-gold px-4 py-2 text-sm font-semibold text-plooy-bg"
                       >
-                        Kaydet
+                        {tc('actions.save')}
                       </button>
                       <button
                         type="button"
                         onClick={() => setEditingProfileId(null)}
                         className="rounded-lg px-4 py-2 text-sm text-plooy-muted hover:text-white"
                       >
-                        İptal
+                        {tc('actions.cancel')}
                       </button>
                       {user.profiles.length > 1 && (
                         <button
@@ -477,7 +485,7 @@ export function AccountPage() {
                           onClick={() => void handleDeleteProfile(profile.id)}
                           className="rounded-lg px-4 py-2 text-sm text-red-300 hover:text-red-200"
                         >
-                          Sil
+                          {tc('actions.delete')}
                         </button>
                       )}
                     </div>
@@ -489,8 +497,8 @@ export function AccountPage() {
                       <div>
                         <p className="text-lg">{profile.name}</p>
                         <p className="text-sm text-plooy-muted">
-                          {profile.isKids ? 'Çocuk profili' : 'Standart profil'}
-                          {activeProfile?.id === profile.id ? ' · Şu an aktif' : ''}
+                          {profile.isKids ? t('kidsProfile') : t('standardProfile')}
+                          {activeProfile?.id === profile.id ? t('currentlyActive') : ''}
                         </p>
                       </div>
                     </div>
@@ -499,7 +507,7 @@ export function AccountPage() {
                       onClick={() => startEditProfile(profile)}
                       className="rounded-lg border border-white/15 px-3 py-1.5 text-sm hover:bg-white/5"
                     >
-                      Düzenle
+                      {t('edit')}
                     </button>
                   </div>
                 )}
@@ -509,11 +517,11 @@ export function AccountPage() {
 
           {showAddForm && (
             <div className="mt-4 rounded-xl border border-plooy-gold/20 bg-plooy-gold/5 p-4">
-              <h3 className="font-medium">Yeni profil</h3>
+              <h3 className="font-medium">{t('newProfile')}</h3>
               <input
                 value={newName}
                 onChange={(event) => setNewName(event.target.value)}
-                placeholder="Profil adı"
+                placeholder={t('profileNamePlaceholder')}
                 className="mt-3 w-full rounded-lg border border-white/10 bg-plooy-bg px-4 py-2.5 outline-none focus:border-plooy-gold"
               />
               <ProfileAvatarPicker value={newAvatar} onChange={setNewAvatar} name={newName} />
@@ -524,7 +532,7 @@ export function AccountPage() {
                   onChange={(event) => setNewKids(event.target.checked)}
                   className="accent-plooy-gold"
                 />
-                Çocuk profili
+                {t('kidsProfile')}
               </label>
               <div className="mt-4 flex gap-2">
                 <button
@@ -532,14 +540,14 @@ export function AccountPage() {
                   onClick={() => void handleAddProfile()}
                   className="rounded-lg bg-plooy-gold px-4 py-2 text-sm font-semibold text-plooy-bg"
                 >
-                  Ekle
+                  {tc('actions.add')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
                   className="rounded-lg px-4 py-2 text-sm text-plooy-muted"
                 >
-                  İptal
+                  {tc('actions.cancel')}
                 </button>
               </div>
             </div>

@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import type { LandingHeroConfig } from '../../api/client'
 import type { ContentItem } from '../../types/content'
+import { useLocale } from '../../i18n/LocaleContext'
 import { resolveHeroBackground } from '../../utils/landingHeroMedia'
 
 interface LandingHeroProps {
@@ -16,6 +18,8 @@ export function LandingHero({
   featuredItem,
   fallbackImage,
 }: LandingHeroProps) {
+  const { t } = useTranslation('landing')
+  const { localizePath } = useLocale()
   const background = resolveHeroBackground(hero, backgroundContent, fallbackImage)
   const showFeaturedCard = hero.showFeaturedCard !== false && featuredItem
 
@@ -59,13 +63,13 @@ export function LandingHero({
 
         <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4">
           <Link
-            to={hero.ctaPrimaryLink || '/kayit'}
+            to={localizePath(hero.ctaPrimaryLink || '/kayit')}
             className="inline-flex h-12 min-w-[200px] items-center justify-center rounded-md bg-plooy-accent px-10 text-base font-semibold text-plooy-bg transition hover:brightness-105"
           >
             {hero.ctaPrimary}
           </Link>
           <Link
-            to={hero.ctaSecondaryLink || '/giris'}
+            to={localizePath(hero.ctaSecondaryLink || '/giris')}
             className="inline-flex h-12 min-w-[200px] items-center justify-center rounded-md border border-white/20 px-10 text-base font-medium text-white/90 transition hover:border-white/35 hover:bg-white/5"
           >
             {hero.ctaSecondary}
@@ -77,7 +81,7 @@ export function LandingHero({
         {showFeaturedCard && (
           <div className="mt-14 w-full max-w-xl rounded-xl border border-white/10 bg-black/35 px-5 py-4 text-left backdrop-blur-sm">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-plooy-accent">
-              Bu hafta öne çıkan
+              {t('hero.featuredThisWeek')}
             </p>
             <p className="mt-2 text-lg font-medium text-white">{featuredItem.title}</p>
             <p className="mt-1 text-sm text-plooy-muted">

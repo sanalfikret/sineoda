@@ -1,0 +1,158 @@
+{
+  "tagline": "Bağımsız sinemanın buluşma noktası",
+  "hero": {
+    "line1": "Bağımsız sinemanın buluşma noktası",
+    "line2": "Festival filmleri, diziler ve belgeseller",
+    "description": "Dünyanın dört bir yanından bağımsız yapımcıların özgün hikâyeleri. Ticari blockbuster değil — küratörlü seçki, sakin arayüz, sinemaseverlere özel bir izleme deneyimi.",
+    "ctaPrimary": "Ücretsiz Dene",
+    "ctaSecondary": "Giriş Yap",
+    "legalNote": "Üye olarak Kullanım Koşulları, Gizlilik Politikası, KVKK ve Çerez Politikası'nı kabul etmiş olursun."
+  },
+  "manifesto": {
+    "eyebrow": "Plooy nedir?",
+    "title": "Dünyanın bağımsız sinemacılarına açılan kapı.",
+    "body": "Hollywood ve ticari yapımların ötesinde; Cannes, Berlin, Sundance, Rotterdam ve yerli festivallerden bağımsız filmler, diziler, belgeseller ve kısa metrajlar. Özgün sesler, özenle seçildi — sakin, odaklı ve sinemaseverlere özel bir izleme deneyimi.",
+    "ctaLabel": "Kataloğu keşfet"
+  },
+  "pillars": [
+    {
+      "title": "Dünyadan bağımsız yapımlar",
+      "text": "Avrupa, Asya, Amerika ve Afrika'dan bağımsız sinemacıların filmleri ve dizileri tek katalogda."
+    },
+    {
+      "title": "İstediğin zaman izle",
+      "text": "Festival ödüllü filmler ve bağımsız diziler — dilediğin cihazdan, kaldığın yerden devam ederek."
+    }
+  ],
+  "features": {
+    "eyebrow": "Neden Plooy",
+    "title": "Dünya bağımsız sineması için tasarlandı.\nGöz yormaz.",
+    "items": [
+      {
+        "title": "Dünya bağımsız sineması",
+        "text": "Kıtalar arası bağımsız yapımcıların filmleri ve dizileri; yerel hikâyeler, evrensel duygular."
+      },
+      {
+        "title": "Festival seçkisi",
+        "text": "Ödüllü festival filmleri ve bağımsız dizi yapımları — küratör ekibi tarafından seçilir."
+      },
+      {
+        "title": "Sakin arayüz",
+        "text": "Göz yormayan, dikkat dağıtmayan sinematik tasarım."
+      },
+      {
+        "title": "Her cihazda",
+        "text": "TV, tablet veya telefonda aynı kalitede izleme."
+      }
+    ]
+  },
+  "campaign": {
+    "eyebrow": "Abonelik",
+    "title": "İzlemeye bugün başla",
+    "description": "Öğrenci veya standart plan. Aylık yenilenir, istediğin zaman iptal et.",
+    "price": "₺49",
+    "priceSuffix": "'ten başlayan /ay",
+    "priceNote": "Öğrenci planı ₺49/ay (kimlik gerekir) · Standart plan ₺69/ay",
+    "ctaPrimary": "Üye Ol",
+    "ctaSecondary": "Planları karşılaştır"
+  },
+  "studentCinema": {
+    "eyebrow": "Sinema okullarıyla",
+    "title": "Genç sinemaya dijital sahne",
+    "subtitle": "Mezun ve öğrenci filmlerinizi yükleyin, kamera arkası görüntülerinizi paylaşın. Okulunuz seçer, Plooy son onayı verir — genç sinemacıları birlikte destekliyoruz.",
+    "stepsHeading": "Nasıl çalışır?",
+    "steps": [
+      {
+        "title": "Filmini ve kamera arkasını yükle",
+        "text": "Kısa film, mezuniyet projesi veya belgesel — yanında set görüntüleri ve kısa making-of videoları."
+      },
+      {
+        "title": "Okulun onaylasın",
+        "text": "Hocanız veya okul temsilcisi projeyi okul adına önerir."
+      },
+      {
+        "title": "Plooy yayınlasın",
+        "text": "İçerik ve platform standartlarına uygunsa Genç Sinema seçkisinde yerini alır."
+      }
+    ],
+    "ctaPrimary": "Film Başvurusu Yap",
+    "ctaSecondary": "Nasıl Çalışır?",
+    "footnote": "Okulunuz seçer · Plooy son onayı verir · Film + kamera arkası birlikte yayınlanır"
+  },
+  "creator": {
+    "eyebrow": "Bağımsız yapımcılar için",
+    "title": "Filmini yükle, adil paylaşımdan kazanç elde et",
+    "subtitle": "Plooy yalnızca izleyiciler için değil — bağımsız sinemacılar için de tasarlandı. Yapımını yükle, küratörlü katalogda yerini al, gelir paylaşımı koşulları yapımcı anlaşmasında açıkça belirtilir.",
+    "perks": [
+      {
+        "title": "Gerçek izleyici kitlesi",
+        "text": "Bağımsız sinema meraklılarından oluşan odaklı bir topluluk — rastgele tıklama değil, gerçek izlenme."
+      },
+      {
+        "title": "Adil gelir modeli",
+        "text": "Şeffaf paylaşım koşulları. Kazancın nasıl hesaplandığı anlaşmada net; sürpriz yok."
+      },
+      {
+        "title": "Küratörlü vitrin",
+        "text": "Filmin editöryal incelemeden geçer, katalogda özenle konumlandırılır — vitrin değeri taşır."
+      },
+      {
+        "title": "Tek platform, tek adres",
+        "text": "Uzun metraj, kısa film, belgesel ve dizi — bağımsız yapımını tek yerden yönet."
+      }
+    ],
+    "ctaPrimary": "Film Başvurusu Yap",
+    "ctaSecondary": "Yapımcı Girişi",
+    "footnote": "Bağımsız sinemanın buluşma noktası — izleyici tarafında keşfet, yapımcı tarafında yayınla."
+  },
+  "faq": {
+    "title": "Sıkça Sorulan Sorular",
+    "items": [
+      {
+        "question": "Plooy nedir?",
+        "answer": "Plooy; dünyanın dört bir yanından bağımsız sinemacıların filmlerini, dizilerini ve belgesellerini izleyebileceğiniz küratörlü bir dijital yayın platformudur."
+      },
+      {
+        "question": "Plooy'nın maliyeti nedir?",
+        "answer": "Aylık ₺49 veya yıllık ₺490 planlarımız mevcuttur. Yıllık planda 2 ay bedava avantajı sunulur."
+      },
+      {
+        "question": "Nerede izleyebilirim?",
+        "answer": "Plooy'yu web tarayıcısı, Android, iOS, Samsung Tizen, LG webOS, Android TV ve Google TV üzerinden izleyebilirsiniz. TV'ye uygulama olarak ekleyebilirsiniz."
+      },
+      {
+        "question": "Nasıl iptal ederim?",
+        "answer": "Hesabınızdan Abonelik bölümünden planınızı istediğiniz zaman iptal edebilirsiniz."
+      },
+      {
+        "question": "Plooy'da ne izleyebilirim?",
+        "answer": "Dünya bağımsız sinemasından filmler, diziler, belgeseller ve kısa metrajlar."
+      },
+      {
+        "question": "Plooy çocuklar için uygun mudur?",
+        "answer": "Evet. Çocuk profili ile yaşa uygun içerikler sunulur."
+      }
+    ],
+    "footerText": "İzlemeye hazır mısın?",
+    "footerLinkLabel": "Üye olmak için e-posta adresini gir"
+  },
+  "emailSignup": {
+    "title": "İzlemeye hazır mısın?",
+    "description": "E-posta adresini gir, üyeliğini oluştur ve sınırsız içeriğe hemen başla.",
+    "buttonLabel": "Başla"
+  },
+  "journal": {
+    "eyebrow": "Plooy Dergi",
+    "title": "Bağımsız sinema üzerine yazılar",
+    "description": "Festival notları, küratör seçkileri ve dünya bağımsız sinemasından haberler.",
+    "viewAll": "Tüm yazılar →"
+  },
+  "slider": {
+    "prev": "Önceki",
+    "next": "Sonraki",
+    "slide": "Slayt {{n}}"
+  },
+  "showcase": {
+    "emptyCategory": "Bu kategoride henüz içerik yok."
+  }
+}

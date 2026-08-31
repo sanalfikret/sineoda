@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useInstallApp } from '../context/InstallAppContext'
 
 interface InstallAppButtonProps {
@@ -10,10 +11,12 @@ interface InstallAppButtonProps {
 export function InstallAppButton({
   className = '',
   variant = 'ghost',
-  label = 'Yükle',
+  label,
   onClick,
 }: InstallAppButtonProps) {
+  const { t } = useTranslation('install')
   const { isStandalone, installApp } = useInstallApp()
+  const buttonLabel = label ?? t('install')
 
   if (isStandalone) return null
 
@@ -33,12 +36,13 @@ export function InstallAppButton({
         void installApp()
       }}
     >
-      {label}
+      {buttonLabel}
     </button>
   )
 }
 
 export function InstallAppMenuItem({ onNavigate }: { onNavigate?: () => void }) {
+  const { t } = useTranslation('install')
   const { isStandalone, installApp } = useInstallApp()
 
   if (isStandalone) return null
@@ -52,32 +56,29 @@ export function InstallAppMenuItem({ onNavigate }: { onNavigate?: () => void }) 
         void installApp()
       }}
     >
-      Yükle
+      {t('install')}
     </button>
   )
 }
 
 export function InstallAppStatusCard() {
+  const { t } = useTranslation('install')
   const { isStandalone, installApp } = useInstallApp()
 
   return (
     <section className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
-      <h2 className="text-lg font-semibold text-white">Mobil uygulama</h2>
+      <h2 className="text-lg font-semibold text-white">{t('statusTitle')}</h2>
       {isStandalone ? (
-        <p className="mt-2 text-sm text-emerald-300">
-          Plooy telefonunuza yüklü. Ana ekrandan uygulama gibi açılır.
-        </p>
+        <p className="mt-2 text-sm text-emerald-300">{t('statusInstalled')}</p>
       ) : (
         <>
-          <p className="mt-2 text-sm text-plooy-muted">
-            Plooy&apos;yu telefona uygulama olarak yükleyin — mağaza veya APK gerekmez.
-          </p>
+          <p className="mt-2 text-sm text-plooy-muted">{t('statusNotInstalled')}</p>
           <button
             type="button"
             onClick={() => void installApp()}
             className="mt-4 rounded-lg bg-plooy-gold px-4 py-2.5 text-sm font-semibold text-plooy-bg hover:brightness-110"
           >
-            Yükle
+            {t('install')}
           </button>
         </>
       )}

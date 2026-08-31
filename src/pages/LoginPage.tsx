@@ -1,11 +1,15 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { AuthLayout } from '../components/AuthLayout'
 import { useAuth } from '../context/AuthContext'
+import { useLocale } from '../i18n/LocaleContext'
 import { postLoginPath } from '../utils/billing'
 
 export function LoginPage() {
+  const { t } = useTranslation()
   const { login } = useAuth()
+  const { localizePath } = useLocale()
   const navigate = useNavigate()
   const location = useLocation()
   const [email, setEmail] = useState('')
@@ -14,7 +18,7 @@ export function LoginPage() {
   const [resendEmail, setResendEmail] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const from = (location.state as { from?: string } | null)?.from ?? '/'
+  const from = (location.state as { from?: string } | null)?.from ?? localizePath('/')
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -23,20 +27,20 @@ export function LoginPage() {
 
     try {
       const loggedInUser = await login(email, password)
-      navigate(postLoginPath(loggedInUser), { replace: true })
+      navigate(localizePath(postLoginPath(loggedInUser)), { replace: true })
     } catch (err) {
       const authError = err as Error & { code?: string; email?: string }
       if (authError.code === 'EMAIL_NOT_VERIFIED') {
         setResendEmail(authError.email ?? email)
       }
-      setError(authError.message || 'Giriş başarısız.')
+      setError(authError.message || t('auth.loginFailed'))
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <AuthLayout title="Tekrar hoş geldin" subtitle="Hesabına giriş yap ve izlemeye devam et.">
+    <AuthLayout title={t('auth.loginTitle')} subtitle={t('auth.loginSubtitle')}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
@@ -44,10 +48,10 @@ export function LoginPage() {
             {resendEmail ? (
               <p className="mt-3">
                 <Link
-                  to={`/eposta-dogrula?email=${encodeURIComponent(resendEmail)}`}
+                  to={`${localizePath('/eposta-dogrula')}?email=${encodeURIComponent(resendEmail)}`}
                   className="font-medium text-plooy-gold hover:underline"
                 >
-                  Doğrulama e-postasını yeniden gönder
+                  {t('auth.resendVerification')}
                 </Link>
               </p>
             ) : null}
@@ -55,7 +59,7 @@ export function LoginPage() {
         )}
 
         <label className="block">
-          <span className="mb-1.5 block text-sm font-medium text-white/90">E-posta</span>
+          <span className="mb-1.5 block text-sm font-medium text-white/90">{t('auth.email')}</span>
           <input
             type="email"
             required
@@ -69,9 +73,9 @@ export function LoginPage() {
 
         <label className="block">
           <div className="mb-1.5 flex items-center justify-between">
-            <span className="text-sm font-medium text-white/90">Şifre</span>
-            <Link to="/sifremi-unuttum" className="text-xs text-plooy-gold hover:underline">
-              Şifremi unuttum
+            <span className="text-sm font-medium text-white/90">{t('auth.password')}</span>
+            <Link to={localizePath('/sifremi-unuttum')} className="text-xs text-plooy-gold hover:underline">
+              {t('auth.forgotPassword')}
             </Link>
           </div>
           <input
@@ -90,20 +94,20 @@ export function LoginPage() {
           disabled={loading}
           className="w-full rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110 disabled:opacity-60"
         >
-          {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+          {loading ? t('auth.loginSubmitting') : t('auth.loginSubmit')}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-plooy-muted">
-        Hesabın yok mu?{' '}
-        <Link to="/kayit" className="font-medium text-plooy-gold hover:underline">
-          Kayıt ol
+        {t('auth.noAccount')}{' '}
+        <Link to={localizePath('/kayit')} className="font-medium text-plooy-gold hover:underline">
+          {t('auth.signupLink')}
         </Link>
       </p>
 
-      {from !== '/' && (
+      {from !== localizePath('/') && (
         <p className="mt-2 text-center text-xs text-plooy-muted">
-          Giriş yaptıktan sonra ödeme adımına yönlendirileceksin.
+          {t('auth.redirectAfterLogin')}
         </p>
       )}
     </AuthLayout>

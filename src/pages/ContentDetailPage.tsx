@@ -6,6 +6,7 @@ import { PageMeta } from '../components/PageMeta'
 import { VideoStructuredData } from '../components/StructuredData'
 import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
+import { useLocale } from '../i18n/LocaleContext'
 import { isContentAllowedForKids } from '../utils/contentRating'
 
 function ContentDetailContent() {
@@ -15,6 +16,7 @@ function ContentDetailContent() {
   const { getContentById, isLoading } = useContent()
   const { activeProfile } = useAuth()
   const { openPlayer } = useContentUI()
+  const { localizePath } = useLocale()
 
   const item = getContentById(id)
   const kidsProfileBlocked = Boolean(
@@ -40,7 +42,7 @@ function ContentDetailContent() {
   }
 
   if (!item) {
-    return <Navigate to="/" replace />
+    return <Navigate to={localizePath('/')} replace />
   }
 
   return (

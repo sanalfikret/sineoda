@@ -1,15 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { fetchBillingPlans, startCheckout, type BillingPlan } from '../../api/client'
 import { CreatorAuthLayout } from '../../components/creator/CreatorAuthLayout'
 import { useAuth } from '../../context/AuthContext'
 import { BRAND_NAME } from '../../constants/brand'
+import { useLocale } from '../../i18n/LocaleContext'
 
 function getCreatorRegistrationPlanId(program?: 'standard' | 'student_cinema') {
   return program === 'student_cinema' ? 'student_cinema_application' : 'creator_application'
 }
 
 export function CreatorPaymentPage() {
+  const { t } = useTranslation('creator')
+  const { localizePath } = useLocale()
   const { user, isCreator, isLoading, refreshUser } = useAuth()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -48,12 +52,12 @@ export function CreatorPaymentPage() {
         setMessage(result.message)
         await refreshUser()
         setSearchParams({}, { replace: true })
-        navigate('/creator', { replace: true })
+        navigate(localizePath('/creator'), { replace: true })
         return
       }
 
       if ('iframeUrl' in result && result.iframeUrl) {
-        navigate(`/odeme/paytr?token=${encodeURIComponent(result.token)}&return=creator`)
+        navigate(`${localizePath('/odeme/paytr')}?token=${encodeURIComponent(result.token)}&return=creator`)
         return
       }
 
@@ -61,11 +65,11 @@ export function CreatorPaymentPage() {
         window.location.href = result.paymentPageUrl
       }
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Ödeme başlatılamadı.')
+      setMessage(err instanceof Error ? err.message : t('checkoutFailed'))
     } finally {
       setPaying(false)
     }
-  }, [plan, provider, navigate, refreshUser, setSearchParams])
+  }, [plan, provider, navigate, refreshUser, setSearchParams, localizePath, t])
 
   useEffect(() => {
     if (loading || !user || !isCreator || registrationPaid || !autoCheckout || autoCheckoutStarted.current || !plan) {
@@ -80,7 +84,7 @@ export function CreatorPaymentPage() {
   }
 
   if (!isLoading && registrationPaid) {
-    navigate('/creator', { replace: true })
+    navigate(localizePath('/creator'), { replace: true })
     return null
   }
 
@@ -90,15 +94,17 @@ export function CreatorPaymentPage() {
     <CreatorAuthLayout>
       <div className="mx-auto w-full max-w-lg px-4 py-10">
         <div className="rounded-2xl border border-white/10 bg-[#11141c] p-6 sm:p-8">
-          <h1 className="text-2xl font-bold text-white">{plan?.name ?? (isStudentProgram ? 'Genç Sinema Başvuru Ücreti' : 'Yapımcı Başvuru Ücreti')}</h1>
+          <h1 className="text-2xl font-bold text-white">
+            {plan?.name ?? (isStudentProgram ? t('studentFeeTitle') : t('creatorFeeTitle'))}
+          </h1>
           <p className="mt-2 text-sm text-plooy-muted">
             {isStudentProgram
-              ? `Genç Sinema üyeliğiniz otomatik açılır. Film başvurunuzu göndermek için tek seferlik başvuru ücretini ödeyin; filminiz okul ve ${BRAND_NAME} incelemesine alınır.`
-              : 'Yapımcı üyeliğiniz otomatik açılır. Film başvurusu göndermek için tek seferlik başvuru ücretini ödeyin; filminizin yayına alınması admin incelemesine tabidir.'}
+              ? t('studentPaymentDesc', { brand: BRAND_NAME })
+              : t('creatorPaymentDesc')}
           </p>
 
           <div className="mt-6 rounded-xl border border-plooy-gold/30 bg-plooy-gold/5 p-5">
-            <p className="text-sm text-plooy-muted">Başvuru ücreti</p>
+            <p className="text-sm text-plooy-muted">{t('applicationFee')}</p>
             <p className="mt-1 text-3xl font-bold text-plooy-gold">₺{price}</p>
             <ul className="mt-4 space-y-2 text-sm text-white/80">
               {(plan?.features ?? []).map((feature) => (
@@ -114,9 +120,7 @@ export function CreatorPaymentPage() {
           )}
 
           {!paymentReady && (
-            <p className="mt-4 text-sm text-amber-200/90">
-              PayTR ödeme altyapısı kısa süre içinde aktif olacak. Başvuru ücreti o zaman alınabilir.
-            </p>
+            <p className="mt-4 text-sm text-amber-200/90">{t('paymentPending')}</p>
           )}
 
           <button
@@ -125,12 +129,16 @@ export function CreatorPaymentPage() {
             onClick={() => void handleCheckout()}
             className="mt-6 w-full rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg disabled:opacity-60"
           >
-            {paying ? 'Yönlendiriliyor...' : paymentReady ? `₺${price} Öde ve Başvuruya Devam Et` : 'Ödeme yakında'}
+            {paying
+              ? t('redirecting')
+              : paymentReady
+                ? t('payAndContinue', { price })
+                : t('paymentSoon')}
           </button>
 
           <p className="mt-4 text-center text-sm text-plooy-muted">
-            <Link to="/creator" className="text-plooy-gold hover:underline">
-              Panele dön
+            <Link to={localizePath('/creator')} className="text-plooy-gold hover:underline">
+              {t('backToPanel')}
             </Link>
           </p>
         </div>

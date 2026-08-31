@@ -1,0 +1,16 @@
+{
+  "loading": "Yükleniyor...",
+  "empty": "Henüz yayınlanmış yazı yok.",
+  "postNotFound": "Yazı bulunamadı.",
+  "backToJournal": "Dergiye dön",
+  "journalNav": "Dergi",
+  "relatedContent": "İlgili içerik",
+  "watch": "İzle",
+  "loginToWatch": "İzlemek için giriş yap",
+  "pagination": {
+    "ariaLabel": "Sayfalama",
+    "summary": "Toplam {{total}} yazı · Sayfa {{page}} / {{totalPages}}",
+    "previous": "Önceki",
+    "next": "Sonraki"
+  }
+}

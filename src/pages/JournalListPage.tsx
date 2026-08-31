@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { fetchJournalPosts } from '../api/client'
 import { JournalCard } from '../components/journal/JournalCard'
 import { JournalPagination } from '../components/journal/JournalPagination'
@@ -9,6 +10,7 @@ import { DEMO_JOURNAL_POSTS } from '../data/demoJournal'
 import type { JournalListSection, JournalPost } from '../types/journal'
 
 export function JournalListPage() {
+  const { t } = useTranslation('journal')
   const [searchParams, setSearchParams] = useSearchParams()
   const page = Math.max(1, Number(searchParams.get('page') ?? '1') || 1)
 
@@ -57,9 +59,9 @@ export function JournalListPage() {
       </p>
 
       {loading ? (
-        <p className="mt-12 text-sm text-plooy-muted">Yükleniyor...</p>
+        <p className="mt-12 text-sm text-plooy-muted">{t('loading')}</p>
       ) : posts.length === 0 ? (
-        <p className="mt-12 text-sm text-plooy-muted">Henüz yayınlanmış yazı yok.</p>
+        <p className="mt-12 text-sm text-plooy-muted">{t('empty')}</p>
       ) : (
         <>
           <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

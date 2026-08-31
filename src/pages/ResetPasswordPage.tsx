@@ -1,9 +1,13 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { resetPasswordRequest } from '../api/client'
 import { AuthLayout } from '../components/AuthLayout'
+import { useLocale } from '../i18n/LocaleContext'
 
 export function ResetPasswordPage() {
+  const { t } = useTranslation('auth')
+  const { localizePath } = useLocale()
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token') ?? ''
   const [password, setPassword] = useState('')
@@ -18,17 +22,17 @@ export function ResetPasswordPage() {
     setMessage('')
 
     if (!token) {
-      setError('Geçersiz sıfırlama bağlantısı.')
+      setError(t('invalidResetLink'))
       return
     }
 
     if (password.length < 6) {
-      setError('Şifre en az 6 karakter olmalı.')
+      setError(t('passwordMinLength'))
       return
     }
 
     if (password !== confirm) {
-      setError('Şifreler eşleşmiyor.')
+      setError(t('passwordMismatch'))
       return
     }
 
@@ -37,14 +41,14 @@ export function ResetPasswordPage() {
       const result = await resetPasswordRequest(token, password)
       setMessage(result.message)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Şifre güncellenemedi.')
+      setError(err instanceof Error ? err.message : t('passwordUpdateFailed'))
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <AuthLayout title="Yeni şifre belirle" subtitle="Hesabın için yeni bir şifre oluştur.">
+    <AuthLayout title={t('resetPasswordTitle')} subtitle={t('resetPasswordSubtitle')}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
@@ -56,15 +60,15 @@ export function ResetPasswordPage() {
           <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
             {message}
             <p className="mt-3">
-              <Link to="/giris" className="font-medium text-plooy-gold hover:underline">
-                Giriş yap
+              <Link to={localizePath('/giris')} className="font-medium text-plooy-gold hover:underline">
+                {t('loginLink')}
               </Link>
             </p>
           </div>
         ) : (
           <>
             <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-white/90">Yeni şifre</span>
+              <span className="mb-1.5 block text-sm font-medium text-white/90">{t('newPassword')}</span>
               <input
                 type="password"
                 required
@@ -77,7 +81,7 @@ export function ResetPasswordPage() {
             </label>
 
             <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-white/90">Şifre tekrar</span>
+              <span className="mb-1.5 block text-sm font-medium text-white/90">{t('confirmPassword')}</span>
               <input
                 type="password"
                 required
@@ -94,7 +98,7 @@ export function ResetPasswordPage() {
               disabled={loading || !token}
               className="w-full rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110 disabled:opacity-60"
             >
-              {loading ? 'Kaydediliyor...' : 'Şifreyi Güncelle'}
+              {loading ? t('saving') : t('updatePassword')}
             </button>
           </>
         )}

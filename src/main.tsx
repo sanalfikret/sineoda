@@ -7,6 +7,9 @@ import { SiteModeProvider } from './context/SiteModeContext'
 import { ContentProvider } from './context/ContentContext'
 import { InstallAppProvider } from './context/InstallAppContext'
 import './index.css'
+import './i18n'
+import { LocaleProvider } from './i18n/LocaleContext'
+import { LocaleSync } from './i18n/LocaleSync'
 import { AnalyticsTracker } from './components/AnalyticsTracker'
 import { CookieConsent } from './components/CookieConsent'
 import { InstallPrompt } from './components/InstallPrompt'
@@ -15,18 +18,21 @@ import App from './App.tsx'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <SiteModeProvider>
-          <ContentProvider>
-            <InstallAppProvider>
-              <AnalyticsTracker />
-              <App />
-              <InstallPrompt />
-              <CookieConsent />
-            </InstallAppProvider>
-          </ContentProvider>
-        </SiteModeProvider>
-      </AuthProvider>
+      <LocaleProvider>
+        <LocaleSync />
+        <AuthProvider>
+          <SiteModeProvider>
+            <ContentProvider>
+              <InstallAppProvider>
+                <AnalyticsTracker />
+                <App />
+                <InstallPrompt />
+                <CookieConsent />
+              </InstallAppProvider>
+            </ContentProvider>
+          </SiteModeProvider>
+        </AuthProvider>
+      </LocaleProvider>
     </BrowserRouter>
   </StrictMode>,
 )

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   fetchUserMessages,
   markUserMessageRead,
@@ -7,8 +8,11 @@ import {
 } from '../api/client'
 import { Header } from '../components/Header'
 import { useAuth } from '../context/AuthContext'
+import { useLocale } from '../i18n/LocaleContext'
 
 export function MessagesPage() {
+  const { t } = useTranslation('messages')
+  const { localizePath, locale } = useLocale()
   const { isAdmin, isCreator } = useAuth()
   const [messages, setMessages] = useState<UserMessage[]>([])
   const [loading, setLoading] = useState(true)
@@ -17,6 +21,7 @@ export function MessagesPage() {
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
 
   const viewerOnly = isAdmin || isCreator
+  const dateLocale = locale === 'en' ? 'en-US' : 'tr-TR'
 
   const load = async () => {
     if (viewerOnly) {
@@ -35,7 +40,7 @@ export function MessagesPage() {
         setSelectedId(data[0].id)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Mesajlar yüklenemedi.')
+      setError(err instanceof Error ? err.message : t('loadFailed'))
     } finally {
       setLoading(false)
     }
@@ -69,23 +74,20 @@ export function MessagesPage() {
       <Header />
       <main className="mobile-page-bottom mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
         <div className="mb-6">
-          <Link to="/" className="text-sm text-plooy-muted hover:text-white">
-            ← Ana sayfa
+          <Link to={localizePath('/')} className="text-sm text-plooy-muted hover:text-white">
+            {t('backHome')}
           </Link>
-          <h1 className="mt-2 text-2xl font-bold">Mesajlarım</h1>
-          <p className="mt-1 text-sm text-plooy-muted">Plooy ekibinden duyurular ve bildirimler</p>
+          <h1 className="mt-2 text-2xl font-bold">{t('title')}</h1>
+          <p className="mt-1 text-sm text-plooy-muted">{t('subtitle')}</p>
         </div>
 
         {viewerOnly ? (
           <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-6 text-sm text-amber-100">
-            <p className="font-medium">Bu sayfa yalnızca izleyici hesapları içindir.</p>
-            <p className="mt-2 text-amber-100/80">
-              Admin veya yapımcı hesabıyla giriş yaptınız. Üyeye gönderdiğiniz mesajı görmek için o üyenin
-              e-posta ve şifresiyle giriş yapın — gizli pencerede denemeniz en kolayı.
-            </p>
+            <p className="font-medium">{t('viewerOnlyTitle')}</p>
+            <p className="mt-2 text-amber-100/80">{t('viewerOnlyBody')}</p>
             {isAdmin && (
               <Link to="/admin/kullanicilar" className="mt-4 inline-block text-plooy-gold hover:underline">
-                Admin → İzleyiciler
+                {t('adminViewersLink')}
               </Link>
             )}
           </div>
@@ -94,10 +96,10 @@ export function MessagesPage() {
             {error}
           </div>
         ) : loading ? (
-          <p className="text-sm text-plooy-muted">Yükleniyor...</p>
+          <p className="text-sm text-plooy-muted">{t('loading')}</p>
         ) : messages.length === 0 ? (
           <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-plooy-muted">
-            Henüz mesajınız yok. Admin panelinden size duyuru gönderildiğinde burada görünür.
+            {t('empty')}
           </p>
         ) : (
           <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
@@ -126,7 +128,7 @@ export function MessagesPage() {
                       </div>
                       <p className="mt-1 line-clamp-2 text-xs text-plooy-muted">{message.body}</p>
                       <p className="mt-1 text-xs text-plooy-muted">
-                        {new Date(message.createdAt).toLocaleDateString('tr-TR')}
+                        {new Date(message.createdAt).toLocaleDateString(dateLocale)}
                       </p>
                     </button>
                   </li>
@@ -146,16 +148,16 @@ export function MessagesPage() {
                     onClick={() => setMobileDetailOpen(false)}
                     className="mb-4 text-sm text-plooy-gold lg:hidden"
                   >
-                    ← Mesaj listesi
+                    {t('backToList')}
                   </button>
                   <h2 className="text-lg font-semibold text-white">{selected.subject}</h2>
                   <p className="mt-1 text-xs text-plooy-muted">
-                    {new Date(selected.createdAt).toLocaleString('tr-TR')}
+                    {new Date(selected.createdAt).toLocaleString(dateLocale)}
                   </p>
                   <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-white/90">{selected.body}</p>
                 </>
               ) : (
-                <p className="text-sm text-plooy-muted">Bir mesaj seçin.</p>
+                <p className="text-sm text-plooy-muted">{t('selectMessage')}</p>
               )}
             </div>
           </div>

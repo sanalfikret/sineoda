@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { ContentItem, Episode } from '../types/content'
 import { groupEpisodesBySeason, sortEpisodes } from '../utils/episodes'
 
@@ -25,6 +26,7 @@ export function SeriesEpisodeSection({
   compact = false,
   initialSeason,
 }: SeriesEpisodeSectionProps) {
+  const { t } = useTranslation('content')
   const sortedEpisodes = useMemo(() => sortEpisodes(episodes), [episodes])
   const seasonGroups = useMemo(() => groupEpisodesBySeason(episodes), [episodes])
   const [season, setSeason] = useState(() => initialSeason ?? seasonGroups[0]?.[0] ?? 1)
@@ -48,7 +50,7 @@ export function SeriesEpisodeSection({
     return (
       <div className={compact ? 'mt-6' : 'mt-8'}>
         <h2 className={`${compact ? 'text-sm' : 'text-lg'} mb-3 font-semibold text-white`}>
-          Bölümler
+          {t('episodes.title')}
         </h2>
         <div className="hide-scrollbar flex gap-2 overflow-x-auto pb-2">
           {sortedEpisodes.map((episode) => (
@@ -71,10 +73,13 @@ export function SeriesEpisodeSection({
   return (
     <div className={compact ? 'mt-6' : 'mt-8'}>
       <h2 className={`${compact ? 'text-sm' : 'text-lg'} mb-1 font-semibold text-white`}>
-        Sezonlar ve Bölümler
+        {t('episodes.seasonsTitle')}
       </h2>
       <p className="mb-4 text-sm text-plooy-muted">
-        {seasonGroups.length} sezon · {episodes.length} bölüm
+        {t('episodes.seasonsMeta', {
+          seasons: seasonGroups.length,
+          episodes: episodes.length,
+        })}
       </p>
 
       <div className="hide-scrollbar -mx-1 mb-5 flex gap-2 overflow-x-auto px-1 pb-1">
@@ -91,7 +96,7 @@ export function SeriesEpisodeSection({
                   : 'bg-white/10 text-white/85 hover:bg-white/15'
               }`}
             >
-              Sezon {seasonNum}
+              {t('episodes.season', { num: seasonNum })}
               <span className={`ml-1.5 text-xs ${selected ? 'text-plooy-bg/80' : 'text-white/60'}`}>
                 ({seasonItems.length})
               </span>
@@ -102,9 +107,9 @@ export function SeriesEpisodeSection({
 
       <div>
         <h3 className={`${compact ? 'text-sm' : 'text-base'} mb-3 font-semibold text-white`}>
-          Sezon {activeSeason}
+          {t('episodes.season', { num: activeSeason })}
           <span className="ml-2 text-sm font-normal text-plooy-muted">
-            · {activeEpisodes.length} bölüm
+            {t('episodes.seasonEpisodes', { count: activeEpisodes.length })}
           </span>
         </h3>
         <div className="space-y-2">
@@ -122,7 +127,7 @@ export function SeriesEpisodeSection({
               </span>
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-white">
-                  Bölüm {episode.episode}: {episode.title}
+                  {t('episodes.episodeLabel', { num: episode.episode, title: episode.title })}
                 </p>
                 {episode.description && !compact && (
                   <p className="mt-1 line-clamp-2 text-xs text-plooy-muted">{episode.description}</p>

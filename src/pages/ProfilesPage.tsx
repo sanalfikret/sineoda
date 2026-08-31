@@ -1,12 +1,16 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { PageFooter } from '../components/PageFooter'
 import { ProfileAvatar } from '../components/ProfileAvatar'
 import { ProfileAvatarPicker } from '../components/ProfileAvatarPicker'
 import { PROFILE_AVATARS } from '../types/auth'
+import { useLocale } from '../i18n/LocaleContext'
 
 export function ProfilesPage() {
+  const { t } = useTranslation('profiles')
+  const { localizePath } = useLocale()
   const { user, selectProfile, addProfile, logout } = useAuth()
   const navigate = useNavigate()
   const [showAddForm, setShowAddForm] = useState(false)
@@ -18,7 +22,7 @@ export function ProfilesPage() {
 
   const handleSelect = (profileId: string) => {
     selectProfile(profileId)
-    navigate('/', { replace: true })
+    navigate(localizePath('/'), { replace: true })
   }
 
   const handleAddProfile = async () => {
@@ -33,17 +37,15 @@ export function ProfilesPage() {
   return (
     <div className="min-h-dvh bg-plooy-bg px-4 py-8 sm:px-6">
       <div className="safe-top mx-auto max-w-4xl text-center">
-        <h1 className="text-2xl font-bold text-white sm:text-4xl">Kim izliyor?</h1>
-        <p className="mt-2 text-sm text-plooy-muted sm:text-base">
-          Profilini seç veya yeni bir profil ekle
-        </p>
+        <h1 className="text-2xl font-bold text-white sm:text-4xl">{t('title')}</h1>
+        <p className="mt-2 text-sm text-plooy-muted sm:text-base">{t('subtitle')}</p>
 
         <div className="mt-4 flex flex-wrap justify-center gap-3">
           <Link
-            to="/hesap"
+            to={localizePath('/hesap')}
             className="rounded-lg border border-white/15 px-4 py-2 text-sm text-white/85 hover:bg-white/5"
           >
-            Hesabım ve Abonelik
+            {t('accountLink')}
           </Link>
         </div>
 
@@ -65,7 +67,7 @@ export function ProfilesPage() {
                 {profile.name}
               </span>
               {profile.isKids && (
-                <span className="-mt-2 text-xs text-plooy-blue">Çocuk profili</span>
+                <span className="-mt-2 text-xs text-plooy-blue">{t('kidsProfile')}</span>
               )}
             </button>
           ))}
@@ -79,19 +81,19 @@ export function ProfilesPage() {
               +
             </div>
             <span className="text-sm font-medium text-white/60 transition group-hover:text-white sm:text-base">
-              Profil Ekle
+              {t('addProfile')}
             </span>
           </button>
         </div>
 
         {showAddForm && (
           <div className="mx-auto mt-10 max-w-sm rounded-2xl border border-white/10 bg-plooy-surface p-5 text-left">
-            <h2 className="font-semibold text-white">Yeni profil</h2>
+            <h2 className="font-semibold text-white">{t('newProfile')}</h2>
             <input
               type="text"
               value={newName}
               onChange={(event) => setNewName(event.target.value)}
-              placeholder="Profil adı"
+              placeholder={t('profileNamePlaceholder')}
               className="mt-3 w-full rounded-lg border border-white/10 bg-plooy-bg px-4 py-2.5 text-white outline-none focus:border-plooy-gold"
             />
             <div className="mt-3">
@@ -104,7 +106,7 @@ export function ProfilesPage() {
                 onChange={(event) => setNewKids(event.target.checked)}
                 className="accent-plooy-gold"
               />
-              Çocuk profili
+              {t('kidsProfileLabel')}
             </label>
             <div className="mt-4 flex gap-2">
               <button
@@ -112,14 +114,14 @@ export function ProfilesPage() {
                 onClick={() => void handleAddProfile()}
                 className="flex-1 rounded-lg bg-plooy-gold py-2.5 text-sm font-semibold text-plooy-bg"
               >
-                Ekle
+                {t('add')}
               </button>
               <button
                 type="button"
                 onClick={() => setShowAddForm(false)}
                 className="rounded-lg px-4 py-2.5 text-sm text-plooy-muted hover:text-white"
               >
-                İptal
+                {t('cancel')}
               </button>
             </div>
           </div>
@@ -129,11 +131,11 @@ export function ProfilesPage() {
           type="button"
           onClick={() => {
             logout()
-            navigate('/', { replace: true })
+            navigate(localizePath('/'), { replace: true })
           }}
           className="mt-12 text-sm text-plooy-muted transition hover:text-white"
         >
-          Hesaptan çıkış yap
+          {t('logout')}
         </button>
       </div>
 

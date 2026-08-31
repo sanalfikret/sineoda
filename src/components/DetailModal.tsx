@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { fetchEpisodes, fetchWatchProgress, resolveMediaUrl } from '../api/client'
 import type { ContentItem, Episode } from '../types/content'
 import { FEEDBACK_EMAIL } from '../constants/site'
@@ -19,9 +20,9 @@ interface DetailModalProps {
 
 type DetailTab = 'overview' | 'details'
 
-function formatResumeTime(seconds: number) {
+function formatResumeTime(seconds: number, t: (key: string, opts?: Record<string, unknown>) => string) {
   const mins = Math.floor(seconds / 60)
-  return `${mins} dk`
+  return t('detail.resumeMinutes', { mins })
 }
 
 function CreditList({ label, items }: { label: string; items: string[] }) {
@@ -35,6 +36,8 @@ function CreditList({ label, items }: { label: string; items: string[] }) {
 }
 
 export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
+  const { t } = useTranslation('content')
+  const { t: tb } = useTranslation('browse')
   const [episodes, setEpisodes] = useState<Episode[]>([])
   const [season, setSeason] = useState(1)
   const [resumePosition, setResumePosition] = useState<number | null>(null)
@@ -102,12 +105,12 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
   const canPlay = hasEpisodeVideo || hasMainVideo
   const canResume = resumePosition !== null && resumePosition > 10
   const credits = item?.credits ?? {}
-  const audioLanguages = credits.audioLanguages ?? ['Türkçe']
+  const audioLanguages = credits.audioLanguages ?? [t('detail.defaultAudio')]
   const subtitleLanguages =
     credits.subtitleLanguages ??
     (item?.subtitles?.length
       ? item.subtitles.map((track) => track.label || track.lang)
-      : ['Türkçe'])
+      : [t('detail.defaultAudio')])
 
   if (!item) return null
 
@@ -129,12 +132,12 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-plooy-surface via-transparent to-black/30" />
           {item.isNew && (
             <span className="absolute left-4 top-4 rounded bg-plooy-gold px-2.5 py-1 text-xs font-bold text-plooy-bg">
-              YENİ
+              {t('detail.new')}
             </span>
           )}
           <button
             type="button"
-            aria-label="Kapat"
+            aria-label={t('detail.close')}
             onClick={onClose}
             className="absolute right-4 top-4 rounded-full bg-black/50 p-2 text-white backdrop-blur-sm transition hover:bg-black/70"
           >
@@ -158,13 +161,13 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
               {item.rating}
             </span>
             <span className="rounded bg-white/10 px-2 py-0.5 text-xs text-white">
-              {getContentTypeLabel(item.type)}
+            {tb(`types.${item.type}`, { defaultValue: getContentTypeLabel(item.type) })}
+          </span>
+          {item.videoFormat === 'vertical' && (
+            <span className="rounded bg-plooy-gold/20 px-2 py-0.5 text-xs text-plooy-gold">
+              {t('detail.vertical')}
             </span>
-            {item.videoFormat === 'vertical' && (
-              <span className="rounded bg-plooy-gold/20 px-2 py-0.5 text-xs text-plooy-gold">
-                Dikey
-              </span>
-            )}
+          )}
             <span>{item.year}</span>
             <span>•</span>
             <span>{item.duration}</span>
@@ -189,7 +192,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
                 className="inline-flex items-center gap-2 rounded-lg bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
               >
                 <PlaySmallIcon />
-                Kaldığın Yerden Devam ({formatResumeTime(resumePosition)})
+                {t('detail.resumeFilm', { time: formatResumeTime(resumePosition, t) })}
               </button>
             )}
 
@@ -200,7 +203,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
                 className="inline-flex items-center gap-2 rounded-lg bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
               >
                 <PlaySmallIcon />
-                {item.videoFormat === 'vertical' ? 'Dikey İzlemeye Başla' : '1. Bölümü Oynat'}
+                {item.videoFormat === 'vertical' ? t('detail.startVertical') : t('detail.playFirstEpisode')}
               </button>
             )}
 
@@ -211,7 +214,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
                 className="inline-flex items-center gap-2 rounded-lg bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
               >
                 <PlaySmallIcon />
-                {item.videoFormat === 'vertical' ? 'Dikey İzle' : 'Oynat'}
+                {item.videoFormat === 'vertical' ? t('hero.playVertical') : t('hero.play')}
               </button>
             )}
 
@@ -222,14 +225,13 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
                 className="inline-flex items-center gap-2 rounded-lg bg-plooy-gold px-5 py-3 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
               >
                 <PlaySmallIcon />
-                Oynat
+                {t('hero.play')}
               </button>
             )}
 
             {!canResume && !canPlay && (
               <p className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-plooy-muted">
-                Bu içerik için henüz video eklenmemiş. Admin panelinden video URL&apos;si ve bölümleri
-                ekleyebilirsiniz.
+                {t('detail.noVideoAdmin')}
               </p>
             )}
 
@@ -239,10 +241,10 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
 
           <div className="mt-6 flex gap-4 border-b border-white/10">
             <TabButton active={tab === 'overview'} onClick={() => setTab('overview')}>
-              Özet
+              {t('detail.tabOverview')}
             </TabButton>
             <TabButton active={tab === 'details'} onClick={() => setTab('details')}>
-              Ayrıntılar
+              {t('detail.tabDetails')}
             </TabButton>
           </div>
 
@@ -267,19 +269,19 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
           {tab === 'details' && (
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-                <h3 className="text-sm font-semibold text-white">Yapımcılar ve Oyuncular</h3>
-                <CreditList label="Yönetmenler" items={credits.directors ?? []} />
-                <CreditList label="Yapımcılar" items={credits.producers ?? []} />
-                <CreditList label="Oyuncu Kadrosu" items={credits.cast ?? []} />
+                <h3 className="text-sm font-semibold text-white">{t('detail.creditsTitle')}</h3>
+                <CreditList label={t('detail.directors')} items={credits.directors ?? []} />
+                <CreditList label={t('detail.producers')} items={credits.producers ?? []} />
+                <CreditList label={t('detail.cast')} items={credits.cast ?? []} />
                 {item.program === 'student_cinema' && item.schoolName ? (
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">Okul</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">{t('detail.school')}</p>
                     <p className="mt-1 text-sm text-white/90">{item.schoolName}</p>
                   </div>
                 ) : null}
                 {credits.studio && (
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">Stüdyo</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">{t('detail.studio')}</p>
                     <p className="mt-1 text-sm text-white/90">{credits.studio}</p>
                   </div>
                 )}
@@ -287,25 +289,25 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
                   !credits.producers?.length &&
                   !credits.cast?.length &&
                   !credits.studio && (
-                    <p className="text-sm text-plooy-muted">Bu içerik için künye bilgisi henüz eklenmedi.</p>
+                    <p className="text-sm text-plooy-muted">{t('detail.noCredits')}</p>
                   )}
               </div>
 
               <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">
-                    Seslendirme Dilleri
+                    {t('detail.audioLanguages')}
                   </p>
                   <p className="mt-1 text-sm text-white/90">{audioLanguages.join(', ')}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">Alt Yazılar</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">{t('detail.subtitles')}</p>
                   <p className="mt-1 text-sm text-white/90">{subtitleLanguages.join(', ')}</p>
                 </div>
                 <StudentCinemaMetaDetails item={item} />
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">
-                    İçerik Danışma
+                    {t('detail.contentAdvisory')}
                   </p>
                   <p className="mt-1 text-sm text-white/90">{item.rating}</p>
                 </div>
@@ -316,12 +318,12 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
           <div className="mt-8 space-y-4 border-t border-white/10 pt-6">
             <TermsAcceptanceNote />
             <div>
-              <p className="text-sm font-medium text-white">Geri bildirim</p>
+              <p className="text-sm font-medium text-white">{t('detail.feedback')}</p>
               <a
-                href={`mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(`${BRAND_NAME} geri bildirim: ${item.title}`)}`}
+                href={`mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(t('detail.feedbackSubject', { brand: BRAND_NAME, title: item.title }))}`}
                 className="mt-2 inline-flex rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white transition hover:bg-white/10"
               >
-                Geri bildirimde bulunun
+                {t('detail.feedbackCta')}
               </a>
             </div>
           </div>
