@@ -45,6 +45,22 @@ fi
 echo ">>> yedek al"
 bash deploy/backup-vps.sh
 
+echo ">>> disk kontrol"
+df -h / /var/lib/docker 2>/dev/null || df -h /
+FREE_KB=$(df -k / | awk 'NR==2 {print $4}')
+if [ "${FREE_KB:-0}" -lt 2097152 ]; then
+  echo "UYARI: Disk dolmak üzere (${FREE_KB} KB boş). Docker cache temizleniyor..."
+  docker builder prune -af 2>/dev/null || true
+  docker system prune -af 2>/dev/null || true
+  FREE_KB=$(df -k / | awk 'NR==2 {print $4}')
+fi
+if [ "${FREE_KB:-0}" -lt 1048576 ]; then
+  echo "HATA: Disk dolu (< 1 GB boş). Önce: docker system prune -af && docker builder prune -af"
+  echo "persistent/ klasörüne DOKUNMA."
+  df -h
+  exit 1
+fi
+
 echo ">>> build (site birkaç dakika kapalı olabilir)"
 if grep -qE '^VITE_API_URL=.*onrender' .env 2>/dev/null; then
   echo "HATA: .env içinde VITE_API_URL Render'a işaret ediyor — satırı silin (VPS same-origin kullanır)."
@@ -57,7 +73,11 @@ fi
 GIT_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 export GIT_SHA
 echo ">>> build git: $GIT_SHA"
-VITE_API_URL= $DC build --no-cache --build-arg VITE_API_URL= --build-arg "GIT_SHA=${GIT_SHA}"
+BUILD_FLAGS=(--build-arg "VITE_API_URL=" --build-arg "GIT_SHA=${GIT_SHA}")
+if [ "${REBUILD_NO_CACHE:-0}" = "1" ]; then
+  BUILD_FLAGS=(--no-cache "${BUILD_FLAGS[@]}")
+fi
+VITE_API_URL= $DC build "${BUILD_FLAGS[@]}"
 
 echo ">>> eski container temizle"
 $DC down --remove-orphans 2>/dev/null || true
