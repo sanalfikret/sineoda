@@ -38,6 +38,7 @@ import creatorRoutes from './routes/creator.js'
 import creatorUploadRoutes from './routes/creatorUpload.js'
 import adsRoutes from './routes/ads.js'
 import adminAdsRoutes from './routes/adminAds.js'
+import seoRoutes from './routes/seo.js'
 import adminSiteNavRoutes from './routes/adminSiteNav.js'
 import { PUBLISHED_CONTENT_SQL_C } from './services/publish.js'
 import { STANDARD_PROGRAM_SQL_C, MAIN_CATALOG_SQL_C, ensureStudentCinemaCatalog } from './services/studentCinema.js'
@@ -309,6 +310,7 @@ app.use('/api/admin/ads', adminAdsRoutes)
 app.use('/api/admin/site-nav', adminSiteNavRoutes)
 app.use('/api/admin/billing-plans', adminBillingPlansRoutes)
 app.use('/api/admin/upload', uploadRoutes)
+app.use(seoRoutes)
 
 if (config.webDistDir) {
   const distPath = path.resolve(config.webDistDir)

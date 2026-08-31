@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { fetchBillingPlans, fetchLegalConsents, fetchSubscription, type LegalConsentRecord } from '../api/client'
+import { fetchBillingPlans, fetchBillingInvoices, fetchLegalConsents, fetchSubscription, cancelSubscription, type BillingInvoice, type LegalConsentRecord } from '../api/client'
 import { PageFooter } from '../components/PageFooter'
+import { PageMeta } from '../components/PageMeta'
 import { InstallAppStatusCard } from '../components/InstallAppButton'
 import { ProfileAvatar } from '../components/ProfileAvatar'
 import { ProfileAvatarPicker } from '../components/ProfileAvatarPicker'
@@ -16,6 +17,22 @@ function formatDate(value: string | null | undefined) {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+  })
+}
+
+function formatMoneyTl(value: number) {
+  return `${value.toLocaleString('tr-TR')} TL`
+}
+
+function formatDateTime(value: string | null | undefined) {
+  if (!value) return '—'
+  return new Date(value).toLocaleString('tr-TR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Europe/Istanbul',
   })
 }
 
@@ -53,6 +70,8 @@ export function AccountPage() {
   const [newKids, setNewKids] = useState(false)
   const [legalConsents, setLegalConsents] = useState<LegalConsentRecord[]>([])
   const [expandedConsentId, setExpandedConsentId] = useState<string | null>(null)
+  const [invoices, setInvoices] = useState<BillingInvoice[]>([])
+  const [cancelling, setCancelling] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -70,6 +89,13 @@ export function AccountPage() {
         setSubscription(null)
       }
     })()
+  }, [user])
+
+  useEffect(() => {
+    if (!user) return
+    void fetchBillingInvoices()
+      .then(({ invoices: rows }) => setInvoices(rows))
+      .catch(() => setInvoices([]))
   }, [user])
 
   useEffect(() => {
@@ -146,8 +172,40 @@ export function AccountPage() {
     }
   }
 
+  const handleCancelSubscription = async () => {
+    if (
+      !window.confirm(
+        'Aboneliğinizi iptal etmek istediğinize emin misiniz? Ödediğiniz dönem sonuna kadar izlemeye devam edebilirsiniz; otomatik yenileme yapılmaz.',
+      )
+    ) {
+      return
+    }
+    setCancelling(true)
+    setMessage('')
+    try {
+      const result = await cancelSubscription()
+      setSubscription((current) =>
+        current
+          ? {
+              ...current,
+              status: result.status,
+              cancelledAt: result.cancelledAt,
+              expiresAt: result.expiresAt,
+              canCancel: false,
+            }
+          : current,
+      )
+      setMessage('Abonelik iptal edildi. Bitiş tarihine kadar izlemeye devam edebilirsiniz.')
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Abonelik iptal edilemedi.')
+    } finally {
+      setCancelling(false)
+    }
+  }
+
   return (
     <div className="min-h-dvh bg-plooy-bg px-4 py-8 text-white sm:px-6">
+      <PageMeta title="Hesabım" noIndex />
       <div className="safe-top mx-auto max-w-3xl">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -226,13 +284,71 @@ export function AccountPage() {
               <dt className="text-xs uppercase tracking-wide text-plooy-muted">Bitiş</dt>
               <dd className="mt-1 font-medium">{formatDate(subscription?.expiresAt)}</dd>
             </div>
+            {subscription?.cancelledAt && (
+              <div className="sm:col-span-2">
+                <dt className="text-xs uppercase tracking-wide text-plooy-muted">İptal tarihi</dt>
+                <dd className="mt-1 font-medium">{formatDate(subscription.cancelledAt)}</dd>
+              </div>
+            )}
           </dl>
+
+          {subscription?.status === 'cancelled' && subscription.expiresAt && (
+            <p className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+              Aboneliğiniz iptal edildi. {formatDate(subscription.expiresAt)} tarihine kadar izlemeye devam
+              edebilirsiniz.
+            </p>
+          )}
+
+          {subscription?.canCancel && (
+            <button
+              type="button"
+              disabled={cancelling}
+              onClick={() => void handleCancelSubscription()}
+              className="mt-4 rounded-lg border border-red-400/40 px-4 py-2.5 text-sm text-red-200 hover:bg-red-500/10 disabled:opacity-60"
+            >
+              {cancelling ? 'İptal ediliyor…' : 'Aboneliği İptal Et'}
+            </button>
+          )}
 
           {activeProfile && (
             <div className="mt-4 flex items-center gap-3 text-sm text-plooy-muted">
               <span>Aktif profil:</span>
               <ProfileAvatar avatar={activeProfile.avatar} name={activeProfile.name} className="h-8 w-8" emojiClassName="text-lg" />
               <span className="text-white">{activeProfile.name}</span>
+            </div>
+          )}
+        </section>
+
+        <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
+          <h2 className="text-lg font-semibold">Ödeme geçmişi</h2>
+          <p className="mt-1 text-sm text-plooy-muted">
+            PayTR ile yapılan ödemeler için platform makbuzu. Resmi e-fatura ayrı muhasebe sürecinde düzenlenir.
+          </p>
+
+          {invoices.length === 0 ? (
+            <p className="mt-4 text-sm text-plooy-muted">Henüz kayıtlı ödeme bulunmuyor.</p>
+          ) : (
+            <div className="mt-4 overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-plooy-muted">
+                    <th className="px-2 py-2 font-medium">Tarih</th>
+                    <th className="px-2 py-2 font-medium">Plan</th>
+                    <th className="px-2 py-2 font-medium">Tutar</th>
+                    <th className="px-2 py-2 font-medium">Referans</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoices.map((invoice) => (
+                    <tr key={invoice.id} className="border-b border-white/5">
+                      <td className="px-2 py-3 whitespace-nowrap">{formatDateTime(invoice.paidAt)}</td>
+                      <td className="px-2 py-3">{invoice.planName}</td>
+                      <td className="px-2 py-3 whitespace-nowrap">{formatMoneyTl(invoice.amountTl)}</td>
+                      <td className="px-2 py-3 font-mono text-xs text-plooy-muted">{invoice.merchantOid}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </section>

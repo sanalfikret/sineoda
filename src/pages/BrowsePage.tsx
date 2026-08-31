@@ -6,6 +6,7 @@ import { AppShell, useContentUI } from '../components/AppShell'
 import { ContentRow } from '../components/ContentRow'
 import { GenreFilterBar } from '../components/GenreFilterBar'
 import { Hero } from '../components/Hero'
+import { PageMeta } from '../components/PageMeta'
 import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
 import { useWatchlist } from '../context/WatchlistContext'
@@ -256,8 +257,21 @@ function BrowseContent({
     )
   }
 
+  const browseMetaTitle =
+    pageTitle ??
+    (verticalOnly
+      ? 'Dikey Diziler'
+      : contentType
+        ? getContentTypeLabel(contentType)
+        : cekimNotlariOnly
+          ? 'Çekim Notları'
+          : studentCinemaOnly
+            ? 'Genç Sinema'
+            : 'Senin İçin')
+
   return (
     <main className="bg-plooy-bg">
+      <PageMeta title={browseMetaTitle} path={location.pathname} />
       {displayHero ? (
       <Hero
         item={displayHero}
