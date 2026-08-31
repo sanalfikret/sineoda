@@ -8,6 +8,7 @@ export type ContentPoolId =
   | 'dizi'
   | 'belgesel'
   | 'kisa-film'
+  | 'stand-up'
   | 'vertical'
   | 'student_cinema'
   | 'shooting_notes'
@@ -32,6 +33,9 @@ export function poolForShowcaseIcon(icon: string): ContentPoolId {
       return 'shooting_notes'
     case 'kisa-film':
       return 'kisa-film'
+    case 'stand-up':
+    case 'standup':
+      return 'stand-up'
     case 'dizi':
       return 'dizi'
     case 'film':
@@ -71,6 +75,7 @@ export const LANDING_CONTENT_POOL_FILTERS: Array<{ id: ContentPoolId; label: str
   { id: 'dizi', label: 'Diziler' },
   { id: 'belgesel', label: 'Belgeseller' },
   { id: 'kisa-film', label: 'Kısa filmler' },
+  { id: 'stand-up', label: 'Stand-up' },
   { id: 'vertical', label: 'Dikey diziler' },
   { id: 'student_cinema', label: 'Öğrenci filmleri' },
   { id: 'shooting_notes', label: 'Ders notları' },

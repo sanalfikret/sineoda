@@ -3,6 +3,7 @@ export const CONTENT_TYPES = [
   { value: 'dizi', label: 'Dizi' },
   { value: 'belgesel', label: 'Belgesel' },
   { value: 'kisa-film', label: 'Kısa Film' },
+  { value: 'stand-up', label: 'Stand-up' },
 ] as const
 
 export type ContentType = (typeof CONTENT_TYPES)[number]['value']

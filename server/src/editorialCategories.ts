@@ -196,7 +196,7 @@ export function matchesEditorialFillRule(
   if (is('Anime + Animasyon') || is('Anime') || is('Animasyon')) {
     return genres.some((g) => ['Anime', 'Animasyon'].includes(g))
   }
-  if (is('Stand-up')) return genres.includes('Stand-up')
+  if (is('Stand-up')) return row.type === 'stand-up' || genres.includes('Stand-up')
   if (is('Yerli Yapımlar')) return genres.includes('Yerli')
   if (is('Suç-Gizem') || is('Suç ve Gizem')) {
     return genres.some((g) => ['Suç', 'Gizem', 'Gerilim'].includes(g))

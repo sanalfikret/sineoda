@@ -63,11 +63,19 @@ const VERTICAL_PRESET = {
   duration: '8 bölüm',
 }
 
-type ContentPreset = 'film' | 'dizi' | 'belgesel' | 'kisa-film' | 'dikey'
+const STANDUP_PRESET = {
+  type: 'stand-up' as ContentType,
+  videoFormat: 'standard' as const,
+  genres: 'Stand-up, Komedi',
+  rating: '16+',
+}
 
-function buildInitialForm(isVertical: boolean) {
-  if (!isVertical) return EMPTY_FORM
-  return { ...EMPTY_FORM, ...VERTICAL_PRESET }
+type ContentPreset = 'film' | 'dizi' | 'belgesel' | 'kisa-film' | 'stand-up' | 'dikey'
+
+function buildInitialForm(options: { vertical?: boolean; standup?: boolean } = {}) {
+  if (options.vertical) return { ...EMPTY_FORM, ...VERTICAL_PRESET }
+  if (options.standup) return { ...EMPTY_FORM, ...STANDUP_PRESET }
+  return EMPTY_FORM
 }
 
 function applyPreset(preset: ContentPreset) {
@@ -85,10 +93,11 @@ export function AdminContentFormPage() {
   const { id } = useParams()
   const [searchParams] = useSearchParams()
   const isVerticalNew = searchParams.get('dikey') === '1'
+  const isStandUpNew = searchParams.get('standup') === '1'
   const isEdit = Boolean(id)
   const navigate = useNavigate()
   const { getContentById, addContent, updateContent } = useContent()
-  const [form, setForm] = useState(() => buildInitialForm(isVerticalNew && !id))
+  const [form, setForm] = useState(() => buildInitialForm({ vertical: isVerticalNew && !id, standup: isStandUpNew && !id }))
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -258,7 +267,9 @@ export function AdminContentFormPage() {
               : 'İçeriği Düzenle'
             : isVerticalNew || form.videoFormat === 'vertical'
               ? 'Yeni Dikey Dizi'
-              : 'Yeni İçerik'}
+              : isStandUpNew || form.type === 'stand-up'
+                ? 'Yeni Stand-up'
+                : 'Yeni İçerik'}
         </h1>
       </div>
 
@@ -279,6 +290,7 @@ export function AdminContentFormPage() {
                   { id: 'dizi', label: 'Dizi' },
                   { id: 'belgesel', label: 'Belgesel' },
                   { id: 'kisa-film', label: 'Kısa Film' },
+                  { id: 'stand-up', label: 'Stand-up' },
                   { id: 'dikey', label: 'Dikey Dizi' },
                 ] as const
               ).map((preset) => (

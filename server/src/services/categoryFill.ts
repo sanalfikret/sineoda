@@ -26,6 +26,7 @@ function matchesCategory(categoryTitle: string, categoryId: string, row: Content
   const title = categoryTitle.toLocaleLowerCase('tr')
   if (title === 'filmler') return row.type === 'film'
   if (title === 'kısa filmler') return row.type === 'kisa-film'
+  if (title === 'stand-up') return row.type === 'stand-up'
 
   if (genres.includes(categoryTitle)) return true
   if (categoryId.startsWith('genre-') && title) {

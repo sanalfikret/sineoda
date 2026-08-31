@@ -154,7 +154,7 @@ function backdropUrl(photoId: string) {
 
 function pickType(genre: string, index: number): ContentItem['type'] {
   if (genre === 'Belgesel') return 'belgesel'
-  if (genre === 'Stand-up') return 'film'
+  if (genre === 'Stand-up') return 'stand-up'
   if (index % 3 === 0) return 'dizi'
   return 'film'
 }

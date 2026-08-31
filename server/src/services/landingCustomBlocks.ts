@@ -29,6 +29,7 @@ const VALID_POOLS: ContentPoolId[] = [
   'dizi',
   'belgesel',
   'kisa-film',
+  'stand-up',
   'vertical',
   'student_cinema',
   'shooting_notes',
