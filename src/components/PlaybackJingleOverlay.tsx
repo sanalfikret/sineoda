@@ -1,49 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import {
-  PLAYBACK_JINGLE_MS,
-  PLAYBACK_JINGLE_SKIP_RESUME_AFTER_SEC,
-  PLAYBACK_JINGLE_SRC,
-} from '../constants/playback'
+import { PLAYBACK_JINGLE_MS, PLAYBACK_JINGLE_SKIP_RESUME_AFTER_SEC } from '../constants/playback'
+import { playPlaybackJingle } from '../utils/playbackJingleAudio'
 import { PlooyLogo } from './PlooyLogo'
 
 interface PlaybackJingleOverlayProps {
   active: boolean
   onComplete: () => void
-}
-
-async function loadAndPlayJingle(durationMs: number): Promise<boolean> {
-  const audio = new Audio(PLAYBACK_JINGLE_SRC)
-  audio.preload = 'auto'
-
-  const canPlay = await new Promise<boolean>((resolve) => {
-    const fail = () => resolve(false)
-    audio.addEventListener('canplaythrough', () => resolve(true), { once: true })
-    audio.addEventListener('error', fail, { once: true })
-    window.setTimeout(fail, 2500)
-    audio.load()
-  })
-
-  if (!canPlay) return false
-
-  try {
-    await audio.play()
-  } catch {
-    return false
-  }
-
-  await new Promise<void>((resolve) => {
-    let done = false
-    const finish = () => {
-      if (done) return
-      done = true
-      audio.pause()
-      resolve()
-    }
-    audio.addEventListener('ended', finish, { once: true })
-    window.setTimeout(finish, durationMs)
-  })
-
-  return true
 }
 
 export function PlaybackJingleOverlay({ active, onComplete }: PlaybackJingleOverlayProps) {
@@ -64,15 +26,8 @@ export function PlaybackJingleOverlay({ active, onComplete }: PlaybackJingleOver
     void (async () => {
       setVisible(true)
       setFading(false)
-
-      const played = await loadAndPlayJingle(PLAYBACK_JINGLE_MS)
+      await playPlaybackJingle(PLAYBACK_JINGLE_MS)
       if (cancelled) return
-
-      if (!played) {
-        setVisible(false)
-        onCompleteRef.current()
-        return
-      }
 
       setFading(true)
       window.setTimeout(() => {
