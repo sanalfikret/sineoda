@@ -7,8 +7,10 @@ import { resolvePlayVideoUrl } from '../utils/playVideo'
 import { getActiveFullscreenElement, isFullscreenSupported, useFullscreen } from '../hooks/useFullscreen'
 import { ContentActionButtons } from './ContentActionButtons'
 import { AgeRatingOverlay } from './AgeRatingOverlay'
+import { PlaybackJingleOverlay } from './PlaybackJingleOverlay'
 import { PlaybackGuardOverlay } from './PlaybackGuardOverlay'
 import { PlayerFullscreenButton } from './PlayerFullscreenButton'
+import { usePlaybackJingleGate } from '../hooks/usePlaybackJingleGate'
 import { usePlaybackGuard } from '../hooks/usePlaybackGuard'
 import { useTvRemoteKeys } from '../hooks/useTvRemoteKeys'
 import { useTvMode } from '../hooks/useTvMode'
@@ -50,6 +52,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
   const [showControls, setShowControls] = useState(true)
   const [showEpisodeList, setShowEpisodeList] = useState(false)
   const [swipeHint, setSwipeHint] = useState(true)
+  const [mediaReady, setMediaReady] = useState(false)
   const hideTimerRef = useRef<number | null>(null)
   const { ref: playerRef, isFullscreen, toggle: toggleFullscreen } = useFullscreen<HTMLDivElement>()
   const fullscreenSupported = isFullscreenSupported()
@@ -79,6 +82,15 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
   const displayTitle = currentEpisode
     ? `${target?.item.title} · B${currentEpisode.episode} ${currentEpisode.title}`
     : target?.title ?? ''
+  const ratingPlaybackKey = target
+    ? `${target.item.id}:${currentEpisode?.id ?? 'main'}`
+    : ''
+  const jingleStartPosition = hasEpisodes ? 0 : target?.startPosition
+  const { jingleBlocking, showJingle, completeJingle } = usePlaybackJingleGate(
+    ratingPlaybackKey,
+    jingleStartPosition,
+    !target || Boolean(youtubeEmbedUrl),
+  )
 
   const persistProgress = useCallback(
     (position: number, videoDuration: number) => {
@@ -136,12 +148,13 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
 
     setCurrentTime(startAt)
     setDuration(0)
-    setPlaying(true)
+    setPlaying(false)
+    setMediaReady(false)
     lastSavedRef.current = startAt
 
-    const beginPlayback = () => {
+    const markReady = () => {
       if (startAt > 0) video.currentTime = startAt
-      void video.play().catch(() => setPlaying(false))
+      setMediaReady(true)
     }
 
     if (isHlsUrl(mediaUrl)) {
@@ -152,15 +165,15 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
           hlsRef.current = hls
           hls.loadSource(mediaUrl)
           hls.attachMedia(video)
-          hls.on(Hls.Events.MANIFEST_PARSED, beginPlayback)
+          hls.on(Hls.Events.MANIFEST_PARSED, markReady)
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
           video.src = mediaUrl
-          video.addEventListener('loadedmetadata', beginPlayback, { once: true })
+          video.addEventListener('loadedmetadata', markReady, { once: true })
         }
       })()
     } else {
       video.src = mediaUrl
-      video.addEventListener('loadedmetadata', beginPlayback, { once: true })
+      video.addEventListener('loadedmetadata', markReady, { once: true })
     }
 
     return () => {
@@ -170,6 +183,13 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
       }
     }
   }, [target, mediaUrl, youtubeEmbedUrl, episodeIndex, hasEpisodes])
+
+  useEffect(() => {
+    if (!target || youtubeEmbedUrl || !mediaReady || jingleBlocking) return
+    const video = videoRef.current
+    if (!video) return
+    void video.play().catch(() => setPlaying(false))
+  }, [target, youtubeEmbedUrl, mediaReady, jingleBlocking])
 
   useEffect(() => {
     if (!target) return
@@ -319,7 +339,6 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
   }
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
-  const ratingPlaybackKey = `${target.item.id}:${currentEpisode?.id ?? 'main'}`
 
   return (
     <div
@@ -338,14 +357,18 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
         />
       )}
 
-      <AgeRatingOverlay rating={target.item.rating} playbackKey={ratingPlaybackKey} />
+      <PlaybackJingleOverlay active={showJingle} onComplete={completeJingle} />
+
+      {!jingleBlocking && (
+        <AgeRatingOverlay rating={target.item.rating} playbackKey={ratingPlaybackKey} />
+      )}
 
       <video
         ref={videoRef}
         className={
           youtubeEmbedUrl
             ? 'hidden'
-            : 'h-full max-h-[100dvh] w-auto max-w-full object-contain'
+            : `h-full max-h-[100dvh] w-auto max-w-full object-contain ${jingleBlocking ? 'opacity-0' : ''}`
         }
         playsInline
         muted={muted}

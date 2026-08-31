@@ -6,8 +6,10 @@ import { getYoutubeEmbedUrl, isYoutubeUrl } from '../utils/media'
 import { getActiveFullscreenElement, isFullscreenSupported, useFullscreen } from '../hooks/useFullscreen'
 import { ContentActionButtons } from './ContentActionButtons'
 import { AgeRatingOverlay } from './AgeRatingOverlay'
+import { PlaybackJingleOverlay } from './PlaybackJingleOverlay'
 import { PlaybackGuardOverlay } from './PlaybackGuardOverlay'
 import { PlayerFullscreenButton } from './PlayerFullscreenButton'
+import { usePlaybackJingleGate } from '../hooks/usePlaybackJingleGate'
 import { usePlaybackGuard } from '../hooks/usePlaybackGuard'
 import { useTvRemoteKeys } from '../hooks/useTvRemoteKeys'
 import { useTvMode } from '../hooks/useTvMode'
@@ -48,6 +50,7 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
   const [episodes, setEpisodes] = useState<Episode[]>([])
   const [nextEpisode, setNextEpisode] = useState<Episode | null>(null)
   const [countdown, setCountdown] = useState(8)
+  const [mediaReady, setMediaReady] = useState(false)
   const hideTimerRef = useRef<number | null>(null)
   const { ref: playerRef, isFullscreen, toggle: toggleFullscreen } = useFullscreen<HTMLDivElement>()
   const fullscreenSupported = isFullscreenSupported()
@@ -64,6 +67,12 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
   const isVertical = target?.item.videoFormat === 'vertical'
   const canTrack = Boolean(getToken() && getProfileId() && target)
   const isTv = useTvMode()
+  const ratingPlaybackKey = target ? `${target.item.id}:${target.episodeId ?? 'main'}` : ''
+  const { jingleBlocking, showJingle, completeJingle } = usePlaybackJingleGate(
+    ratingPlaybackKey,
+    target?.startPosition,
+    !target || Boolean(youtubeEmbedUrl),
+  )
 
   const clearNextCountdown = useCallback(() => {
     if (countdownRef.current) {
@@ -194,12 +203,13 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
     const startAt = target.startPosition && target.startPosition > 5 ? target.startPosition : 0
     setCurrentTime(startAt)
     setDuration(0)
-    setPlaying(true)
+    setPlaying(false)
+    setMediaReady(false)
     lastSavedRef.current = startAt
 
-    const beginPlayback = () => {
+    const markReady = () => {
       if (startAt > 0) video.currentTime = startAt
-      void video.play().catch(() => setPlaying(false))
+      setMediaReady(true)
     }
 
     if (isHlsUrl(mediaUrl)) {
@@ -210,15 +220,15 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
           hlsRef.current = hls
           hls.loadSource(mediaUrl)
           hls.attachMedia(video)
-          hls.on(Hls.Events.MANIFEST_PARSED, beginPlayback)
+          hls.on(Hls.Events.MANIFEST_PARSED, markReady)
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
           video.src = mediaUrl
-          video.addEventListener('loadedmetadata', beginPlayback, { once: true })
+          video.addEventListener('loadedmetadata', markReady, { once: true })
         }
       })()
     } else {
       video.src = mediaUrl
-      video.addEventListener('loadedmetadata', beginPlayback, { once: true })
+      video.addEventListener('loadedmetadata', markReady, { once: true })
     }
 
     return () => {
@@ -228,6 +238,13 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
       }
     }
   }, [target, mediaUrl, youtubeEmbedUrl])
+
+  useEffect(() => {
+    if (!target || youtubeEmbedUrl || !mediaReady || jingleBlocking) return
+    const video = videoRef.current
+    if (!video) return
+    void video.play().catch(() => setPlaying(false))
+  }, [target, youtubeEmbedUrl, mediaReady, jingleBlocking])
 
   useEffect(() => {
     const video = videoRef.current
@@ -314,7 +331,6 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
   }
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
-  const ratingPlaybackKey = `${target.item.id}:${target.episodeId ?? 'main'}`
 
   return (
     <div
@@ -334,16 +350,18 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
         />
       )}
 
-      <AgeRatingOverlay rating={target.item.rating} playbackKey={ratingPlaybackKey} />
+      <PlaybackJingleOverlay active={showJingle} onComplete={completeJingle} />
+
+      {!jingleBlocking && <AgeRatingOverlay rating={target.item.rating} playbackKey={ratingPlaybackKey} />}
 
       <video
         ref={videoRef}
         className={
           isVertical
-            ? 'h-full max-h-[100dvh] w-auto max-w-full object-contain'
+            ? `h-full max-h-[100dvh] w-auto max-w-full object-contain ${jingleBlocking ? 'opacity-0' : ''}`
             : youtubeEmbedUrl
               ? 'hidden'
-              : 'h-full w-full object-contain'
+              : `h-full w-full object-contain ${jingleBlocking ? 'opacity-0' : ''}`
         }
         playsInline
         muted={muted}
