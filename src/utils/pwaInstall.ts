@@ -1,4 +1,4 @@
-export type InstallPlatform = 'ios' | 'android' | 'desktop' | 'unknown'
+export type InstallPlatform = 'ios' | 'android' | 'android-tv' | 'tv' | 'desktop' | 'unknown'
 
 const DISMISS_KEY = 'plooy-install-dismissed-until'
 const AUTO_PROMPT_KEY = 'plooy-install-auto-prompted'
@@ -18,10 +18,29 @@ export function isStandaloneDisplayMode() {
 
 export function detectInstallPlatform(): InstallPlatform {
   const ua = navigator.userAgent
+  const uaLower = ua.toLowerCase()
+
   if (/iPad|iPhone|iPod/.test(ua)) return 'ios'
-  if (/Android/i.test(ua)) return 'android'
+
+  if (/Android/i.test(ua)) {
+    if (/googletv|android tv|aft[bmtst]|nexus player|shield/i.test(uaLower)) return 'android-tv'
+    return 'android'
+  }
+
+  if (
+    /smart-tv|smarttv|googletv|appletv|hbbtv|tizen|web0s|webos|crkey|firetv|bravia|viera|netcast/i.test(
+      uaLower,
+    )
+  ) {
+    return 'tv'
+  }
+
   if (/Windows|Macintosh|Linux/i.test(ua)) return 'desktop'
   return 'unknown'
+}
+
+export function isTvInstallPlatform(platform: InstallPlatform) {
+  return platform === 'tv' || platform === 'android-tv'
 }
 
 export function isInstallBannerDismissed() {

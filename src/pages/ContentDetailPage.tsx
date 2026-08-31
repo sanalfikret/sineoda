@@ -3,6 +3,7 @@ import { resolveMediaUrl } from '../api/client'
 import { AppShell, useContentUI } from '../components/AppShell'
 import { ContentDetailView } from '../components/ContentDetailView'
 import { PageMeta } from '../components/PageMeta'
+import { VideoStructuredData } from '../components/StructuredData'
 import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
 import { isContentAllowedForKids } from '../utils/contentRating'
@@ -49,6 +50,21 @@ function ContentDetailContent() {
         description={item.description}
         image={resolveMediaUrl(item.poster)}
         path={`/icerik/${item.id}`}
+      />
+      <VideoStructuredData
+        title={item.title}
+        description={item.description}
+        thumbnailUrl={
+          resolveMediaUrl(item.poster) ||
+          (typeof window !== 'undefined' ? `${window.location.origin}/brand/plooy-wordmark.png` : '')
+        }
+        pageUrl={
+          typeof window !== 'undefined'
+            ? `${window.location.origin}/icerik/${item.id}`
+            : `/icerik/${item.id}`
+        }
+        uploadDate={item.publishedAt ?? null}
+        contentType={item.type}
       />
       <ContentDetailView
         item={item}

@@ -5,6 +5,7 @@ import { resolveMediaUrl } from '../api/client'
 import { getContentTypeLabel } from '../constants/contentTypes'
 import type { ContentItem } from '../types/content'
 import { backdropUrlForId, enrichContentImages, posterUrlForId } from '../utils/contentImages'
+import { isTvDevice } from '../utils/tvDevice'
 
 interface ContentCardProps {
   item: ContentItem
@@ -74,7 +75,8 @@ export function ContentCard({
 
   const aspectClass = isPortrait ? 'aspect-[9/16]' : 'aspect-video'
   const genreLine = item.genres.slice(0, 3).join(' · ')
-  const enableNetflixHover = !guestHref && (!isGrid || isBrowseGrid)
+  const isTv = isTvDevice()
+  const enableNetflixHover = !guestHref && (!isGrid || isBrowseGrid) && !isTv
 
   const clearLeaveTimer = () => {
     if (leaveTimerRef.current) {

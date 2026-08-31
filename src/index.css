@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant tv (&:where(html[data-tv='true'] *));
+
 @theme {
   --font-sans: 'Outfit', system-ui, sans-serif;
   --color-plooy-bg: #090a0e;
@@ -114,5 +116,18 @@
   html[data-tv='true'] .tv-player button {
     min-height: 2.75rem;
     min-width: 2.75rem;
+  }
+
+  html[data-tv='true'] {
+    scroll-behavior: auto;
+  }
+
+  html[data-tv='true'] .hide-scrollbar {
+    scroll-behavior: auto;
+  }
+
+  html[data-tv='true'] [data-tv-row] button:focus-visible {
+    transform: scale(1.04);
+    z-index: 20;
   }
 }

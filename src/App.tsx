@@ -55,6 +55,7 @@ import { CreatorDashboardPage } from './pages/creator/CreatorDashboardPage'
 import { CreatorPaymentPage } from './pages/creator/CreatorPaymentPage'
 import { ComingSoonPage } from './pages/ComingSoonPage'
 import { SiteModeGuard } from './components/SiteModeGuard'
+import { WebSiteStructuredData } from './components/StructuredData'
 import { useSiteMode } from './context/SiteModeContext'
 import { AdminSiteModePage } from './pages/admin/AdminSiteModePage'
 
@@ -147,6 +148,8 @@ function TanitimRoute() {
 
 function App() {
   return (
+    <>
+      <WebSiteStructuredData />
     <Routes>
       <Route path="/" element={<HomeRoute />} />
       <Route path="/tanitim" element={<TanitimRoute />} />
@@ -376,6 +379,7 @@ function App() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   )
 }
 
