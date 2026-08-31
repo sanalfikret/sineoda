@@ -1,5 +1,6 @@
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { BRAND_NAME } from '../constants/brand.js'
+import { getIstanbulMonthKey } from './dailyWatchLimits.js'
 import { getWatchThreshold } from './watchQualification.js'
 
 export interface MonthlyContentStat {
@@ -43,7 +44,71 @@ export function resolveSegment(program: string, creatorId: string | null): Accou
 }
 
 export function monthKey(date = new Date()) {
-  return date.toISOString().slice(0, 7)
+  return getIstanbulMonthKey(date)
+}
+
+function previousMonthKey(month: string) {
+  const [year, mon] = month.split('-').map(Number)
+  if (mon === 1) return `${year - 1}-12`
+  return `${year}-${String(mon - 1).padStart(2, '0')}`
+}
+
+function purgeInvalidAccountingData(current = monthKey()) {
+  dbRun('DELETE FROM watch_accounting_periods WHERE month > ?', [current])
+  dbRun('DELETE FROM content_watch_monthly WHERE month > ?', [current])
+  dbRun(
+    `DELETE FROM watch_accounting_periods
+     WHERE month < ?
+       AND total_qualified_seconds = 0
+       AND total_watch_seconds = 0
+       AND NOT EXISTS (
+         SELECT 1 FROM content_watch_monthly m WHERE m.month = watch_accounting_periods.month
+       )`,
+    [current],
+  )
+}
+
+function isValidMonthKey(month: string) {
+  return /^\d{4}-\d{2}$/.test(month)
+}
+
+function collectAccountingMonthKeys(current: string) {
+  const months = new Set<string>([current])
+
+  for (const row of dbAll<{ month: string }>(
+    'SELECT DISTINCT month FROM content_watch_monthly WHERE month <= ?',
+    [current],
+  )) {
+    if (isValidMonthKey(row.month) && row.month <= current) months.add(row.month)
+  }
+
+  for (const row of dbAll<{ month: string }>(
+    `SELECT DISTINCT substr(activity_date, 1, 7) AS month
+     FROM creator_qualified_activity
+     WHERE substr(activity_date, 1, 7) <= ?`,
+    [current],
+  )) {
+    if (isValidMonthKey(row.month) && row.month <= current) months.add(row.month)
+  }
+
+  for (const row of dbAll<{ month: string }>(
+    `SELECT DISTINCT substr(activity_date, 1, 7) AS month
+     FROM watch_activity
+     WHERE content_id IS NOT NULL AND content_id != '' AND substr(activity_date, 1, 7) <= ?`,
+    [current],
+  )) {
+    if (isValidMonthKey(row.month) && row.month <= current) months.add(row.month)
+  }
+
+  for (const row of dbAll<{ month: string }>(
+    `SELECT month FROM watch_accounting_periods
+     WHERE month <= ? AND (total_qualified_seconds > 0 OR total_watch_seconds > 0)`,
+    [current],
+  )) {
+    if (isValidMonthKey(row.month)) months.add(row.month)
+  }
+
+  return [...months].sort((a, b) => b.localeCompare(a))
 }
 
 export function monthDateRange(month: string) {
@@ -54,11 +119,14 @@ export function monthDateRange(month: string) {
 }
 
 function ensurePeriodRow(month: string) {
+  const current = monthKey()
+  if (month > current) return
+
   const exists = dbGet('SELECT month FROM watch_accounting_periods WHERE month = ?', [month])
   if (!exists) {
     dbRun(
       'INSERT INTO watch_accounting_periods (month, total_qualified_seconds, total_watch_seconds, status) VALUES (?, 0, 0, ?)',
-      [month, month === monthKey() ? 'open' : 'closed'],
+      [month, month === current ? 'open' : 'closed'],
     )
   }
 }
@@ -376,6 +444,7 @@ export function finalizeMonth(month: string) {
 
 export function ensureMonthlyRollover() {
   const current = monthKey()
+  purgeInvalidAccountingData(current)
   const openPast = dbAll<{ month: string }>(
     `SELECT month FROM watch_accounting_periods
      WHERE status = 'open' AND month < ?
@@ -409,20 +478,22 @@ export function ensureMonthlyRollover() {
 }
 
 export function listAccountingMonths() {
-  ensurePeriodRow(monthKey())
-  const rows = dbAll<{ month: string; status: string; total_qualified_seconds: number; closed_at: string | null }>(
-    'SELECT month, status, total_qualified_seconds, closed_at FROM watch_accounting_periods ORDER BY month DESC',
-  )
   const current = monthKey()
-  if (!rows.some((row) => row.month === current)) {
-    rows.unshift({ month: current, status: 'open', total_qualified_seconds: 0, closed_at: null })
-  }
-  return rows.map((row) => ({
-    month: row.month,
-    status: row.month === current ? 'open' : (row.status as 'open' | 'closed'),
-    totalQualifiedMinutes: Math.round((row.total_qualified_seconds ?? 0) / 60),
-    closedAt: row.closed_at,
-  }))
+  purgeInvalidAccountingData(current)
+  ensurePeriodRow(current)
+
+  return collectAccountingMonthKeys(current).map((month) => {
+    const period = dbGet<{ total_qualified_seconds: number; closed_at: string | null }>(
+      'SELECT total_qualified_seconds, closed_at FROM watch_accounting_periods WHERE month = ?',
+      [month],
+    )
+    return {
+      month,
+      status: month === current ? ('open' as const) : ('closed' as const),
+      totalQualifiedMinutes: Math.round((period?.total_qualified_seconds ?? 0) / 60),
+      closedAt: period?.closed_at ?? null,
+    }
+  })
 }
 
 export function getMonthlyReport(month: string, options?: { creatorId?: string; program?: string }) {
@@ -430,8 +501,12 @@ export function getMonthlyReport(month: string, options?: { creatorId?: string; 
     throw new Error('Geçersiz ay formatı.')
   }
 
-  const memberStats = getMemberStats(month)
   const current = monthKey()
+  if (month > current) {
+    throw new Error('Henüz gelmemiş bir ay seçilemez.')
+  }
+
+  const memberStats = getMemberStats(month)
   const period = dbGet<{ status: string; total_qualified_seconds: number; total_watch_seconds: number }>(
     'SELECT status, total_qualified_seconds, total_watch_seconds FROM watch_accounting_periods WHERE month = ?',
     [month],
@@ -576,7 +651,7 @@ export function seedDemoMonthlyIfEmpty() {
   )
   if (creators.length === 0) return
 
-  const prevMonth = monthKey(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 15))
+  const prevMonth = previousMonthKey(monthKey())
   let totalQ = 0
   let totalW = 0
 
