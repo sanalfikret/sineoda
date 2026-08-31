@@ -327,15 +327,51 @@ if (config.webDistDir) {
   const distPath = path.resolve(config.webDistDir)
   const indexPath = path.join(distPath, 'index.html')
   const indexHtmlRaw = fs.existsSync(indexPath) ? fs.readFileSync(indexPath, 'utf8') : ''
-  const indexHtml = indexHtmlRaw.includes('__PLOOY_API_BASE__') || indexHtmlRaw.includes('__SINEODA_API_BASE__')
-    ? indexHtmlRaw
-    : indexHtmlRaw.replace(
-        '<head>',
-        "<head><script>window.__PLOOY_API_BASE__='';</script>",
-      )
+  const buildId = process.env.GIT_SHA || 'dev'
+  const bootScript =
+    `<script>window.__PLOOY_API_BASE__='';window.__PLOOY_BUILD__='${buildId}';` +
+    `(function(){try{var key='plooy-build',next=window.__PLOOY_BUILD__,prev=localStorage.getItem(key);` +
+    `if(prev&&prev!==next){localStorage.setItem(key,next);var done=function(){location.reload()};` +
+    `var wipeCaches=function(){if(!window.caches){done();return}` +
+    `caches.keys().then(function(names){return Promise.all(names.map(function(name){return caches.delete(name)}))}).then(done)};` +
+    `if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations()` +
+    `.then(function(regs){return Promise.all(regs.map(function(reg){return reg.unregister()}))}).then(wipeCaches)}` +
+    `else wipeCaches()}else if(!prev){localStorage.setItem(key,next)}}catch(e){}})();</script>`
 
-  app.use(express.static(distPath, { index: false }))
-  app.get(/^(?!\/api\/|\/uploads\/).*/, (_req, res) => {
+  const indexHtml = indexHtmlRaw.includes('__PLOOY_BUILD__')
+    ? indexHtmlRaw.replace('__PLOOY_BUILD__', buildId)
+    : indexHtmlRaw.includes('__PLOOY_API_BASE__') || indexHtmlRaw.includes('__SINEODA_API_BASE__')
+      ? indexHtmlRaw.replace(
+          '<head>',
+          `<head>${bootScript}`,
+        )
+      : indexHtmlRaw.replace('<head>', `<head>${bootScript}`)
+
+  const assetsPath = path.join(distPath, 'assets')
+  if (fs.existsSync(assetsPath)) {
+    app.use(
+      '/assets',
+      express.static(assetsPath, {
+        immutable: true,
+        maxAge: '365d',
+        fallthrough: false,
+      }),
+    )
+  }
+
+  app.use(
+    express.static(distPath, {
+      index: false,
+      maxAge: '7d',
+      setHeaders(res, filePath) {
+        if (filePath.endsWith('.html')) {
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+        }
+      },
+    }),
+  )
+
+  app.get(/^(?!\/api\/|\/uploads\/|\/assets\/).*/, (_req, res) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
     if (indexHtml) {
       res.type('html').send(indexHtml)
@@ -343,7 +379,7 @@ if (config.webDistDir) {
     }
     res.sendFile(indexPath)
   })
-  console.log(`Web UI: ${distPath}`)
+  console.log(`Web UI: ${distPath} (build ${buildId})`)
 }
 
 app.use((error: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
