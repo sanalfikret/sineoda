@@ -58,8 +58,10 @@ export function AdminWatchAccountingPage() {
   const loadPeriods = useCallback(async () => {
     const { periods: data } = await fetchAdminMonthlyPeriods()
     setPeriods(data)
-    if (!month && data.length > 0) {
-      setMonth(data[0].month)
+    const openPeriod = data.find((period) => period.status === 'open')
+    const monthStillValid = month && data.some((period) => period.month === month)
+    if (!monthStillValid) {
+      setMonth(openPeriod?.month ?? data[0]?.month ?? '')
     }
   }, [month])
 

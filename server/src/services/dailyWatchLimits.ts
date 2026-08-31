@@ -15,6 +15,10 @@ export function getIstanbulDateKey(date = new Date()) {
   }).format(date)
 }
 
+export function getIstanbulMonthKey(date = new Date()) {
+  return getIstanbulDateKey(date).slice(0, 7)
+}
+
 type UsageRow = {
   total_seconds: number
   title_starts: number
