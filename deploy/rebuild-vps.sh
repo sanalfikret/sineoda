@@ -104,6 +104,17 @@ if [ "$ok" -eq 1 ]; then
   HEALTH=$(curl -sf "http://127.0.0.1:${HOST_PORT:-3001}/api/health" || true)
   echo "$HEALTH" | head -c 400 || true
   echo ""
+  HTML=$(curl -sf "http://127.0.0.1:${HOST_PORT:-3001}/" || true)
+  JS_PATH=$(echo "$HTML" | grep -oE '/assets/index-[^" ]+\.js' | head -1 || true)
+  if [ -z "$JS_PATH" ]; then
+    echo "HATA: index.html içinde JS bundle bulunamadı."
+    exit 1
+  fi
+  if ! curl -sf "http://127.0.0.1:${HOST_PORT:-3001}${JS_PATH}" >/dev/null; then
+    echo "HATA: JS bundle servis edilmiyor: ${JS_PATH}"
+    exit 1
+  fi
+  echo ">>> frontend bundle OK: ${JS_PATH}"
   if ! echo "$HEALTH" | grep -q 'jwtExpiresIn'; then
     echo "HATA: /api/health auth.jwtExpiresIn yok — container eski imaj olabilir."
     exit 1
