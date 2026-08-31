@@ -18,8 +18,8 @@ VPS production (tek domain — önerilen)
 --------------------------------------
   .env örneği:
 
-    FRONTEND_URL=https://ornek.com
-    PUBLIC_URL=https://ornek.com
+    FRONTEND_URL=https://plooy.tv
+    PUBLIC_URL=https://plooy.tv
     VITE_API_URL=                    ← BOŞ (same-origin /api)
     JWT_SECRET=<uzun-random>
     PERSIST_DIR=/opt/sineoda/persistent

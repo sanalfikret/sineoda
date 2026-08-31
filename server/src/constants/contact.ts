@@ -1,7 +1,7 @@
 import { BRAND_NAME } from './brand.js'
 
 /** E-posta domain — .env EMAIL_DOMAIN ile değiştirilir (sunucu taşımada kod dokunulmaz). */
-const emailDomain = (process.env.EMAIL_DOMAIN ?? 'plooy.com').replace(/^@/, '')
+const emailDomain = (process.env.EMAIL_DOMAIN ?? 'plooy.tv').replace(/^@/, '')
 
 export const contactEmails = {
   support: process.env.CONTACT_EMAIL ?? `destek@${emailDomain}`,
