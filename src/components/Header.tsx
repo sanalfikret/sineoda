@@ -113,7 +113,7 @@ export function Header() {
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2.5 sm:px-6 sm:py-3 lg:px-8 tv:py-5">
         <div className="flex min-w-0 items-center gap-2 sm:gap-4 lg:gap-8">
-          <PlooyLogo tone="on-dark" className="h-7 w-auto sm:h-8 tv:h-9" linked linkTo={isCreator ? '/creator' : '/'} />
+          <PlooyLogo tone="on-dark" className="h-7 sm:h-8 tv:h-9" linked linkTo={isCreator ? '/creator' : '/'} />
 
           <nav className="hidden min-w-0 flex-nowrap items-center gap-0.5 md:flex lg:gap-1">
             {primaryNavItems.map((item) => (
