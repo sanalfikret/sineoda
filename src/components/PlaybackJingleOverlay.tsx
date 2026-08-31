@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   PLAYBACK_JINGLE_MS,
   PLAYBACK_JINGLE_SKIP_RESUME_AFTER_SEC,
+  PLAYBACK_JINGLE_SRC,
 } from '../constants/playback'
-import { playPlaybackJingle } from '../utils/playbackJingleAudio'
 import { PlooyLogo } from './PlooyLogo'
 
 interface PlaybackJingleOverlayProps {
@@ -11,9 +11,46 @@ interface PlaybackJingleOverlayProps {
   onComplete: () => void
 }
 
+async function loadAndPlayJingle(durationMs: number): Promise<boolean> {
+  const audio = new Audio(PLAYBACK_JINGLE_SRC)
+  audio.preload = 'auto'
+
+  const canPlay = await new Promise<boolean>((resolve) => {
+    const fail = () => resolve(false)
+    audio.addEventListener('canplaythrough', () => resolve(true), { once: true })
+    audio.addEventListener('error', fail, { once: true })
+    window.setTimeout(fail, 2500)
+    audio.load()
+  })
+
+  if (!canPlay) return false
+
+  try {
+    await audio.play()
+  } catch {
+    return false
+  }
+
+  await new Promise<void>((resolve) => {
+    let done = false
+    const finish = () => {
+      if (done) return
+      done = true
+      audio.pause()
+      resolve()
+    }
+    audio.addEventListener('ended', finish, { once: true })
+    window.setTimeout(finish, durationMs)
+  })
+
+  return true
+}
+
 export function PlaybackJingleOverlay({ active, onComplete }: PlaybackJingleOverlayProps) {
-  const [visible, setVisible] = useState(active)
+  const [visible, setVisible] = useState(false)
   const [fading, setFading] = useState(false)
+  const onCompleteRef = useRef(onComplete)
+  onCompleteRef.current = onComplete
 
   useEffect(() => {
     if (!active) {
@@ -22,25 +59,33 @@ export function PlaybackJingleOverlay({ active, onComplete }: PlaybackJingleOver
       return
     }
 
-    setVisible(true)
-    setFading(false)
     let cancelled = false
 
     void (async () => {
-      await playPlaybackJingle(PLAYBACK_JINGLE_MS)
+      setVisible(true)
+      setFading(false)
+
+      const played = await loadAndPlayJingle(PLAYBACK_JINGLE_MS)
       if (cancelled) return
+
+      if (!played) {
+        setVisible(false)
+        onCompleteRef.current()
+        return
+      }
+
       setFading(true)
       window.setTimeout(() => {
         if (cancelled) return
         setVisible(false)
-        onComplete()
+        onCompleteRef.current()
       }, 450)
     })()
 
     return () => {
       cancelled = true
     }
-  }, [active, onComplete])
+  }, [active])
 
   if (!visible) return null
 
@@ -53,9 +98,7 @@ export function PlaybackJingleOverlay({ active, onComplete }: PlaybackJingleOver
       aria-live="polite"
       aria-label="Plooy açılış"
     >
-      <div
-        className={`flex flex-col items-center gap-4 ${fading ? '' : 'animate-[plooy-jingle-pop_0.9s_ease-out]'}`}
-      >
+      <div className="flex flex-col items-center gap-4 animate-[plooy-jingle-pop_0.9s_ease-out]">
         <PlooyLogo tone="on-dark" className="h-10 sm:h-12" />
         <p className="text-xs font-semibold uppercase tracking-[0.45em] text-plooy-gold/90">Plooy</p>
       </div>
