@@ -1,4 +1,4 @@
-export const CONTENT_TYPE_VALUES = ['film', 'dizi', 'belgesel', 'kisa-film'] as const
+export const CONTENT_TYPE_VALUES = ['film', 'dizi', 'belgesel', 'kisa-film', 'stand-up'] as const
 
 export type ContentType = (typeof CONTENT_TYPE_VALUES)[number]
 

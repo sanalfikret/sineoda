@@ -9,6 +9,7 @@ export type ContentPoolId =
   | 'dizi'
   | 'belgesel'
   | 'kisa-film'
+  | 'stand-up'
   | 'vertical'
   | 'student_cinema'
   | 'shooting_notes'
@@ -29,6 +30,9 @@ export function poolForShowcaseIcon(icon: string): ContentPoolId {
       return 'shooting_notes'
     case 'kisa-film':
       return 'kisa-film'
+    case 'stand-up':
+    case 'standup':
+      return 'stand-up'
     case 'dizi':
       return 'dizi'
     case 'film':

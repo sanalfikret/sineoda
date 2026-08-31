@@ -68,6 +68,7 @@ router.get('/sitemap.xml', (_req, res) => {
     '/filmler',
     '/diziler',
     '/belgeseller',
+    '/stand-up',
     '/kisa-filmler',
     '/dikey-diziler',
     '/genc-sinema',

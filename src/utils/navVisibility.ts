@@ -23,6 +23,8 @@ export const SHOWCASE_ICON_TO_NAV: Record<string, SiteNavId> = {
   dizi: 'diziler',
   film: 'filmler',
   belgesel: 'belgeseller',
+  'stand-up': 'standup',
+  standup: 'standup',
   dikey: 'dikey',
 }
 
@@ -47,6 +49,7 @@ export function isContentBlockedByNav(item: ContentItem, hiddenNav: SiteNavId[])
   if (hiddenNav.includes('diziler') && item.type === 'dizi' && item.videoFormat !== 'vertical') return true
   if (hiddenNav.includes('filmler') && item.type === 'film') return true
   if (hiddenNav.includes('belgeseller') && item.type === 'belgesel') return true
+  if (hiddenNav.includes('standup') && item.type === 'stand-up') return true
   return false
 }
 
@@ -72,6 +75,7 @@ export function navIdForBrowseRoute(options: {
   if (options.contentType === 'dizi') return 'diziler'
   if (options.contentType === 'film') return 'filmler'
   if (options.contentType === 'belgesel') return 'belgeseller'
+  if (options.contentType === 'stand-up') return 'standup'
   if (options.path === '/cekim-notlari') return 'cekimNotlari'
   if (options.path === '/listem') return 'listem'
   if (options.path === '/dergi' || options.path?.startsWith('/dergi/')) return 'dergi'

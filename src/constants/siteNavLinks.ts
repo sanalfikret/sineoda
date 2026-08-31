@@ -3,8 +3,9 @@ import { isCekimCategoryId } from './cekimNotlari'
 export const NAV_CATEGORY_SYNC: Record<SiteNavId, readonly string[]> = {
   home: [],
   diziler: ['series', 'anime-animation', 'crime'],
-  filmler: ['comedy-specials', 'family', 'romance', 'standup', 'local', 'scifi-fantasy'],
+  filmler: ['comedy-specials', 'family', 'romance', 'local', 'scifi-fantasy'],
   belgeseller: ['documentary'],
+  standup: ['standup'],
   dikey: ['vertical-series'],
   gencSinema: ['genc-sinema'],
   cekimNotlari: [],
@@ -29,6 +30,7 @@ export const NAV_LABELS: Record<SiteNavId, string> = {
   diziler: 'Diziler',
   filmler: 'Filmler',
   belgeseller: 'Belgeseller',
+  standup: 'Stand-up',
   dikey: 'Dikey Diziler',
   gencSinema: 'Genç Sinema',
   cekimNotlari: 'Çekim Notları',

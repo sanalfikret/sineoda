@@ -3,6 +3,7 @@ export const SITE_NAV_IDS = [
   'diziler',
   'filmler',
   'belgeseller',
+  'standup',
   'dikey',
   'gencSinema',
   'cekimNotlari',
@@ -31,6 +32,12 @@ export const SITE_NAV_ITEMS: SiteNavItemDef[] = [
     shortLabel: 'Belgesel',
     path: '/belgeseller',
     match: (path) => path === '/belgeseller',
+  },
+  {
+    id: 'standup',
+    label: 'Stand-up',
+    path: '/stand-up',
+    match: (path) => path === '/stand-up',
   },
   {
     id: 'dikey',
@@ -75,7 +82,7 @@ export const DEFAULT_SITE_NAV: SiteNavConfig = {
 export { NAV_CATEGORY_SYNC, getNavIdForCategory, NAV_LABELS, STANDALONE_CATEGORY_IDS } from './siteNavLinks'
 
 /** Üst menüde doğrudan gösterilir */
-export const PRIMARY_NAV_IDS: SiteNavId[] = ['home', 'diziler', 'filmler', 'belgeseller', 'gencSinema']
+export const PRIMARY_NAV_IDS: SiteNavId[] = ['home', 'diziler', 'filmler', 'belgeseller', 'standup', 'gencSinema']
 
 /** "Keşfet" menüsünde toplanır — tek satır taşmayı önler */
 export const EXPLORE_NAV_IDS: SiteNavId[] = ['dikey', 'cekimNotlari', 'dergi']

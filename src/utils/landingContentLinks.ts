@@ -17,6 +17,8 @@ export function viewAllHrefForPool(pool?: ContentPoolId) {
       return '/belgeseller'
     case 'kisa-film':
       return '/filmler'
+    case 'stand-up':
+      return '/stand-up'
     case 'vertical':
       return '/dikey-diziler'
     default:
@@ -40,5 +42,6 @@ export function guestItemHref(item: ContentItem) {
   if (item.videoFormat === 'vertical') return '/dikey-diziler'
   if (item.type === 'dizi') return '/diziler'
   if (item.type === 'belgesel') return '/belgeseller'
+  if (item.type === 'stand-up') return '/stand-up'
   return '/kayit'
 }

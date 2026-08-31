@@ -5,13 +5,26 @@ import { reconcileCategoryOrder } from './categoryOrder.js'
 
 const MAINTENANCE_KEY = 'category_maintenance_version'
 /** Başlık ezme davranışı kaldırıldıktan sonraki tek seferlik bakım sürümü. */
-const MAINTENANCE_VERSION = 3
+const MAINTENANCE_VERSION = 4
+
+function migrateStandUpContentTypes() {
+  dbRun(
+    `UPDATE content
+     SET type = 'stand-up'
+     WHERE type = 'film'
+       AND (
+         genres LIKE '%"Stand-up"%'
+         OR genres LIKE '%Stand-up%'
+       )`,
+  )
+}
 
 /**
  * Sunucu açılışında kategori bakımı.
  * Admin'in kaydettiği başlık/sıra her restart'ta seed ile ezilmez.
  */
 export function runStartupCategoryMaintenance() {
+  migrateStandUpContentTypes()
   fillCategoriesToTarget()
   runOneTimeCategoryDedupeIfNeeded()
   reconcileCategoryOrder()

@@ -274,6 +274,20 @@ function App() {
         }
       />
       <Route
+        path="/stand-up"
+        element={
+          <SiteModeGuard>
+            <ProtectedRoute requireProfile requireSubscription>
+              <AuthenticatedProviders>
+                <NavRouteGuard contentType="stand-up">
+                  <BrowsePage contentType="stand-up" pageTitle="Stand-up" />
+                </NavRouteGuard>
+              </AuthenticatedProviders>
+            </ProtectedRoute>
+          </SiteModeGuard>
+        }
+      />
+      <Route
         path="/dikey-diziler"
         element={
           <SiteModeGuard>

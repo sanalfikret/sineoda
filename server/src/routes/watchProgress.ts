@@ -57,6 +57,7 @@ const WATCH_CATEGORY_LABELS: Record<string, string> = {
   dizi: 'Diziler',
   belgesel: 'Belgeseller',
   'kisa-film': 'Kısa Filmler',
+  'stand-up': 'Stand-up',
   vertical: 'Dikey Diziler',
 }
 

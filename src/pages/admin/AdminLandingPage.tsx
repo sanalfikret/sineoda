@@ -98,6 +98,7 @@ const ICON_OPTIONS = [
   { value: 'dizi', label: 'Dizi' },
   { value: 'film', label: 'Uzun metraj' },
   { value: 'kisa-film', label: 'Kısa film' },
+  { value: 'stand-up', label: 'Stand-up' },
   { value: 'belgesel', label: 'Belgesel' },
   { value: 'genc-sinema', label: 'Öğrenci filmleri' },
   { value: 'cekim-notlari', label: 'Ders notları' },
