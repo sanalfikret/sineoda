@@ -1,13 +1,28 @@
-import { readFileSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 
-const svg = readFileSync('public/icon.svg')
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const root = path.join(__dirname, '..')
+const wordmark = path.join(root, 'public', 'brand', 'plooy-wordmark-light.png')
+const bg = '#080a12'
 
-await sharp(svg).resize(192, 192).png().toFile('public/pwa-192x192.png')
-await sharp(svg).resize(512, 512).png().toFile('public/pwa-512x512.png')
-await sharp(svg).resize(180, 180).png().toFile('public/apple-touch-icon.png')
+async function makeSquareIcon(size, outPath) {
+  const logoWidth = Math.round(size * 0.78)
+  const logo = await sharp(wordmark).resize(logoWidth).ensureAlpha().toBuffer()
+  await sharp({
+    create: { width: size, height: size, channels: 4, background: bg },
+  })
+    .composite([{ input: logo, gravity: 'center' }])
+    .png()
+    .toFile(outPath)
+}
 
-const tvBanner = readFileSync('public/tv-banner.svg')
-await sharp(tvBanner).resize(320, 180).png().toFile('public/tv-banner.png')
+await makeSquareIcon(192, path.join(root, 'public', 'pwa-192x192.png'))
+await makeSquareIcon(512, path.join(root, 'public', 'pwa-512x512.png'))
+await makeSquareIcon(180, path.join(root, 'public', 'apple-touch-icon.png'))
 
-console.log('PWA + TV banner icons generated.')
+const tvBanner = path.join(root, 'public', 'tv-banner.svg')
+await sharp(tvBanner).resize(320, 180).png().toFile(path.join(root, 'public', 'tv-banner.png'))
+
+console.log('PWA + TV banner icons generated from plooy wordmark.')
