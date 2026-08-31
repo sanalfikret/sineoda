@@ -6,6 +6,7 @@ import {
   isInstallBannerDismissed,
   isMobileInstallPlatform,
   isStandaloneDisplayMode,
+  isTvInstallPlatform,
   markAutoInstallPrompted,
   type InstallPlatform,
   wasAutoInstallPrompted,
@@ -63,6 +64,7 @@ export function InstallAppProvider({ children }: { children: ReactNode }) {
       const currentPlatform = detectInstallPlatform()
       const canAutoPrompt =
         isMobileInstallPlatform(currentPlatform) &&
+        !isTvInstallPlatform(currentPlatform) &&
         !isStandaloneDisplayMode() &&
         !isInstallBannerDismissed() &&
         !wasAutoInstallPrompted()
@@ -102,6 +104,16 @@ export function InstallAppProvider({ children }: { children: ReactNode }) {
 
     if (platform === 'android') {
       setHintMessage('Chrome menüsünden "Uygulamayı yükle" seçin')
+      return false
+    }
+
+    if (platform === 'android-tv') {
+      setHintMessage('Google TV: Chrome → menü → "Ana ekrana ekle" veya "Uygulamayı yükle"')
+      return false
+    }
+
+    if (platform === 'tv') {
+      setHintMessage('TV tarayıcısında uygulamayı ana ekrana ekleyin (Samsung: Smart Hub, LG: webOS)')
       return false
     }
 

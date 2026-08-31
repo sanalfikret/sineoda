@@ -52,7 +52,7 @@ export function ContentRow({
   }
 
   return (
-    <section className={`relative overflow-visible ${isGrid ? 'mb-5' : CAROUSEL_SECTION_MB}`}>
+    <section data-tv-row className={`relative overflow-visible ${isGrid ? 'mb-5' : CAROUSEL_SECTION_MB}`}>
       <div className="mb-2 flex items-center justify-between px-4 sm:px-6 lg:px-8">
         <h2 className="text-lg font-semibold text-white sm:text-xl">{title}</h2>
         <div className="flex items-center gap-2">

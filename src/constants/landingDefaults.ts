@@ -168,7 +168,8 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
       },
       {
         question: 'Nerede izleyebilirim?',
-        answer: `${BRAND_NAME}'yu web tarayıcısı, Android, iOS ve Android TV üzerinden izleyebilirsiniz.`,
+        answer:
+          `${BRAND_NAME}'yu web tarayıcısı, Android, iOS, Samsung Tizen, LG webOS, Android TV ve Google TV üzerinden izleyebilirsiniz. TV'ye uygulama olarak ekleyebilirsiniz.`,
       },
       {
         question: 'Nasıl iptal ederim?',
