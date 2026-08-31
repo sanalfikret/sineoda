@@ -53,3 +53,7 @@ async function buildTransparentWordmark(inputName, outputName, ink) {
 
 await buildTransparentWordmark('plooy-wordmark-light.png', 'plooy-wordmark.png', 'white')
 await buildTransparentWordmark('plooy-wordmark-light.png', 'plooy-wordmark-on-light.png', 'black')
+await buildTransparentWordmark('plooy-wordmark-light.png', 'plooy-wordmark-on-dark.png', 'white')
+await buildTransparentWordmark('plooy-wordmark-light.png', 'plooy-mark-light.png', 'white')
+await buildTransparentWordmark('plooy-wordmark-light.png', 'plooy-mark-on-dark.png', 'white')
+await buildTransparentWordmark('plooy-wordmark-light.png', 'plooy-mark-on-light.png', 'black')
