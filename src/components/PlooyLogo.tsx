@@ -8,14 +8,6 @@ const LOGO_SRC: Record<PlooyLogoTone, string> = {
   'on-light': '/brand/plooy-wordmark-on-light.png',
 }
 
-/** Tailwind h-* sınıflarına +8px (2 birim) ekler */
-function boostLogoHeight(className: string) {
-  return className.replace(/\b((?:sm:|md:|lg:|xl:|tv:)?)h-(\d+)\b/g, (_match, prefix: string, value: string) => {
-    const next = Number(value) + 2
-    return `${prefix}h-${next}`
-  })
-}
-
 type PlooyLogoProps = {
   tone?: PlooyLogoTone
   className?: string
@@ -33,7 +25,7 @@ export function PlooyLogo({
     <img
       src={LOGO_SRC[tone]}
       alt="Plooy"
-      className={`block w-auto max-w-full object-contain object-left ${boostLogoHeight(className)}`.trim()}
+      className={`block h-8 w-auto shrink-0 object-contain object-left ${className}`.trim()}
       draggable={false}
     />
   )
