@@ -13,6 +13,7 @@ import { sendPasswordResetEmail, sendEmailVerificationEmail } from '../services/
 import { getPlan, normalizePlanId, planRequiresStudentId } from '../services/plans.js'
 import { isValidTurkishMobile, normalizePhone, sendVerificationSms } from '../services/sms.js'
 import { recordSignupConsents } from '../services/legalConsent.js'
+import { getSiteMode } from '../services/siteMode.js'
 import { getClientIp, getUserAgent } from '../utils/clientIp.js'
 import type { JwtPayload, ProfileRow, UserRow } from '../types.js'
 
@@ -94,6 +95,15 @@ router.post('/sms/send', async (req, res) => {
 })
 
 router.post('/signup', async (req, res) => {
+  const siteMode = getSiteMode()
+  if (siteMode.enabled && !siteMode.allowViewerSignup) {
+    res.status(503).json({
+      error: 'İzleyici kaydı henüz açılmadı. Açılış tarihini ana sayfadaki geri sayımdan takip edebilirsiniz.',
+      code: 'SITE_COMING_SOON',
+    })
+    return
+  }
+
   const { name, email, password, phone, smsCode, planId, studentIdUrl, acceptTerms, acceptPrivacy, acceptKvkk } = req.body as {
     name?: string
     email?: string

@@ -849,6 +849,29 @@ export interface BillingProviders {
   paymentReady: boolean
 }
 
+export interface SiteModeConfig {
+  enabled: boolean
+  launchAt: string | null
+  headline: string
+  subheadline: string
+  allowViewerSignup: boolean
+}
+
+export async function fetchSiteMode() {
+  return api<SiteModeConfig>('/api/site-mode')
+}
+
+export async function fetchAdminSiteMode() {
+  return api<{ siteMode: SiteModeConfig }>('/api/admin/site-mode')
+}
+
+export async function updateAdminSiteMode(payload: Partial<SiteModeConfig>) {
+  return api<{ siteMode: SiteModeConfig }>('/api/admin/site-mode', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
+}
+
 export async function fetchBillingPlans(): Promise<{
   plans: BillingPlan[]
   providers: BillingProviders

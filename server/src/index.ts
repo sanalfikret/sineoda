@@ -40,6 +40,8 @@ import adsRoutes from './routes/ads.js'
 import adminAdsRoutes from './routes/adminAds.js'
 import seoRoutes from './routes/seo.js'
 import adminSiteNavRoutes from './routes/adminSiteNav.js'
+import adminSiteModeRoutes from './routes/adminSiteMode.js'
+import siteModeRoutes from './routes/siteMode.js'
 import { PUBLISHED_CONTENT_SQL_C } from './services/publish.js'
 import { STANDARD_PROGRAM_SQL_C, MAIN_CATALOG_SQL_C, ensureStudentCinemaCatalog } from './services/studentCinema.js'
 import { mapCategoriesResponse, getCategoryOrderForBrowse } from './services/categoryOrder.js'
@@ -48,6 +50,7 @@ import {
   fetchStudentCinemaPicksFallback,
 } from './services/landingStudentRows.js'
 import { mapSiteNavResponse } from './services/siteNav.js'
+import { getSiteMode } from './services/siteMode.js'
 import { listCekimNotlariSections } from './services/cekimNotlari.js'
 import { runStartupCategoryMaintenance } from './services/categoryMaintenance.js'
 import { backfillMissingImages } from './backfillImages.js'
@@ -191,6 +194,7 @@ app.get('/api/health', (_req, res) => {
       requireSubscription: config.requireSubscription,
       paytrConfigured: config.isPaytrConfigured(),
       paymentReady: config.isPaymentConfigured(),
+      comingSoon: getSiteMode().enabled,
     },
   })
 })
@@ -313,6 +317,8 @@ app.use('/api/messages', messagesRoutes)
 app.use('/api/ads', adsRoutes)
 app.use('/api/admin/ads', adminAdsRoutes)
 app.use('/api/admin/site-nav', adminSiteNavRoutes)
+app.use('/api/admin/site-mode', adminSiteModeRoutes)
+app.use('/api/site-mode', siteModeRoutes)
 app.use('/api/admin/billing-plans', adminBillingPlansRoutes)
 app.use('/api/admin/upload', uploadRoutes)
 app.use(seoRoutes)
