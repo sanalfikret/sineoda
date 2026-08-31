@@ -1,23 +1,44 @@
 import { normalizeContentType } from '../constants/contentTypes.js'
+import { BRAND_NAME } from '../constants/brand.js'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { getWatchThreshold } from './watchQualification.js'
 import { getMonthlyReport } from './watchAccounting.js'
 
 export type PaymentHalf = 'H1' | 'H2'
-export type PaymentPool = 'short' | 'student' | 'long'
+export type PaymentPool = 'short' | 'student' | 'documentary' | 'long'
 export type SettlementStatus = 'open' | 'confirmed' | 'paid'
 
-export const REVENUE_POOL_RATES = {
+/** Giderler sonrası dağıtılabilir kardan pay oranları (toplam %100). */
+export const REVENUE_POOL_RATES: Record<PaymentPool | 'plooy', number> = {
   plooy: 0.5,
-  short: 0.1,
-  student: 0.1,
-  long: 0.4,
-} as const
+  short: 0.05,
+  student: 0.05,
+  documentary: 0.1,
+  long: 0.3,
+}
+
+export const POOL_RATE_PERCENT: Record<PaymentPool | 'plooy', number> = {
+  plooy: 50,
+  short: 5,
+  student: 5,
+  documentary: 10,
+  long: 30,
+}
 
 const POOL_LABELS: Record<PaymentPool, string> = {
   short: 'Kısa film',
   student: 'Genç Sinema',
+  documentary: 'Belgesel & dikey',
   long: 'Uzun metraj',
+}
+
+export interface SettlementPoolSummary {
+  pool: PaymentPool | 'plooy'
+  label: string
+  ratePercent: number
+  effectiveRatePercent: number
+  qualifiedMinutes: number
+  contentCount: number
 }
 
 export interface SettlementContentItem {
@@ -27,6 +48,7 @@ export interface SettlementContentItem {
   program: 'standard' | 'student_cinema'
   pool: PaymentPool
   poolLabel: string
+  poolRatePercent: number
   creatorId: string | null
   creatorName: string | null
   studioName: string | null
@@ -36,7 +58,7 @@ export interface SettlementContentItem {
   avgCompletionPercent: number
   qualifiedViewerPercent: number
   poolSharePercent: number
-  payoutAmount: number
+  profitSharePercent: number
 }
 
 export interface SettlementCreatorItem {
@@ -44,7 +66,7 @@ export interface SettlementCreatorItem {
   creatorName: string | null
   studioName: string | null
   qualifiedMinutes: number
-  payoutAmount: number
+  profitSharePercent: number
   contentCount: number
 }
 
@@ -53,18 +75,11 @@ export interface SettlementReport {
   label: string
   months: string[]
   status: SettlementStatus
-  netRevenue: number
   isEditable: boolean
   totalQualifiedMinutes: number
   totalWatchMinutes: number
-  pools: {
-    plooy: number
-    short: number
-    student: number
-    long: number
-    unallocatedToPlooy: number
-  }
-  totalCreatorPayout: number
+  poolSummaries: SettlementPoolSummary[]
+  totalCreatorSharePercent: number
   items: SettlementContentItem[]
   creators: SettlementCreatorItem[]
   confirmedAt: string | null
@@ -105,10 +120,17 @@ export function paymentPeriodDateRange(periodId: string) {
   return { start: `${year}-07-01`, endExclusive: `${year + 1}-01-01` }
 }
 
-export function resolvePaymentPool(type: string, program: string): PaymentPool | null {
+export function resolvePaymentPool(
+  type: string,
+  program: string,
+  videoFormat?: string | null,
+): PaymentPool | null {
   if (program === 'platform') return null
   if (program === 'student_cinema') return 'student'
-  if (normalizeContentType(type) === 'kisa-film') return 'short'
+  const normalized = normalizeContentType(type)
+  if (normalized === 'kisa-film') return 'short'
+  if (normalized === 'belgesel') return 'documentary'
+  if (videoFormat === 'vertical') return 'documentary'
   return 'long'
 }
 
@@ -153,7 +175,10 @@ function aggregateCompletionForRange(start: string, endExclusive: string) {
     [start, endExclusive],
   )
 
-  const buckets = new Map<string, { totalCompletion: number; viewers: number; qualifiedViewers: number; type: string; program: string }>()
+  const buckets = new Map<
+    string,
+    { totalCompletion: number; viewers: number; qualifiedViewers: number; type: string; program: string }
+  >()
 
   for (const row of rows) {
     const completion = row.position_seconds / row.duration_seconds
@@ -192,6 +217,7 @@ function aggregateHalfYearWatch(periodId: string) {
       title: string
       type: string
       program: 'standard' | 'student_cinema'
+      videoFormat: string | null
       creatorId: string | null
       creatorName: string | null
       studioName: string | null
@@ -205,7 +231,11 @@ function aggregateHalfYearWatch(periodId: string) {
     const report = getMonthlyReport(month)
     for (const item of report.items) {
       if (item.program === 'platform') continue
-      const pool = resolvePaymentPool(item.type, item.program)
+      const meta = dbGet<{ video_format: string | null }>(
+        'SELECT video_format FROM content WHERE id = ?',
+        [item.contentId],
+      )
+      const pool = resolvePaymentPool(item.type, item.program, meta?.video_format)
       if (!pool) continue
 
       const existing = merged.get(item.contentId)
@@ -219,6 +249,7 @@ function aggregateHalfYearWatch(periodId: string) {
           title: item.title,
           type: item.type,
           program: item.program as 'standard' | 'student_cinema',
+          videoFormat: meta?.video_format ?? null,
           creatorId: item.creatorId,
           creatorName: item.creatorName,
           studioName: item.studioName,
@@ -257,19 +288,14 @@ export function listSettlementPeriods() {
 
   return ids.map((periodId) => {
     ensureSettlementPeriodRow(periodId)
-    const row = dbGet<{
-      net_revenue: number
-      status: string
-      confirmed_at: string | null
-      paid_at: string | null
-    }>('SELECT net_revenue, status, confirmed_at, paid_at FROM payment_settlement_periods WHERE period_id = ?', [
-      periodId,
-    ])
+    const row = dbGet<{ status: string; confirmed_at: string | null; paid_at: string | null }>(
+      'SELECT status, confirmed_at, paid_at FROM payment_settlement_periods WHERE period_id = ?',
+      [periodId],
+    )
     return {
       periodId,
       label: paymentPeriodLabel(periodId),
       status: (row?.status ?? 'open') as SettlementStatus,
-      netRevenue: row?.net_revenue ?? 0,
       isCurrent: periodId === current,
       confirmedAt: row?.confirmed_at ?? null,
       paidAt: row?.paid_at ?? null,
@@ -277,37 +303,35 @@ export function listSettlementPeriods() {
   })
 }
 
-function buildPayoutItems(
-  netRevenue: number,
+function buildShareItems(
   rows: ReturnType<typeof aggregateHalfYearWatch>,
   completionByContent: Map<string, { avgCompletionPercent: number; qualifiedViewerPercent: number }>,
-): Pick<SettlementReport, 'items' | 'creators' | 'pools' | 'totalCreatorPayout' | 'totalQualifiedMinutes' | 'totalWatchMinutes'> {
-  const poolTotals: Record<PaymentPool, number> = { short: 0, student: 0, long: 0 }
-  const poolAmounts: Record<PaymentPool, number> = {
-    short: netRevenue * REVENUE_POOL_RATES.short,
-    student: netRevenue * REVENUE_POOL_RATES.student,
-    long: netRevenue * REVENUE_POOL_RATES.long,
-  }
+): Pick<
+  SettlementReport,
+  'items' | 'creators' | 'poolSummaries' | 'totalCreatorSharePercent' | 'totalQualifiedMinutes' | 'totalWatchMinutes'
+> {
+  const poolTotals: Record<PaymentPool, number> = { short: 0, student: 0, documentary: 0, long: 0 }
+  const poolContentCounts: Record<PaymentPool, number> = { short: 0, student: 0, documentary: 0, long: 0 }
 
   const enriched = rows.map((row) => {
-    const pool = resolvePaymentPool(row.type, row.program)!
+    const pool = resolvePaymentPool(row.type, row.program, row.videoFormat)!
     poolTotals[pool] += row.qualifiedSeconds
     const completion = completionByContent.get(row.contentId)
     return { ...row, pool, completion }
   })
 
-  let unallocatedToPlooy = 0
+  let unallocatedPercent = 0
   const items: SettlementContentItem[] = enriched
     .filter((row) => row.qualifiedSeconds > 0)
     .map((row) => {
       const categoryTotal = poolTotals[row.pool]
-      const poolAmount = poolAmounts[row.pool]
-      let payoutAmount = 0
+      const poolRate = REVENUE_POOL_RATES[row.pool]
       let poolSharePercent = 0
+      let profitSharePercent = 0
 
       if (categoryTotal > 0) {
         poolSharePercent = Math.round((row.qualifiedSeconds / categoryTotal) * 1000) / 10
-        payoutAmount = Math.round((poolAmount * row.qualifiedSeconds) / categoryTotal)
+        profitSharePercent = Math.round(poolRate * (row.qualifiedSeconds / categoryTotal) * 1000) / 10
       }
 
       return {
@@ -317,6 +341,7 @@ function buildPayoutItems(
         program: row.program,
         pool: row.pool,
         poolLabel: POOL_LABELS[row.pool],
+        poolRatePercent: POOL_RATE_PERCENT[row.pool],
         creatorId: row.creatorId,
         creatorName: row.creatorName,
         studioName: row.studioName,
@@ -326,14 +351,15 @@ function buildPayoutItems(
         avgCompletionPercent: row.completion?.avgCompletionPercent ?? 0,
         qualifiedViewerPercent: row.completion?.qualifiedViewerPercent ?? 0,
         poolSharePercent,
-        payoutAmount,
+        profitSharePercent,
       }
     })
-    .sort((a, b) => b.payoutAmount - a.payoutAmount)
+    .sort((a, b) => b.profitSharePercent - a.profitSharePercent)
 
-  for (const pool of ['short', 'student', 'long'] as PaymentPool[]) {
+  for (const pool of ['short', 'student', 'documentary', 'long'] as PaymentPool[]) {
+    poolContentCounts[pool] = items.filter((item) => item.pool === pool).length
     if (poolTotals[pool] <= 0) {
-      unallocatedToPlooy += poolAmounts[pool]
+      unallocatedPercent += POOL_RATE_PERCENT[pool]
     }
   }
 
@@ -343,7 +369,7 @@ function buildPayoutItems(
     const existing = creatorMap.get(item.creatorId)
     if (existing) {
       existing.qualifiedMinutes += item.qualifiedMinutes
-      existing.payoutAmount += item.payoutAmount
+      existing.profitSharePercent = Math.round((existing.profitSharePercent + item.profitSharePercent) * 10) / 10
       existing.contentCount += 1
     } else {
       creatorMap.set(item.creatorId, {
@@ -351,27 +377,41 @@ function buildPayoutItems(
         creatorName: item.creatorName,
         studioName: item.studioName,
         qualifiedMinutes: item.qualifiedMinutes,
-        payoutAmount: item.payoutAmount,
+        profitSharePercent: item.profitSharePercent,
         contentCount: 1,
       })
     }
   }
 
+  const poolSummaries: SettlementPoolSummary[] = [
+    {
+      pool: 'plooy',
+      label: BRAND_NAME,
+      ratePercent: POOL_RATE_PERCENT.plooy,
+      effectiveRatePercent: POOL_RATE_PERCENT.plooy + unallocatedPercent,
+      qualifiedMinutes: 0,
+      contentCount: 0,
+    },
+    ...(['short', 'student', 'documentary', 'long'] as PaymentPool[]).map((pool) => ({
+      pool,
+      label: POOL_LABELS[pool],
+      ratePercent: POOL_RATE_PERCENT[pool],
+      effectiveRatePercent: poolTotals[pool] > 0 ? POOL_RATE_PERCENT[pool] : 0,
+      qualifiedMinutes: Math.round(poolTotals[pool] / 60),
+      contentCount: poolContentCounts[pool],
+    })),
+  ]
+
   const totalQualifiedMinutes = Math.round(rows.reduce((sum, row) => sum + row.qualifiedSeconds, 0) / 60)
   const totalWatchMinutes = Math.round(rows.reduce((sum, row) => sum + row.watchSeconds, 0) / 60)
-  const totalCreatorPayout = items.reduce((sum, item) => sum + item.payoutAmount, 0)
+  const totalCreatorSharePercent =
+    Math.round(items.reduce((sum, item) => sum + item.profitSharePercent, 0) * 10) / 10
 
   return {
     items,
-    creators: [...creatorMap.values()].sort((a, b) => b.payoutAmount - a.payoutAmount),
-    pools: {
-      plooy: Math.round(netRevenue * REVENUE_POOL_RATES.plooy + unallocatedToPlooy),
-      short: poolTotals.short > 0 ? Math.round(poolAmounts.short) : 0,
-      student: poolTotals.student > 0 ? Math.round(poolAmounts.student) : 0,
-      long: poolTotals.long > 0 ? Math.round(poolAmounts.long) : 0,
-      unallocatedToPlooy: Math.round(unallocatedToPlooy),
-    },
-    totalCreatorPayout,
+    creators: [...creatorMap.values()].sort((a, b) => b.profitSharePercent - a.profitSharePercent),
+    poolSummaries,
+    totalCreatorSharePercent,
     totalQualifiedMinutes,
     totalWatchMinutes,
   }
@@ -381,36 +421,30 @@ export function getSettlementReport(periodId: string): SettlementReport {
   parsePaymentPeriodId(periodId)
   ensureSettlementPeriodRow(periodId)
 
-  const row = dbGet<{
-    net_revenue: number
-    status: string
-    confirmed_at: string | null
-    paid_at: string | null
-  }>('SELECT net_revenue, status, confirmed_at, paid_at FROM payment_settlement_periods WHERE period_id = ?', [
-    periodId,
-  ])
+  const row = dbGet<{ status: string; confirmed_at: string | null; paid_at: string | null }>(
+    'SELECT status, confirmed_at, paid_at FROM payment_settlement_periods WHERE period_id = ?',
+    [periodId],
+  )
 
   const status = (row?.status ?? 'open') as SettlementStatus
-  const netRevenue = row?.net_revenue ?? 0
   const { start, endExclusive } = paymentPeriodDateRange(periodId)
   const watchRows = aggregateHalfYearWatch(periodId)
   const completionByContent = aggregateCompletionForRange(start, endExclusive)
-  const payout = buildPayoutItems(netRevenue, watchRows, completionByContent)
+  const share = buildShareItems(watchRows, completionByContent)
 
   return {
     periodId,
     label: paymentPeriodLabel(periodId),
     months: paymentPeriodMonths(periodId),
     status,
-    netRevenue,
     isEditable: status === 'open',
     confirmedAt: row?.confirmed_at ?? null,
     paidAt: row?.paid_at ?? null,
-    ...payout,
+    ...share,
   }
 }
 
-export function updateSettlementNetRevenue(periodId: string, netRevenue: number) {
+export function confirmSettlementPeriod(periodId: string) {
   parsePaymentPeriodId(periodId)
   ensureSettlementPeriodRow(periodId)
 
@@ -418,33 +452,7 @@ export function updateSettlementNetRevenue(periodId: string, netRevenue: number)
     periodId,
   ])
   if (row?.status !== 'open') {
-    throw new Error('Bu dönem kilitli; net gelir güncellenemez.')
-  }
-  if (!Number.isFinite(netRevenue) || netRevenue < 0) {
-    throw new Error('Geçerli bir net gelir girin.')
-  }
-
-  dbRun(
-    `UPDATE payment_settlement_periods SET net_revenue = ?, updated_at = ? WHERE period_id = ?`,
-    [Math.round(netRevenue), new Date().toISOString(), periodId],
-  )
-
-  return getSettlementReport(periodId)
-}
-
-export function confirmSettlementPeriod(periodId: string) {
-  parsePaymentPeriodId(periodId)
-  ensureSettlementPeriodRow(periodId)
-
-  const row = dbGet<{ status: string; net_revenue: number }>(
-    'SELECT status, net_revenue FROM payment_settlement_periods WHERE period_id = ?',
-    [periodId],
-  )
-  if (row?.status !== 'open') {
     throw new Error('Yalnızca açık dönemler onaylanabilir.')
-  }
-  if ((row.net_revenue ?? 0) <= 0) {
-    throw new Error('Onaylamadan önce net gelir girin.')
   }
 
   const now = new Date().toISOString()
