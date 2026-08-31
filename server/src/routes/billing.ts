@@ -3,7 +3,7 @@ import multer from 'multer'
 import path from 'node:path'
 import { v4 as uuid } from 'uuid'
 import { config, publicAssetUrl } from '../config.js'
-import { dbGet, dbRun, uploadsDir } from '../db.js'
+import { dbGet, dbRun, dbAll, uploadsDir } from '../db.js'
 import { createIyzicoCheckout, retrieveIyzicoCheckout } from '../services/iyzico.js'
 import { createPaytrToken, verifyPaytrCallback } from '../services/paytr.js'
 import { getBillingPlans } from '../services/billingPlansConfig.js'
@@ -12,6 +12,7 @@ import { getCreatorRegistrationPlanId, getPlan, isCreatorApplicationPlan, normal
 import { activateCreatorRegistration } from '../services/creatorRegistration.js'
 import { canUserPlay, getUserSubscription, isSubscriptionRequired } from '../services/subscription.js'
 import { activateUserSubscription } from '../services/subscriptionActivation.js'
+import { cancelUserSubscription } from '../services/subscriptionCancellation.js'
 import { requireAuth, getCreatorForUser, type AuthRequest } from '../middleware/auth.js'
 import type { UserRow } from '../types.js'
 
@@ -63,7 +64,7 @@ router.get('/can-play', requireAuth, (req: AuthRequest, res) => {
 
 router.get('/subscription', requireAuth, (req: AuthRequest, res) => {
   const user = dbGet<UserRow>(
-    'SELECT subscription_status, subscription_plan, subscription_started_at, subscription_expires_at, role FROM users WHERE id = ?',
+    'SELECT role, subscription_status, subscription_plan, subscription_started_at, subscription_expires_at, subscription_cancelled_at FROM users WHERE id = ?',
     [req.auth!.userId],
   )
 
@@ -79,16 +80,67 @@ router.get('/subscription', requireAuth, (req: AuthRequest, res) => {
   const expiresAt = user?.subscription_expires_at ?? null
   const isExpired = Boolean(expiresAt && new Date(expiresAt) < new Date())
   const status =
-    user?.subscription_status === 'active' && isExpired ? 'expired' : (user?.subscription_status ?? 'free')
+    user?.subscription_status === 'active' && isExpired
+      ? 'expired'
+      : user?.subscription_status === 'cancelled' && isExpired
+        ? 'expired'
+        : (user?.subscription_status ?? 'free')
 
   res.json({
     status,
     plan: user?.subscription_plan ?? null,
     startedAt,
     expiresAt,
+    cancelledAt: user?.subscription_cancelled_at ?? null,
     canPlay: canUserPlay(user),
     paymentRequired: isSubscriptionRequired(),
+    canCancel: user?.role === 'user' && user?.subscription_status === 'active',
   })
+})
+
+router.get('/invoices', requireAuth, (req: AuthRequest, res) => {
+  const rows = dbAll<{
+    id: string
+    plan_id: string
+    provider: string
+    amount: number
+    status: string
+    merchant_oid: string
+    created_at: string
+    completed_at: string | null
+  }>(
+    `SELECT id, plan_id, provider, amount, status, merchant_oid, created_at, completed_at
+     FROM payment_orders
+     WHERE user_id = ? AND status = 'paid'
+     ORDER BY completed_at DESC, created_at DESC`,
+    [req.auth!.userId],
+  )
+
+  const plans = getBillingPlans()
+  res.json({
+    invoices: rows.map((row) => {
+      const plan = plans.find((entry) => entry.id === row.plan_id)
+      return {
+        id: row.id,
+        merchantOid: row.merchant_oid,
+        planId: row.plan_id,
+        planName: plan?.name ?? row.plan_id,
+        provider: row.provider,
+        amountTl: Math.round(row.amount / 100),
+        paidAt: row.completed_at ?? row.created_at,
+        status: row.status,
+      }
+    }),
+  })
+})
+
+router.post('/subscription/cancel', requireAuth, (req: AuthRequest, res) => {
+  try {
+    const result = cancelUserSubscription(req.auth!.userId)
+    res.json({ ok: true, ...result })
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'Abonelik iptal edilemedi.' })
+  }
 })
 
 router.post('/student-id', requireAuth, studentIdUpload.single('file'), (req: AuthRequest, res) => {

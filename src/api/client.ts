@@ -885,10 +885,34 @@ export async function fetchSubscription(): Promise<{
   plan: string | null
   startedAt: string | null
   expiresAt: string | null
+  cancelledAt: string | null
   canPlay: boolean
   paymentRequired: boolean
+  canCancel: boolean
 }> {
   return api('/api/billing/subscription')
+}
+
+export interface BillingInvoice {
+  id: string
+  merchantOid: string
+  planId: string
+  planName: string
+  provider: string
+  amountTl: number
+  paidAt: string
+  status: string
+}
+
+export async function fetchBillingInvoices() {
+  return api<{ invoices: BillingInvoice[] }>('/api/billing/invoices')
+}
+
+export async function cancelSubscription() {
+  return api<{ ok: boolean; status: string; cancelledAt: string; expiresAt: string | null }>(
+    '/api/billing/subscription/cancel',
+    { method: 'POST' },
+  )
 }
 
 export async function fetchCanPlay(): Promise<{ allowed: boolean; paymentRequired: boolean }> {

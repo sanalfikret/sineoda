@@ -11,7 +11,7 @@ export function canUserPlay(user: UserSubscription | null | undefined) {
   if (!user) return false
   if (user.role === 'admin' || user.role === 'manager') return true
   if (!config.requireSubscription) return true
-  if (user.subscription_status !== 'active') return false
+  if (user.subscription_status !== 'active' && user.subscription_status !== 'cancelled') return false
   if (user.subscription_expires_at && new Date(user.subscription_expires_at) < new Date()) {
     return false
   }

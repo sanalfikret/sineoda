@@ -130,6 +130,7 @@ function runMigrations() {
   ensureColumn('users', 'subscription_plan', 'TEXT')
   ensureColumn('users', 'subscription_expires_at', 'TEXT')
   ensureColumn('users', 'subscription_started_at', 'TEXT')
+  ensureColumn('users', 'subscription_cancelled_at', 'TEXT')
   ensureColumn('users', 'pending_plan_id', 'TEXT')
   ensureColumn('users', 'student_id_url', 'TEXT')
   ensureColumn('users', 'phone', 'TEXT')

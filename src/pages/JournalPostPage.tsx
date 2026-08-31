@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { fetchJournalPost, resolveMediaUrl } from '../api/client'
 import { useOptionalContentUI } from '../components/AppShell'
+import { PageMeta } from '../components/PageMeta'
 import { resolveJournalPost } from '../data/demoJournal'
 import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
@@ -48,6 +49,12 @@ export function JournalPostPage() {
 
   return (
     <>
+      <PageMeta
+        title={post.title}
+        description={post.excerpt || post.title}
+        image={post.coverImage ? resolveMediaUrl(post.coverImage) : null}
+        path={`/dergi/${post.slug}`}
+      />
       {!isMember && (
         <header className="safe-top border-b border-white/5 px-4 py-5 sm:px-6">
           <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">

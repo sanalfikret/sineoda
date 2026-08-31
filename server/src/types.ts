@@ -20,6 +20,7 @@ export interface UserRow {
   subscription_plan?: string | null
   subscription_expires_at?: string | null
   subscription_started_at?: string | null
+  subscription_cancelled_at?: string | null
   pending_plan_id?: string | null
   student_id_url?: string | null
   phone?: string | null

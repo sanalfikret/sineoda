@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { SiteFooter } from '../components/SiteFooter'
+import { PageMeta } from '../components/PageMeta'
 import { LandingHeader } from '../components/landing/LandingHeader'
 import { LandingPageBlocks } from '../components/landing/LandingPageBlocks'
 import {
@@ -179,6 +180,7 @@ export function LandingPage() {
 
   return (
     <div className="min-h-dvh bg-plooy-bg text-white">
+      <PageMeta path="/" />
       <LandingHeader scrolled={scrolled} hiddenNavIds={hiddenNavIds} />
       <LandingPageBlocks
         ctx={{

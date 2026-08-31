@@ -1,6 +1,8 @@
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { resolveMediaUrl } from '../api/client'
 import { AppShell, useContentUI } from '../components/AppShell'
 import { ContentDetailView } from '../components/ContentDetailView'
+import { PageMeta } from '../components/PageMeta'
 import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
 import { isContentAllowedForKids } from '../utils/contentRating'
@@ -41,13 +43,21 @@ function ContentDetailContent() {
   }
 
   return (
-    <ContentDetailView
-      item={item}
-      onPlay={openPlayer}
-      onBack={handleBack}
-      mode="page"
-      kidsProfileBlocked={kidsProfileBlocked}
-    />
+    <>
+      <PageMeta
+        title={item.title}
+        description={item.description}
+        image={resolveMediaUrl(item.poster)}
+        path={`/icerik/${item.id}`}
+      />
+      <ContentDetailView
+        item={item}
+        onPlay={openPlayer}
+        onBack={handleBack}
+        mode="page"
+        kidsProfileBlocked={kidsProfileBlocked}
+      />
+    </>
   )
 }
 
