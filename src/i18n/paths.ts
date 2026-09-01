@@ -136,3 +136,24 @@ export function localePaths(tr: string, en: string): [string, string] {
 export function isAdminOrInternalPath(pathname: string): boolean {
   return pathname.startsWith('/admin') || pathname.startsWith('/api')
 }
+
+/** Paths reachable without signing in — safe login "back" targets. */
+export function isPublicPath(pathWithQuery: string): boolean {
+  const path = pathWithQuery.split('?')[0]
+  if (path === '/' || path === '/en') return true
+  if (path.startsWith('/yasal/') || path.startsWith('/en/legal/')) return true
+  if (path.startsWith('/dergi/') || path.startsWith('/en/journal/')) return true
+  for (const pair of ROUTE_PAIRS) {
+    if (matchPattern(pair.tr, path) || matchPattern(pair.en, path)) {
+      const authRequired = [
+        '/hesap', '/profiller', '/mesajlar', '/listem', '/icerik/:id',
+        '/diziler', '/filmler', '/belgeseller', '/stand-up', '/klasikler',
+        '/dikey-diziler', '/genc-sinema', '/cekim-notlari', '/kisa-filmler',
+        '/creator', '/creator/odeme',
+      ]
+      const trAuth = authRequired.some((p) => matchPattern(p, pair.tr))
+      return !trAuth
+    }
+  }
+  return false
+}

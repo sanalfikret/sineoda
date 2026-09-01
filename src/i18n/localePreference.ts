@@ -1,5 +1,6 @@
 import {
   DEFAULT_LOCALE,
+  detectLocale,
   LOCALE_MANUAL_KEY,
   LOCALE_STORAGE_KEY,
   type Locale,
@@ -38,4 +39,15 @@ export function detectBrowserLocale(): Locale {
   const lang = (navigator.language || '').toLowerCase()
   if (lang.startsWith('en')) return 'en'
   return DEFAULT_LOCALE
+}
+
+/** Locale for links when URL prefix and saved preference may disagree. */
+export function getEffectiveLocale(pathname?: string): Locale {
+  if (isLocaleManual()) {
+    const saved = getSavedLocale()
+    if (saved) return saved
+  }
+  const path =
+    pathname ?? (typeof window !== 'undefined' ? window.location.pathname : '/')
+  return detectLocale(path)
 }
