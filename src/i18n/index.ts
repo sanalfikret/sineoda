@@ -14,6 +14,8 @@ import trAccount from '../locales/tr/account.json'
 import enAccount from '../locales/en/account.json'
 import trMyList from '../locales/tr/myList.json'
 import enMyList from '../locales/en/myList.json'
+import trWatchHistory from '../locales/tr/watchHistory.json'
+import enWatchHistory from '../locales/en/watchHistory.json'
 import trBrowse from '../locales/tr/browse.json'
 import enBrowse from '../locales/en/browse.json'
 import trContent from '../locales/tr/content.json'
@@ -50,6 +52,7 @@ const namespaces = [
   'profiles',
   'account',
   'myList',
+  'watchHistory',
   'browse',
   'content',
   'creator',
@@ -71,6 +74,7 @@ void i18n.use(initReactI18next).init({
       profiles: trProfiles,
       account: trAccount,
       myList: trMyList,
+      watchHistory: trWatchHistory,
       browse: trBrowse,
       content: trContent,
       creator: trCreator,
@@ -88,6 +92,7 @@ void i18n.use(initReactI18next).init({
       profiles: enProfiles,
       account: enAccount,
       myList: enMyList,
+      watchHistory: enWatchHistory,
       browse: enBrowse,
       content: enContent,
       creator: enCreator,

@@ -135,8 +135,9 @@ router.get('/all', requireAuth, (req: AuthRequest, res) => {
     total_watched_seconds: number
     qualified: number
     qualified_seconds: number
+    updated_at: string
   }>(
-    'SELECT content_id, episode_id, position_seconds, duration_seconds, total_watched_seconds, qualified, qualified_seconds FROM watch_progress WHERE profile_id = ?',
+    'SELECT content_id, episode_id, position_seconds, duration_seconds, total_watched_seconds, qualified, qualified_seconds, updated_at FROM watch_progress WHERE profile_id = ? ORDER BY updated_at DESC',
     [profileId],
   )
 
@@ -149,6 +150,7 @@ router.get('/all', requireAuth, (req: AuthRequest, res) => {
       totalWatched: row.total_watched_seconds,
       qualified: row.qualified === 1,
       qualifiedSeconds: row.qualified_seconds,
+      updatedAt: row.updated_at,
     })),
   })
 })

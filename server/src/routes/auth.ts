@@ -366,6 +366,30 @@ router.post('/refresh', (req, res) => {
 
 const MAX_PROFILES = 4
 
+router.post('/change-password', requireAuth, (req: AuthRequest, res) => {
+  const currentPassword = String(req.body.currentPassword ?? '')
+  const newPassword = String(req.body.newPassword ?? '')
+
+  if (!currentPassword || newPassword.length < 6) {
+    res.status(400).json({ error: 'Mevcut şifre gerekli; yeni şifre en az 6 karakter olmalı.' })
+    return
+  }
+
+  const row = dbGet<{ password_hash: string }>('SELECT password_hash FROM users WHERE id = ?', [
+    req.auth!.userId,
+  ])
+  if (!row || !bcrypt.compareSync(currentPassword, row.password_hash)) {
+    res.status(401).json({ error: 'Mevcut şifre hatalı.' })
+    return
+  }
+
+  dbRun('UPDATE users SET password_hash = ? WHERE id = ?', [
+    bcrypt.hashSync(newPassword, 10),
+    req.auth!.userId,
+  ])
+  res.json({ ok: true })
+})
+
 router.patch('/me', requireAuth, (req: AuthRequest, res) => {
   const name = String(req.body.name ?? '').trim()
   if (!name) {

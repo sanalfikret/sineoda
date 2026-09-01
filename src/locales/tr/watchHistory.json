@@ -1,0 +1,11 @@
+{
+  "title": "İzleme Geçmişi",
+  "subtitle": "Kaldığın yerden devam et veya tekrar izle",
+  "backToAccount": "Hesaba dön",
+  "sectionContinue": "Devam et",
+  "sectionCompleted": "Tamamlanan",
+  "continue": "Devam et · {{time}}",
+  "watchAgain": "Tekrar izle",
+  "emptyTitle": "Henüz izleme kaydı yok",
+  "emptyBody": "Bir film veya dizi oynattığında burada görünür."
+}

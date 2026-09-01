@@ -444,6 +444,13 @@ export async function createProfileRequest(
   })
 }
 
+export async function changePasswordRequest(currentPassword: string, newPassword: string) {
+  return api<{ ok: boolean }>('/api/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  })
+}
+
 export async function updateAccountRequest(name: string): Promise<{ user: User }> {
   return api<{ user: User }>('/api/auth/me', {
     method: 'PATCH',
@@ -1088,6 +1095,9 @@ export async function fetchAllWatchProgress() {
       position: number
       duration: number
       totalWatched: number
+      qualified?: boolean
+      qualifiedSeconds?: number
+      updatedAt?: string
     }>
   }>('/api/watch-progress/all')
 }

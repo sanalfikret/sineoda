@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { fetchBillingPlans, fetchBillingInvoices, fetchLegalConsents, fetchSubscription, cancelSubscription, type BillingInvoice, type LegalConsentRecord } from '../api/client'
+import { fetchBillingPlans, fetchBillingInvoices, fetchLegalConsents, fetchSubscription, cancelSubscription, changePasswordRequest, type BillingInvoice, type LegalConsentRecord } from '../api/client'
+import { DailyWatchQuotaCard } from '../components/member/DailyWatchQuotaCard'
 import { PageFooter } from '../components/PageFooter'
 import { PageMeta } from '../components/PageMeta'
 import { InstallAppStatusCard } from '../components/InstallAppButton'
@@ -80,6 +81,10 @@ export function AccountPage() {
   const [expandedConsentId, setExpandedConsentId] = useState<string | null>(null)
   const [invoices, setInvoices] = useState<BillingInvoice[]>([])
   const [cancelling, setCancelling] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [savingPassword, setSavingPassword] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -207,6 +212,30 @@ export function AccountPage() {
     }
   }
 
+  const handleChangePassword = async () => {
+    if (newPassword.length < 6) {
+      setMessage(t('password.tooShort'))
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setMessage(t('password.mismatch'))
+      return
+    }
+    setSavingPassword(true)
+    setMessage('')
+    try {
+      await changePasswordRequest(currentPassword, newPassword)
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setMessage(t('password.success'))
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : t('password.failed'))
+    } finally {
+      setSavingPassword(false)
+    }
+  }
+
   const subscriptionStatusLabel = (status: string) => {
     const key = ['active', 'expired', 'cancelled'].includes(status) ? status : 'free'
     return t(`status.${key}`)
@@ -264,6 +293,18 @@ export function AccountPage() {
           >
             {savingAccount ? t('actions.saving') : t('actions.saveAccount')}
           </button>
+        </section>
+
+        <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold">{t('dailyQuota.title')}</h2>
+            <Link to={localizePath('/izleme-gecmisi')} className="text-sm text-plooy-gold hover:underline">
+              {t('dailyQuota.viewHistory')}
+            </Link>
+          </div>
+          <div className="mt-4">
+            <DailyWatchQuotaCard />
+          </div>
         </section>
 
         <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
@@ -325,6 +366,51 @@ export function AccountPage() {
               <span className="text-white">{activeProfile.name}</span>
             </div>
           )}
+        </section>
+
+        <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
+          <h2 className="text-lg font-semibold">{t('password.title')}</h2>
+          <p className="mt-1 text-sm text-plooy-muted">{t('password.hint')}</p>
+          <div className="mt-4 space-y-3">
+            <label className="block space-y-2">
+              <span className="text-xs font-medium uppercase tracking-wide text-plooy-muted">{t('password.current')}</span>
+              <input
+                type="password"
+                autoComplete="current-password"
+                value={currentPassword}
+                onChange={(event) => setCurrentPassword(event.target.value)}
+                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 outline-none focus:border-plooy-gold"
+              />
+            </label>
+            <label className="block space-y-2">
+              <span className="text-xs font-medium uppercase tracking-wide text-plooy-muted">{t('password.new')}</span>
+              <input
+                type="password"
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 outline-none focus:border-plooy-gold"
+              />
+            </label>
+            <label className="block space-y-2">
+              <span className="text-xs font-medium uppercase tracking-wide text-plooy-muted">{t('password.confirm')}</span>
+              <input
+                type="password"
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 outline-none focus:border-plooy-gold"
+              />
+            </label>
+          </div>
+          <button
+            type="button"
+            disabled={savingPassword || !currentPassword || !newPassword}
+            onClick={() => void handleChangePassword()}
+            className="mt-4 rounded-lg bg-plooy-gold px-4 py-2.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
+          >
+            {savingPassword ? t('password.saving') : t('password.submit')}
+          </button>
         </section>
 
         <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">

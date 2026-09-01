@@ -14,6 +14,7 @@ import { LegalPage } from '../pages/LegalPage'
 import { LoginPage } from '../pages/LoginPage'
 import { MessagesPage } from '../pages/MessagesPage'
 import { MyListPage } from '../pages/MyListPage'
+import { WatchHistoryPage } from '../pages/WatchHistoryPage'
 import { PaytrCheckoutPage } from '../pages/PaytrCheckoutPage'
 import { PaymentFailPage } from '../pages/PaymentFailPage'
 import { PaymentSuccessPage } from '../pages/PaymentSuccessPage'
@@ -118,6 +119,21 @@ export function publicRoutes() {
             <AuthenticatedProviders>
               <NavRouteGuard>
                 <MyListPage />
+              </NavRouteGuard>
+            </AuthenticatedProviders>
+          </ProtectedRoute>
+        </SiteModeGuard>
+      ),
+    }),
+    ...localeRoutes({
+      tr: '/izleme-gecmisi',
+      en: '/en/watch-history',
+      element: (
+        <SiteModeGuard>
+          <ProtectedRoute requireProfile requireSubscription>
+            <AuthenticatedProviders>
+              <NavRouteGuard>
+                <WatchHistoryPage />
               </NavRouteGuard>
             </AuthenticatedProviders>
           </ProtectedRoute>

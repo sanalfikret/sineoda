@@ -361,6 +361,15 @@ export function Header() {
                       >
                         {t('nav.account')}
                       </Link>
+                      {activeProfile && (
+                        <Link
+                          to={localizePath('/izleme-gecmisi')}
+                          className="block px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          {t('nav.watchHistory')}
+                        </Link>
+                      )}
                       <button
                         type="button"
                         className="block w-full px-4 py-2.5 text-left text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"

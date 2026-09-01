@@ -96,6 +96,13 @@
     "ariaLabel": "Age rating: {{badge}}"
   },
   "playbackGuard": {
+    "idleTitle": "Still watching?",
+    "idleBody": "Playback paused due to inactivity. Continue watching?",
+    "dailyLimitTitle": "Daily limit reached",
+    "dailyLimitBody": "You've used today's watch allowance. Come back tomorrow.",
+    "otherDeviceTitle": "Another device is playing",
+    "otherDeviceBody": "Playback is active on another device. Only one screen at a time.",
+    "continue": "Continue watching",
     "kidsBlockedTitle": "Kids profile",
     "kidsBlockedBody": "This content is not suitable for kids profiles."
   }
