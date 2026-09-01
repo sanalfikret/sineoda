@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Tek komut deploy — PuTTY: cd ~/plooy && bash deploy/deploy-vps.sh
+# Tek komut deploy — PuTTY: cd /root/plooy && bash deploy/deploy-vps.sh
 set -euo pipefail
 
 if [ -f "$(dirname "$0")/rebuild-vps.sh" ]; then
   ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 else
   ROOT=""
-  for candidate in /opt/Plooy /opt/sineoda /opt/plooy /root/plooy /root/Plooy /root/sineoda; do
+  for candidate in /root/plooy /root/Plooy ~/plooy /opt/Plooy /opt/sineoda /opt/plooy; do
     if [ -f "$candidate/deploy/rebuild-vps.sh" ]; then
       ROOT="$candidate"
       break
