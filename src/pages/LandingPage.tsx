@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { SiteFooter } from '../components/SiteFooter'
 import { PageMeta } from '../components/PageMeta'
-import { LandingHeader } from '../components/landing/LandingHeader'
+import { GuestSiteShell } from '../components/GuestSiteShell'
 import { LandingPageBlocks } from '../components/landing/LandingPageBlocks'
 import {
   DEMO_LANDING_SHOWCASES,
@@ -61,7 +61,6 @@ export function LandingPage() {
   const [cekimSections, setCekimSections] = useState<CekimNotlariSection[]>([])
   const [blockTitles, setBlockTitles] = useState<Record<string, string>>({})
   const [hiddenNavIds, setHiddenNavIds] = useState<SiteNavId[]>([])
-  const [scrolled, setScrolled] = useState(false)
   const [ready, setReady] = useState(false)
 
   const loadLanding = useCallback(async () => {
@@ -145,12 +144,6 @@ export function LandingPage() {
     void loadLanding().catch(() => setReady(true))
   }, [loadLanding])
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
   const lookupCatalog = useMemo(() => {
     const seen = new Set<string>()
     return [...catalog, ...studentPicks, ...studentMonthlyWinners, ...sliderItems, ...cekimCatalog].filter((item) => {
@@ -179,29 +172,29 @@ export function LandingPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-plooy-bg text-white">
-      <PageMeta path="/" />
-      <LandingHeader scrolled={scrolled} hiddenNavIds={hiddenNavIds} />
-      <LandingPageBlocks
-        ctx={{
-          heroConfig,
-          backgroundContent,
-          featuredItem: displayFeaturedItem,
-          fallbackImage: FALLBACK_HERO,
-          sections,
-          blockTitles,
-          sliderItems,
-          studentPicks,
-          studentMonthlyWinners,
-          showcases,
-          layout,
-          customBlocks,
-          hiddenNavIds,
-          catalog: lookupCatalog,
-          cekimSections,
-        }}
-      />
-      <SiteFooter />
-    </div>
+    <GuestSiteShell footer={<SiteFooter />}>
+      <div className="min-h-dvh bg-plooy-bg text-white">
+        <PageMeta path="/" />
+        <LandingPageBlocks
+          ctx={{
+            heroConfig,
+            backgroundContent,
+            featuredItem: displayFeaturedItem,
+            fallbackImage: FALLBACK_HERO,
+            sections,
+            blockTitles,
+            sliderItems,
+            studentPicks,
+            studentMonthlyWinners,
+            showcases,
+            layout,
+            customBlocks,
+            hiddenNavIds,
+            catalog: lookupCatalog,
+            cekimSections,
+          }}
+        />
+      </div>
+    </GuestSiteShell>
   )
 }
