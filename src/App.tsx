@@ -8,7 +8,7 @@ import { SearchProvider } from './context/SearchContext'
 import { WatchlistProvider } from './context/WatchlistContext'
 import { useAuth } from './context/AuthContext'
 import { useLocale } from './i18n/LocaleContext'
-import { LocaleRoute } from './i18n/LocaleRoute'
+import { localeRoutes } from './i18n/LocaleRoute'
 import { AdminAdsPage } from './pages/admin/AdminAdsPage'
 import { AdminCategoriesPage } from './pages/admin/AdminCategoriesPage'
 import { AdminContentFormPage } from './pages/admin/AdminContentFormPage'
@@ -160,68 +160,71 @@ function App() {
     <>
       <WebSiteStructuredData />
     <Routes>
-      <LocaleRoute tr="/" en="/en" element={<HomeRoute />} />
-      <LocaleRoute tr="/tanitim" en="/en/about" element={<TanitimRoute />} />
-      <LocaleRoute tr="/giris" en="/en/login" element={<SiteModeGuard><LoginPage /></SiteModeGuard>} />
-      <LocaleRoute tr="/kayit" en="/en/signup" element={<SiteModeGuard mode="signup"><SignupPage /></SiteModeGuard>} />
-      <LocaleRoute tr="/eposta-dogrula" en="/en/verify-email" element={<VerifyEmailPage />} />
-      <LocaleRoute tr="/sifremi-unuttum" en="/en/forgot-password" element={<ForgotPasswordPage />} />
-      <LocaleRoute tr="/sifre-sifirla" en="/en/reset-password" element={<ResetPasswordPage />} />
-      <LocaleRoute tr="/planlar" en="/en/plans" element={<SiteModeGuard mode="signup"><PricingPage /></SiteModeGuard>} />
-      <LocaleRoute tr="/yasal/:slug" en="/en/legal/:slug" element={<LegalPage />} />
-      <LocaleRoute tr="/iletisim" en="/en/contact" element={<ContactPage />} />
-      <LocaleRoute
-        tr="/dergi"
-        en="/en/journal"
-        element={
+      {localeRoutes({ tr: '/', en: '/en', element: <HomeRoute /> })}
+      {localeRoutes({ tr: '/tanitim', en: '/en/about', element: <TanitimRoute /> })}
+      {localeRoutes({ tr: '/giris', en: '/en/login', element: <SiteModeGuard><LoginPage /></SiteModeGuard> })}
+      {localeRoutes({ tr: '/kayit', en: '/en/signup', element: <SiteModeGuard mode="signup"><SignupPage /></SiteModeGuard> })}
+      {localeRoutes({ tr: '/eposta-dogrula', en: '/en/verify-email', element: <VerifyEmailPage /> })}
+      {localeRoutes({ tr: '/sifremi-unuttum', en: '/en/forgot-password', element: <ForgotPasswordPage /> })}
+      {localeRoutes({ tr: '/sifre-sifirla', en: '/en/reset-password', element: <ResetPasswordPage /> })}
+      {localeRoutes({ tr: '/planlar', en: '/en/plans', element: <SiteModeGuard mode="signup"><PricingPage /></SiteModeGuard> })}
+      {localeRoutes({ tr: '/yasal/:slug', en: '/en/legal/:slug', element: <LegalPage /> })}
+      {localeRoutes({ tr: '/iletisim', en: '/en/contact', element: <ContactPage /> })}
+      {localeRoutes({
+        tr: '/dergi',
+        en: '/en/journal',
+        element: (
           <SiteModeGuard>
             <NavRouteGuard>
               <JournalLayout />
             </NavRouteGuard>
           </SiteModeGuard>
-        }
-      >
-        <Route index element={<JournalListPage />} />
-        <Route path=":slug" element={<JournalPostPage />} />
-      </LocaleRoute>
-      <LocaleRoute tr="/odeme/paytr" en="/en/payment/paytr" element={<PaytrCheckoutPage />} />
-      <LocaleRoute tr="/odeme/basarili" en="/en/payment/success" element={<PaymentSuccessPage />} />
-      <LocaleRoute tr="/odeme/basarisiz" en="/en/payment/failed" element={<PaymentFailPage />} />
-      <LocaleRoute
-        tr="/hesap"
-        en="/en/account"
-        element={
+        ),
+        children: (
+          <>
+            <Route index element={<JournalListPage />} />
+            <Route path=":slug" element={<JournalPostPage />} />
+          </>
+        ),
+      })}
+      {localeRoutes({ tr: '/odeme/paytr', en: '/en/payment/paytr', element: <PaytrCheckoutPage /> })}
+      {localeRoutes({ tr: '/odeme/basarili', en: '/en/payment/success', element: <PaymentSuccessPage /> })}
+      {localeRoutes({ tr: '/odeme/basarisiz', en: '/en/payment/failed', element: <PaymentFailPage /> })}
+      {localeRoutes({
+        tr: '/hesap',
+        en: '/en/account',
+        element: (
           <ProtectedRoute>
             <AccountPage />
           </ProtectedRoute>
-        }
-      />
-      <LocaleRoute
-        tr="/profiller"
-        en="/en/profiles"
-        element={
+        ),
+      })}
+      {localeRoutes({
+        tr: '/profiller',
+        en: '/en/profiles',
+        element: (
           <SiteModeGuard>
             <ProtectedRoute requireSubscription>
               <ProfilesPage />
             </ProtectedRoute>
           </SiteModeGuard>
-        }
-      />
-      <LocaleRoute
-        tr="/mesajlar"
-        en="/en/messages"
-        element={
+        ),
+      })}
+      {localeRoutes({
+        tr: '/mesajlar',
+        en: '/en/messages',
+        element: (
           <ProtectedRoute>
             <AuthenticatedProviders>
               <MessagesPage />
             </AuthenticatedProviders>
           </ProtectedRoute>
-        }
-      />
-      <LocaleRoute
-        tr="/listem"
-        en="/en/my-list"
-        element={
+        ),
+      })}
+      {localeRoutes({
+        tr: '/listem',
+        en: '/en/my-list',
+        element: (
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
               <AuthenticatedProviders>
@@ -231,12 +234,12 @@ function App() {
               </AuthenticatedProviders>
             </ProtectedRoute>
           </SiteModeGuard>
-        }
-      />
-      <LocaleRoute
-        tr="/icerik/:id"
-        en="/en/content/:id"
-        element={
+        ),
+      })}
+      {localeRoutes({
+        tr: '/icerik/:id',
+        en: '/en/content/:id',
+        element: (
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
               <AuthenticatedProviders>
@@ -244,12 +247,12 @@ function App() {
               </AuthenticatedProviders>
             </ProtectedRoute>
           </SiteModeGuard>
-        }
-      />
-      <LocaleRoute
-        tr="/diziler"
-        en="/en/series"
-        element={
+        ),
+      })}
+      {localeRoutes({
+        tr: '/diziler',
+        en: '/en/series',
+        element: (
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
               <AuthenticatedProviders>
@@ -259,12 +262,12 @@ function App() {
               </AuthenticatedProviders>
             </ProtectedRoute>
           </SiteModeGuard>
-        }
-      />
-      <LocaleRoute
-        tr="/filmler"
-        en="/en/films"
-        element={
+        ),
+      })}
+      {localeRoutes({
+        tr: '/filmler',
+        en: '/en/films',
+        element: (
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
               <AuthenticatedProviders>
@@ -274,12 +277,12 @@ function App() {
               </AuthenticatedProviders>
             </ProtectedRoute>
           </SiteModeGuard>
-        }
-      />
-      <LocaleRoute
-        tr="/belgeseller"
-        en="/en/documentaries"
-        element={
+        ),
+      })}
+      {localeRoutes({
+        tr: '/belgeseller',
+        en: '/en/documentaries',
+        element: (
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
               <AuthenticatedProviders>
@@ -289,12 +292,12 @@ function App() {
               </AuthenticatedProviders>
             </ProtectedRoute>
           </SiteModeGuard>
-        }
-      />
-      <LocaleRoute
-        tr="/stand-up"
-        en="/en/stand-up"
-        element={
+        ),
+      })}
+      {localeRoutes({
+        tr: '/stand-up',
+        en: '/en/stand-up',
+        element: (
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
               <AuthenticatedProviders>
@@ -304,12 +307,12 @@ function App() {
               </AuthenticatedProviders>
             </ProtectedRoute>
           </SiteModeGuard>
-        }
-      />
-      <LocaleRoute
-        tr="/klasikler"
-        en="/en/classics"
-        element={
+        ),
+      })}
+      {localeRoutes({
+        tr: '/klasikler',
+        en: '/en/classics',
+        element: (
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
               <AuthenticatedProviders>
@@ -319,12 +322,12 @@ function App() {
               </AuthenticatedProviders>
             </ProtectedRoute>
           </SiteModeGuard>
-        }
-      />
-      <LocaleRoute
-        tr="/dikey-diziler"
-        en="/en/vertical-series"
-        element={
+        ),
+      })}
+      {localeRoutes({
+        tr: '/dikey-diziler',
+        en: '/en/vertical-series',
+        element: (
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
               <AuthenticatedProviders>
@@ -334,12 +337,12 @@ function App() {
               </AuthenticatedProviders>
             </ProtectedRoute>
           </SiteModeGuard>
-        }
-      />
-      <LocaleRoute
-        tr="/genc-sinema"
-        en="/en/student-cinema"
-        element={
+        ),
+      })}
+      {localeRoutes({
+        tr: '/genc-sinema',
+        en: '/en/student-cinema',
+        element: (
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
               <AuthenticatedProviders>
@@ -349,12 +352,12 @@ function App() {
               </AuthenticatedProviders>
             </ProtectedRoute>
           </SiteModeGuard>
-        }
-      />
-      <LocaleRoute
-        tr="/cekim-notlari"
-        en="/en/production-notes"
-        element={
+        ),
+      })}
+      {localeRoutes({
+        tr: '/cekim-notlari',
+        en: '/en/production-notes',
+        element: (
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
               <AuthenticatedProviders>
@@ -364,12 +367,12 @@ function App() {
               </AuthenticatedProviders>
             </ProtectedRoute>
           </SiteModeGuard>
-        }
-      />
-      <LocaleRoute
-        tr="/kisa-filmler"
-        en="/en/short-films"
-        element={
+        ),
+      })}
+      {localeRoutes({
+        tr: '/kisa-filmler',
+        en: '/en/short-films',
+        element: (
           <SiteModeGuard>
             <ProtectedRoute requireProfile requireSubscription>
               <AuthenticatedProviders>
@@ -377,30 +380,30 @@ function App() {
               </AuthenticatedProviders>
             </ProtectedRoute>
           </SiteModeGuard>
-        }
-      />
+        ),
+      })}
 
       <Route path="/admin/giris" element={<AdminLoginPage />} />
-      <LocaleRoute tr="/creator/giris" en="/en/creator/login" element={<CreatorLoginPage />} />
-      <LocaleRoute tr="/creator/kayit" en="/en/creator/register" element={<CreatorRegisterPage />} />
-      <LocaleRoute
-        tr="/creator/odeme"
-        en="/en/creator/payment"
-        element={
+      {localeRoutes({ tr: '/creator/giris', en: '/en/creator/login', element: <CreatorLoginPage /> })}
+      {localeRoutes({ tr: '/creator/kayit', en: '/en/creator/register', element: <CreatorRegisterPage /> })}
+      {localeRoutes({
+        tr: '/creator/odeme',
+        en: '/en/creator/payment',
+        element: (
           <CreatorRoute>
             <CreatorPaymentPage />
           </CreatorRoute>
-        }
-      />
-      <LocaleRoute
-        tr="/creator"
-        en="/en/creator"
-        element={
+        ),
+      })}
+      {localeRoutes({
+        tr: '/creator',
+        en: '/en/creator',
+        element: (
           <CreatorRoute>
             <CreatorDashboardPage />
           </CreatorRoute>
-        }
-      />
+        ),
+      })}
       <Route
         path="/admin"
         element={
