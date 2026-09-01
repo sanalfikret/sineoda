@@ -1,9 +1,9 @@
 # Bilgisayardan VPS'e kod aktar + rebuild (GitHub gerekmez)
 # Kullanım: powershell -File deploy/sync-to-vps.ps1
-# İsteğe bağlı: -Host "root@31.142.128.250" -RemoteDir "/opt/sineoda"
+# Fikret VPS: powershell -File deploy/sync-to-vps.ps1 -Remote "root@31.42.127.26" -RemoteDir "/opt/sineoda"
 
 param(
-  [string]$Remote = "root@31.142.128.250",
+  [string]$Remote = "root@31.42.127.26",
   [string]$RemoteDir = "/opt/sineoda"
 )
 
@@ -34,10 +34,13 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 Write-Host ">>> VPS'te açılıyor + rebuild"
 ssh $Remote @"
 set -e
+mkdir -p '$RemoteDir/persistent/data' '$RemoteDir/persistent/uploads'
 cd '$RemoteDir'
 tar -xzf /tmp/sineoda-deploy.tgz
 rm -f /tmp/sineoda-deploy.tgz
 export SINEODA_SKIP_GIT_PULL=1
+export PERSIST_DIR='$RemoteDir/persistent'
+bash deploy/fix-nginx-vps.sh 2>/dev/null || true
 bash deploy/rebuild-vps.sh
 "@
 
