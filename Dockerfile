@@ -15,6 +15,7 @@ COPY server/package.json server/package-lock.json ./
 RUN npm ci --omit=dev
 COPY server/tsconfig.json ./
 COPY server/src ./src
+COPY shared /app/shared
 COPY --from=frontend /app/dist /app/web-dist
 
 ARG GIT_SHA=unknown

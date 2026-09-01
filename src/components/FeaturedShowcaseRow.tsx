@@ -5,17 +5,12 @@ import { useLocale } from '../i18n/LocaleContext'
 import { ContentCard } from './ContentCard'
 
 import { useBrowseLabels } from '../i18n/useBrowseLabels'
+import { usesFeaturedShowcaseRow } from '../catalog/browseRowUi'
 
 export const FEATURED_SHOWCASE_MAX_ITEMS = 6
 export const FEATURED_SHOWCASE_COLUMNS = 3
 
-/** Misafir ana sayfa + "Ayın …" kategorileri: ortalanmış 3×2 vitrin */
-export function usesFeaturedShowcaseRow(title: string, rowId?: string) {
-  const normalized = title.trim()
-  if (rowId === 'student-monthly-winners') return true
-  if (/^Ayın /i.test(normalized)) return true
-  return false
-}
+export { usesFeaturedShowcaseRow }
 
 interface FeaturedShowcaseRowProps {
   title: string
