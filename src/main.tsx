@@ -14,28 +14,43 @@ import { AnalyticsTracker } from './components/AnalyticsTracker'
 import { CookieConsent } from './components/CookieConsent'
 import { InstallPrompt } from './components/InstallPrompt'
 import App from './App.tsx'
+import { BootMarker } from './components/BootMarker'
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <BrowserRouter>
-      <LocaleProvider>
-        <LocaleSync />
-        <AuthProvider>
-          <SiteModeProvider>
-            <ContentProvider>
-              <InstallAppProvider>
-                <AnalyticsTracker />
-                <App />
-                <InstallPrompt />
-                <CookieConsent />
-              </InstallAppProvider>
-            </ContentProvider>
-          </SiteModeProvider>
-        </AuthProvider>
-      </LocaleProvider>
-    </BrowserRouter>
-  </StrictMode>,
-)
+try {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <BrowserRouter>
+        <LocaleProvider>
+          <LocaleSync />
+          <AuthProvider>
+            <SiteModeProvider>
+              <ContentProvider>
+                <InstallAppProvider>
+                  <BootMarker />
+                  <AnalyticsTracker />
+                  <App />
+                  <InstallPrompt />
+                  <CookieConsent />
+                </InstallAppProvider>
+              </ContentProvider>
+            </SiteModeProvider>
+          </AuthProvider>
+        </LocaleProvider>
+      </BrowserRouter>
+    </StrictMode>,
+  )
+} catch (error) {
+  console.error('[plooy] boot failed', error)
+  const root = document.getElementById('root')
+  if (root && root.getAttribute('data-plooy-boot') !== 'ready') {
+    root.setAttribute('data-plooy-boot', 'error')
+    root.innerHTML =
+      '<div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px;background:#090a0e;color:#e8eaef;font-family:system-ui,sans-serif;text-align:center">' +
+      '<div><p style="font-size:18px;font-weight:600;margin:0 0 8px">Sayfa yüklenemedi</p>' +
+      '<p style="margin:0 0 16px;color:#9aa3b5;font-size:14px">Eski önbellek veya bağlantı sorunu olabilir.</p>' +
+      '<button type="button" onclick="location.reload()" style="cursor:pointer;border:0;border-radius:8px;padding:10px 18px;background:#c9a962;color:#090a0e;font-weight:700">Yeniden dene</button></div></div>'
+  }
+}
 
 try {
   registerSW({
@@ -50,7 +65,8 @@ try {
 
 window.setTimeout(() => {
   const root = document.getElementById('root')
-  if (root && root.childElementCount === 0) {
+  if (root && root.getAttribute('data-plooy-boot') !== 'ready') {
+    root.setAttribute('data-plooy-boot', 'error')
     root.innerHTML =
       '<div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px;background:#090a0e;color:#e8eaef;font-family:system-ui,sans-serif;text-align:center">' +
       '<div><p style="font-size:18px;font-weight:600;margin:0 0 8px">Sayfa yüklenemedi</p>' +

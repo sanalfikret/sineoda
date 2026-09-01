@@ -354,9 +354,12 @@ if (config.webDistDir) {
       express.static(assetsPath, {
         immutable: true,
         maxAge: '365d',
-        fallthrough: false,
       }),
     )
+    // Eski deploy hash'leri 500 JSON yerine 404 — tarayıcı script hatası / siyah ekranı önler
+    app.use('/assets', (_req, res) => {
+      res.status(404).type('text/plain').send('Not found')
+    })
   }
 
   app.use(

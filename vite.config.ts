@@ -95,15 +95,8 @@ export default defineConfig({
         // index.html precache etme — deploy sonrası eski JS hash'i siyah ekran yapıyordu
         globPatterns: ['**/*.{js,css,ico,png,svg,woff2,webmanifest}'],
         navigateFallback: undefined,
+        // HTML sayfalarını cache'leme — deploy sonrası eski index.html + yeni JS hash = siyah ekran
         runtimeCaching: [
-          {
-            urlPattern: ({ request }) => request.mode === 'navigate',
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'pages',
-              networkTimeoutSeconds: 5,
-            },
-          },
           {
             urlPattern: /^https:\/\/images\.unsplash\.com\/.*/i,
             handler: 'CacheFirst',
