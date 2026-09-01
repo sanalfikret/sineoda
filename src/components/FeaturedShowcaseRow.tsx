@@ -4,6 +4,8 @@ import type { ContentItem } from '../types/content'
 import { useLocale } from '../i18n/LocaleContext'
 import { ContentCard } from './ContentCard'
 
+import { useBrowseLabels } from '../i18n/useBrowseLabels'
+
 export const FEATURED_SHOWCASE_MAX_ITEMS = 6
 export const FEATURED_SHOWCASE_COLUMNS = 3
 
@@ -62,6 +64,7 @@ export function FeaturedShowcaseRow({
 }: FeaturedShowcaseRowProps) {
   const { t } = useTranslation('browse')
   const { localizePath } = useLocale()
+  const { translateCategory } = useBrowseLabels()
 
   if (items.length === 0) return null
 
@@ -74,7 +77,9 @@ export function FeaturedShowcaseRow({
     <section className={`overflow-hidden px-4 py-4 sm:px-6 lg:px-8 ${className}`}>
       <div className="mx-auto max-w-5xl">
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="whitespace-pre-line text-lg font-semibold text-white sm:text-xl">{title}</h2>
+          <h2 className="whitespace-pre-line text-lg font-semibold text-white sm:text-xl">
+            {translateCategory(title)}
+          </h2>
           {loginHref && (guestMode || hasMore) && (
             <Link to={loginHref} className="shrink-0 text-sm font-medium text-plooy-gold hover:underline">
               {t('viewAll')}

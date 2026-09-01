@@ -18,6 +18,7 @@ import { restoreBrowseScroll } from '../utils/browseState'
 import { isVerticalContent } from '../utils/vertical'
 import { isContentAllowedForKids } from '../utils/contentRating'
 import { useLocale } from '../i18n/LocaleContext'
+import { useBrowseLabels } from '../i18n/useBrowseLabels'
 
 interface BrowsePageProps {
   contentType?: ContentType | null
@@ -38,6 +39,7 @@ function BrowseContent({
 }: BrowsePageProps) {
   const { t } = useTranslation('browse')
   const { localizePath } = useLocale()
+  const { translateGenre, translateContentType } = useBrowseLabels()
   const { openDetail, openPlayer } = useContentUI()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -202,14 +204,14 @@ function BrowseContent({
     ? (item: ContentItem) => void openPlayer(item)
     : openDetail
 
-  const rowLayout = (_rowId: string, rowTitle: string, items: ContentItem[]) => {
+  const rowLayout = (rowId: string, _rowTitle: string, items: ContentItem[]) => {
     if (verticalOnly) return 'portrait' as const
-    if (rowTitle === 'Dikey Diziler' || items.every(isVerticalContent)) return 'portrait' as const
+    if (rowId === 'dikey-diziler' || items.every(isVerticalContent)) return 'portrait' as const
     return 'landscape' as const
   }
 
-  const rowSelect = (rowTitle: string) => {
-    if (verticalOnly || rowTitle === 'Dikey Diziler') {
+  const rowSelect = (rowId: string) => {
+    if (verticalOnly || rowId === 'dikey-diziler') {
       return (item: ContentItem) => void openPlayer(item)
     }
     return handleSelect
@@ -271,8 +273,7 @@ function BrowseContent({
     return t('forYou')
   }, [verticalOnly, studentCinemaOnly, cekimNotlariOnly, classicsOnly, contentType, t])
 
-  const contentTypeLabel = (type: ContentType | string) =>
-    t(`contentTypes.${type}`, { defaultValue: type })
+  const contentTypeLabel = (type: ContentType | string) => translateContentType(type)
 
   if (isLoading) {
     return (
@@ -300,7 +301,7 @@ function BrowseContent({
             : classicsOnly
             ? t('klasikler')
             : activeGenre
-            ? activeGenre
+            ? translateGenre(activeGenre)
             : contentType
             ? contentTypeLabel(contentType)
             : resolvedPageTitle
@@ -367,7 +368,7 @@ function BrowseContent({
                   ? localizePath('/genc-sinema')
                   : !activeGenre &&
                       !contentType &&
-                      row.title === 'Dikey Diziler' &&
+                      row.id === 'dikey-diziler' &&
                       !hiddenNavIds.includes('dikey')
                     ? localizePath('/dikey-diziler')
                     : undefined
@@ -378,7 +379,7 @@ function BrowseContent({
                   key={row.id}
                   title={row.title}
                   items={row.items}
-                  onSelect={rowSelect(row.title)}
+                  onSelect={rowSelect(row.id)}
                   progressMap={progressMap}
                   viewAllHref={viewAllHref}
                 />
@@ -390,7 +391,7 @@ function BrowseContent({
               key={row.id}
               title={row.title}
               items={row.items}
-              onSelect={rowSelect(row.title)}
+              onSelect={rowSelect(row.id)}
               progressMap={progressMap}
               viewAllHref={viewAllHref}
               prominent={false}

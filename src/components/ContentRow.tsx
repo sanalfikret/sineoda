@@ -18,6 +18,8 @@ const CAROUSEL_SECTION_MB = 'mb-2'
 const GRID_TRACK_BOTTOM = 'pb-20'
 const BROWSE_TRACK_PX = 'px-4 sm:px-6 lg:px-8'
 
+import { useBrowseLabels } from '../i18n/useBrowseLabels'
+
 interface ContentRowProps {
   title: string
   items: ContentItem[]
@@ -45,6 +47,7 @@ export function ContentRow({
 }: ContentRowProps) {
   const { t } = useTranslation('browse')
   const { localizePath } = useLocale()
+  const { translateCategory } = useBrowseLabels()
   const rowRef = useRef<HTMLDivElement>(null)
   const isGrid = variant === 'grid'
 
@@ -58,7 +61,7 @@ export function ContentRow({
   return (
     <section data-tv-row className={`relative overflow-visible ${isGrid ? 'mb-5' : CAROUSEL_SECTION_MB}`}>
       <div className="mb-2 flex items-center justify-between px-4 sm:px-6 lg:px-8">
-        <h2 className="text-lg font-semibold text-white sm:text-xl">{title}</h2>
+        <h2 className="text-lg font-semibold text-white sm:text-xl">{translateCategory(title)}</h2>
         <div className="flex items-center gap-2">
           {viewAllHref && (
             <Link to={localizePath(viewAllHref)} className="text-sm font-medium text-plooy-gold hover:underline">
