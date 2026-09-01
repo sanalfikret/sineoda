@@ -1,7 +1,12 @@
 {
   "title": "Account",
+  "metaDescription": "Account details, subscription, payment history, and profile management.",
   "switchProfile": "Switch Profile",
   "home": "Home",
+  "actions": {
+    "saveAccount": "Save account",
+    "saving": "Saving…"
+  },
   "sections": {
     "accountInfo": "Account Information",
     "subscription": "Subscription",
@@ -64,7 +69,23 @@
     "showText": "View text",
     "hideText": "Hide",
     "ipLabel": "IP:",
-    "versionLabel": "Version:"
+    "versionLabel": "Version:",
+    "consentMeta": "{{date}} · IP: {{ip}} · Version {{version}}"
+  },
+  "consentTypes": {
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "kvkk": "KVKK Disclosure",
+    "cookies": "Cookie Policy",
+    "creator_terms": "Creator Agreement"
+  },
+  "watchStatsPanel": {
+    "loading": "Loading statistics…",
+    "loadFailed": "Could not load watch statistics.",
+    "summary": "{{name}} — watch summary",
+    "totalWatch": "Total watch time",
+    "contentCount": "{{count}} titles",
+    "empty": "No watch activity yet on this profile."
   },
   "messages": {
     "accountUpdated": "Account information updated.",

@@ -154,7 +154,7 @@ export function AccountPage() {
   }
 
   const handleDeleteProfile = async (profileId: string) => {
-    if (!window.confirm(t('messages.confirmDeleteProfile'))) return
+    if (!window.confirm(t('profile.deleteConfirm'))) return
     setMessage('')
     try {
       await deleteProfile(profileId)
@@ -181,9 +181,7 @@ export function AccountPage() {
   }
 
   const handleCancelSubscription = async () => {
-    if (
-      !window.confirm(t('messages.confirmCancelSubscription'))
-    ) {
+    if (!window.confirm(t('subscription.cancelConfirm'))) {
       return
     }
     setCancelling(true)
@@ -201,9 +199,9 @@ export function AccountPage() {
             }
           : current,
       )
-      setMessage(t('messages.subscriptionCancelled'))
+      setMessage(t('subscription.cancelSuccess'))
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : t('messages.subscriptionCancelFailed'))
+      setMessage(err instanceof Error ? err.message : t('messages.cancelFailed'))
     } finally {
       setCancelling(false)
     }
@@ -211,7 +209,7 @@ export function AccountPage() {
 
   const subscriptionStatusLabel = (status: string) => {
     const key = ['active', 'expired', 'cancelled'].includes(status) ? status : 'free'
-    return t(`subscriptionStatus.${key}`)
+    return t(`status.${key}`)
   }
 
   return (
@@ -249,9 +247,9 @@ export function AccountPage() {
         </div>
 
         <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
-          <h2 className="text-lg font-semibold">{t('accountInfo')}</h2>
+          <h2 className="text-lg font-semibold">{t('sections.accountInfo')}</h2>
           <label className="mt-4 block space-y-2">
-            <span className="text-xs font-medium uppercase tracking-wide text-plooy-muted">{t('fullName')}</span>
+            <span className="text-xs font-medium uppercase tracking-wide text-plooy-muted">{t('fields.name')}</span>
             <input
               value={accountName}
               onChange={(event) => setAccountName(event.target.value)}
@@ -264,40 +262,40 @@ export function AccountPage() {
             onClick={() => void handleSaveAccount()}
             className="mt-4 rounded-lg bg-plooy-gold px-4 py-2.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
           >
-            {savingAccount ? t('saving') : t('saveAccount')}
+            {savingAccount ? t('actions.saving') : t('actions.saveAccount')}
           </button>
         </section>
 
         <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <h2 className="text-lg font-semibold">{t('subscription')}</h2>
+            <h2 className="text-lg font-semibold">{t('sections.subscription')}</h2>
             <Link to={localizePath('/planlar')} className="text-sm text-plooy-gold hover:underline">
-              {t('viewPlans')}
+              {t('subscription.viewPlans')}
             </Link>
           </div>
 
           <dl className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
-              <dt className="text-xs uppercase tracking-wide text-plooy-muted">{t('status')}</dt>
+              <dt className="text-xs uppercase tracking-wide text-plooy-muted">{t('fields.status')}</dt>
               <dd className="mt-1 font-medium">
                 {subscription ? subscriptionStatusLabel(subscription.status) : '—'}
               </dd>
             </div>
             <div>
-              <dt className="text-xs uppercase tracking-wide text-plooy-muted">{t('plan')}</dt>
+              <dt className="text-xs uppercase tracking-wide text-plooy-muted">{t('fields.plan')}</dt>
               <dd className="mt-1 font-medium">{planName ?? '—'}</dd>
             </div>
             <div>
-              <dt className="text-xs uppercase tracking-wide text-plooy-muted">{t('startedAt')}</dt>
+              <dt className="text-xs uppercase tracking-wide text-plooy-muted">{t('fields.startedAt')}</dt>
               <dd className="mt-1 font-medium">{formatDate(subscription?.startedAt, locale)}</dd>
             </div>
             <div>
-              <dt className="text-xs uppercase tracking-wide text-plooy-muted">{t('expiresAt')}</dt>
+              <dt className="text-xs uppercase tracking-wide text-plooy-muted">{t('fields.expiresAt')}</dt>
               <dd className="mt-1 font-medium">{formatDate(subscription?.expiresAt, locale)}</dd>
             </div>
             {subscription?.cancelledAt && (
               <div className="sm:col-span-2">
-                <dt className="text-xs uppercase tracking-wide text-plooy-muted">{t('cancelledAt')}</dt>
+                <dt className="text-xs uppercase tracking-wide text-plooy-muted">{t('fields.cancelledAt')}</dt>
                 <dd className="mt-1 font-medium">{formatDate(subscription.cancelledAt, locale)}</dd>
               </div>
             )}
@@ -305,7 +303,7 @@ export function AccountPage() {
 
           {subscription?.status === 'cancelled' && subscription.expiresAt && (
             <p className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-              {t('cancelledNotice', { date: formatDate(subscription.expiresAt, locale) })}
+              {t('subscription.cancelledNotice', { date: formatDate(subscription.expiresAt, locale) })}
             </p>
           )}
 
@@ -316,13 +314,13 @@ export function AccountPage() {
               onClick={() => void handleCancelSubscription()}
               className="mt-4 rounded-lg border border-red-400/40 px-4 py-2.5 text-sm text-red-200 hover:bg-red-500/10 disabled:opacity-60"
             >
-              {cancelling ? t('cancelling') : t('cancelSubscription')}
+              {cancelling ? t('subscription.cancelling') : t('subscription.cancel')}
             </button>
           )}
 
           {activeProfile && (
             <div className="mt-4 flex items-center gap-3 text-sm text-plooy-muted">
-              <span>{t('activeProfile')}</span>
+              <span>{t('fields.activeProfile')}</span>
               <ProfileAvatar avatar={activeProfile.avatar} name={activeProfile.name} className="h-8 w-8" emojiClassName="text-lg" />
               <span className="text-white">{activeProfile.name}</span>
             </div>
@@ -330,20 +328,20 @@ export function AccountPage() {
         </section>
 
         <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
-          <h2 className="text-lg font-semibold">{t('paymentHistory')}</h2>
-          <p className="mt-1 text-sm text-plooy-muted">{t('paymentHistoryNote')}</p>
+          <h2 className="text-lg font-semibold">{t('sections.paymentHistory')}</h2>
+          <p className="mt-1 text-sm text-plooy-muted">{t('paymentHistory.description')}</p>
 
           {invoices.length === 0 ? (
-            <p className="mt-4 text-sm text-plooy-muted">{t('noPayments')}</p>
+            <p className="mt-4 text-sm text-plooy-muted">{t('paymentHistory.empty')}</p>
           ) : (
             <div className="mt-4 overflow-x-auto">
               <table className="min-w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-plooy-muted">
-                    <th className="px-2 py-2 font-medium">{t('invoiceDate')}</th>
-                    <th className="px-2 py-2 font-medium">{t('invoicePlan')}</th>
-                    <th className="px-2 py-2 font-medium">{t('invoiceAmount')}</th>
-                    <th className="px-2 py-2 font-medium">{t('invoiceReference')}</th>
+                    <th className="px-2 py-2 font-medium">{t('fields.date')}</th>
+                    <th className="px-2 py-2 font-medium">{t('fields.plan')}</th>
+                    <th className="px-2 py-2 font-medium">{t('fields.amount')}</th>
+                    <th className="px-2 py-2 font-medium">{t('fields.reference')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -363,8 +361,8 @@ export function AccountPage() {
 
         {activeProfile && (
           <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
-            <h2 className="text-lg font-semibold">{t('watchStats')}</h2>
-            <p className="mt-1 text-sm text-plooy-muted">{t('watchStatsNote')}</p>
+            <h2 className="text-lg font-semibold">{t('sections.watchStats')}</h2>
+            <p className="mt-1 text-sm text-plooy-muted">{t('watchStats.description')}</p>
             <div className="mt-4">
               <ProfileWatchStatsPanel profileId={activeProfile.id} profileName={activeProfile.name} />
             </div>
@@ -372,8 +370,8 @@ export function AccountPage() {
         )}
 
         <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
-          <h2 className="text-lg font-semibold">{t('legal')}</h2>
-          <p className="mt-1 text-sm text-plooy-muted">{t('legalNote', { version: LEGAL_VERSION })}</p>
+          <h2 className="text-lg font-semibold">{t('sections.legal')}</h2>
+          <p className="mt-1 text-sm text-plooy-muted">{t('legal.versionNote', { version: LEGAL_VERSION })}</p>
           <nav className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
             {LEGAL_LINKS.map((link) => (
               <Link
@@ -388,8 +386,8 @@ export function AccountPage() {
 
           {legalConsents.length > 0 && (
             <div className="mt-6 border-t border-white/10 pt-5">
-              <h3 className="text-sm font-semibold text-white">{t('consentRecords')}</h3>
-              <p className="mt-1 text-xs text-plooy-muted">{t('consentRecordsNote')}</p>
+              <h3 className="text-sm font-semibold text-white">{t('legal.consentRecords')}</h3>
+              <p className="mt-1 text-xs text-plooy-muted">{t('legal.consentDescription')}</p>
               <ul className="mt-4 space-y-3">
                 {legalConsents.map((consent) => (
                   <li key={consent.id} className="rounded-xl border border-white/10 bg-[#0d0f14] p-3">
@@ -399,7 +397,7 @@ export function AccountPage() {
                           {t(`consentTypes.${consent.consentType}`)}
                         </p>
                         <p className="mt-1 text-xs text-plooy-muted">
-                          {t('consentMeta', {
+                          {t('legal.consentMeta', {
                             date: new Date(consent.acceptedAt).toLocaleString(locale === 'en' ? 'en-US' : 'tr-TR', {
                               timeZone: 'Europe/Istanbul',
                             }),
@@ -415,7 +413,7 @@ export function AccountPage() {
                         }
                         className="text-xs text-plooy-gold hover:underline"
                       >
-                        {expandedConsentId === consent.id ? t('hide') : t('viewText')}
+                        {expandedConsentId === consent.id ? t('legal.hideText') : t('legal.showText')}
                       </button>
                     </div>
                     {expandedConsentId === consent.id && (
@@ -432,14 +430,14 @@ export function AccountPage() {
 
         <section className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">{t('profiles')}</h2>
+            <h2 className="text-lg font-semibold">{t('sections.profiles')}</h2>
             {user.profiles.length < 4 && (
               <button
                 type="button"
                 onClick={() => setShowAddForm((open) => !open)}
                 className="rounded-lg border border-plooy-gold/40 px-3 py-1.5 text-sm text-plooy-gold"
               >
-                {t('addProfile')}
+                {t('profile.add')}
               </button>
             )}
           </div>
@@ -462,7 +460,7 @@ export function AccountPage() {
                         onChange={(event) => setEditKids(event.target.checked)}
                         className="accent-plooy-gold"
                       />
-                      {t('kidsProfile')}
+                      {t('profile.kidsProfile')}
                     </label>
                     <div className="flex flex-wrap gap-2">
                       <button
@@ -497,8 +495,8 @@ export function AccountPage() {
                       <div>
                         <p className="text-lg">{profile.name}</p>
                         <p className="text-sm text-plooy-muted">
-                          {profile.isKids ? t('kidsProfile') : t('standardProfile')}
-                          {activeProfile?.id === profile.id ? t('currentlyActive') : ''}
+                          {profile.isKids ? t('profile.kidsProfile') : t('profile.standardProfile')}
+                          {activeProfile?.id === profile.id ? t('profile.currentlyActive') : ''}
                         </p>
                       </div>
                     </div>
@@ -507,7 +505,7 @@ export function AccountPage() {
                       onClick={() => startEditProfile(profile)}
                       className="rounded-lg border border-white/15 px-3 py-1.5 text-sm hover:bg-white/5"
                     >
-                      {t('edit')}
+                      {t('profile.edit')}
                     </button>
                   </div>
                 )}
@@ -517,11 +515,11 @@ export function AccountPage() {
 
           {showAddForm && (
             <div className="mt-4 rounded-xl border border-plooy-gold/20 bg-plooy-gold/5 p-4">
-              <h3 className="font-medium">{t('newProfile')}</h3>
+              <h3 className="font-medium">{t('profile.new')}</h3>
               <input
                 value={newName}
                 onChange={(event) => setNewName(event.target.value)}
-                placeholder={t('profileNamePlaceholder')}
+                placeholder={t('profile.namePlaceholder')}
                 className="mt-3 w-full rounded-lg border border-white/10 bg-plooy-bg px-4 py-2.5 outline-none focus:border-plooy-gold"
               />
               <ProfileAvatarPicker value={newAvatar} onChange={setNewAvatar} name={newName} />
@@ -532,7 +530,7 @@ export function AccountPage() {
                   onChange={(event) => setNewKids(event.target.checked)}
                   className="accent-plooy-gold"
                 />
-                {t('kidsProfile')}
+                {t('profile.kidsProfile')}
               </label>
               <div className="mt-4 flex gap-2">
                 <button
