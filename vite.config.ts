@@ -21,6 +21,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'prompt',
+      injectRegister: false,
       includeAssets: [
         'favicon.svg',
         'icon.svg',
