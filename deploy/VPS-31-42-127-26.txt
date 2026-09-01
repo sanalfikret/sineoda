@@ -1,25 +1,20 @@
-Plooy VPS — 31.42.127.26 (Fikret sunucusu)
-============================================
+Plooy VPS — 31.42.127.26
+========================
 
-DOĞRU KLASÖR (PuTTY):
-  cd /root/plooy
+ÖNEMLİ: /opt/Plooy, /opt/plooy, /root/plooy — HİÇBİRİ YOK.
+Proje klasörü silinmiş veya hiç kurulmamış olabilir.
 
-YANLIŞ (bu sunucuda YOK):
-  /opt/Plooy
-  /opt/plooy
-  /opt/sineoda
+ACİL KURULUM (PuTTY — tek satır):
+  curl -fsSL https://raw.githubusercontent.com/sanalfikret/sineoda/main/deploy/vps-rescue.sh | bash
 
-NGINX → Docker:
-  http://127.0.0.1:3001  (port 80 dışarıdan)
+Manuel:
+  mkdir -p /opt/sineoda && git clone https://github.com/sanalfikret/sineoda.git /opt/sineoda
+  cd /opt/sineoda && bash deploy/vps-rescue.sh
 
-VERİ:
-  /root/plooy/persistent/data/sineoda.db
+Kurulum yolu: /opt/sineoda
+API port: 3001
+nginx: 80 → 127.0.0.1:3001
+Veri: /opt/sineoda/persistent/data/sineoda.db
 
-TEK KOMUT DEPLOY:
-  cd /root/plooy && git fetch origin main && git reset --hard origin/main && bash deploy/deploy-vps.sh
-
-DOĞRULAMA:
-  curl -s http://127.0.0.1:3001/api/health | grep gitSha
-  curl -s http://127.0.0.1:3001/ | grep -o 'assets/index-[^"]*\.js'
-
-Tarayıcı: Ctrl+Shift+R → http://31.42.127.26/
+PC'den (SSH şifresi ile):
+  npm run deploy:vps
