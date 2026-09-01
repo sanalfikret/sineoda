@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { AppShell } from '../AppShell'
-import { LandingHeader } from '../landing/LandingHeader'
+import { GuestSiteShell } from '../GuestSiteShell'
 import { PageFooter } from '../PageFooter'
 import { useAuth } from '../../context/AuthContext'
 import { SearchProvider } from '../../context/SearchContext'
@@ -17,14 +16,6 @@ function MemberProviders({ children }: { children: React.ReactNode }) {
 
 export function JournalLayout() {
   const { user, activeProfile, isLoading } = useAuth()
-  const [scrolled, setScrolled] = useState(false)
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
 
   if (isLoading) {
     return (
@@ -47,12 +38,12 @@ export function JournalLayout() {
   }
 
   return (
-    <div className="min-h-dvh bg-plooy-bg text-white">
-      <LandingHeader scrolled={scrolled} />
-      <div className="pt-20">
+    <GuestSiteShell
+      footer={<PageFooter />}
+    >
+      <div className="min-h-dvh bg-plooy-bg pt-20 text-white">
         <Outlet />
       </div>
-      <PageFooter />
-    </div>
+    </GuestSiteShell>
   )
 }

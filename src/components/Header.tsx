@@ -10,7 +10,7 @@ import { useLocale } from '../i18n/LocaleContext'
 import { toTrPathname } from '../i18n/paths'
 import { ProfileAvatar } from './ProfileAvatar'
 import { PlooyLogo } from './PlooyLogo'
-import { InstallAppMenuItem } from './InstallAppButton'
+import { InstallAppButton, InstallAppMenuItem } from './InstallAppButton'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { PROFILE_AVATARS } from '../types/auth'
 
@@ -113,10 +113,14 @@ export function Header() {
     })
   }, [isCreator, hiddenNavIds, creatorNavItems, localizePath, t])
 
-  const primaryNavItems = useMemo(
-    () => (isCreator ? navItems : navItems.filter((item) => PRIMARY_NAV_IDS.includes(item.id as SiteNavId))),
-    [isCreator, navItems],
-  )
+  const primaryNavItems = useMemo(() => {
+    if (isCreator) return navItems
+    let items = navItems.filter((item) => PRIMARY_NAV_IDS.includes(item.id as SiteNavId))
+    if (!user && trPath === '/') {
+      items = items.filter((item) => item.id !== 'home')
+    }
+    return items
+  }, [isCreator, navItems, user, trPath])
 
   const exploreNavItems = useMemo(
     () => (isCreator ? [] : navItems.filter((item) => EXPLORE_NAV_IDS.includes(item.id as SiteNavId))),
@@ -129,13 +133,11 @@ export function Header() {
 
   const navLinkClass = (item: (typeof navItems)[number], active: boolean) =>
     `whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold lg:px-3 lg:text-sm xl:text-[15px] tv:px-4 tv:py-3 tv:text-base ${
-      item.isStudentCinema
-        ? active
+      active
+        ? item.isStudentCinema
           ? 'bg-emerald-500/15 text-emerald-300'
-          : 'text-emerald-200/80 hover:bg-emerald-500/10 hover:text-emerald-200'
-        : active
-          ? 'bg-white/10 text-white'
-          : 'text-white/75 hover:bg-white/5 hover:text-white'
+          : 'bg-white/10 text-white'
+        : 'text-white/75 hover:bg-white/5 hover:text-white'
     }`
 
   const homePath = localizePath(isCreator ? '/creator' : '/')
@@ -190,13 +192,11 @@ export function Header() {
                         onMouseEnter={item.id === 'cekimNotlari' ? () => prefetchCekimNotlariSections() : undefined}
                         onFocus={item.id === 'cekimNotlari' ? () => prefetchCekimNotlariSections() : undefined}
                         className={`block whitespace-nowrap px-4 py-2.5 text-sm transition hover:bg-white/5 ${
-                          item.isStudentCinema
-                            ? isActive(item.match)
+                          isActive(item.match)
+                            ? item.isStudentCinema
                               ? 'text-emerald-300'
-                              : 'text-emerald-200/90'
-                            : isActive(item.match)
-                              ? 'text-white'
-                              : 'text-white/85'
+                              : 'text-white'
+                            : 'text-white/85'
                         }`}
                       >
                         {item.label}
@@ -249,13 +249,21 @@ export function Header() {
           )}
 
           {!isCreator && !user && (
-            <Link
-              to={localizePath('/iletisim')}
-              aria-label={t('nav.contact')}
-              className="rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold tv:p-3"
-            >
-              <MessagesIcon />
-            </Link>
+            <>
+              <Link
+                to={localizePath('/planlar')}
+                className="hidden whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium text-white/75 transition hover:bg-white/5 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold lg:inline-flex lg:px-3 lg:text-sm"
+              >
+                {t('nav.plans')}
+              </Link>
+              <Link
+                to={localizePath('/iletisim')}
+                aria-label={t('nav.contact')}
+                className="rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold tv:p-3"
+              >
+                <MessagesIcon />
+              </Link>
+            </>
           )}
 
           {!isCreator && (
@@ -389,12 +397,25 @@ export function Header() {
               )}
             </div>
           ) : (
-            <Link
-              to={localizePath('/giris')}
-              className="hidden rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold sm:inline-flex tv:px-5 tv:py-2.5 tv:text-base"
-            >
-              {t('nav.login')}
-            </Link>
+            <>
+              <InstallAppButton
+                variant="ghost"
+                className="hidden sm:inline-flex"
+                label={t('nav.install')}
+              />
+              <Link
+                to={localizePath('/giris')}
+                className="hidden rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold md:inline-flex tv:px-5 tv:py-2.5 tv:text-base"
+              >
+                {t('nav.login')}
+              </Link>
+              <Link
+                to={localizePath('/kayit')}
+                className="rounded-md bg-plooy-gold px-3 py-2 text-sm font-bold text-plooy-bg transition hover:brightness-110 sm:px-5 sm:py-2.5"
+              >
+                {t('nav.signup')}
+              </Link>
+            </>
           )}
 
           <button
@@ -469,6 +490,15 @@ export function Header() {
               <>
                 <li>
                   <Link
+                    to={localizePath('/planlar')}
+                    className="block w-full rounded-lg px-3 py-3.5 text-base font-medium text-white/90 hover:bg-white/5"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {t('nav.plans')}
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     to={localizePath('/iletisim')}
                     className="block w-full rounded-lg px-3 py-3.5 text-base font-medium text-white/90 hover:bg-white/5"
                     onClick={() => setMenuOpen(false)}
@@ -478,8 +508,17 @@ export function Header() {
                 </li>
                 <li>
                   <Link
-                    to={localizePath('/giris')}
+                    to={localizePath('/kayit')}
                     className="mt-2 block w-full rounded-lg bg-plooy-gold px-3 py-3 text-center text-sm font-semibold text-plooy-bg"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {t('nav.signup')}
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to={localizePath('/giris')}
+                    className="block w-full rounded-lg px-3 py-3.5 text-center text-base font-medium text-white/90 hover:bg-white/5"
                     onClick={() => setMenuOpen(false)}
                   >
                     {t('nav.login')}
