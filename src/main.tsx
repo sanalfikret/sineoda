@@ -1,64 +1,102 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import { registerSW } from 'virtual:pwa-register'
-import { AuthProvider } from './context/AuthContext'
-import { SiteModeProvider } from './context/SiteModeContext'
-import { ContentProvider } from './context/ContentContext'
-import { InstallAppProvider } from './context/InstallAppContext'
 import './index.css'
-import './i18n'
-import { LocaleProvider } from './i18n/LocaleContext'
-import { LocaleSync } from './i18n/LocaleSync'
-import { AnalyticsTracker } from './components/AnalyticsTracker'
-import { CookieConsent } from './components/CookieConsent'
-import { InstallPrompt } from './components/InstallPrompt'
-import App from './App.tsx'
-import { BootMarker } from './components/BootMarker'
 
-try {
-  createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-      <BrowserRouter>
-        <LocaleProvider>
-          <LocaleSync />
-          <AuthProvider>
-            <SiteModeProvider>
-              <ContentProvider>
-                <InstallAppProvider>
-                  <BootMarker />
-                  <AnalyticsTracker />
-                  <App />
-                  <InstallPrompt />
-                  <CookieConsent />
-                </InstallAppProvider>
-              </ContentProvider>
-            </SiteModeProvider>
-          </AuthProvider>
-        </LocaleProvider>
-      </BrowserRouter>
-    </StrictMode>,
+function BootSpinner() {
+  return (
+    <div
+      style={{
+        minHeight: '100dvh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#090a0e',
+      }}
+    >
+      <div
+        style={{
+          width: 40,
+          height: 40,
+          border: '2px solid #c9a962',
+          borderTopColor: 'transparent',
+          borderRadius: '50%',
+          animation: 'plooy-boot-spin 0.8s linear infinite',
+        }}
+      />
+    </div>
   )
-} catch (error) {
-  console.error('[plooy] boot failed', error)
-  const root = document.getElementById('root')
-  if (root && root.getAttribute('data-plooy-boot') !== 'ready') {
-    root.setAttribute('data-plooy-boot', 'error')
-    root.innerHTML =
-      '<div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px;background:#090a0e;color:#e8eaef;font-family:system-ui,sans-serif;text-align:center">' +
-      '<div><p style="font-size:18px;font-weight:600;margin:0 0 8px">Sayfa yüklenemedi</p>' +
-      '<p style="margin:0 0 16px;color:#9aa3b5;font-size:14px">Eski önbellek veya bağlantı sorunu olabilir.</p>' +
-      '<button type="button" onclick="location.reload()" style="cursor:pointer;border:0;border-radius:8px;padding:10px 18px;background:#c9a962;color:#090a0e;font-weight:700">Yeniden dene</button></div></div>'
-  }
 }
 
-try {
-  registerSW({
-    immediate: false,
-    onNeedRefresh() {
-      // Admin düzenleme sırasında otomatik sayfa yenilemesi yapma.
-    },
-  })
-} catch {
-  // PWA / service worker opsiyonel — statik hostingde uygulama yine açılsın.
+function BootError() {
+  return (
+    <div
+      style={{
+        minHeight: '100dvh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+        background: '#090a0e',
+        color: '#e8eaef',
+        fontFamily: 'system-ui,sans-serif',
+        textAlign: 'center',
+      }}
+    >
+      <div>
+        <p style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px' }}>Sayfa yüklenemedi</p>
+        <p style={{ margin: '0 0 16px', color: '#9aa3b5', fontSize: 14 }}>
+          Bağlantı veya önbellek sorunu olabilir. Ctrl+Shift+R ile yenileyin.
+        </p>
+        <button
+          type="button"
+          onClick={() => location.reload()}
+          style={{
+            cursor: 'pointer',
+            border: 0,
+            borderRadius: 8,
+            padding: '10px 18px',
+            background: '#c9a962',
+            color: '#090a0e',
+            fontWeight: 700,
+          }}
+        >
+          Yeniden dene
+        </button>
+      </div>
+    </div>
+  )
 }
+
+const container = document.getElementById('root')
+if (!container) {
+  throw new Error('#root bulunamadı')
+}
+
+const root = createRoot(container)
+root.render(
+  <StrictMode>
+    <BootSpinner />
+  </StrictMode>,
+)
+
+void (async () => {
+  try {
+    await import('./i18n')
+    const { default: AppRoot } = await import('./AppRoot')
+    root.render(<AppRoot />)
+    try {
+      const { registerSW } = await import('virtual:pwa-register')
+      registerSW({ immediate: false, onNeedRefresh() {} })
+    } catch {
+      /* PWA opsiyonel */
+    }
+  } catch (error) {
+    console.error('[plooy] boot failed', error)
+    container.setAttribute('data-plooy-boot', 'error')
+    root.render(
+      <StrictMode>
+        <BootError />
+      </StrictMode>,
+    )
+  }
+})()
