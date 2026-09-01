@@ -11,7 +11,7 @@ import { JournalCard } from '../journal/JournalCard'
 const TEASER_COUNT = 3
 
 export function LandingJournalTeaser({
-  section,
+  section: _section,
 }: {
   section: LandingSectionsConfig['journal']
 }) {
@@ -35,12 +35,12 @@ export function LandingJournalTeaser({
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-plooy-accent">
-              {section.eyebrow}
+              {t('journal.eyebrow')}
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              {section.title}
+              {t('journal.title')}
             </h2>
-            <p className="mt-3 max-w-2xl text-base text-plooy-muted">{section.description}</p>
+            <p className="mt-3 max-w-2xl text-base text-plooy-muted">{t('journal.description')}</p>
           </div>
           <Link
             to={localizePath('/dergi')}

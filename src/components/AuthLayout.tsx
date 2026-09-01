@@ -1,14 +1,21 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { PageFooter } from './PageFooter'
 import { PlooyLogo } from './PlooyLogo'
+import { useLocale } from '../i18n/LocaleContext'
 
 interface AuthLayoutProps {
   children: ReactNode
   title: string
   subtitle?: string
+  backTo?: string
 }
 
-export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
+export function AuthLayout({ children, title, subtitle, backTo }: AuthLayoutProps) {
+  const { localizePath } = useLocale()
+  const { t } = useTranslation()
+
   return (
     <div className="relative min-h-dvh overflow-hidden bg-plooy-bg">
       <div
@@ -21,8 +28,16 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
       <div className="absolute inset-0 bg-gradient-to-b from-plooy-bg/60 via-plooy-bg/90 to-plooy-bg" />
 
       <div className="safe-top relative z-10 mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-4 py-10 sm:px-6">
+        {backTo ? (
+          <Link
+            to={backTo}
+            className="mb-4 self-start text-sm text-plooy-muted transition hover:text-white"
+          >
+            ← {t('auth.back')}
+          </Link>
+        ) : null}
         <div className="mb-8 flex justify-center">
-          <PlooyLogo tone="on-dark" linked className="h-10 sm:h-12" />
+          <PlooyLogo tone="on-dark" linked linkTo={localizePath('/')} className="h-10 sm:h-12" />
         </div>
 
         <div className="w-full rounded-2xl border border-white/10 bg-plooy-surface/90 p-6 shadow-2xl backdrop-blur-md sm:p-8">

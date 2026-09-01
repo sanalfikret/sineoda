@@ -1,6 +1,9 @@
-export function formatJournalDate(value: string | null) {
+import type { Locale } from '../i18n/paths'
+
+export function formatJournalDate(value: string | null, locale: Locale = 'tr') {
   if (!value) return ''
-  return new Date(value).toLocaleDateString('tr-TR', {
+  const tag = locale === 'en' ? 'en-US' : 'tr-TR'
+  return new Date(value).toLocaleDateString(tag, {
     day: 'numeric',
     month: 'long',
     year: 'numeric',

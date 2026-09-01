@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import type { LandingSectionsConfig } from '../../constants/landingDefaults'
 import { useLocale } from '../../i18n/LocaleContext'
 
@@ -7,12 +8,15 @@ export function LandingManifesto({
 }: {
   section: LandingSectionsConfig['manifesto']
 }) {
+  const { t } = useTranslation('landing')
   const { localizePath } = useLocale()
+  const pillars = t('pillars', { returnObjects: true }) as Array<{ title: string; text: string }>
+
   return (
     <section className="border-y border-white/[0.06] bg-plooy-surface px-5 py-20 sm:px-8 sm:py-24">
       <div className="mx-auto max-w-[1400px]">
         <div className="grid gap-14 lg:grid-cols-2 lg:gap-20">
-          {section.pillars.map((pillar) => (
+          {pillars.map((pillar) => (
             <article key={pillar.title} className="max-w-lg">
               <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
                 {pillar.title}
@@ -24,19 +28,19 @@ export function LandingManifesto({
 
         <div className="mt-20 max-w-3xl border-t border-white/[0.06] pt-16">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-plooy-accent">
-            {section.eyebrow}
+            {t('manifesto.eyebrow')}
           </p>
           <h2 className="mt-5 text-3xl font-semibold leading-tight tracking-tight text-white sm:text-4xl">
-            {section.title}
+            {t('manifesto.title')}
           </h2>
           <p className="mt-5 text-base leading-relaxed text-plooy-muted sm:text-lg">
-            {section.body}
+            {t('manifesto.body')}
           </p>
           <Link
-            to={localizePath(section.ctaLink)}
+            to={localizePath(section.ctaLink || '/kayit')}
             className="mt-8 inline-flex h-12 items-center rounded-md bg-plooy-accent px-8 text-sm font-semibold text-plooy-bg transition hover:brightness-105"
           >
-            {section.ctaLabel}
+            {t('manifesto.ctaLabel')}
           </Link>
         </div>
       </div>

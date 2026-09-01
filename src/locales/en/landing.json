@@ -6,7 +6,8 @@
     "description": "Original stories from independent filmmakers around the world. Not commercial blockbusters — a curated selection, a calm interface, and a viewing experience built for cinephiles.",
     "ctaPrimary": "Start Free Trial",
     "ctaSecondary": "Sign In",
-    "legalNote": "By signing up, you accept the Terms of Use, Privacy Policy, KVKK notice, and Cookie Policy."
+    "legalNote": "By signing up, you accept the Terms of Use, Privacy Policy, KVKK notice, and Cookie Policy.",
+    "featuredThisWeek": "Featured this week"
   },
   "manifesto": {
     "eyebrow": "What is Plooy?",
@@ -139,13 +140,15 @@
   "emailSignup": {
     "title": "Ready to watch?",
     "description": "Enter your email, create your membership, and start unlimited streaming right away.",
-    "buttonLabel": "Get Started"
+    "buttonLabel": "Get Started",
+    "placeholder": "Your email address"
   },
   "journal": {
     "eyebrow": "Plooy Journal",
     "title": "Writing on independent cinema",
     "description": "Festival notes, curator picks, and news from world independent cinema.",
-    "viewAll": "All articles →"
+    "viewAll": "All articles →",
+    "backHome": "Home"
   },
   "slider": {
     "prev": "Previous",

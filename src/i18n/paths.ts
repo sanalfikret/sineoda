@@ -2,6 +2,8 @@ export type Locale = 'tr' | 'en'
 
 export const DEFAULT_LOCALE: Locale = 'tr'
 export const LOCALE_STORAGE_KEY = 'plooy_locale'
+/** Set when user explicitly picks TR/EN — prevents auto locale changes. */
+export const LOCALE_MANUAL_KEY = 'plooy_locale_manual'
 
 export const SUPPORTED_LOCALES: Locale[] = ['tr', 'en']
 

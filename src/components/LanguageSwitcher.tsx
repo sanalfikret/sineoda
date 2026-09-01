@@ -1,15 +1,20 @@
 import type { ComponentProps, ReactNode } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useLocale } from '../i18n/LocaleContext'
+import { markLocaleManual } from '../i18n/localePreference'
+import { switchLocalePath } from '../i18n/paths'
 
 export function LanguageSwitcher({ className = '' }: { className?: string }) {
   const { t } = useTranslation()
-  const { locale, switchLocalePath } = useLocale()
+  const { locale } = useLocale()
   const navigate = useNavigate()
+  const location = useLocation()
 
-  const switchTo = () => {
-    navigate(switchLocalePath())
+  const switchTo = (target: 'tr' | 'en') => {
+    if (locale === target) return
+    markLocaleManual(target)
+    navigate(switchLocalePath(`${location.pathname}${location.search}`, target))
   }
 
   return (
@@ -20,7 +25,7 @@ export function LanguageSwitcher({ className = '' }: { className?: string }) {
     >
       <button
         type="button"
-        onClick={() => locale !== 'tr' && switchTo()}
+        onClick={() => switchTo('tr')}
         className={`rounded-md px-2 py-1 transition ${
           locale === 'tr' ? 'bg-white/15 text-white' : 'text-white/60 hover:text-white'
         }`}
@@ -30,7 +35,7 @@ export function LanguageSwitcher({ className = '' }: { className?: string }) {
       </button>
       <button
         type="button"
-        onClick={() => locale !== 'en' && switchTo()}
+        onClick={() => switchTo('en')}
         className={`rounded-md px-2 py-1 transition ${
           locale === 'en' ? 'bg-white/15 text-white' : 'text-white/60 hover:text-white'
         }`}

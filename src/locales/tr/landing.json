@@ -6,7 +6,8 @@
     "description": "Dünyanın dört bir yanından bağımsız yapımcıların özgün hikâyeleri. Ticari blockbuster değil — küratörlü seçki, sakin arayüz, sinemaseverlere özel bir izleme deneyimi.",
     "ctaPrimary": "Ücretsiz Dene",
     "ctaSecondary": "Giriş Yap",
-    "legalNote": "Üye olarak Kullanım Koşulları, Gizlilik Politikası, KVKK ve Çerez Politikası'nı kabul etmiş olursun."
+    "legalNote": "Üye olarak Kullanım Koşulları, Gizlilik Politikası, KVKK ve Çerez Politikası'nı kabul etmiş olursun.",
+    "featuredThisWeek": "Bu haftanın öne çıkanı"
   },
   "manifesto": {
     "eyebrow": "Plooy nedir?",
@@ -139,13 +140,15 @@
   "emailSignup": {
     "title": "İzlemeye hazır mısın?",
     "description": "E-posta adresini gir, üyeliğini oluştur ve sınırsız içeriğe hemen başla.",
-    "buttonLabel": "Başla"
+    "buttonLabel": "Başla",
+    "placeholder": "E-posta adresin"
   },
   "journal": {
     "eyebrow": "Plooy Dergi",
     "title": "Bağımsız sinema üzerine yazılar",
     "description": "Festival notları, küratör seçkileri ve dünya bağımsız sinemasından haberler.",
-    "viewAll": "Tüm yazılar →"
+    "viewAll": "Tüm yazılar →",
+    "backHome": "Ana sayfa"
   },
   "slider": {
     "prev": "Önceki",
