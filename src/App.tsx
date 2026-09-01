@@ -8,7 +8,8 @@ import { SearchProvider } from './context/SearchContext'
 import { WatchlistProvider } from './context/WatchlistContext'
 import { useAuth } from './context/AuthContext'
 import { useLocale } from './i18n/LocaleContext'
-import { localeRoutes } from './i18n/LocaleRoute'
+import { getEffectiveLocale } from './i18n/localePreference'
+import { localizePathname } from './i18n/paths'
 import { AdminAdsPage } from './pages/admin/AdminAdsPage'
 import { AdminCategoriesPage } from './pages/admin/AdminCategoriesPage'
 import { AdminContentFormPage } from './pages/admin/AdminContentFormPage'
@@ -87,6 +88,12 @@ function LegacyContentRedirect() {
 function CatchAllRedirect() {
   const { localizePath } = useLocale()
   return <Navigate to={localizePath('/')} replace />
+}
+
+/** Bare EN slugs without /en prefix (bookmarks, old links). */
+function LegacyLocaleRedirect({ trPath }: { trPath: string }) {
+  const locale = getEffectiveLocale()
+  return <Navigate to={localizePathname(trPath, locale)} replace />
 }
 
 function HomeRoute() {
@@ -433,6 +440,11 @@ function App() {
         <Route path="cekim-notlari" element={<AdminCekimNotlariPage />} />
         <Route path="cekim-notlari/:id" element={<AdminCekimNotlariFormPage />} />
       </Route>
+
+      <Route path="/login" element={<LegacyLocaleRedirect trPath="/giris" />} />
+      <Route path="/signup" element={<LegacyLocaleRedirect trPath="/kayit" />} />
+      <Route path="/plans" element={<LegacyLocaleRedirect trPath="/planlar" />} />
+      <Route path="/journal" element={<LegacyLocaleRedirect trPath="/dergi" />} />
 
       <Route path="*" element={<CatchAllRedirect />} />
     </Routes>
