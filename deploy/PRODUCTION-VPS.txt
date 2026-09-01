@@ -1,45 +1,34 @@
 Plooy — tek sunucu (VPS) production rehberi
 =============================================
 
-Yapılandırma tek kaynak: config/env.example  |  Rehber: config/AYARLAR.txt
+Yapılandırma: config/env.example  |  Günlük ops: deploy/OPS.txt
 
 Amaç: Site + API + veritabanı + yüklemeler TEK kiralık sunucuda.
-Render, Vercel, GitHub runtime'da kullanılmaz.
+Render, Vercel, cPanel runtime'da kullanılmaz.
 
 Mimari
 ------
   İnternet → nginx (443) → Docker :3001 → Node API + statik React
-  Veri     → /opt/Plooy/persistent/data/Plooy.db (host disk)
-  Upload   → /opt/Plooy/persistent/uploads/
+  Veri     → /opt/sineoda/persistent/data/sineoda.db
+  Upload   → /opt/sineoda/persistent/uploads/
 
-Zorunlu .env (/opt/Plooy/.env)
+Zorunlu .env (/opt/sineoda/.env)
 --------------------------------
-  PERSIST_DIR=/opt/Plooy/persistent
+  PERSIST_DIR=/opt/sineoda/persistent
   JWT_SECRET=<uzun rastgele, deploy sonrası değiştirmeyin>
   FRONTEND_URL=https://plooy.tv
   PUBLIC_URL=https://plooy.tv
   VITE_API_URL=                    (BOŞ — same-origin /api)
   NODE_ENV=production
 
-  JWT_EXPIRES_IN kullanmayın — production otomatik 30 gün.
+Deploy (GitHub + VPS)
+---------------------
+  PC:   npm run check:deploy && git push origin main
+  VPS:  cd /opt/sineoda && git pull && bash deploy/rebuild-vps.sh
 
-Deploy yöntemleri
------------------
+GitHub'sız: powershell -File deploy/sync-to-vps.ps1
 
-A) GitHub + VPS (önerilen — Netflix/Mubi modeli):
-   PC: git push origin main
-   VPS (PuTTY):
-     cd /opt/Plooy
-     git pull
-     bash deploy/rebuild-vps.sh
-   GitHub = kod deposu. Canlı site = VPS.
-
-B) GitHub'sız yedek — bilgisayardan direkt aktarım:
-   npm run check:deploy
-   powershell -File deploy/sync-to-vps.ps1
-
-Sadece rebuild (kod zaten VPS'te güncelse):
-   cd /opt/Plooy && bash deploy/rebuild-vps.sh
+Acil kurtarma: bash deploy/recover-vps.sh
 
 Deploy sonrası doğrulama
 ------------------------
@@ -47,23 +36,14 @@ Deploy sonrası doğrulama
   → storage.dbExists: true
   → storage.userCount deploy öncesiyle aynı veya artmış
   → auth.jwtExpiresIn: "30d"
-  → build.gitSha: son commit veya unknown
 
-  Tarayıcı: Ctrl+Shift+R
+  Tarayıcı: Ctrl+Shift+R — / ve /en açılmalı
 
 Asla yapma
 ----------
   docker compose down -v
   rm -rf persistent/
-  .env içinde VITE_API_URL=https://...onrender.com
 
-Yedek
------
-  Otomatik: her deploy öncesi deploy/backup-vps.sh
-  Cron: deploy/PERSISTENCE.txt
+Yedek: deploy/backup-vps.sh (her rebuild öncesi otomatik)
 
-İlk kurulum
------------
-  bash deploy/install-vps.sh
-  cp deploy/env.production.example .env  → düzenle
-  nginx: deploy/nginx-Plooy.conf
+İlk kurulum: bash deploy/install-vps.sh

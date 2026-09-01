@@ -22,7 +22,6 @@ import { useBrowseLabels } from '../i18n/useBrowseLabels'
 
 interface BrowsePageProps {
   contentType?: ContentType | null
-  pageTitle?: string
   verticalOnly?: boolean
   studentCinemaOnly?: boolean
   cekimNotlariOnly?: boolean
@@ -31,7 +30,6 @@ interface BrowsePageProps {
 
 function BrowseContent({
   contentType = null,
-  pageTitle: _pageTitle,
   verticalOnly = false,
   studentCinemaOnly = false,
   cekimNotlariOnly = false,

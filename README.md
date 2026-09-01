@@ -1,32 +1,59 @@
-# React + TypeScript + Vite
+# Plooy
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Independent cinema streaming platform — web app, PWA, Smart TV, admin CMS.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Frontend:** React 19, TypeScript, Vite, Tailwind, i18next (TR/EN)
+- **Backend:** Node.js, Express, SQLite
+- **Deploy:** Single VPS, Docker, nginx
 
-## React Compiler
+## Local development
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm install --prefix server
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Client: `http://localhost:5173` · API: `http://localhost:3001`
+
+## Before push / deploy
+
+```bash
+npm run check:deploy
+```
+
+Runs server boot smoke test + frontend build + route integrity check.
+
+## Production (VPS)
+
+| Item | Value |
+|------|--------|
+| Install path | `/opt/sineoda` |
+| Database | `persistent/data/sineoda.db` |
+| Rebuild | `bash deploy/rebuild-vps.sh` |
+| Emergency | `bash deploy/recover-vps.sh` |
+
+Full guide: [deploy/PRODUCTION-VPS.txt](deploy/PRODUCTION-VPS.txt) · Ops cheatsheet: [deploy/OPS.txt](deploy/OPS.txt)
+
+## Project layout
+
+```
+src/
+  routes/       Route registry + split route modules
+  pages/        Route screens (public, admin, creator)
+  components/   Shared UI
+  i18n/         Locale routing + translations
+  locales/      TR/EN JSON bundles
+server/
+  src/routes/   REST API
+  src/services/ Business logic
+deploy/         VPS scripts, nginx, backups
+```
+
+## Docs
+
+- [config/AYARLAR.txt](config/AYARLAR.txt) — environment variables
+- [deploy/tv/README.md](deploy/tv/README.md) — Smart TV + Play Store TWA prep
+- [deploy/archive/](deploy/archive/) — deprecated Render/Vercel/cPanel configs

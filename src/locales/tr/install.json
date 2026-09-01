@@ -1,20 +1,11 @@
 {
-  "prompt": {
-    "title": "Plooy'yu telefona yükle",
-    "descriptionNative": "App Store gerekmez — yükle, ana ekrandan uygulama gibi aç.",
-    "descriptionIos": "Safari ile yükle; tam ekran, tarayıcı çubuğu yok.",
-    "descriptionAndroid": "Chrome ile yükle; ana ekranda uygulama simgesi oluşur.",
-    "install": "Yükle",
-    "later": "Sonra"
-  },
-  "button": {
-    "install": "Yükle",
-    "menuInstall": "Yükle"
-  },
-  "statusCard": {
-    "title": "Mobil uygulama",
-    "installed": "Plooy telefonunuza yüklü. Ana ekrandan uygulama gibi açılır.",
-    "notInstalled": "Plooy'yu telefona uygulama olarak yükleyin — mağaza veya APK gerekmez.",
-    "install": "Yükle"
-  }
+  "promptTitle": "Plooy'yu telefona yükle",
+  "promptNative": "App Store gerekmez — yükle, ana ekrandan uygulama gibi aç.",
+  "promptIos": "Safari ile yükle; tam ekran, tarayıcı çubuğu yok.",
+  "promptAndroid": "Chrome ile yükle; ana ekranda uygulama simgesi oluşur.",
+  "install": "Yükle",
+  "later": "Sonra",
+  "statusTitle": "Mobil uygulama",
+  "statusInstalled": "Plooy telefonunuza yüklü. Ana ekrandan uygulama gibi açılır.",
+  "statusNotInstalled": "Plooy'yu telefona uygulama olarak yükleyin — mağaza veya APK gerekmez."
 }

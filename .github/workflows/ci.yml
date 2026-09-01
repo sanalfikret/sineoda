@@ -29,5 +29,8 @@ jobs:
       - name: Install frontend deps
         run: npm ci
 
-      - name: Build frontend (cpanel/VPS)
-        run: npm run build:cpanel
+      - name: Lint
+        run: npm run lint
+
+      - name: Frontend build + route smoke test
+        run: npm run check:frontend

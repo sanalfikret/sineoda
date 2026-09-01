@@ -1,3 +1,5 @@
+import { AUTH_REQUIRED_TR_PATHS, ROUTE_PAIRS, type RoutePair } from '../routes/registry'
+
 export type Locale = 'tr' | 'en'
 
 export const DEFAULT_LOCALE: Locale = 'tr'
@@ -7,47 +9,7 @@ export const LOCALE_MANUAL_KEY = 'plooy_locale_manual'
 
 export const SUPPORTED_LOCALES: Locale[] = ['tr', 'en']
 
-interface RoutePair {
-  tr: string
-  en: string
-}
-
-/** TR canonical path ↔ EN path (supports :param segments) */
-const ROUTE_PAIRS: RoutePair[] = [
-  { tr: '/', en: '/en' },
-  { tr: '/tanitim', en: '/en/about' },
-  { tr: '/giris', en: '/en/login' },
-  { tr: '/kayit', en: '/en/signup' },
-  { tr: '/eposta-dogrula', en: '/en/verify-email' },
-  { tr: '/sifremi-unuttum', en: '/en/forgot-password' },
-  { tr: '/sifre-sifirla', en: '/en/reset-password' },
-  { tr: '/planlar', en: '/en/plans' },
-  { tr: '/iletisim', en: '/en/contact' },
-  { tr: '/dergi', en: '/en/journal' },
-  { tr: '/dergi/:slug', en: '/en/journal/:slug' },
-  { tr: '/yasal/:slug', en: '/en/legal/:slug' },
-  { tr: '/odeme/paytr', en: '/en/payment/paytr' },
-  { tr: '/odeme/basarili', en: '/en/payment/success' },
-  { tr: '/odeme/basarisiz', en: '/en/payment/failed' },
-  { tr: '/hesap', en: '/en/account' },
-  { tr: '/profiller', en: '/en/profiles' },
-  { tr: '/mesajlar', en: '/en/messages' },
-  { tr: '/listem', en: '/en/my-list' },
-  { tr: '/icerik/:id', en: '/en/content/:id' },
-  { tr: '/diziler', en: '/en/series' },
-  { tr: '/filmler', en: '/en/films' },
-  { tr: '/belgeseller', en: '/en/documentaries' },
-  { tr: '/stand-up', en: '/en/stand-up' },
-  { tr: '/klasikler', en: '/en/classics' },
-  { tr: '/dikey-diziler', en: '/en/vertical-series' },
-  { tr: '/genc-sinema', en: '/en/student-cinema' },
-  { tr: '/cekim-notlari', en: '/en/production-notes' },
-  { tr: '/kisa-filmler', en: '/en/short-films' },
-  { tr: '/creator/giris', en: '/en/creator/login' },
-  { tr: '/creator/kayit', en: '/en/creator/register' },
-  { tr: '/creator/odeme', en: '/en/creator/payment' },
-  { tr: '/creator', en: '/en/creator' },
-]
+export { ROUTE_PAIRS } from '../routes/registry'
 
 function matchPattern(pattern: string, pathname: string): Record<string, string> | null {
   const patternParts = pattern.split('/').filter(Boolean)
@@ -145,13 +107,7 @@ export function isPublicPath(pathWithQuery: string): boolean {
   if (path.startsWith('/dergi/') || path.startsWith('/en/journal/')) return true
   for (const pair of ROUTE_PAIRS) {
     if (matchPattern(pair.tr, path) || matchPattern(pair.en, path)) {
-      const authRequired = [
-        '/hesap', '/profiller', '/mesajlar', '/listem', '/icerik/:id',
-        '/diziler', '/filmler', '/belgeseller', '/stand-up', '/klasikler',
-        '/dikey-diziler', '/genc-sinema', '/cekim-notlari', '/kisa-filmler',
-        '/creator', '/creator/odeme',
-      ]
-      const trAuth = authRequired.some((p) => matchPattern(p, pair.tr))
+      const trAuth = AUTH_REQUIRED_TR_PATHS.some((p) => matchPattern(p, pair.tr))
       return !trAuth
     }
   }
