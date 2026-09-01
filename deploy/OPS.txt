@@ -1,0 +1,46 @@
+Plooy — VPS operations (canonical)
+==================================
+
+## Paths (single source of truth)
+
+  Install dir:  /opt/sineoda
+  Database:     /opt/sineoda/persistent/data/sineoda.db
+  Uploads:      /opt/sineoda/persistent/uploads/
+  API port:     3001 (nginx → 80/443)
+
+## Normal deploy
+
+  PC:   npm run check:deploy && git push origin main
+  VPS:  cd /opt/sineoda && git pull && bash deploy/rebuild-vps.sh
+
+## Emergency (502 / black screen)
+
+  cd /opt/sineoda && bash deploy/recover-vps.sh
+
+  Fresh install (folder missing):
+  curl -fsSL https://raw.githubusercontent.com/sanalfikret/sineoda/main/deploy/vps-rescue.sh | bash
+
+## Health check
+
+  curl -s http://127.0.0.1:3001/api/health
+  → ok: true, storage.dbExists: true, auth.jwtExpiresIn: "30d"
+
+  Browser: hard refresh Ctrl+Shift+R — test / and /en
+
+## Script map
+
+| Script | When |
+|--------|------|
+| deploy/rebuild-vps.sh | Code update on VPS (canonical) |
+| deploy/recover-vps.sh | git pull + rebuild |
+| deploy/vps-rescue.sh | First install or lost folder |
+| deploy/backup-vps.sh | Auto before rebuild |
+| deploy/restore-db.sh | Manual DB restore only |
+| deploy/sync-to-vps.ps1 | Deploy from PC without GitHub |
+
+Deprecated wrappers (call recover/rebuild): vps-now.sh, update-vps.sh, deploy-vps.sh
+
+## Never
+
+  docker compose down -v
+  rm -rf persistent/

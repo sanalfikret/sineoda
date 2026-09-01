@@ -1,0 +1,5 @@
+DEPRECATED — do not use for Plooy production.
+
+Production is VPS-only: see deploy/PRODUCTION-VPS.txt and deploy/OPS.txt
+
+These files remain for historical reference only (shared hosting / Render experiments).
