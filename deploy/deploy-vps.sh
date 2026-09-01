@@ -1,13 +1,29 @@
 #!/usr/bin/env bash
-# Tek komut deploy — PuTTY: cd /opt/Plooy && bash deploy/deploy-vps.sh
+# Tek komut deploy — PuTTY: cd ~/plooy && bash deploy/deploy-vps.sh
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [ -f "$(dirname "$0")/rebuild-vps.sh" ]; then
+  ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+else
+  ROOT=""
+  for candidate in /opt/Plooy /opt/sineoda /opt/plooy /root/plooy /root/Plooy /root/sineoda; do
+    if [ -f "$candidate/deploy/rebuild-vps.sh" ]; then
+      ROOT="$candidate"
+      break
+    fi
+  done
+  if [ -z "$ROOT" ]; then
+    echo "HATA: Proje klasörü bulunamadı."
+    echo "  bash deploy/find-vps-project.sh"
+    echo "  veya: cd ~/plooy"
+    exit 1
+  fi
+fi
 cd "$ROOT"
 
 if [ ! -d .git ]; then
   echo "HATA: Git repo değil — pwd=$(pwd)"
-  echo "      Doğru klasör: cd /opt/Plooy"
+  echo "  bash deploy/find-vps-project.sh ile doğru klasörü bul"
   exit 1
 fi
 
