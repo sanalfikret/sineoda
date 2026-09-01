@@ -1,7 +1,12 @@
 {
   "title": "Hesabım",
+  "metaDescription": "Hesap bilgileri, abonelik, ödeme geçmişi ve profil yönetimi.",
   "switchProfile": "Profil Değiştir",
   "home": "Ana Sayfa",
+  "actions": {
+    "saveAccount": "Hesabı Kaydet",
+    "saving": "Kaydediliyor…"
+  },
   "sections": {
     "accountInfo": "Hesap Bilgileri",
     "subscription": "Abonelik",
@@ -64,7 +69,23 @@
     "showText": "Metni gör",
     "hideText": "Gizle",
     "ipLabel": "IP:",
-    "versionLabel": "Sürüm:"
+    "versionLabel": "Sürüm:",
+    "consentMeta": "{{date}} · IP: {{ip}} · Sürüm {{version}}"
+  },
+  "consentTypes": {
+    "terms": "Kullanım koşulları",
+    "privacy": "Gizlilik politikası",
+    "kvkk": "KVKK aydınlatma",
+    "cookies": "Çerez politikası",
+    "creator_terms": "İçerik sağlayıcı sözleşmesi"
+  },
+  "watchStatsPanel": {
+    "loading": "İstatistikler yükleniyor…",
+    "loadFailed": "İzleme istatistikleri yüklenemedi.",
+    "summary": "{{name}} — izleme özeti",
+    "totalWatch": "Toplam izleme",
+    "contentCount": "{{count}} içerik",
+    "empty": "Bu profilde henüz izleme kaydı yok."
   },
   "messages": {
     "accountUpdated": "Hesap bilgileri güncellendi.",

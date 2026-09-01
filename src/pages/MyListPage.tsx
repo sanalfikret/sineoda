@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { isContentAllowedForKids } from '../utils/contentRating'
 
 function MyListContent() {
-  const { t } = useTranslation('account')
+  const { t } = useTranslation('myList')
   const { watchlistItems } = useWatchlist()
   const { activeProfile } = useAuth()
   const { openDetail, openPlayer } = useContentUI()

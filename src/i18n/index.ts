@@ -12,6 +12,8 @@ import trProfiles from '../locales/tr/profiles.json'
 import enProfiles from '../locales/en/profiles.json'
 import trAccount from '../locales/tr/account.json'
 import enAccount from '../locales/en/account.json'
+import trMyList from '../locales/tr/myList.json'
+import enMyList from '../locales/en/myList.json'
 import trBrowse from '../locales/tr/browse.json'
 import enBrowse from '../locales/en/browse.json'
 import trContent from '../locales/tr/content.json'
@@ -47,6 +49,7 @@ const namespaces = [
   'payment',
   'profiles',
   'account',
+  'myList',
   'browse',
   'content',
   'creator',
@@ -67,6 +70,7 @@ void i18n.use(initReactI18next).init({
       payment: trPayment,
       profiles: trProfiles,
       account: trAccount,
+      myList: trMyList,
       browse: trBrowse,
       content: trContent,
       creator: trCreator,
@@ -83,6 +87,7 @@ void i18n.use(initReactI18next).init({
       payment: enPayment,
       profiles: enProfiles,
       account: enAccount,
+      myList: enMyList,
       browse: enBrowse,
       content: enContent,
       creator: enCreator,
