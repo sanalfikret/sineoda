@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { TrailerBackdrop } from './TrailerBackdrop'
 import type { ContentItem } from '../types/content'
+import { useBrowseLabels } from '../i18n/useBrowseLabels'
 
 interface HeroProps {
   item: ContentItem
@@ -11,6 +12,7 @@ interface HeroProps {
 
 export function Hero({ item, onPlay, onDetails, eyebrow }: HeroProps) {
   const { t } = useTranslation('content')
+  const { translateGenre, translateRating, translateDuration, translateContentType } = useBrowseLabels()
   const eyebrowLabel = eyebrow ?? t('hero.featured')
 
   return (
@@ -37,13 +39,13 @@ export function Hero({ item, onPlay, onDetails, eyebrow }: HeroProps) {
           </h1>
           <div className="mt-5 flex flex-wrap items-center gap-2 text-sm text-white/75">
             <span className="rounded border border-plooy-gold/30 bg-plooy-gold/10 px-2.5 py-0.5 text-xs font-semibold text-plooy-gold">
-              {item.rating}
+              {translateRating(item.rating)}
             </span>
             <span>{item.year}</span>
             <span className="text-white/40">•</span>
-            <span>{item.duration}</span>
+            <span>{translateDuration(item.duration)}</span>
             <span className="text-white/40">•</span>
-            <span className="capitalize">{item.type}</span>
+            <span>{translateContentType(item.type)}</span>
             {item.videoFormat === 'vertical' && (
               <>
                 <span className="text-white/40">•</span>
@@ -54,7 +56,7 @@ export function Hero({ item, onPlay, onDetails, eyebrow }: HeroProps) {
           <div className="mt-3 flex flex-wrap gap-2">
             {item.genres.slice(0, 4).map((genre) => (
               <span key={genre} className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/85">
-                {genre}
+                {translateGenre(genre)}
               </span>
             ))}
           </div>

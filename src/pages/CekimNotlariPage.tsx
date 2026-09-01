@@ -167,7 +167,7 @@ function CekimNotlariContent() {
                         onClick={() => toggleSection(section.id)}
                         className="mt-3 text-sm font-medium text-plooy-accent transition hover:text-white"
                       >
-                        {t('showAll', { count: section.items.length })}
+                        {t('showAllCount', { count: section.items.length })}
                       </button>
                     )}
                   </>
