@@ -31,9 +31,14 @@ import enInstall from '../locales/en/install.json'
 import enLegalDocuments from '../locales/en/legalDocuments.json'
 import { DEFAULT_LOCALE, LOCALE_STORAGE_KEY, type Locale } from './paths'
 
-const saved = (typeof localStorage !== 'undefined'
-  ? (localStorage.getItem(LOCALE_STORAGE_KEY) as Locale | null)
-  : null)
+let saved: Locale | null = null
+if (typeof localStorage !== 'undefined') {
+  try {
+    saved = localStorage.getItem(LOCALE_STORAGE_KEY) as Locale | null
+  } catch {
+    saved = null
+  }
+}
 
 const namespaces = [
   'common',
