@@ -62,15 +62,3 @@ try {
 } catch {
   // PWA / service worker opsiyonel — statik hostingde uygulama yine açılsın.
 }
-
-window.setTimeout(() => {
-  const root = document.getElementById('root')
-  if (root && root.getAttribute('data-plooy-boot') !== 'ready') {
-    root.setAttribute('data-plooy-boot', 'error')
-    root.innerHTML =
-      '<div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px;background:#090a0e;color:#e8eaef;font-family:system-ui,sans-serif;text-align:center">' +
-      '<div><p style="font-size:18px;font-weight:600;margin:0 0 8px">Sayfa yüklenemedi</p>' +
-      '<p style="margin:0 0 16px;color:#9aa3b5;font-size:14px">Eski önbellek veya bağlantı sorunu olabilir.</p>' +
-      '<button type="button" onclick="location.reload()" style="cursor:pointer;border:0;border-radius:8px;padding:10px 18px;background:#c9a962;color:#090a0e;font-weight:700">Yeniden dene</button></div></div>'
-  }
-}, 10000)
