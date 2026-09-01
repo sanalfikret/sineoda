@@ -96,6 +96,13 @@
     "ariaLabel": "Yaş sınırı: {{badge}}"
   },
   "playbackGuard": {
+    "idleTitle": "Hâlâ izliyor musun?",
+    "idleBody": "Uzun süre hareketsiz kaldın; oynatma duraklatıldı. Devam etmek ister misin?",
+    "dailyLimitTitle": "Günlük limit doldu",
+    "dailyLimitBody": "Bugünlük izleme hakkın bitti. Yarın kaldığın yerden devam edebilirsin.",
+    "otherDeviceTitle": "Başka cihazda oynatılıyor",
+    "otherDeviceBody": "Başka bir cihazda izleme devam ediyor. Aynı anda yalnızca bir ekrandan izleyebilirsin.",
+    "continue": "İzlemeye devam et",
     "kidsBlockedTitle": "Çocuk profili",
     "kidsBlockedBody": "Bu içerik çocuk profili için uygun değil."
   }

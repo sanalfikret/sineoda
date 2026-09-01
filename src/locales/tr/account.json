@@ -7,6 +7,30 @@
     "saveAccount": "Hesabı Kaydet",
     "saving": "Kaydediliyor…"
   },
+  "dailyQuota": {
+    "title": "Bugünkü izleme hakkın",
+    "note": "İstanbul saatiyle günlük limit: 3 farklı içerik veya 300 dakika.",
+    "loading": "Kota yükleniyor…",
+    "titles": "İçerik sayısı",
+    "titlesCount": "{{used}} / {{limit}}",
+    "minutes": "İzleme süresi",
+    "minutesCount": "{{used}} / {{limit}} dk",
+    "limitReached": "Bugünlük limitine ulaştın. Yarın yeni hakların aktif olur.",
+    "viewHistory": "İzleme geçmişi"
+  },
+  "password": {
+    "title": "Şifre",
+    "current": "Mevcut şifre",
+    "new": "Yeni şifre",
+    "confirm": "Yeni şifre (tekrar)",
+    "hint": "En az 6 karakter.",
+    "submit": "Şifreyi güncelle",
+    "saving": "Güncelleniyor…",
+    "success": "Şifren güncellendi.",
+    "mismatch": "Yeni şifreler eşleşmiyor.",
+    "tooShort": "Yeni şifre en az 6 karakter olmalı.",
+    "failed": "Şifre güncellenemedi."
+  },
   "sections": {
     "accountInfo": "Hesap Bilgileri",
     "subscription": "Abonelik",

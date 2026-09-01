@@ -1,0 +1,11 @@
+{
+  "title": "Watch History",
+  "subtitle": "Continue where you left off or watch again",
+  "backToAccount": "Back to account",
+  "sectionContinue": "Continue watching",
+  "sectionCompleted": "Completed",
+  "continue": "Continue · {{time}}",
+  "watchAgain": "Watch again",
+  "emptyTitle": "No watch history yet",
+  "emptyBody": "Titles appear here after you start watching."
+}

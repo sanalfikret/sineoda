@@ -7,6 +7,30 @@
     "saveAccount": "Save account",
     "saving": "Saving…"
   },
+  "dailyQuota": {
+    "title": "Today's watch allowance",
+    "note": "Daily limit (Istanbul time): 3 titles or 300 minutes.",
+    "loading": "Loading quota…",
+    "titles": "Titles",
+    "titlesCount": "{{used}} / {{limit}}",
+    "minutes": "Watch time",
+    "minutesCount": "{{used}} / {{limit}} min",
+    "limitReached": "You've reached today's limit. Your allowance resets tomorrow.",
+    "viewHistory": "Watch history"
+  },
+  "password": {
+    "title": "Password",
+    "current": "Current password",
+    "new": "New password",
+    "confirm": "Confirm new password",
+    "hint": "At least 6 characters.",
+    "submit": "Update password",
+    "saving": "Updating…",
+    "success": "Password updated.",
+    "mismatch": "New passwords don't match.",
+    "tooShort": "New password must be at least 6 characters.",
+    "failed": "Could not update password."
+  },
   "sections": {
     "accountInfo": "Account Information",
     "subscription": "Subscription",
