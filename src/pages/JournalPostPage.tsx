@@ -14,7 +14,7 @@ import { useLocale } from '../i18n/LocaleContext'
 
 export function JournalPostPage() {
   const { t } = useTranslation('journal')
-  const { localizePath } = useLocale()
+  const { localizePath, locale } = useLocale()
   const { slug = '' } = useParams()
   const { user, activeProfile } = useAuth()
   const { catalog } = useContent()
@@ -43,7 +43,7 @@ export function JournalPostPage() {
   if (!post) {
     return (
       <div className="flex min-h-[50dvh] flex-col items-center justify-center gap-4 px-4 text-center">
-        <p className="text-lg text-white">{t('notFound')}</p>
+        <p className="text-lg text-white">{t('postNotFound')}</p>
         <Link to={localizePath('/dergi')} className="text-plooy-accent hover:underline">
           {t('backToJournal')}
         </Link>
@@ -57,13 +57,13 @@ export function JournalPostPage() {
         title={post.title}
         description={post.excerpt || post.title}
         image={post.coverImage ? resolveMediaUrl(post.coverImage) : null}
-        path={`/dergi/${post.slug}`}
+        path={localizePath(`/dergi/${post.slug}`)}
       />
       {!isMember && (
         <header className="safe-top border-b border-white/5 px-4 py-5 sm:px-6">
           <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
             <Link to={localizePath('/dergi')} className="text-sm text-plooy-muted transition hover:text-white">
-              {t('journalBack')}
+              ← {t('backToJournal')}
             </Link>
             <Link to={localizePath('/')} className="text-sm font-medium text-plooy-accent">
               {BRAND_NAME}
@@ -75,12 +75,12 @@ export function JournalPostPage() {
       <article className={`mx-auto max-w-3xl px-5 sm:px-8 ${isMember ? 'py-8' : 'py-10 sm:py-14'}`}>
         {isMember && (
           <Link to={localizePath('/dergi')} className="text-sm text-plooy-muted transition hover:text-white">
-            {t('journalBack')}
+            ← {t('backToJournal')}
           </Link>
         )}
 
         <p className={`text-xs font-semibold uppercase tracking-[0.22em] text-plooy-accent ${isMember ? 'mt-4' : ''}`}>
-          {formatJournalDate(post.publishedAt)} · {post.author}
+          {formatJournalDate(post.publishedAt, locale)} · {post.author}
         </p>
         <h1 className="mt-4 text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">
           {post.title}

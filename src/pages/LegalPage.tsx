@@ -83,7 +83,7 @@ export function LegalPage() {
               ← {t('home')}
             </Link>
           )}
-          <PlooyLogo tone="on-dark" linked linkTo="/" className="h-7" />
+          <PlooyLogo tone="on-dark" linked linkTo={localizePath('/')} className="h-7" />
         </div>
       </header>
 

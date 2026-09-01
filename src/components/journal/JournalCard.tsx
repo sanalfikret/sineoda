@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { resolveMediaUrl } from '../../api/client'
 import type { JournalPost } from '../../types/journal'
+import { useLocale } from '../../i18n/LocaleContext'
 import { formatJournalDate } from '../../utils/journal'
 
 interface JournalCardProps {
@@ -10,9 +11,11 @@ interface JournalCardProps {
 }
 
 export function JournalCard({ post, featured = false, compact = false }: JournalCardProps) {
+  const { localizePath, locale } = useLocale()
+
   return (
     <Link
-      to={`/dergi/${post.slug}`}
+      to={localizePath(`/dergi/${post.slug}`)}
       className={`group block overflow-hidden rounded-xl border border-white/[0.06] bg-plooy-surface transition hover:border-white/12 ${
         featured ? 'sm:grid sm:grid-cols-[1.1fr_1fr]' : ''
       }`}
@@ -30,7 +33,7 @@ export function JournalCard({ post, featured = false, compact = false }: Journal
       </div>
       <div className={`flex flex-col justify-center ${compact ? 'p-4' : featured ? 'p-5 sm:p-8' : 'p-5 sm:p-6'}`}>
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-plooy-accent">
-          {formatJournalDate(post.publishedAt)}
+          {formatJournalDate(post.publishedAt, locale)}
         </p>
         <h3
           className={`mt-2 font-semibold leading-snug text-white group-hover:text-plooy-accent ${

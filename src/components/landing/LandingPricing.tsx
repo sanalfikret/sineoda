@@ -1,10 +1,13 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { resolveMediaUrl } from '../../api/client'
 import type { LandingCampaignSection } from '../../constants/landingDefaults'
 import { useLocale } from '../../i18n/LocaleContext'
 
 export function LandingPricing({ section }: { section: LandingCampaignSection }) {
+  const { t } = useTranslation('landing')
   const { localizePath } = useLocale()
+
   return (
     <section className="px-5 py-20 sm:px-8">
       <div className="mx-auto max-w-[1400px]">
@@ -12,30 +15,30 @@ export function LandingPricing({ section }: { section: LandingCampaignSection })
           <div className="grid lg:grid-cols-2">
             <div className="p-8 sm:p-12 lg:p-14">
               <p className="text-xs font-bold uppercase tracking-[0.3em] text-plooy-gold">
-                {section.eyebrow}
+                {t('campaign.eyebrow')}
               </p>
-              <h2 className="mt-4 text-3xl font-bold sm:text-4xl">{section.title}</h2>
-              <p className="mt-4 text-base text-white/55">{section.description}</p>
+              <h2 className="mt-4 text-3xl font-bold sm:text-4xl">{t('campaign.title')}</h2>
+              <p className="mt-4 text-base text-white/55">{t('campaign.description')}</p>
 
               <div className="mt-8 space-y-4">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-extrabold">{section.price}</span>
-                  <span className="text-white/50">{section.priceSuffix}</span>
+                  <span className="text-5xl font-extrabold">{t('campaign.price')}</span>
+                  <span className="text-white/50">{t('campaign.priceSuffix')}</span>
                 </div>
-                <p className="text-sm text-white/45">{section.priceNote}</p>
+                <p className="text-sm text-white/45">{t('campaign.priceNote')}</p>
               </div>
 
               <Link
-                to={localizePath(section.ctaPrimaryLink)}
+                to={localizePath(section.ctaPrimaryLink || '/kayit')}
                 className="mt-8 inline-flex rounded-md bg-white px-8 py-3.5 text-sm font-bold text-black transition hover:bg-white/90"
               >
-                {section.ctaPrimary}
+                {t('campaign.ctaPrimary')}
               </Link>
               <Link
-                to={localizePath(section.ctaSecondaryLink)}
+                to={localizePath(section.ctaSecondaryLink || '/planlar')}
                 className="ml-4 inline-flex text-sm font-semibold text-white/70 underline-offset-4 hover:text-white hover:underline"
               >
-                {section.ctaSecondary}
+                {t('campaign.ctaSecondary')}
               </Link>
             </div>
 

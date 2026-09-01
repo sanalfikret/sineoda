@@ -8,7 +8,7 @@ interface JournalPaginationProps {
 }
 
 export function JournalPagination({ page, totalPages, total, onPageChange }: JournalPaginationProps) {
-  const { t } = useTranslation('landing')
+  const { t } = useTranslation('journal')
 
   if (totalPages <= 1) return null
 
@@ -17,10 +17,10 @@ export function JournalPagination({ page, totalPages, total, onPageChange }: Jou
   return (
     <nav
       className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-8"
-      aria-label={t('journal.paginationAria')}
+      aria-label={t('pagination.ariaLabel')}
     >
       <p className="text-sm text-plooy-muted">
-        {t('journal.paginationSummary', { total, page, totalPages })}
+        {t('pagination.summary', { total, page, totalPages })}
       </p>
       <div className="flex flex-wrap items-center gap-2">
         <button
@@ -29,7 +29,7 @@ export function JournalPagination({ page, totalPages, total, onPageChange }: Jou
           onClick={() => onPageChange(page - 1)}
           className="rounded-lg border border-white/10 px-3 py-2 text-sm text-white/80 transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {t('journal.prev')}
+          {t('pagination.previous')}
         </button>
         {pages.map((item, index) =>
           item === '…' ? (
@@ -58,7 +58,7 @@ export function JournalPagination({ page, totalPages, total, onPageChange }: Jou
           onClick={() => onPageChange(page + 1)}
           className="rounded-lg border border-white/10 px-3 py-2 text-sm text-white/80 transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {t('journal.next')}
+          {t('pagination.next')}
         </button>
       </div>
     </nav>

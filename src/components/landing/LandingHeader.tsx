@@ -75,7 +75,7 @@ export function LandingHeader({ scrolled, hiddenNavIds = [] }: LandingHeaderProp
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <LanguageSwitcher className="hidden md:inline-flex" />
+          <LanguageSwitcher className="inline-flex" />
           <InstallAppButton
             variant="ghost"
             className="hidden sm:inline-flex"

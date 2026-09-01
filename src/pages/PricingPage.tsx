@@ -145,7 +145,7 @@ export function PricingPage() {
     <div className="min-h-dvh bg-plooy-bg">
       <header className="safe-top border-b border-white/5 px-4 py-5 sm:px-6">
         <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <PlooyLogo tone="on-dark" linked linkTo="/" className="h-8" />
+          <PlooyLogo tone="on-dark" linked linkTo={localizePath('/')} className="h-8" />
           <Link to={localizePath(user ? '/hesap' : '/giris')} className="text-sm text-plooy-gold hover:underline">
             {user ? t('accountLink') : t('loginLink')}
           </Link>

@@ -51,14 +51,14 @@ export function LandingHero({
 
       <div className="relative mx-auto flex min-h-[88dvh] max-w-[1400px] flex-col items-center justify-center px-5 pb-20 pt-28 text-center sm:min-h-dvh sm:px-8">
         <h1 className="max-w-4xl font-semibold leading-[1.05] tracking-tight">
-          <span className="block text-[2rem] text-white sm:text-5xl lg:text-6xl">{hero.line1}</span>
+          <span className="block text-[2rem] text-white sm:text-5xl lg:text-6xl">{t('hero.line1')}</span>
           <span className="mt-3 block text-[1.35rem] font-normal text-white/75 sm:text-3xl lg:text-4xl">
-            {hero.line2}
+            {t('hero.line2')}
           </span>
         </h1>
 
         <p className="mt-8 max-w-2xl text-base leading-relaxed text-plooy-muted sm:text-lg">
-          {hero.description}
+          {t('hero.description')}
         </p>
 
         <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4">
@@ -66,17 +66,17 @@ export function LandingHero({
             to={localizePath(hero.ctaPrimaryLink || '/kayit')}
             className="inline-flex h-12 min-w-[200px] items-center justify-center rounded-md bg-plooy-accent px-10 text-base font-semibold text-plooy-bg transition hover:brightness-105"
           >
-            {hero.ctaPrimary}
+            {t('hero.ctaPrimary')}
           </Link>
           <Link
             to={localizePath(hero.ctaSecondaryLink || '/giris')}
             className="inline-flex h-12 min-w-[200px] items-center justify-center rounded-md border border-white/20 px-10 text-base font-medium text-white/90 transition hover:border-white/35 hover:bg-white/5"
           >
-            {hero.ctaSecondary}
+            {t('hero.ctaSecondary')}
           </Link>
         </div>
 
-        <p className="mt-5 max-w-md text-xs leading-relaxed text-white/40">{hero.legalNote}</p>
+        <p className="mt-5 max-w-md text-xs leading-relaxed text-white/40">{t('hero.legalNote')}</p>
 
         {showFeaturedCard && (
           <div className="mt-14 w-full max-w-xl rounded-xl border border-white/10 bg-black/35 px-5 py-4 text-left backdrop-blur-sm">

@@ -1,21 +1,22 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { fetchJournalPosts } from '../api/client'
 import { JournalCard } from '../components/journal/JournalCard'
 import { JournalPagination } from '../components/journal/JournalPagination'
 import { JOURNAL_PAGE_SIZE } from '../constants/journal'
-import { DEFAULT_LANDING_SECTIONS } from '../constants/landingDefaults'
 import { DEMO_JOURNAL_POSTS } from '../data/demoJournal'
-import type { JournalListSection, JournalPost } from '../types/journal'
+import { useLocale } from '../i18n/LocaleContext'
+import type { JournalPost } from '../types/journal'
 
 export function JournalListPage() {
   const { t } = useTranslation('journal')
+  const { t: tl } = useTranslation('landing')
+  const { localizePath } = useLocale()
   const [searchParams, setSearchParams] = useSearchParams()
   const page = Math.max(1, Number(searchParams.get('page') ?? '1') || 1)
 
   const [posts, setPosts] = useState<JournalPost[]>(DEMO_JOURNAL_POSTS)
-  const [section, setSection] = useState<JournalListSection>(DEFAULT_LANDING_SECTIONS.journal)
   const [total, setTotal] = useState(DEMO_JOURNAL_POSTS.length)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
@@ -29,7 +30,6 @@ export function JournalListPage() {
           setTotal(data.total)
           setTotalPages(data.totalPages)
         }
-        if (data.section) setSection(data.section)
       })
       .catch(() => undefined)
       .finally(() => setLoading(false))
@@ -48,14 +48,20 @@ export function JournalListPage() {
 
   return (
     <main className="mx-auto max-w-[1400px] px-5 py-12 sm:px-8 sm:py-16">
-      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-plooy-accent">
-        {section.eyebrow}
+      <Link
+        to={localizePath('/')}
+        className="inline-flex text-sm text-plooy-muted transition hover:text-white"
+      >
+        ← {tl('journal.backHome')}
+      </Link>
+      <p className="mt-6 text-xs font-semibold uppercase tracking-[0.28em] text-plooy-accent">
+        {tl('journal.eyebrow')}
       </p>
       <h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl">
-        {section.title}
+        {tl('journal.title')}
       </h1>
       <p className="mt-4 max-w-2xl text-base leading-relaxed text-plooy-muted">
-        {section.description}
+        {tl('journal.description')}
       </p>
 
       {loading ? (

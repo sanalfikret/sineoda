@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import type { LandingSectionsConfig } from '../../constants/landingDefaults'
 import { useLocale } from '../../i18n/LocaleContext'
 
@@ -8,8 +9,10 @@ export function LandingStudentCinemaSection({
 }: {
   section: LandingSectionsConfig['studentCinema']
 }) {
+  const { t } = useTranslation('landing')
   const { localizePath } = useLocale()
   const stepsRef = useRef<HTMLDivElement>(null)
+  const steps = t('studentCinema.steps', { returnObjects: true }) as Array<{ title: string; text: string }>
 
   return (
     <section
@@ -19,22 +22,22 @@ export function LandingStudentCinemaSection({
       <div className="relative mx-auto max-w-[1400px] px-5 py-20 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300/90">
-            {section.eyebrow}
+            {t('studentCinema.eyebrow')}
           </p>
           <h2 className="mt-5 text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl">
-            {section.title}
+            {t('studentCinema.title')}
           </h2>
           <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/60 sm:text-lg">
-            {section.subtitle}
+            {t('studentCinema.subtitle')}
           </p>
         </div>
 
         <div ref={stepsRef} id="nasil-calisir" className="mt-16 scroll-mt-28">
           <p className="mb-8 text-center text-xs font-semibold uppercase tracking-[0.24em] text-white/40">
-            {section.stepsHeading}
+            {t('studentCinema.stepsHeading')}
           </p>
           <div className="grid gap-5 md:grid-cols-3">
-            {section.steps.map((step, index) => (
+            {steps.map((step, index) => (
               <article
                 key={`${step.title}-${index}`}
                 className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6"
@@ -54,18 +57,18 @@ export function LandingStudentCinemaSection({
             to={localizePath(section.ctaPrimaryLink || '/creator/kayit?program=genc-sinema')}
             className="inline-flex h-14 min-w-[240px] items-center justify-center rounded-lg bg-emerald-500 px-10 text-base font-bold text-[#07110d] shadow-lg shadow-emerald-500/20 transition hover:brightness-110"
           >
-            {section.ctaPrimary}
+            {t('studentCinema.ctaPrimary')}
           </Link>
           <button
             type="button"
             onClick={() => stepsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
             className="inline-flex h-14 min-w-[240px] items-center justify-center rounded-lg border border-white/20 bg-white/5 px-10 text-base font-semibold text-white backdrop-blur-sm transition hover:border-emerald-400/40 hover:bg-white/10"
           >
-            {section.ctaSecondary}
+            {t('studentCinema.ctaSecondary')}
           </button>
         </div>
 
-        <p className="mt-8 text-center text-xs text-white/35">{section.footnote}</p>
+        <p className="mt-8 text-center text-xs text-white/35">{t('studentCinema.footnote')}</p>
       </div>
     </section>
   )

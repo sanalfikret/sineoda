@@ -18,7 +18,10 @@ export function LoginPage() {
   const [resendEmail, setResendEmail] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const from = (location.state as { from?: string } | null)?.from ?? localizePath('/')
+  const rawFrom = (location.state as { from?: string } | null)?.from
+  const loginPath = localizePath('/giris')
+  const from =
+    rawFrom && rawFrom !== loginPath ? rawFrom : localizePath('/')
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -40,7 +43,7 @@ export function LoginPage() {
   }
 
   return (
-    <AuthLayout title={t('auth.loginTitle')} subtitle={t('auth.loginSubtitle')}>
+    <AuthLayout title={t('auth.loginTitle')} subtitle={t('auth.loginSubtitle')} backTo={from}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
