@@ -18,8 +18,7 @@ import { LandingPricing } from './LandingPricing'
 import { LandingCreatorSection } from './LandingCreatorSection'
 import { LandingStudentCinemaSection } from './LandingStudentCinemaSection'
 import { LandingHero } from './LandingHero'
-import { StudentCinemaPicksRow } from '../StudentCinemaPicksRow'
-import { StudentCinemaMonthlyWinnersRow } from '../StudentCinemaMonthlyWinnersRow'
+import { ProgramShowcaseRow } from '../ProgramShowcaseRow'
 import type { ContentItem } from '../../types/content'
 import type { CekimNotlariSection, LandingShowcaseResponse } from '../../api/client'
 import type { SiteNavId } from '../../constants/siteNav'
@@ -82,7 +81,8 @@ function renderLandingBlock(id: string, ctx: LandingPageBlockContext): ReactNode
       return <LandingSlider items={ctx.sliderItems} />
     case 'studentMonthlyWinners':
       return (
-        <StudentCinemaMonthlyWinnersRow
+        <ProgramShowcaseRow
+          kind="studentMonthlyWinners"
           items={ctx.studentMonthlyWinners}
           title={resolvePublicRowTitle('studentMonthlyWinners', ctx.blockTitles ?? {})}
           guestMode
@@ -91,7 +91,8 @@ function renderLandingBlock(id: string, ctx: LandingPageBlockContext): ReactNode
       )
     case 'studentPicks':
       return (
-        <StudentCinemaPicksRow
+        <ProgramShowcaseRow
+          kind="studentPicks"
           items={ctx.studentPicks}
           title={resolvePublicRowTitle('studentPicks', ctx.blockTitles ?? {})}
           guestMode

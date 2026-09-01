@@ -12,10 +12,9 @@ import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
 import { useWatchlist } from '../context/WatchlistContext'
 import { buildBrowseRows, filterCatalog, genresForCatalog, pickFeatured, STUDENT_MONTHLY_WINNERS_ROW_ID } from '../utils/browse'
-import { BRAND_STUDENT_CINEMA } from '../constants/brand'
-import { FeaturedShowcaseRow, usesFeaturedShowcaseRow } from '../components/FeaturedShowcaseRow'
+import { FeaturedShowcaseRow } from '../components/FeaturedShowcaseRow'
+import { browseRowLayout, browseRowOpensPlayer, browseRowViewAllPath, usesFeaturedShowcaseRow } from '../catalog/browseRowUi'
 import { restoreBrowseScroll } from '../utils/browseState'
-import { isVerticalContent } from '../utils/vertical'
 import { isContentAllowedForKids } from '../utils/contentRating'
 import { useLocale } from '../i18n/LocaleContext'
 import { useBrowseLabels } from '../i18n/useBrowseLabels'
@@ -202,14 +201,11 @@ function BrowseContent({
     ? (item: ContentItem) => void openPlayer(item)
     : openDetail
 
-  const rowLayout = (rowId: string, _rowTitle: string, items: ContentItem[]) => {
-    if (verticalOnly) return 'portrait' as const
-    if (rowId === 'dikey-diziler' || items.every(isVerticalContent)) return 'portrait' as const
-    return 'landscape' as const
-  }
+  const rowLayout = (rowId: string, _rowTitle: string, items: ContentItem[]) =>
+    browseRowLayout(rowId, items, verticalOnly)
 
   const rowSelect = (rowId: string) => {
-    if (verticalOnly || rowId === 'dikey-diziler') {
+    if (browseRowOpensPlayer(rowId, verticalOnly)) {
       return (item: ContentItem) => void openPlayer(item)
     }
     return handleSelect
@@ -353,23 +349,12 @@ function BrowseContent({
           </p>
         ) : (
           rows.map((row) => {
-            const viewAllHref =
-              !activeGenre &&
-              !contentType &&
-              row.id === BRAND_STUDENT_CINEMA.id &&
-              !hiddenNavIds.includes('gencSinema')
-                ? localizePath('/genc-sinema')
-                : !activeGenre &&
-                    !contentType &&
-                    row.id === STUDENT_MONTHLY_WINNERS_ROW_ID &&
-                    !hiddenNavIds.includes('gencSinema')
-                  ? localizePath('/genc-sinema')
-                  : !activeGenre &&
-                      !contentType &&
-                      row.id === 'dikey-diziler' &&
-                      !hiddenNavIds.includes('dikey')
-                    ? localizePath('/dikey-diziler')
-                    : undefined
+            const viewAllPath = browseRowViewAllPath(row.id, {
+              activeGenre,
+              contentType,
+              hiddenNavIds,
+            })
+            const viewAllHref = viewAllPath ? localizePath(viewAllPath) : undefined
 
             if (!isBrowseList && usesFeaturedShowcaseRow(row.title, row.id)) {
               return (

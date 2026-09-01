@@ -6,9 +6,11 @@ import {
 
 export type LandingBlockTitlesConfig = Partial<Record<BuiltInLandingBlockId, string>>
 
+import { PROGRAM_SHOWCASE_ROWS } from '../../shared/catalog/programRows'
+
 export const LANDING_PUBLIC_ROW_TITLE_DEFAULTS: Partial<Record<BuiltInLandingBlockId, string>> = {
-  studentPicks: 'Ayın Genç Sinema Seçkileri',
-  studentMonthlyWinners: 'Ayın Genç Sinema Birincileri',
+  studentPicks: PROGRAM_SHOWCASE_ROWS.studentPicks.title,
+  studentMonthlyWinners: PROGRAM_SHOWCASE_ROWS.studentMonthlyWinners.title,
 }
 
 export const LANDING_BLOCKS_WITH_PUBLIC_ROW_TITLE: BuiltInLandingBlockId[] = [

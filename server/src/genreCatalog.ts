@@ -1,11 +1,8 @@
+import { BROWSE_GENRES } from '../../shared/catalog/genres.js'
 import { dbGet, dbRun } from './db.js'
 import { buildGenreToEditorialIdMap } from './editorialCategories.js'
 
-const FEATURED_BROWSE_GENRES = [
-  'Aksiyon', 'Dram', 'Suç', 'Gerilim', 'Komedi', 'Romantik', 'Aile', 'Belgesel',
-  'Gizem', 'Stand-up', 'Din Temalı', 'Korku', 'Bilim Kurgu', 'Fantastik',
-  'Macera', 'Animasyon', 'Anime', 'Müzikal', 'Reality', 'Yerli', 'Klasik', 'Spor',
-] as const
+const FEATURED_BROWSE_GENRES = BROWSE_GENRES
 
 const POSTERS = [
   'photo-1536440136628-849c177e76a1', 'photo-1489599849927-2ee91cede3ba', 'photo-1478720568477-152d9b164e26',

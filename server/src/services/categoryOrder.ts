@@ -1,8 +1,9 @@
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { isCekimCategoryId } from '../constants/cekimNotlari.js'
+import { STUDENT_MONTHLY_WINNERS_ROW_ID } from '../../../shared/catalog/programRows.js'
 
 const SETTINGS_KEY = 'category_order'
-export const STUDENT_MONTHLY_WINNERS_ROW_ID = 'student-monthly-winners'
+export { STUDENT_MONTHLY_WINNERS_ROW_ID }
 
 function isVirtualBrowseRowId(categoryId: string) {
   return categoryId === STUDENT_MONTHLY_WINNERS_ROW_ID

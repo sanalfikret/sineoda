@@ -5,8 +5,12 @@ import { isCekimCategoryId } from '../constants/cekimNotlari'
 import type { ContentCategory, ContentItem, ContentType } from '../types/content'
 import { isContentAllowedForKids } from './contentRating'
 
-export const STUDENT_MONTHLY_WINNERS_ROW_ID = 'student-monthly-winners'
-export const STUDENT_MONTHLY_WINNERS_ROW_TITLE = 'Ayın Genç Sinema Birincileri'
+import {
+  STUDENT_MONTHLY_WINNERS_ROW_ID,
+  STUDENT_MONTHLY_WINNERS_ROW_TITLE,
+} from '../../shared/catalog/programRows'
+
+export { STUDENT_MONTHLY_WINNERS_ROW_ID, STUDENT_MONTHLY_WINNERS_ROW_TITLE }
 
 export type BrowseFilterOptions = {
   type?: ContentType | null
