@@ -30,7 +30,7 @@ const NAV_I18N: Record<SiteNavId, { label: string; shortLabel?: string }> = {
 
 export function Header() {
   const { t } = useTranslation()
-  const { user, activeProfile, logout, isCreator, clearActiveProfile } = useAuth()
+  const { user, activeProfile, logout, isCreator, isAdmin, clearActiveProfile } = useAuth()
   const { hiddenNavIds } = useContent()
   const { openSearch } = useSearchUI()
   const { localizePath } = useLocale()
@@ -43,7 +43,8 @@ export function Header() {
   const [exploreOpen, setExploreOpen] = useState(false)
   const [unreadMessages, setUnreadMessages] = useState(0)
 
-  const showMemberInbox = Boolean(user && activeProfile && !isCreator && user.role === 'user')
+  const canOpenMessagesPage = Boolean(user && activeProfile && !isCreator)
+  const showMemberInbox = Boolean(canOpenMessagesPage && !isAdmin)
 
   useEffect(() => {
     if (!showMemberInbox) {
@@ -340,14 +341,14 @@ export function Header() {
                     </>
                   ) : (
                     <>
-                      {showMemberInbox && (
+                      {canOpenMessagesPage && (
                         <Link
                           to={localizePath('/mesajlar')}
                           className="flex items-center justify-between px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
                           onClick={() => setUserMenuOpen(false)}
                         >
                           <span>{t('nav.messages')}</span>
-                          {unreadMessages > 0 && (
+                          {showMemberInbox && unreadMessages > 0 && (
                             <span className="rounded-full bg-plooy-gold px-2 py-0.5 text-xs font-semibold text-plooy-bg">
                               {unreadMessages}
                             </span>
@@ -468,7 +469,7 @@ export function Header() {
                 </Link>
               </li>
             )}
-            {showMemberInbox && (
+            {canOpenMessagesPage && (
               <li>
                 <Link
                   to={localizePath('/mesajlar')}
@@ -476,7 +477,7 @@ export function Header() {
                   onClick={() => setMenuOpen(false)}
                 >
                   <span>{t('nav.messages')}</span>
-                  {unreadMessages > 0 && (
+                  {showMemberInbox && unreadMessages > 0 && (
                     <span className="rounded-full bg-plooy-gold px-2 py-0.5 text-xs font-semibold text-plooy-bg">
                       {unreadMessages}
                     </span>

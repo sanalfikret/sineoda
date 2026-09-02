@@ -70,14 +70,13 @@ export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
 
   return (
     <div
-      className="safe-top safe-bottom fixed inset-0 z-50 flex flex-col bg-plooy-bg/95 backdrop-blur-md"
+      className="safe-top safe-bottom fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-plooy-bg/95 backdrop-blur-md"
       role="dialog"
       aria-modal="true"
       aria-label={t('search.ariaLabel')}
     >
-      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col overflow-hidden px-4 py-5 sm:px-6">
-        <div className="shrink-0">
-          <div className="flex items-center gap-3">
+      <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6">
+        <div className="flex items-center gap-3">
           <div className="relative flex-1">
             <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-plooy-muted" />
             <input
@@ -137,9 +136,8 @@ export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
             ))}
           </select>
         </div>
-        </div>
 
-        <div className="mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6">
+        <div className="mt-6 pb-6">
           <p className="mb-4 text-sm text-plooy-muted">{t('search.resultsCount', { count: results.length })}</p>
 
           {results.length > 0 ? (
