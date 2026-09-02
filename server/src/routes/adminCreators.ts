@@ -37,9 +37,34 @@ function mapCreatorContentItem(row: ContentRow, stats?: ReturnType<typeof getCon
 function getStandardCreatorContent(contentId: string) {
   return dbGet<ContentRow>(
     `SELECT * FROM content
-     WHERE id = ? AND creator_id IS NOT NULL AND program = 'standard'`,
+     WHERE id = ?
+       AND creator_id IS NOT NULL
+       AND COALESCE(NULLIF(program, ''), 'standard') = 'standard'`,
     [contentId],
   )
+}
+
+function publishPendingStandardFilms(creatorId: string, adminUserId: string) {
+  const rows = dbAll<ContentRow>(
+    `SELECT * FROM content
+     WHERE creator_id = ?
+       AND review_status = 'pending'
+       AND COALESCE(NULLIF(program, ''), 'standard') = 'standard'`,
+    [creatorId],
+  )
+  const now = new Date().toISOString()
+  const publishedIds: string[] = []
+  for (const row of rows) {
+    applyCreatorReviewStatus(row, 'published', { publishedAt: now })
+    notifyCreatorFilmReview({
+      content: row,
+      reviewStatus: 'published',
+      previousStatus: row.review_status ?? null,
+      adminUserId,
+    })
+    publishedIds.push(row.id)
+  }
+  return publishedIds
 }
 
 router.get('/creators', requireAdmin, (_req: AuthRequest, res) => {
@@ -149,7 +174,13 @@ router.patch('/creators/:id', requireAdmin, (req: AuthRequest, res) => {
   }
 
   dbRun('UPDATE creators SET status = ? WHERE id = ?', [status, creator.id])
-  res.json({ ok: true, status })
+
+  let publishedFilmIds: string[] = []
+  if (status === 'approved') {
+    publishedFilmIds = publishPendingStandardFilms(creator.id, req.auth!.userId)
+  }
+
+  res.json({ ok: true, status, publishedFilmIds, publishedCount: publishedFilmIds.length })
 })
 
 router.get('/content/pending', requireAdmin, (_req: AuthRequest, res) => {
@@ -158,7 +189,9 @@ router.get('/content/pending', requireAdmin, (_req: AuthRequest, res) => {
      FROM content c
      LEFT JOIN creators cr ON cr.id = c.creator_id
      LEFT JOIN users u ON u.id = cr.user_id
-     WHERE c.review_status = 'pending' AND c.program = 'standard' AND c.creator_id IS NOT NULL
+     WHERE c.review_status = 'pending'
+       AND COALESCE(NULLIF(c.program, ''), 'standard') = 'standard'
+       AND c.creator_id IS NOT NULL
      ORDER BY c.content_added_at DESC`,
   )
 
