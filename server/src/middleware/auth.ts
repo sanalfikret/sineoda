@@ -7,6 +7,8 @@ import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
 
 /** Oturum süresi — env ile kısaltılamaz (admin panel 2dk logout sorununu önler). */
 const JWT_EXPIRES_IN = '30d'
+/** Süresi dolmuş token en fazla bu kadar süre sonra yenilenir; sonrası tekrar giriş gerekir. */
+const JWT_REFRESH_GRACE_MS = 7 * 24 * 60 * 60 * 1000
 
 export function resolveJwtExpiresIn() {
   return JWT_EXPIRES_IN
@@ -20,14 +22,20 @@ export function verifyToken(token: string) {
   return jwt.verify(token, config.jwtSecret) as JwtPayload
 }
 
-/** Süresi dolmuş ama imzası geçerli token — admin kaydet 401 önlemi. */
+/** Süresi dolmuş ama imzası geçerli token — kısa yenileme penceresi içinde. */
 export function readAuthPayload(token: string): JwtPayload | null {
   try {
     return verifyToken(token)
   } catch (err) {
     if (err instanceof jwt.TokenExpiredError) {
       try {
-        return jwt.verify(token, config.jwtSecret, { ignoreExpiration: true }) as JwtPayload
+        const decoded = jwt.verify(token, config.jwtSecret, { ignoreExpiration: true }) as JwtPayload & {
+          exp?: number
+        }
+        if (!decoded.exp) return null
+        const expiredForMs = Date.now() - decoded.exp * 1000
+        if (expiredForMs > JWT_REFRESH_GRACE_MS) return null
+        return decoded
       } catch {
         return null
       }

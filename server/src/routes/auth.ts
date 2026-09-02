@@ -15,6 +15,12 @@ import { isValidTurkishMobile, normalizePhone, sendVerificationSms } from '../se
 import { recordSignupConsents } from '../services/legalConsent.js'
 import { getSiteMode } from '../services/siteMode.js'
 import { getClientIp, getUserAgent } from '../utils/clientIp.js'
+import { allowDevSecretLeaks } from '../security/devSecrets.js'
+import {
+  authForgotPasswordLimiter,
+  authLoginLimiter,
+  authSmsLimiter,
+} from '../security/rateLimit.js'
 import type { JwtPayload, ProfileRow, UserRow } from '../types.js'
 
 const router = Router()
@@ -73,7 +79,7 @@ async function createEmailChangeToken(userId: string, newEmail: string) {
   return sendEmailChangeConfirmationEmail(newEmail, confirmUrl)
 }
 
-router.post('/sms/send', async (req, res) => {
+router.post('/sms/send', authSmsLimiter, async (req, res) => {
   const phone = String(req.body.phone ?? '')
   if (!isValidTurkishMobile(phone)) {
     res.status(400).json({ error: 'Geçerli bir Türkiye cep telefonu numarası girin (5xx xxx xx xx).' })
@@ -101,7 +107,7 @@ router.post('/sms/send', async (req, res) => {
     res.json({
       message: 'Doğrulama kodu gönderildi.',
       expiresInSeconds: 300,
-      ...(result.devMode ? { devCode: result.devCode } : {}),
+      ...(allowDevSecretLeaks() && result.devMode ? { devCode: result.devCode } : {}),
     })
   } catch (error) {
     res.status(500).json({ error: error instanceof Error ? error.message : 'SMS gönderilemedi.' })
@@ -250,11 +256,11 @@ router.post('/signup', async (req, res) => {
       'Kayıt alındı. E-postanı doğrula, ardından giriş yap — seçtiğin plan için ödeme adımına yönlendirileceksin.',
     email: normalizedEmail,
     planId: selectedPlanId,
-    ...(emailResult.devMode ? { devVerifyUrl: emailResult.verifyUrl } : {}),
+    ...(allowDevSecretLeaks() && emailResult.devMode ? { devVerifyUrl: emailResult.verifyUrl } : {}),
   })
 })
 
-router.post('/login', (req, res) => {
+router.post('/login', authLoginLimiter, (req, res) => {
   const { email, password, requireAdmin } = req.body as {
     email?: string
     password?: string
@@ -441,7 +447,7 @@ router.post('/change-email', requireAuth, async (req: AuthRequest, res) => {
   const emailResult = await createEmailChangeToken(user.id, newEmail)
   res.json({
     message: 'Onay bağlantısı yeni e-posta adresine gönderildi.',
-    ...(emailResult.devMode ? { devConfirmUrl: emailResult.confirmUrl } : {}),
+    ...(allowDevSecretLeaks() && emailResult.devMode ? { devConfirmUrl: emailResult.confirmUrl } : {}),
   })
 })
 
@@ -594,7 +600,7 @@ router.get('/profiles/validate', requireAuth, (req: AuthRequest, res) => {
   res.json({ profile: mapProfile(profile) })
 })
 
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', authForgotPasswordLimiter, async (req, res) => {
   const email = String(req.body.email ?? '').trim().toLowerCase()
   if (!email) {
     res.status(400).json({ error: 'E-posta gerekli.' })
@@ -623,7 +629,7 @@ router.post('/forgot-password', async (req, res) => {
 
   res.json({
     message: 'E-posta kayıtlıysa sıfırlama bağlantısı gönderildi.',
-    ...(result.devMode ? { devResetUrl: result.resetUrl } : {}),
+    ...(allowDevSecretLeaks() && result.devMode ? { devResetUrl: result.resetUrl } : {}),
   })
 })
 
@@ -696,7 +702,7 @@ router.post('/resend-verification', async (req, res) => {
   const emailResult = await createEmailVerificationToken(user.id, user.email)
   res.json({
     message: 'Doğrulama e-postası gönderildi.',
-    ...(emailResult.devMode ? { devVerifyUrl: emailResult.verifyUrl } : {}),
+    ...(allowDevSecretLeaks() && emailResult.devMode ? { devVerifyUrl: emailResult.verifyUrl } : {}),
   })
 })
 

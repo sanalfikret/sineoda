@@ -1,6 +1,6 @@
 import type { ContentType } from './constants/contentTypes.js'
 
-export type UserRole = 'user' | 'admin' | 'creator'
+export type UserRole = 'user' | 'admin' | 'manager' | 'creator'
 export type CreatorStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
 export type ContentReviewStatus = 'draft' | 'pending' | 'published' | 'rejected'
 export type CreatorProgram = 'standard' | 'student_cinema'

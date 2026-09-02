@@ -81,8 +81,13 @@ import {
 import { migrateLegacyBrandText } from './services/brandMigration.js'
 import { ensureMonthlyRollover, seedDemoMonthlyIfEmpty } from './services/watchAccounting.js'
 import type { ContentRow } from './types.js'
+import { assertProductionSecurity, warnProductionReadiness } from './security/startupValidation.js'
+import helmet from 'helmet'
+import { globalApiLimiter } from './security/rateLimit.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+assertProductionSecurity()
 
 await initDatabase()
 migrateLegacyBrandAccounts()
@@ -112,19 +117,31 @@ ensureStudentCinemaCatalog()
 const app = express()
 
 app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  }),
+)
+
+app.use(
   cors({
     origin(origin, callback) {
       if (!origin || config.corsOrigins.includes(origin)) {
         callback(null, true)
-      } else {
-        callback(null, true) // geliştirme kolaylığı; production'da sıkılaştırılabilir
+        return
       }
+      if (config.isProduction) {
+        callback(new Error('CORS blocked'))
+        return
+      }
+      callback(null, true)
     },
     credentials: true,
     allowedHeaders: ['Authorization', 'Content-Type', 'X-Profile-Id'],
     exposedHeaders: ['X-Plooy-Token', 'X-Sineoda-Token'],
   }),
 )
+app.use('/api', globalApiLimiter)
 app.use((req, res, next) => {
   const originalJson = res.json.bind(res)
   res.json = (body: unknown) => {
@@ -395,11 +412,9 @@ app.listen(config.port, () => {
   console.log(`Database: ${path.join(config.dataDir, 'sineoda.db')}`)
   console.log(`Frontend: ${config.frontendUrl}`)
   console.log(`Email: ${config.isEmailConfigured() ? 'configured' : 'dev mode (console log)'}`)
-  if (process.env.NODE_ENV === 'production' && config.jwtSecret === 'sineoda-dev-secret-change-in-production') {
-    console.warn('[auth] UYARI: JWT_SECRET varsayılan değerde — .env içinde güçlü bir secret tanımlayın.')
-  }
+  warnProductionReadiness()
   const jwtExpiresIn = resolveJwtExpiresIn()
-  console.log(`[auth] JWT süresi: ${jwtExpiresIn} (env JWT_EXPIRES_IN yok sayılır)`)
+  console.log(`[auth] JWT süresi: ${jwtExpiresIn}`)
 
   try {
     ensureMonthlyRollover()

@@ -4,7 +4,9 @@ import { v4 as uuid } from 'uuid'
 import { TURKEY_FILM_SCHOOLS } from './turkeyFilmSchools.js'
 import { BRAND_NAME, BRAND_STUDIOS } from './constants/brand.js'
 import { contactEmails } from './constants/contact.js'
+import { config } from './config.js'
 import { dbAll, dbExec, dbGet, dbRun } from './db.js'
+import { preserveExistingContent } from './services/seedPolicy.js'
 import { parseCredits, serializeCredits } from './services/credits.js'
 import type { UserRow } from './types.js'
 
@@ -132,7 +134,7 @@ export function ensureVerticalSeries() {
         new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       ],
     )
-  } else {
+  } else if (!preserveExistingContent()) {
     dbRun(
       'UPDATE content SET video_format = ?, is_new = 1, new_until = ? WHERE id = ?',
       ['vertical', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), id],
@@ -178,20 +180,23 @@ export function ensureContentMeta() {
   }
 
   const newIds = ['aurora-dreams', 'neon-pulse', 'ocean-whispers', 'little-stars', 'kalp-satirlari', 'stage-lights', 'anime-horizon']
-  for (const id of newIds) {
-    const exists = dbGet('SELECT id FROM content WHERE id = ?', [id])
-    if (!exists) continue
-    dbRun('UPDATE content SET is_new = 1, new_until = ? WHERE id = ?', [
-      new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      id,
-    ])
+  if (!preserveExistingContent()) {
+    for (const id of newIds) {
+      const exists = dbGet('SELECT id FROM content WHERE id = ?', [id])
+      if (!exists) continue
+      dbRun('UPDATE content SET is_new = 1, new_until = ? WHERE id = ?', [
+        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        id,
+      ])
+    }
+    ensureContentTypes()
   }
 
   ensureSeedCredits()
-  ensureContentTypes()
 }
 
 function ensureContentTypes() {
+  if (preserveExistingContent()) return
   const updates: Array<[string, string]> = [
     ['golden-era', 'belgesel'],
     ['wild-planet', 'belgesel'],
@@ -297,7 +302,22 @@ export function ensureDefaultAdmin() {
     dbGet<UserRow>('SELECT * FROM users WHERE email = ?', [DEFAULT_ADMIN_EMAIL]) ??
     dbGet<UserRow>('SELECT * FROM users WHERE email = ?', [LEGACY_ADMIN_EMAIL])
   if (!existing) {
-    const adminHash = bcrypt.hashSync('admin123', 10)
+    const bootstrapPass = process.env.ADMIN_BOOTSTRAP_PASSWORD?.trim()
+    const adminPassword =
+      config.isProduction && bootstrapPass && bootstrapPass.length >= 12
+        ? bootstrapPass
+        : config.isProduction
+          ? null
+          : 'admin123'
+
+    if (!adminPassword) {
+      console.warn(
+        '[seed] Production: varsayılan admin oluşturulmadı. ADMIN_BOOTSTRAP_PASSWORD (min 12 karakter) tanımlayın veya mevcut admin ile giriş yapın.',
+      )
+      return
+    }
+
+    const adminHash = bcrypt.hashSync(adminPassword, 10)
     dbRun(
       'INSERT INTO users (id, name, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)',
       [DEFAULT_ADMIN_ID, `${BRAND_NAME} Admin`, DEFAULT_ADMIN_EMAIL, adminHash, 'admin', new Date().toISOString()],
