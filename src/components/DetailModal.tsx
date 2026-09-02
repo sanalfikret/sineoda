@@ -161,7 +161,7 @@ export function DetailModal({ item, onClose, onPlay }: DetailModalProps) {
               {item.rating}
             </span>
             <span className="rounded bg-white/10 px-2 py-0.5 text-xs text-white">
-            {tb(`types.${item.type}`, { defaultValue: getContentTypeLabel(item.type) })}
+            {tb(`contentTypes.${item.type}`, { defaultValue: getContentTypeLabel(item.type) })}
           </span>
           {item.videoFormat === 'vertical' && (
             <span className="rounded bg-plooy-gold/20 px-2 py-0.5 text-xs text-plooy-gold">
