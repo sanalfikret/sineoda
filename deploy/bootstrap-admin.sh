@@ -48,7 +48,7 @@ fi
 
 echo ">>> container: $CONTAINER"
 
-if ! docker exec -T \
+if ! docker exec -T -w /app/server \
   -e "BOOTSTRAP_EMAIL=$ADMIN_EMAIL" \
   -e "BOOTSTRAP_PASS=$ADMIN_PASS" \
   "$CONTAINER" node -e "$NODE_SCRIPT"; then
