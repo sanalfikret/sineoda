@@ -9,6 +9,9 @@ export function PaytrCheckoutPage() {
   const { localizePath } = useLocale()
   const [params] = useSearchParams()
   const token = params.get('token') ?? ''
+  const returnTarget = params.get('return')
+  const cancelPath =
+    returnTarget === 'creator' ? localizePath('/creator/odeme') : localizePath('/planlar')
 
   useEffect(() => {
     if (!token) return
@@ -26,7 +29,7 @@ export function PaytrCheckoutPage() {
       <div className="flex min-h-dvh items-center justify-center bg-plooy-bg px-4 text-center text-white">
         <div>
           <p>{t('sessionNotFound')}</p>
-          <Link to={localizePath('/planlar')} className="mt-4 inline-block text-plooy-gold hover:underline">
+          <Link to={cancelPath} className="mt-4 inline-block text-plooy-gold hover:underline">
             {t('backToPlansLower')}
           </Link>
         </div>
@@ -42,7 +45,7 @@ export function PaytrCheckoutPage() {
             <PlooyLogo tone="on-dark" className="h-6" />
             <span className="text-sm text-plooy-muted">· PayTR</span>
           </div>
-          <Link to={localizePath('/planlar')} className="text-sm text-plooy-muted hover:text-white">
+          <Link to={cancelPath} className="text-sm text-plooy-muted hover:text-white">
             {t('cancel')}
           </Link>
         </div>

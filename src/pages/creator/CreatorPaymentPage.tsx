@@ -12,7 +12,7 @@ function getCreatorRegistrationPlanId(program?: 'standard' | 'student_cinema') {
 }
 
 export function CreatorPaymentPage() {
-  const { t } = useTranslation('creator')
+  const { t } = useTranslation('creator', { keyPrefix: 'payment' })
   const { localizePath } = useLocale()
   const { user, isCreator, isLoading, refreshUser } = useAuth()
   const navigate = useNavigate()
@@ -95,16 +95,16 @@ export function CreatorPaymentPage() {
       <div className="mx-auto w-full max-w-lg px-4 py-10">
         <div className="rounded-2xl border border-white/10 bg-[#11141c] p-6 sm:p-8">
           <h1 className="text-2xl font-bold text-white">
-            {plan?.name ?? (isStudentProgram ? t('studentFeeTitle') : t('creatorFeeTitle'))}
+            {plan?.name ?? (isStudentProgram ? t('titleStudent') : t('titleStandard'))}
           </h1>
           <p className="mt-2 text-sm text-plooy-muted">
             {isStudentProgram
-              ? t('studentPaymentDesc', { brand: BRAND_NAME })
-              : t('creatorPaymentDesc')}
+              ? t('subtitleStudent', { brand: BRAND_NAME })
+              : t('subtitleStandard')}
           </p>
 
           <div className="mt-6 rounded-xl border border-plooy-gold/30 bg-plooy-gold/5 p-5">
-            <p className="text-sm text-plooy-muted">{t('applicationFee')}</p>
+            <p className="text-sm text-plooy-muted">{t('feeLabel')}</p>
             <p className="mt-1 text-3xl font-bold text-plooy-gold">₺{price}</p>
             <ul className="mt-4 space-y-2 text-sm text-white/80">
               {(plan?.features ?? []).map((feature) => (
@@ -120,7 +120,7 @@ export function CreatorPaymentPage() {
           )}
 
           {!paymentReady && (
-            <p className="mt-4 text-sm text-amber-200/90">{t('paymentPending')}</p>
+            <p className="mt-4 text-sm text-amber-200/90">{t('paymentNotReady')}</p>
           )}
 
           <button

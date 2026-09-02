@@ -37,6 +37,7 @@
     "passwordLabel": "Şifre (en az 6 karakter)",
     "bioLabel": "Kısa biyografi (isteğe bağlı)",
     "feeNoticeStandard": "Kayıt sonrası ₺69 yapımcı başvuru ücreti ödenir. Üyeliğiniz otomatik onaylanır; filminizin yayına alınması admin incelemesine tabidir.",
+    "feeNoticeStudent": "Kayıt sonrası ₺49 Genç Sinema başvuru ücreti ödenir. Üyeliğiniz otomatik açılır; filminiz okul ve {{brand}} incelemesine alınır.",
     "legalHeading": "Yasal şartlar ve sorumluluk beyanı",
     "legalAccept": "Filminin bana ait olduğunu belgeleyeceğimi, tüm yasal sorumluluğun bana ait olduğunu ve gelir paylaşımı koşullarının yapımcı anlaşmasında belirtildiğini kabul ediyorum.",
     "submitStandard": "Yapımcı Hesabı Oluştur",

@@ -51,7 +51,7 @@ interface AuthContextValue {
       acceptKvkk?: boolean
     },
   ) => Promise<{ message: string; email: string; planId?: string; devVerifyUrl?: string }>
-  creatorLogin: (email: string, password: string) => Promise<void>
+  creatorLogin: (email: string, password: string) => Promise<User>
   creatorSignup: (data: {
     name: string
     email: string
@@ -207,6 +207,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfileId(null)
     setActiveProfile(null)
     applyUser(loggedInUser)
+    return loggedInUser
   }, [applyUser])
 
   const creatorSignup = useCallback(
