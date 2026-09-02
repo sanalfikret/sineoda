@@ -74,6 +74,11 @@ export function normalizeLandingLayout(
     if (!order.includes(id)) order.push(id)
   }
 
+  for (const blockId of customBlockIds) {
+    const layoutId = `${CUSTOM_PREFIX}${blockId}` as LandingLayoutBlockId
+    if (!order.includes(layoutId)) order.push(layoutId)
+  }
+
   const hiddenInput = Array.isArray(raw?.hidden) ? raw.hidden : []
   const hidden: LandingLayoutBlockId[] = []
   for (const id of hiddenInput) {
@@ -87,15 +92,24 @@ export function normalizeLandingLayout(
 
 export function getLandingLayoutConfig(customBlockIds: string[] = []): LandingLayoutConfig {
   const row = dbGet<{ value: string }>('SELECT value FROM site_settings WHERE key = ?', [SETTINGS_KEY])
-  if (!row?.value) {
-    return normalizeLandingLayout(null, customBlockIds)
+  let raw: Partial<LandingLayoutConfig> | null = null
+  if (row?.value) {
+    try {
+      raw = JSON.parse(row.value) as Partial<LandingLayoutConfig>
+    } catch {
+      raw = null
+    }
   }
 
-  try {
-    return normalizeLandingLayout(JSON.parse(row.value) as Partial<LandingLayoutConfig>, customBlockIds)
-  } catch {
-    return normalizeLandingLayout(null, customBlockIds)
+  const layout = normalizeLandingLayout(raw, customBlockIds)
+  const rawOrder = Array.isArray(raw?.order) ? raw.order : []
+  const missingCustomInStoredLayout = customBlockIds.some(
+    (id) => !rawOrder.includes(`${CUSTOM_PREFIX}${id}` as LandingLayoutBlockId),
+  )
+  if (missingCustomInStoredLayout) {
+    saveLandingLayoutConfig(layout, customBlockIds)
   }
+  return layout
 }
 
 export function saveLandingLayoutConfig(raw: unknown, customBlockIds: string[] = []): LandingLayoutConfig {

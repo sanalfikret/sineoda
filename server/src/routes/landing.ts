@@ -158,8 +158,12 @@ function validateHeroPayload(raw: unknown): LandingHeroConfig {
 
 function sanitizeLayout(raw: Partial<LandingLayoutConfig> | undefined, customBlockIds: string[]) {
   if (!raw) return undefined
+  const incomingCustomIds = (raw.order ?? [])
+    .filter((id): id is string => typeof id === 'string' && id.startsWith('custom:'))
+    .map((id) => id.slice('custom:'.length))
+  const allCustomIds = [...new Set([...customBlockIds, ...incomingCustomIds])]
   const validIds = new Set([
-    ...customBlockIds.map((id) => `custom:${id}`),
+    ...allCustomIds.map((id) => `custom:${id}`),
     'hero',
     'manifesto',
     'slider',
@@ -192,8 +196,20 @@ router.patch('/sections', requireAdmin, (req: AuthRequest, res) => {
 })
 
 router.patch('/layout', requireAdmin, (req: AuthRequest, res) => {
-  const customBlockIds = getLandingCustomBlocks().map((block) => block.id)
-  const layout = saveLandingLayoutConfig(req.body, customBlockIds)
+  const body = req.body as Partial<LandingLayoutConfig> & { customBlockIds?: unknown }
+  const pendingIds = Array.isArray(body.customBlockIds)
+    ? body.customBlockIds.map((id) => String(id))
+    : []
+  const dbCustomIds = getLandingCustomBlocks().map((block) => block.id)
+  const customBlockIds = [...new Set([...dbCustomIds, ...pendingIds])]
+  const layoutPayload: Partial<LandingLayoutConfig> = {
+    order: body.order,
+    hidden: body.hidden,
+  }
+  const layout = saveLandingLayoutConfig(
+    sanitizeLayout(layoutPayload, customBlockIds),
+    customBlockIds,
+  )
   res.json({ layout })
 })
 
@@ -271,14 +287,16 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
       })
   }
 
-  if (sliderIds && showcases) {
+  if (sliderIds) {
     dbRun('DELETE FROM landing_slider')
     sliderIds
       .filter((contentId) => catalogIds.has(contentId))
       .forEach((contentId: string, index: number) => {
         dbRun('INSERT INTO landing_slider (content_id, sort_order) VALUES (?, ?)', [contentId, index])
       })
+  }
 
+  if (showcases) {
     dbRun('DELETE FROM landing_showcase_items')
     dbRun('DELETE FROM landing_showcases')
 
@@ -320,6 +338,8 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
     !body.sections &&
     !body.layout &&
     !body.customBlocks &&
+    !sliderIds &&
+    !showcases &&
     !monthlyWinnerIds &&
     !studentPickIds
   ) {

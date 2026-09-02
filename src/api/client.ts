@@ -99,7 +99,7 @@ export function setProfileId(profileId: string | null) {
   writeStorageItem(PROFILE_KEY, LEGACY_PROFILE_KEY, profileId)
 }
 
-/** VPS rebuild / JWT değişince eski token — panel açık kalmasın. */
+/** Yalnızca explicit logout — arka plan refresh 401 ile silme. */
 export function clearAuthStorage() {
   setToken(null)
   setProfileId(null)
@@ -126,11 +126,6 @@ export async function refreshSessionToken() {
 
     if (response.status === 404) {
       response = await fetch(`${getApiBase()}/api/auth/me`, { headers, cache: 'no-store' })
-    }
-
-    if (response.status === 401) {
-      clearAuthStorage()
-      return false
     }
 
     if (!response.ok) return false
@@ -185,7 +180,6 @@ export async function api<T>(path: string, options: RequestInit = {}, retried = 
   ) {
     const refreshed = await refreshSessionToken()
     if (refreshed) return api<T>(path, options, true)
-    clearAuthStorage()
   }
 
   if (!response.ok) {
@@ -589,13 +583,14 @@ export async function updateLandingSectionsConfig(
 
 export async function updateLandingLayoutConfig(
   layout: LandingLayoutConfig,
+  customBlockIds: string[] = [],
 ): Promise<{ layout: LandingLayoutConfig }> {
   let lastError: unknown
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
       return await api<{ layout: LandingLayoutConfig }>('/api/admin/landing/layout', {
         method: 'PATCH',
-        body: JSON.stringify(layout),
+        body: JSON.stringify({ ...layout, customBlockIds }),
       })
     } catch (error) {
       lastError = error

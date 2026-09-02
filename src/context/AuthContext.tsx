@@ -16,7 +16,6 @@ import {
   getProfileId,
   getToken,
   loginRequest,
-  refreshSessionToken,
   setProfileId,
   setToken,
   signupRequest,
@@ -138,10 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await syncAuthSession()
           break
         } catch {
-          if (attempt === 2) {
-            clearSession()
-            break
-          }
+          if (attempt === 2) break
           await sleep(700 * (attempt + 1))
         }
       }
@@ -150,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     void init()
-  }, [syncAuthSession])
+  }, [syncAuthSession, applyUser])
 
   useEffect(() => {
     const onAuthCleared = () => clearSession()
@@ -161,22 +157,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!getToken()) return
 
-    const refresh = () => {
-      void refreshSessionToken().then((ok) => {
-        if (!ok && !getToken()) clearSession()
-      })
-    }
-
-    refresh()
-    const interval = window.setInterval(refresh, 60 * 1000)
-
     const onVisible = () => {
-      if (document.visibilityState === 'visible') refresh()
+      if (document.visibilityState !== 'visible') return
+      void syncAuthSession().catch(() => undefined)
     }
     document.addEventListener('visibilitychange', onVisible)
 
     return () => {
-      window.clearInterval(interval)
       document.removeEventListener('visibilitychange', onVisible)
     }
   }, [syncAuthSession])
