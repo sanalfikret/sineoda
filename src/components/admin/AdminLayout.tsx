@@ -3,7 +3,7 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { AdminContentActions } from './AdminContentActions'
 import { PlooyLogo } from '../PlooyLogo'
 import { useAuth } from '../../context/AuthContext'
-import { refreshSessionToken } from '../../api/client'
+import { getToken, refreshSessionToken } from '../../api/client'
 
 const navItems = [
   { to: '/admin', label: 'Dashboard', end: true },
@@ -28,12 +28,18 @@ export function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
-    void refreshSessionToken().catch(() => undefined)
-    const interval = window.setInterval(() => {
-      void refreshSessionToken().catch(() => undefined)
-    }, 45 * 1000)
+    const refresh = () => {
+      void refreshSessionToken().then((ok) => {
+        if (!ok && !getToken()) {
+          logout()
+          navigate('/admin/giris', { replace: true })
+        }
+      })
+    }
+    refresh()
+    const interval = window.setInterval(refresh, 45 * 1000)
     return () => window.clearInterval(interval)
-  }, [])
+  }, [logout, navigate])
 
   const handleLogout = () => {
     logout()
