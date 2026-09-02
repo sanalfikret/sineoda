@@ -1,27 +1,19 @@
 Plooy — ACİL VPS KURTARMA
 ==========================
 
-Site bozuldu / dosyalar eksik / dbExists false:
+ÖNEMLİ: Yeni PuTTY oturumu aç. ~/sineoda veya /opt/sineoda içine GİRME.
+Eski oturumda PATH bozulmuş olabilir (grep/rm not found).
 
-  curl -fsSL https://raw.githubusercontent.com/sanalfikret/sineoda/main/deploy/recover-from-archive.sh | bash
+Tek satır (kopyala-yapıştır):
 
-Bu komut:
-- Docker'ı durdurur
-- DB'yi bozuk klasörlerden ve yedeklerden bulur
-- GitHub'dan temiz kod indirir (/opt/sineoda-staging)
-- Bozuk /opt/sineoda → /opt/sineoda-broken-TARIH taşınır
-- Temiz kod + DB ile rebuild yapar
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin; /usr/bin/curl -fsSL https://raw.githubusercontent.com/sanalfikret/sineoda/main/deploy/recover-from-archive.sh | /bin/bash
 
-ASLA kullanma:
-- rsync ile /opt/sineoda üzerine yazma
-- ~/sinoda-main veya ~/sineoda-main içinden deploy
-- git pull (auth patlıyorsa)
-- docker-compose down -v
+Bitince: "dbExists":true ve yeni gitSha.
 
-Deploy sonrası doğrula:
-  curl -s http://127.0.0.1:3001/api/health | grep dbExists
+ASLA:
+- ./recover-from-archive.sh (dosya yok)
+- ~/sineoda klasöründen deploy
+- rsync
+- git pull
 
-dbExists:true ve gitSha yeni olmalı.
-
-Film yayını (admin):
-  Yapımcılar → fikret sanal → "Bekleyen 1 filmi yayınla"
+Hâlâ hata: VPS sağlayıcı panelinden Rescue/Reboot, sonra yukarıdaki komutu tekrar çalıştır.
