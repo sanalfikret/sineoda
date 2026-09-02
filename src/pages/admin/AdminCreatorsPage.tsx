@@ -12,6 +12,7 @@ import {
 import { AdminCreatorFilmEditor } from '../../components/admin/AdminCreatorFilmEditor'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { CREATOR_DOC_TYPES } from '../../constants/creatorLegal'
+import { getContentTypeLabel } from '../../constants/contentTypes'
 import { formatPublishDate } from '../../utils/publish'
 import { fuzzySearchMatch, sortByTurkishTitle } from '../../utils/search'
 
@@ -401,7 +402,7 @@ export function AdminCreatorsPage() {
                           <div>
                             <p className="font-medium text-white">{item.title}</p>
                             <p className="mt-1 text-xs text-plooy-muted">
-                              {item.type} · {item.year} · {item.duration || 'Süre belirtilmemiş'}
+                              {getContentTypeLabel(item.type)} · {item.year} · {item.duration || 'Süre belirtilmemiş'}
                             </p>
                           </div>
                           <span

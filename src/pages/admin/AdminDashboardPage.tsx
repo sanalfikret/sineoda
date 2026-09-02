@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchExpiringLicenses, resolveMediaUrl } from '../../api/client'
 import { useContent } from '../../context/ContentContext'
-import { CONTENT_TYPES } from '../../constants/contentTypes'
+import { CONTENT_TYPES, getContentTypeLabel } from '../../constants/contentTypes'
 import { useAdminAnalytics } from '../../hooks/useAdminAnalytics'
 import type { AdminContentItem } from '../../types/content'
 import { formatLicenseDate } from '../../utils/license'
@@ -187,7 +187,7 @@ export function AdminDashboardPage() {
                 {watchStats.map((row) => (
                   <tr key={row.contentId} className="border-b border-white/5">
                     <td className="py-3 pr-4 text-white">{row.title}</td>
-                    <td className="py-3 pr-4 capitalize text-plooy-muted">{row.type}</td>
+                    <td className="py-3 pr-4 text-plooy-muted">{getContentTypeLabel(row.type)}</td>
                     <td className="py-3 pr-4 text-plooy-gold">{row.totalWatchedMinutes} dk</td>
                     <td className="py-3 pr-4 text-white/80">{row.viewerCount}</td>
                     <td className="py-3 text-white/80">{row.avgProgressPercent}%</td>
@@ -211,8 +211,8 @@ export function AdminDashboardPage() {
               />
               <div>
                 <p className="font-medium text-white">{featuredContent.title}</p>
-                <p className="mt-1 text-sm text-plooy-muted capitalize">
-                  {featuredContent.type} · {featuredContent.year}
+                <p className="mt-1 text-sm text-plooy-muted">
+                  {getContentTypeLabel(featuredContent.type)} · {featuredContent.year}
                 </p>
                 <Link
                   to={`/admin/icerikler/${featuredContent.id}`}

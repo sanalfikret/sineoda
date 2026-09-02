@@ -69,4 +69,7 @@ export const LEGACY_EN_REDIRECTS = [
   { from: '/signup', trPath: '/kayit' },
   { from: '/plans', trPath: '/planlar' },
   { from: '/journal', trPath: '/dergi' },
+  { from: '/creators/register', trPath: '/creator/kayit' },
+  { from: '/creators/login', trPath: '/creator/giris' },
+  { from: '/creator/register', trPath: '/creator/kayit' },
 ] as const
