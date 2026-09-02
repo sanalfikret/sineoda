@@ -17,30 +17,22 @@ db_bytes() {
 }
 
 find_best_db() {
-  local best="" size=0 candidate s
-  for candidate in \
-    "$INSTALL/persistent/data/sineoda.db" \
-    "$INSTALL/persistent/sineoda.db" \
-    /opt/sineoda-broken-*/persistent/data/sineoda.db \
-    /opt/sineoda-broken-*/persistent/sineoda.db \
-    /opt/sineoda-*/persistent/data/sineoda.db \
-    "$PRESERVE/persistent/data/sineoda.db" \
-    "$PRESERVE/persistent/sineoda.db" \
-    "$INSTALL/persistent/backups/"sineoda-*.db; do
+  local best="" size=0 s candidate
+  while IFS= read -r candidate; do
     [ -f "$candidate" ] || continue
     s="$(db_bytes "$candidate")"
+    [ "$s" -gt 50000 ] || continue
     if [ "$s" -gt "$size" ]; then best="$candidate"; size="$s"; fi
-  done
+  done < <(find /opt /root /tmp -type f \( -name 'sineoda.db' -o -name 'sineoda-*.db' \) 2>/dev/null || true)
   if [ "$size" -eq 0 ]; then
     for cid in $(docker ps -aq 2>/dev/null); do
-      local src
       src="$(docker inspect "$cid" --format '{{range .Mounts}}{{if eq .Destination "/app/server/data"}}{{.Source}}{{end}}{{end}}' 2>/dev/null || true)"
       [ -n "$src" ] && [ -f "$src/sineoda.db" ] || continue
       s="$(db_bytes "$src/sineoda.db")"
-      if [ "$s" -gt "$size" ]; then best="$src/sineoda.db"; size="$s"; fi
+      [ "$s" -gt "$size" ] && best="$src/sineoda.db" && size="$s"
     done
   fi
-  echo "$best"
+  printf '%s' "$best"
 }
 
 cleanup_temp() {
@@ -61,14 +53,17 @@ if [ -n "$BEST_DB" ]; then
   cp -a "$BEST_DB" "$PRESERVE/persistent/data/sineoda.db"
   echo ">>> DB bulundu: $BEST_DB ($(du -h "$PRESERVE/persistent/data/sineoda.db" | cut -f1))"
 else
-  echo ">>> UYARI: DB bulunamadı — boş kurulum olabilir"
+  echo ">>> UYARI: DB bulunamadı — yedek klasörler taranacak"
 fi
-if [ -d "$INSTALL/persistent/uploads" ]; then
-  cp -a "$INSTALL/persistent/uploads/." "$PRESERVE/persistent/uploads/" 2>/dev/null || true
-fi
-if [ -f "$INSTALL/.env" ]; then
-  cp -a "$INSTALL/.env" "$PRESERVE/"
-fi
+for uploads_dir in "$INSTALL/persistent/uploads" /opt/sineoda-broken-*/persistent/uploads; do
+  [ -d "$uploads_dir" ] || continue
+  cp -a "$uploads_dir/." "$PRESERVE/persistent/uploads/" 2>/dev/null || true
+done
+for env_file in "$INSTALL/.env" /opt/sineoda-broken-*/.env; do
+  [ -f "$env_file" ] || continue
+  cp -a "$env_file" "$PRESERVE/.env"
+  break
+done
 
 echo "=== 2) GitHub arşivi indir ==="
 curl -fsSL "https://github.com/sanalfikret/sineoda/archive/refs/heads/main.tar.gz" -o "$ARCHIVE"
@@ -86,8 +81,17 @@ cp -a "$SRC"/. "$STAGING/"
 echo "=== 4) persistent + .env geri yükle ==="
 rm -rf "$STAGING/persistent"
 mkdir -p "$STAGING/persistent/data" "$STAGING/persistent/uploads"
+if [ ! -f "$PRESERVE/persistent/data/sineoda.db" ]; then
+  BEST_DB="$(find_best_db)"
+  [ -n "$BEST_DB" ] && cp -a "$BEST_DB" "$PRESERVE/persistent/data/sineoda.db"
+fi
 if [ -f "$PRESERVE/persistent/data/sineoda.db" ]; then
   cp -a "$PRESERVE/persistent/data/sineoda.db" "$STAGING/persistent/data/"
+  mkdir -p "$STAGING/persistent/backups"
+  cp -a "$PRESERVE/persistent/data/sineoda.db" "$STAGING/persistent/backups/sineoda-recover-$(date +%Y%m%d-%H%M%S).db"
+else
+  echo ">>> UYARI: DB yok — boş DB ile devam (test verisi)"
+  mkdir -p "$STAGING/persistent/data"
 fi
 if [ -d "$PRESERVE/persistent/uploads" ]; then
   cp -a "$PRESERVE/persistent/uploads/." "$STAGING/persistent/uploads/" 2>/dev/null || true
@@ -107,12 +111,6 @@ fi
 mv "$STAGING" "$INSTALL"
 STAGING=""
 
-if [ ! -f "$INSTALL/persistent/data/sineoda.db" ]; then
-  echo "HATA: DB staging sonrası da yok!"
-  ls -la "$INSTALL/persistent/data/" 2>/dev/null || true
-  exit 1
-fi
-
 echo "=== 6) rebuild ==="
 export PERSIST_DIR="$INSTALL/persistent"
 export HOST_PORT="${HOST_PORT:-3001}"
@@ -124,8 +122,8 @@ echo "=== 7) doğrulama ==="
 HEALTH="$(curl -sf "http://127.0.0.1:${HOST_PORT}/api/health" || true)"
 echo "$HEALTH"
 if echo "$HEALTH" | grep -q '"dbExists":true'; then
-  echo ">>> OK — DB ve site ayakta. Tarayıcı Ctrl+Shift+R"
+  echo ">>> OK — site ayakta. Tarayıcı Ctrl+Shift+R"
 else
-  echo ">>> UYARI: dbExists false — persistent mount kontrol et"
-  ls -la "$INSTALL/persistent/data/"
+  echo ">>> UYARI: dbExists false"
+  ls -la "$INSTALL/persistent/data/" 2>/dev/null || true
 fi
