@@ -22,5 +22,12 @@
   "loginLink": "Giriş Yap",
   "studentIdRequired": "Öğrenci planı için öğrenci kimliği yükleyin.",
   "studentIdUploadFailed": "Öğrenci kimliği yüklenemedi.",
-  "checkoutFailed": "Ödeme başlatılamadı."
+  "checkoutFailed": "Ödeme başlatılamadı.",
+  "currentPlan": "Mevcut plan",
+  "switchPlan": "Plana geç",
+  "renewPlan": "Yenile",
+  "currentPlanBadge": "Mevcut planın",
+  "currentPlanLabel": "Aktif plan",
+  "cancelledSubscription": "Abonelik iptal edildi",
+  "planChangeNote": "Plan değişikliği veya yenileme yeni ödeme adımıyla başlar. Mevcut dönem bitene kadar izlemeye devam edersin."
 }

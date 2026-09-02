@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { fetchBillingPlans, fetchBillingInvoices, fetchLegalConsents, fetchSubscription, cancelSubscription, changePasswordRequest, type BillingInvoice, type LegalConsentRecord } from '../api/client'
+import { fetchBillingPlans, fetchBillingInvoices, fetchLegalConsents, fetchSubscription, cancelSubscription, changePasswordRequest, changeEmailRequest, openBillingInvoiceReceipt, type BillingInvoice, type LegalConsentRecord } from '../api/client'
 import { DailyWatchQuotaCard } from '../components/member/DailyWatchQuotaCard'
 import { PageFooter } from '../components/PageFooter'
 import { PageMeta } from '../components/PageMeta'
@@ -85,6 +85,9 @@ export function AccountPage() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [savingPassword, setSavingPassword] = useState(false)
+  const [newEmail, setNewEmail] = useState('')
+  const [emailChangePassword, setEmailChangePassword] = useState('')
+  const [savingEmail, setSavingEmail] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -236,6 +239,34 @@ export function AccountPage() {
     }
   }
 
+  const handleChangeEmail = async () => {
+    if (!newEmail.trim()) return
+    setSavingEmail(true)
+    setMessage('')
+    try {
+      const result = await changeEmailRequest(newEmail.trim(), emailChangePassword)
+      setNewEmail('')
+      setEmailChangePassword('')
+      setMessage(
+        result.devConfirmUrl
+          ? `${result.message} ${t('email.devConfirmLink')} ${result.devConfirmUrl}`
+          : result.message,
+      )
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : t('email.failed'))
+    } finally {
+      setSavingEmail(false)
+    }
+  }
+
+  const handleOpenReceipt = async (invoiceId: string) => {
+    try {
+      await openBillingInvoiceReceipt(invoiceId)
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : t('paymentHistory.receiptFailed'))
+    }
+  }
+
   const subscriptionStatusLabel = (status: string) => {
     const key = ['active', 'expired', 'cancelled'].includes(status) ? status : 'free'
     return t(`status.${key}`)
@@ -277,6 +308,7 @@ export function AccountPage() {
 
         <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
           <h2 className="text-lg font-semibold">{t('sections.accountInfo')}</h2>
+          <p className="mt-1 text-sm text-plooy-muted">{user.email}</p>
           <label className="mt-4 block space-y-2">
             <span className="text-xs font-medium uppercase tracking-wide text-plooy-muted">{t('fields.name')}</span>
             <input
@@ -296,6 +328,49 @@ export function AccountPage() {
         </section>
 
         <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
+          <h2 className="text-lg font-semibold">{t('email.title')}</h2>
+          <p className="mt-1 text-sm text-plooy-muted">{t('email.note')}</p>
+          <div className="mt-4 space-y-3">
+            <label className="block space-y-2">
+              <span className="text-xs font-medium uppercase tracking-wide text-plooy-muted">{t('email.current')}</span>
+              <input
+                value={user.email}
+                readOnly
+                className="w-full rounded-lg border border-white/10 bg-[#0d0f14]/60 px-4 py-2.5 text-plooy-muted outline-none"
+              />
+            </label>
+            <label className="block space-y-2">
+              <span className="text-xs font-medium uppercase tracking-wide text-plooy-muted">{t('email.new')}</span>
+              <input
+                type="email"
+                autoComplete="email"
+                value={newEmail}
+                onChange={(event) => setNewEmail(event.target.value)}
+                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 outline-none focus:border-plooy-gold"
+              />
+            </label>
+            <label className="block space-y-2">
+              <span className="text-xs font-medium uppercase tracking-wide text-plooy-muted">{t('email.password')}</span>
+              <input
+                type="password"
+                autoComplete="current-password"
+                value={emailChangePassword}
+                onChange={(event) => setEmailChangePassword(event.target.value)}
+                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 outline-none focus:border-plooy-gold"
+              />
+            </label>
+          </div>
+          <button
+            type="button"
+            disabled={savingEmail || !newEmail.trim() || !emailChangePassword}
+            onClick={() => void handleChangeEmail()}
+            className="mt-4 rounded-lg bg-plooy-gold px-4 py-2.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
+          >
+            {savingEmail ? t('email.saving') : t('email.submit')}
+          </button>
+        </section>
+
+        <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-lg font-semibold">{t('dailyQuota.title')}</h2>
             <Link to={localizePath('/izleme-gecmisi')} className="text-sm text-plooy-gold hover:underline">
@@ -311,7 +386,7 @@ export function AccountPage() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <h2 className="text-lg font-semibold">{t('sections.subscription')}</h2>
             <Link to={localizePath('/planlar')} className="text-sm text-plooy-gold hover:underline">
-              {t('subscription.viewPlans')}
+              {subscription?.status === 'active' ? t('subscription.changePlan') : t('subscription.viewPlans')}
             </Link>
           </div>
 
@@ -416,6 +491,7 @@ export function AccountPage() {
         <section className="mb-8 rounded-2xl border border-white/10 bg-[#11141c] p-5">
           <h2 className="text-lg font-semibold">{t('sections.paymentHistory')}</h2>
           <p className="mt-1 text-sm text-plooy-muted">{t('paymentHistory.description')}</p>
+          <p className="mt-2 text-xs text-plooy-muted">{t('paymentHistory.receiptNote')}</p>
 
           {invoices.length === 0 ? (
             <p className="mt-4 text-sm text-plooy-muted">{t('paymentHistory.empty')}</p>
@@ -428,6 +504,7 @@ export function AccountPage() {
                     <th className="px-2 py-2 font-medium">{t('fields.plan')}</th>
                     <th className="px-2 py-2 font-medium">{t('fields.amount')}</th>
                     <th className="px-2 py-2 font-medium">{t('fields.reference')}</th>
+                    <th className="px-2 py-2 font-medium">{t('paymentHistory.receipt')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -437,6 +514,15 @@ export function AccountPage() {
                       <td className="px-2 py-3">{invoice.planName}</td>
                       <td className="px-2 py-3 whitespace-nowrap">{formatMoneyTl(invoice.amountTl, locale)}</td>
                       <td className="px-2 py-3 font-mono text-xs text-plooy-muted">{invoice.merchantOid}</td>
+                      <td className="px-2 py-3">
+                        <button
+                          type="button"
+                          onClick={() => void handleOpenReceipt(invoice.id)}
+                          className="text-sm text-plooy-gold hover:underline"
+                        >
+                          {t('paymentHistory.viewReceipt')}
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

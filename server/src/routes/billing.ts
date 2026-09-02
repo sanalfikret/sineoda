@@ -135,6 +135,67 @@ router.get('/invoices', requireAuth, (req: AuthRequest, res) => {
   })
 })
 
+router.get('/invoices/:id/receipt', requireAuth, (req: AuthRequest, res) => {
+  const row = dbGet<{
+    id: string
+    user_id: string
+    plan_id: string
+    provider: string
+    amount: number
+    merchant_oid: string
+    completed_at: string | null
+    created_at: string
+  }>(
+    `SELECT id, user_id, plan_id, provider, amount, merchant_oid, completed_at, created_at
+     FROM payment_orders WHERE id = ? AND user_id = ? AND status = 'paid'`,
+    [req.params.id, req.auth!.userId],
+  )
+
+  if (!row) {
+    res.status(404).send('Makbuz bulunamadı.')
+    return
+  }
+
+  const plan = getBillingPlans().find((entry) => entry.id === row.plan_id)
+  const paidAt = row.completed_at ?? row.created_at
+  const amountTl = Math.round(row.amount / 100)
+  const paidLabel = new Date(paidAt).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })
+
+  const html = `<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <title>${BRAND_NAME} Makbuz — ${row.merchant_oid}</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; color: #111; }
+    h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+    .muted { color: #555; font-size: 0.9rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
+    td { padding: 0.5rem 0; border-bottom: 1px solid #eee; vertical-align: top; }
+    td:first-child { color: #555; width: 38%; }
+    .note { margin-top: 1.5rem; font-size: 0.85rem; color: #666; line-height: 1.5; }
+    @media print { button { display: none; } }
+  </style>
+</head>
+<body>
+  <h1>${BRAND_NAME}</h1>
+  <p class="muted">Platform ödeme makbuzu</p>
+  <table>
+    <tr><td>Plan</td><td>${plan?.name ?? row.plan_id}</td></tr>
+    <tr><td>Tutar</td><td>₺${amountTl.toLocaleString('tr-TR')}</td></tr>
+    <tr><td>Ödeme tarihi</td><td>${paidLabel}</td></tr>
+    <tr><td>Referans</td><td><code>${row.merchant_oid}</code></td></tr>
+    <tr><td>Ödeme yöntemi</td><td>${row.provider.toUpperCase()}</td></tr>
+  </table>
+  <p class="note">Bu belge PayTR üzerinden alınan ödemenin platform makbuzudur. Resmi e-fatura ayrı muhasebe sürecinde düzenlenir.</p>
+  <p><button type="button" onclick="window.print()">Yazdır / PDF kaydet</button></p>
+</body>
+</html>`
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.send(html)
+})
+
 router.post('/subscription/cancel', requireAuth, (req: AuthRequest, res) => {
   try {
     const result = cancelUserSubscription(req.auth!.userId)

@@ -31,6 +31,17 @@
     "tooShort": "Yeni şifre en az 6 karakter olmalı.",
     "failed": "Şifre güncellenemedi."
   },
+  "email": {
+    "title": "E-posta",
+    "note": "Yeni adresine doğrulama bağlantısı gönderilir. Bağlantıya tıklayana kadar mevcut e-postan geçerli kalır.",
+    "current": "Mevcut e-posta",
+    "new": "Yeni e-posta",
+    "password": "Mevcut şifre",
+    "submit": "Doğrulama e-postası gönder",
+    "saving": "Gönderiliyor…",
+    "failed": "E-posta değişikliği başlatılamadı.",
+    "devConfirmLink": "Geliştirme bağlantısı:"
+  },
   "sections": {
     "accountInfo": "Hesap Bilgileri",
     "subscription": "Abonelik",
@@ -54,6 +65,7 @@
   },
   "subscription": {
     "viewPlans": "Planları Gör",
+    "changePlan": "Planı Değiştir",
     "cancel": "Aboneliği İptal Et",
     "cancelling": "İptal ediliyor…",
     "cancelledNotice": "Aboneliğiniz iptal edildi. {{date}} tarihine kadar izlemeye devam edebilirsiniz.",
@@ -81,6 +93,10 @@
   },
   "paymentHistory": {
     "description": "PayTR ile yapılan ödemeler için platform makbuzu. Resmi e-fatura ayrı muhasebe sürecinde düzenlenir.",
+    "receiptNote": "Tamamlanan ödemeler için makbuzu görüntüleyebilir ve yazdırabilirsin.",
+    "receipt": "Makbuz",
+    "viewReceipt": "Görüntüle",
+    "receiptFailed": "Makbuz açılamadı.",
     "empty": "Henüz kayıtlı ödeme bulunmuyor."
   },
   "watchStats": {

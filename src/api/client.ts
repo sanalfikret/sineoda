@@ -451,6 +451,37 @@ export async function changePasswordRequest(currentPassword: string, newPassword
   })
 }
 
+export async function changeEmailRequest(newEmail: string, password: string) {
+  return api<{ message: string; devConfirmUrl?: string }>('/api/auth/change-email', {
+    method: 'POST',
+    body: JSON.stringify({ newEmail, password }),
+  })
+}
+
+export async function confirmEmailChangeRequest(token: string) {
+  return api<{ message: string }>('/api/auth/confirm-email-change', {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+  })
+}
+
+export async function openBillingInvoiceReceipt(invoiceId: string) {
+  const token = getToken()
+  const res = await fetch(`${getApiBase()}/api/billing/invoices/${encodeURIComponent(invoiceId)}/receipt`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+  if (!res.ok) {
+    throw new Error('Makbuz açılamadı.')
+  }
+  const html = await res.text()
+  const popup = window.open('', '_blank', 'noopener,noreferrer')
+  if (!popup) {
+    throw new Error('Açılır pencere engellendi.')
+  }
+  popup.document.write(html)
+  popup.document.close()
+}
+
 export async function updateAccountRequest(name: string): Promise<{ user: User }> {
   return api<{ user: User }>('/api/auth/me', {
     method: 'PATCH',

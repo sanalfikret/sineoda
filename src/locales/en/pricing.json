@@ -22,5 +22,12 @@
   "loginLink": "Sign In",
   "studentIdRequired": "Upload a student ID for the student plan.",
   "studentIdUploadFailed": "Could not upload student ID.",
-  "checkoutFailed": "Could not start payment."
+  "checkoutFailed": "Could not start payment.",
+  "currentPlan": "Current plan",
+  "switchPlan": "Switch to this plan",
+  "renewPlan": "Renew",
+  "currentPlanBadge": "Your current plan",
+  "currentPlanLabel": "Active plan",
+  "cancelledSubscription": "Subscription cancelled",
+  "planChangeNote": "Changing or renewing your plan starts a new payment step. You can keep watching until your current period ends."
 }

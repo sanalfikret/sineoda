@@ -31,6 +31,17 @@
     "tooShort": "New password must be at least 6 characters.",
     "failed": "Could not update password."
   },
+  "email": {
+    "title": "Email",
+    "note": "We'll send a confirmation link to your new address. Your current email stays active until you confirm.",
+    "current": "Current email",
+    "new": "New email",
+    "password": "Current password",
+    "submit": "Send confirmation email",
+    "saving": "Sending…",
+    "failed": "Could not start email change.",
+    "devConfirmLink": "Dev link:"
+  },
   "sections": {
     "accountInfo": "Account Information",
     "subscription": "Subscription",
@@ -54,6 +65,7 @@
   },
   "subscription": {
     "viewPlans": "View Plans",
+    "changePlan": "Change Plan",
     "cancel": "Cancel Subscription",
     "cancelling": "Cancelling…",
     "cancelledNotice": "Your subscription has been cancelled. You can keep watching until {{date}}.",
@@ -81,6 +93,10 @@
   },
   "paymentHistory": {
     "description": "Platform receipt for payments made via PayTR. Official e-invoices are issued through a separate accounting process.",
+    "receiptNote": "For completed payments you can view and print your receipt.",
+    "receipt": "Receipt",
+    "viewReceipt": "View",
+    "receiptFailed": "Could not open receipt.",
     "empty": "No payment records yet."
   },
   "watchStats": {

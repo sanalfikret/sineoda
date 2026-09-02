@@ -156,6 +156,17 @@ function runMigrations() {
   `)
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS email_change_tokens (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      new_email TEXT NOT NULL,
+      token TEXT UNIQUE NOT NULL,
+      expires_at TEXT NOT NULL,
+      used INTEGER NOT NULL DEFAULT 0
+    );
+  `)
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS phone_verification_codes (
       id TEXT PRIMARY KEY,
       phone TEXT NOT NULL,
