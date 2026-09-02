@@ -897,18 +897,20 @@ export interface BillingPlan {
   popular?: boolean
   requiresStudentId?: boolean
   enabled?: boolean
+  campaignLabel?: string
 }
 
-export type AdminBillingPlan = BillingPlan
+export type AdminBillingPlan = BillingPlan & { isCustom?: boolean }
 
 export async function fetchAdminBillingPlans(): Promise<{
   plans: AdminBillingPlan[]
   overrides: Record<string, unknown>
+  customPlans: BillingPlan[]
 }> {
   return api('/api/admin/billing-plans')
 }
 
-export async function saveAdminBillingPlans(
+export async function saveAdminBillingPlans(payload: {
   plans: Record<
     string,
     {
@@ -917,14 +919,80 @@ export async function saveAdminBillingPlans(
       features?: string[]
       popular?: boolean
       enabled?: boolean
+      interval?: BillingPlan['interval']
+      audience?: BillingPlan['audience']
+      requiresStudentId?: boolean
+      campaignLabel?: string
     }
-  >,
-) {
-  return api<{ plans: AdminBillingPlan[]; overrides: Record<string, unknown> }>(
+  >
+  customPlans?: Array<{
+    id?: string
+    name: string
+    price: number
+    interval: BillingPlan['interval']
+    audience: NonNullable<BillingPlan['audience']>
+    features: string[]
+    popular?: boolean
+    requiresStudentId?: boolean
+    enabled?: boolean
+    campaignLabel?: string
+  }>
+}) {
+  return api<{ plans: AdminBillingPlan[]; overrides: Record<string, unknown>; customPlans: BillingPlan[] }>(
     '/api/admin/billing-plans',
     {
       method: 'PUT',
-      body: JSON.stringify({ plans }),
+      body: JSON.stringify(payload),
+    },
+  )
+}
+
+export interface GiftCode {
+  id: string
+  code: string
+  label: string
+  planId: string
+  durationMonths: number
+  durationYears: number
+  maxUses: number
+  usedCount: number
+  expiresAt: string | null
+  enabled: boolean
+  createdAt: string
+}
+
+export async function fetchAdminGiftCodes() {
+  return api<{ codes: GiftCode[] }>('/api/admin/gift-codes')
+}
+
+export async function createAdminGiftCode(payload: {
+  code: string
+  label?: string
+  planId?: string
+  durationMonths?: number
+  durationYears?: number
+  maxUses?: number
+  expiresAt?: string | null
+}) {
+  return api<{ code: GiftCode }>('/api/admin/gift-codes', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function setAdminGiftCodeEnabled(id: string, enabled: boolean) {
+  return api<{ code: GiftCode }>(`/api/admin/gift-codes/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ enabled }),
+  })
+}
+
+export async function redeemGiftCode(code: string) {
+  return api<{ ok: true; planId: string; expiresAt: string; label: string; code: string }>(
+    '/api/billing/redeem-gift-code',
+    {
+      method: 'POST',
+      body: JSON.stringify({ code }),
     },
   )
 }

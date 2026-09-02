@@ -1,25 +1,41 @@
 import {
   getCreatorRegistrationPlanId,
   isCreatorApplicationPlanId,
-  normalizePlanId,
   planExpiryFor,
-  type BillingPlanId,
+  type BillingPlanDefinition,
 } from './billingPlanDefaults.js'
-import { getBillingPlan, getBillingPlans } from './billingPlansConfig.js'
+import {
+  getBillingPlan,
+  getBillingPlans,
+  getBillingPlansConfig,
+  normalizeBillingPlanId,
+  saveBillingPlansConfig,
+  saveCustomBillingPlans,
+  type CustomBillingPlanInput,
+} from './billingPlansConfig.js'
 
-export type { BillingPlanId, BillingPlanDefinition } from './billingPlanDefaults.js'
+export type { BillingPlanDefinition } from './billingPlanDefaults.js'
 export {
   DEFAULT_BILLING_PLANS,
   getCreatorRegistrationPlanId,
-  normalizePlanId,
   isCreatorApplicationPlanId,
+  planExpiryFor,
 } from './billingPlanDefaults.js'
-export { getBillingPlans, getBillingPlansConfig, saveBillingPlansConfig } from './billingPlansConfig.js'
+export {
+  getBillingPlans,
+  getBillingPlansConfig,
+  saveBillingPlansConfig,
+  saveCustomBillingPlans,
+  normalizeBillingPlanId,
+  type CustomBillingPlanInput,
+} from './billingPlansConfig.js'
+
+export function normalizePlanId(planId: string) {
+  return normalizeBillingPlanId(planId)
+}
 
 export function getPlan(planId: string) {
-  const normalized = normalizePlanId(planId)
-  if (!normalized) return undefined
-  return getBillingPlan(normalized)
+  return getBillingPlan(planId)
 }
 
 export function planRequiresStudentId(planId: string) {
@@ -31,8 +47,13 @@ export function planExpiry(planId: string) {
 }
 
 export function isCreatorApplicationPlan(planId: string) {
-  const normalized = normalizePlanId(planId)
-  return normalized ? isCreatorApplicationPlanId(normalized) : false
+  const plan = getPlan(planId)
+  return plan?.audience === 'creator'
+}
+
+export function isBuiltInCreatorApplicationPlan(planId: string) {
+  const normalized = normalizeBillingPlanId(planId)
+  return normalized ? isCreatorApplicationPlanId(normalized as never) : false
 }
 
 export function getCreatorRegistrationPrice(program: 'standard' | 'student_cinema' = 'standard') {

@@ -451,6 +451,32 @@ function runMigrations() {
     );
   `)
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS gift_codes (
+      id TEXT PRIMARY KEY,
+      code TEXT UNIQUE NOT NULL,
+      label TEXT NOT NULL DEFAULT '',
+      plan_id TEXT NOT NULL DEFAULT 'standard',
+      duration_months INTEGER NOT NULL DEFAULT 0,
+      duration_years INTEGER NOT NULL DEFAULT 0,
+      max_uses INTEGER NOT NULL DEFAULT 1,
+      used_count INTEGER NOT NULL DEFAULT 0,
+      expires_at TEXT,
+      enabled INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL
+    );
+  `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS gift_code_redemptions (
+      id TEXT PRIMARY KEY,
+      gift_code_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      redeemed_at TEXT NOT NULL,
+      subscription_expires_at TEXT NOT NULL
+    );
+  `)
+
   ensureColumn('creators', 'program', "TEXT NOT NULL DEFAULT 'standard'")
   ensureColumn('creators', 'school_id', 'TEXT')
   ensureColumn('creators', 'project_crew', "TEXT NOT NULL DEFAULT ''")

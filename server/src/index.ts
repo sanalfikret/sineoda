@@ -62,6 +62,7 @@ import { ensureCekimNotlariCategories } from './services/cekimNotlariCategories.
 import { ensureCekimNotlariDemoContent } from './services/cekimNotlariSeed.js'
 import adminCekimNotlariRoutes from './routes/adminCekimNotlari.js'
 import adminBillingPlansRoutes from './routes/adminBillingPlans.js'
+import adminGiftCodesRoutes from './routes/adminGiftCodes.js'
 import cekimNotlariRoutes from './routes/cekimNotlari.js'
 import {
   seedDatabase,
@@ -348,6 +349,7 @@ app.use('/api/admin/site-nav', adminSiteNavRoutes)
 app.use('/api/admin/site-mode', adminSiteModeRoutes)
 app.use('/api/site-mode', siteModeRoutes)
 app.use('/api/admin/billing-plans', adminBillingPlansRoutes)
+app.use('/api/admin/gift-codes', adminGiftCodesRoutes)
 app.use('/api/admin/upload', uploadRoutes)
 app.use(seoRoutes)
 
