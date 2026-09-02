@@ -10,6 +10,7 @@ import {
   normalizeStoredMediaPath,
   saveLandingPageConfig,
   updateLandingLayoutConfig,
+  updateLandingShowcasesConfig,
   type LandingHeroConfig,
 } from '../../api/client'
 import { useContent } from '../../context/ContentContext'
@@ -275,33 +276,60 @@ export function AdminLandingPage() {
   }
 
   const updateShowcase = (index: number, patch: Partial<ShowcaseDraft>) => {
-    setShowcases((current) =>
-      current.map((showcase, i) => (i === index ? { ...showcase, ...patch } : showcase)),
-    )
+    setShowcases((current) => {
+      const next = current.map((showcase, i) => (i === index ? { ...showcase, ...patch } : showcase))
+      window.setTimeout(() => {
+        void persistShowcases(next).catch((err) => {
+          setMessage(err instanceof Error ? err.message : 'Sekme güncellenemedi.')
+        })
+      }, 600)
+      return next
+    })
   }
 
   const toggleShowcaseItem = (showcaseIndex: number, contentId: string) => {
-    setShowcases((current) =>
-      current.map((showcase, index) => {
+    setShowcases((current) => {
+      const next = current.map((showcase, index) => {
         if (index !== showcaseIndex) return showcase
         const itemIds = showcase.itemIds.includes(contentId)
           ? showcase.itemIds.filter((id) => id !== contentId)
           : [...showcase.itemIds, contentId]
         return { ...showcase, itemIds }
-      }),
-    )
+      })
+      void persistShowcases(next).catch((err) => {
+        setMessage(err instanceof Error ? err.message : 'İçerik seçimi kaydedilemedi.')
+      })
+      return next
+    })
   }
 
   const addShowcase = () => {
     const id = `showcase-${Date.now()}`
-    setShowcases((current) => [
-      ...current,
-      { id, title: 'Yeni Kategori', icon: 'film', description: '', itemIds: [] },
-    ])
+    const nextShowcase: ShowcaseDraft = {
+      id,
+      title: 'Yeni Sekme',
+      icon: 'film',
+      description: '',
+      itemIds: [],
+    }
+    setShowcases((current) => {
+      const next = [...current, nextShowcase]
+      void persistShowcases(next).catch((err) => {
+        setMessage(err instanceof Error ? err.message : 'Sekme kaydedilemedi.')
+      })
+      return next
+    })
+    setMessage('Ana sayfa sekmesi eklendi ve kaydedildi.')
   }
 
   const removeShowcase = (index: number) => {
-    setShowcases((current) => current.filter((_, i) => i !== index))
+    setShowcases((current) => {
+      const next = current.filter((_, i) => i !== index)
+      void persistShowcases(next).catch((err) => {
+        setMessage(err instanceof Error ? err.message : 'Silme kaydedilemedi.')
+      })
+      return next
+    })
   }
 
   const moveShowcase = (index: number, direction: -1 | 1) => {
@@ -380,6 +408,25 @@ export function AdminLandingPage() {
     () => filterCatalogByPool(pickerCatalog, 'student_cinema'),
     [pickerCatalog],
   )
+
+  const persistShowcases = async (nextShowcases: ShowcaseDraft[]) => {
+    if (saving) return
+    const validIds = new Set(pickerCatalog.map((item) => item.id))
+    const payload = nextShowcases.map((showcase) => ({
+      ...showcase,
+      itemIds: showcase.itemIds.filter((id) => validIds.has(id)),
+    }))
+    const data = await updateLandingShowcasesConfig(payload)
+    setShowcases(
+      data.showcases.map((showcase) => ({
+        id: showcase.id,
+        title: showcase.title,
+        icon: showcase.icon,
+        description: showcase.description,
+        itemIds: showcase.items.map((item) => item.id),
+      })),
+    )
+  }
 
   const persistLayout = async (nextLayout: LandingLayoutConfig) => {
     if (saving) return
@@ -1094,14 +1141,18 @@ export function AdminLandingPage() {
           <>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-plooy-muted">
-                Dizi, Film, Belgesel gibi sekmeler ve poster satırları
+                Misafir ana sayfadaki Dizi / Film sekmeleri — ana kategori satırları değil (
+                <a href="/admin/kategoriler" className="text-plooy-gold hover:underline">
+                  Kategoriler & Menü
+                </a>
+                ). Ekleme anında kaydedilir.
               </p>
               <button
                 type="button"
                 onClick={addShowcase}
                 className="rounded-lg border border-white/10 px-4 py-2 text-sm text-white/80 hover:bg-white/5"
               >
-                + Kategori Ekle
+                + Sekme Ekle
               </button>
             </div>
             <div className="space-y-4">

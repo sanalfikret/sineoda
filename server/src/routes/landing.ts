@@ -184,6 +184,57 @@ function sanitizeLayout(raw: Partial<LandingLayoutConfig> | undefined, customBlo
   }
 }
 
+function saveLandingShowcasesPayload(showcases: unknown[]) {
+  const catalogIds = new Set(dbAll<{ id: string }>('SELECT id FROM content').map((row) => row.id))
+  const normalizedShowcases = showcases
+    .map(
+      (
+        showcase: {
+          id: string
+          title: string
+          icon?: string
+          description?: string
+          itemIds?: string[]
+        },
+        index: number,
+      ) => ({
+        id: String(showcase.id ?? '').trim(),
+        title: String(showcase.title ?? '').trim(),
+        icon: String(showcase.icon ?? 'film'),
+        description: String(showcase.description ?? ''),
+        itemIds: Array.isArray(showcase.itemIds) ? showcase.itemIds.map(String) : [],
+        sortOrder: index,
+      }),
+    )
+    .filter((showcase) => showcase.id && showcase.title)
+
+  if (normalizedShowcases.length !== showcases.length) {
+    const err = new Error('Her kategori şeridinin başlığı dolu olmalı.') as Error & { status?: number }
+    err.status = 400
+    throw err
+  }
+
+  dbRun('DELETE FROM landing_showcase_items')
+  dbRun('DELETE FROM landing_showcases')
+
+  normalizedShowcases.forEach((showcase) => {
+    dbRun(
+      'INSERT INTO landing_showcases (id, title, icon, description, sort_order) VALUES (?, ?, ?, ?, ?)',
+      [showcase.id, showcase.title, showcase.icon, showcase.description, showcase.sortOrder],
+    )
+
+    ;(filterContentIdsForPool(
+      poolForShowcaseIcon(showcase.icon),
+      showcase.itemIds.filter((contentId) => catalogIds.has(contentId)),
+    ) as string[]).forEach((contentId: string, itemIndex: number) => {
+      dbRun(
+        'INSERT INTO landing_showcase_items (showcase_id, content_id, sort_order) VALUES (?, ?, ?)',
+        [showcase.id, contentId, itemIndex],
+      )
+    })
+  })
+}
+
 router.patch('/hero', requireAdmin, (req: AuthRequest, res) => {
   const hero = saveLandingHeroConfig(validateHeroPayload(req.body))
   syncFeaturedFromHero(hero)
@@ -211,6 +262,25 @@ router.patch('/layout', requireAdmin, (req: AuthRequest, res) => {
     customBlockIds,
   )
   res.json({ layout })
+})
+
+router.patch('/showcases', requireAdmin, (req: AuthRequest, res) => {
+  const showcases = req.body?.showcases
+  if (!Array.isArray(showcases)) {
+    res.status(400).json({ error: 'showcases dizisi zorunlu.' })
+    return
+  }
+  try {
+    saveLandingShowcasesPayload(showcases)
+    const config = getLandingConfig()
+    res.json({
+      showcases: config.showcases,
+      sliderContentIds: config.sliderContentIds,
+    })
+  } catch (err) {
+    const status = (err as Error & { status?: number }).status ?? 500
+    res.status(status).json({ error: err instanceof Error ? err.message : 'Kayıt başarısız.' })
+  }
 })
 
 router.get('/', (_req, res) => {
@@ -297,52 +367,13 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
   }
 
   if (showcases) {
-    const normalizedShowcases = showcases
-      .map(
-        (
-          showcase: {
-            id: string
-            title: string
-            icon?: string
-            description?: string
-            itemIds?: string[]
-          },
-          index: number,
-        ) => ({
-          id: String(showcase.id ?? '').trim(),
-          title: String(showcase.title ?? '').trim(),
-          icon: String(showcase.icon ?? 'film'),
-          description: String(showcase.description ?? ''),
-          itemIds: Array.isArray(showcase.itemIds) ? showcase.itemIds.map(String) : [],
-          sortOrder: index,
-        }),
-      )
-      .filter((showcase) => showcase.id && showcase.title)
-
-    if (normalizedShowcases.length !== showcases.length) {
-      res.status(400).json({ error: 'Her kategori şeridinin başlığı dolu olmalı.' })
+    try {
+      saveLandingShowcasesPayload(showcases)
+    } catch (err) {
+      const status = (err as Error & { status?: number }).status ?? 500
+      res.status(status).json({ error: err instanceof Error ? err.message : 'Kayıt başarısız.' })
       return
     }
-
-    dbRun('DELETE FROM landing_showcase_items')
-    dbRun('DELETE FROM landing_showcases')
-
-    normalizedShowcases.forEach((showcase) => {
-      dbRun(
-        'INSERT INTO landing_showcases (id, title, icon, description, sort_order) VALUES (?, ?, ?, ?, ?)',
-        [showcase.id, showcase.title, showcase.icon, showcase.description, showcase.sortOrder],
-      )
-
-      ;(filterContentIdsForPool(
-        poolForShowcaseIcon(showcase.icon),
-        showcase.itemIds.filter((contentId) => catalogIds.has(contentId)),
-      ) as string[]).forEach((contentId: string, itemIndex: number) => {
-        dbRun(
-          'INSERT INTO landing_showcase_items (showcase_id, content_id, sort_order) VALUES (?, ?, ?)',
-          [showcase.id, contentId, itemIndex],
-        )
-      })
-    })
   }
 
   try {

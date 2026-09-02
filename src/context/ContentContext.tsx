@@ -204,11 +204,26 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   const addCategory = useCallback(
     async (title: string) => {
-      const result = await api<{ category: ContentCategory }>('/api/categories', {
+      const result = await api<{
+        category: ContentCategory
+        categories?: ContentCategory[]
+        categoryOrder?: string[]
+      }>('/api/categories', {
         method: 'POST',
         body: JSON.stringify({ title }),
       })
-      setCategories((prev) => [...prev, result.category])
+      if (result.categories?.length) {
+        setCategories(result.categories)
+      } else {
+        setCategories((prev) => [...prev, result.category])
+      }
+      if (result.categoryOrder?.length) {
+        setCategoryOrder(result.categoryOrder)
+      } else {
+        setCategoryOrder((prev) =>
+          prev.includes(result.category.id) ? prev : [...prev, result.category.id],
+        )
+      }
       return result.category
     },
     [],
