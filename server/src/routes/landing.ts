@@ -26,6 +26,10 @@ import {
 } from '../services/landingSections.js'
 import { filterContentIdsForPool, poolForShowcaseIcon } from '../services/contentPools.js'
 import {
+  fetchStudentCinemaMonthlyWinnersFallback,
+  fetchStudentCinemaPicksFallback,
+} from '../services/landingStudentRows.js'
+import {
   resolveLandingFeaturedItem,
   syncFeaturedFromHero,
 } from '../services/landingFeatured.js'
