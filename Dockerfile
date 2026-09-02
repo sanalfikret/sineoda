@@ -21,6 +21,7 @@ COPY --from=frontend /app/dist /app/web-dist
 
 ARG GIT_SHA=unknown
 ENV GIT_SHA=$GIT_SHA
+COPY .deploy-sha /app/.deploy-sha
 ENV NODE_ENV=production
 ENV PORT=3001
 ENV WEB_DIST_DIR=/app/web-dist

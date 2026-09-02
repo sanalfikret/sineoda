@@ -165,6 +165,21 @@ app.use(express.json({ limit: '2mb' }))
 app.use(express.urlencoded({ extended: true }))
 app.use('/uploads', express.static(uploadsDir))
 
+function resolveGitSha() {
+  const fromEnv = String(process.env.GIT_SHA ?? '').trim()
+  if (fromEnv && fromEnv !== 'unknown') return fromEnv
+  for (const candidate of ['/app/.deploy-sha', path.join(process.cwd(), '.deploy-sha')]) {
+    try {
+      if (!fs.existsSync(candidate)) continue
+      const sha = fs.readFileSync(candidate, 'utf8').trim()
+      if (sha && sha !== 'unknown') return sha.slice(0, 12)
+    } catch {
+      /* ignore */
+    }
+  }
+  return fromEnv || 'unknown'
+}
+
 app.get('/api/health', (_req, res) => {
   const dbFile = getDbPath()
   let dbSizeBytes = 0
@@ -204,7 +219,7 @@ app.get('/api/health', (_req, res) => {
     },
     email: config.isEmailConfigured(),
     build: {
-      gitSha: process.env.GIT_SHA ?? 'unknown',
+      gitSha: resolveGitSha(),
     },
     auth: {
       jwtExpiresIn: resolveJwtExpiresIn(),

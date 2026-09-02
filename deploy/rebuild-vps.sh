@@ -77,6 +77,9 @@ fi
 GIT_SHA="${GIT_SHA:-unknown}"
 export GIT_SHA
 echo ">>> build git: $GIT_SHA"
+if [ ! -f .deploy-sha ]; then
+  echo "$GIT_SHA" > .deploy-sha
+fi
 BUILD_FLAGS=(--build-arg "VITE_API_URL=" --build-arg "GIT_SHA=${GIT_SHA}")
 if [ "${REBUILD_NO_CACHE:-0}" = "1" ]; then
   BUILD_FLAGS=(--no-cache "${BUILD_FLAGS[@]}")

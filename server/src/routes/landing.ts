@@ -20,7 +20,6 @@ import {
 } from '../services/landingLayout.js'
 import {
   getLandingSectionsConfig,
-  parseLandingSections,
   saveLandingSectionsConfig,
   type LandingSectionsConfig,
 } from '../services/landingSections.js'
