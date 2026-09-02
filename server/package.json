@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "node --import tsx src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "bootstrap:admin": "node scripts/bootstrap-admin.js"
   },
   "engines": {
     "node": ">=18"
