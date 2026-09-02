@@ -1,10 +1,25 @@
-#!/usr/bin/env bash
+#!/bin/bash
+# SIFIR VPS — Ubuntu format sonrası tek komut (git gerekmez)
 # PuTTY: curl -fsSL https://raw.githubusercontent.com/sanalfikret/sineoda/main/deploy/paste-install.sh | bash
-set -euo pipefail
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+set -eu
 
-echo "=== nginx temizle ==="
-rm -f /etc/nginx/sites-enabled/*.save /etc/nginx/sites-enabled/default 2>/dev/null || true
+INSTALL="/opt/sineoda"
+ARCHIVE="/tmp/sineoda-main.tar.gz"
+EXTRACT="/tmp/sineoda-extract"
 
+echo "=== 1) paketler ==="
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq
+apt-get install -y -qq curl ca-certificates nginx tar
+
+if ! command -v docker >/dev/null 2>&1; then
+  echo ">>> Docker kuruluyor..."
+  curl -fsSL https://get.docker.com | sh
+fi
+
+echo "=== 2) nginx ==="
+rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
 cat > /etc/nginx/sites-available/plooy << 'NGINX'
 server {
     listen 80 default_server;
@@ -20,50 +35,50 @@ server {
     }
 }
 NGINX
-
 ln -sf /etc/nginx/sites-available/plooy /etc/nginx/sites-enabled/plooy
 nginx -t
+systemctl enable nginx
 systemctl reload nginx
-echo "nginx OK"
 
-echo "=== git + proje ==="
-export DEBIAN_FRONTEND=noninteractive
-apt-get update -qq
-apt-get install -y -qq git curl ca-certificates
+echo "=== 3) kod indir (GitHub arşiv) ==="
+rm -rf "$EXTRACT" "$ARCHIVE" 2>/dev/null || true
+mkdir -p "$EXTRACT" "$INSTALL/persistent/data" "$INSTALL/persistent/uploads"
+curl -fsSL "https://github.com/sanalfikret/sineoda/archive/refs/heads/main.tar.gz" -o "$ARCHIVE"
+tar -xzf "$ARCHIVE" -C "$EXTRACT"
+SRC="$(find "$EXTRACT" -maxdepth 1 -type d -name 'sineoda-main*' | head -1)"
+if [ -z "$SRC" ] || [ ! -f "$SRC/server/src/index.ts" ]; then
+  echo "HATA: arşiv bozuk."
+  exit 1
+fi
+# Temiz kurulum — eski bozuk klasör varsa yedekle
+if [ -d "$INSTALL/server" ]; then
+  mv "$INSTALL" "/opt/sineoda-old-$(date +%Y%m%d-%H%M%S)" 2>/dev/null || rm -rf "$INSTALL"
+  mkdir -p "$INSTALL/persistent/data" "$INSTALL/persistent/uploads"
+fi
+cp -a "$SRC"/. "$INSTALL/"
+rm -rf "$ARCHIVE" "$EXTRACT"
 
-INSTALL=/opt/sineoda
-mkdir -p "$INSTALL/persistent/data" "$INSTALL/persistent/uploads"
-
-if [ ! -d "$INSTALL/.git" ]; then
-  git clone https://github.com/sanalfikret/sineoda.git "$INSTALL"
+echo "=== 4) .env ==="
+if [ ! -f "$INSTALL/.env" ]; then
+  cp "$INSTALL/config/env.example" "$INSTALL/.env"
+  IP="$(curl -fsSL -4 ifconfig.me 2>/dev/null || hostname -I 2>/dev/null | awk '{print $1}')"
+  JWT="$(head -c 48 /dev/urandom | base64 | tr -dc 'a-zA-Z0-9' | head -c 48)"
+  sed -i "s|^FRONTEND_URL=.*|FRONTEND_URL=http://${IP}|" "$INSTALL/.env"
+  sed -i "s|^PUBLIC_URL=.*|PUBLIC_URL=http://${IP}|" "$INSTALL/.env"
+  sed -i "s|^JWT_SECRET=.*|JWT_SECRET=${JWT}|" "$INSTALL/.env"
+  sed -i "s|^PERSIST_DIR=.*|PERSIST_DIR=${INSTALL}/persistent|" "$INSTALL/.env"
+  echo ">>> .env oluşturuldu (IP: $IP)"
 fi
 
-cd "$INSTALL"
-git fetch origin main
-git reset --hard origin/main
-
-echo "=== eski DB kurtar ==="
-if [ ! -f "$INSTALL/persistent/data/sineoda.db" ]; then
-  for cid in $(docker ps -aq 2>/dev/null); do
-    src=$(docker inspect "$cid" --format '{{range .Mounts}}{{if eq .Destination "/app/server/data"}}{{.Source}}{{end}}{{end}}' 2>/dev/null || true)
-    if [ -n "$src" ] && [ -f "$src/sineoda.db" ]; then
-      cp -a "$src/sineoda.db" "$INSTALL/persistent/data/"
-      echo "DB: $src/sineoda.db"
-      break
-    fi
-  done
-fi
-
-echo "=== docker rebuild ==="
+echo "=== 5) docker rebuild ==="
 export PERSIST_DIR="$INSTALL/persistent"
 export HOST_PORT=3001
-docker stop sineoda-app-1 sineoda-api-1 plooy-web plooy-db 2>/dev/null || true
-docker rm -f sineoda-app-1 sineoda-api-1 plooy-web plooy-db 2>/dev/null || true
-docker compose down --remove-orphans 2>/dev/null || docker-compose down --remove-orphans 2>/dev/null || true
-bash deploy/rebuild-vps.sh
+cd "$INSTALL"
+/bin/bash deploy/rebuild-vps.sh
 
 echo ""
+echo "=== 6) bitti ==="
 curl -sf "http://127.0.0.1:3001/api/health" | grep -E 'gitSha|dbExists|userCount' || true
 echo ""
-docker ps
-echo ">>> Bitti — tarayici Ctrl+Shift+R"
+echo ">>> Tarayıcı: Ctrl+Shift+R  http://$(curl -fsSL -4 ifconfig.me 2>/dev/null || echo 31.42.127.26)/"
+echo ">>> Admin: kayıt ol veya seed admin — test aşaması, veri sıfırdan."
