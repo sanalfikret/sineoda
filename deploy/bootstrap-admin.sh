@@ -25,14 +25,19 @@ else
 fi
 
 if ! docker ps --format '{{.Names}}' | grep -qx sineoda; then
-  echo "HATA: sineoda container çalışmıyor — önce paste-install.sh"
-  exit 1
+  CONTAINER="$(docker ps --format '{{.Names}}' | grep -E 'sineoda' | head -1 || true)"
+  if [ -z "$CONTAINER" ]; then
+    echo "HATA: sineoda container çalışmıyor — docker ps ile kontrol edin"
+    exit 1
+  fi
+else
+  CONTAINER="sineoda"
 fi
 
 docker exec \
   -e "BOOTSTRAP_EMAIL=$ADMIN_EMAIL" \
   -e "BOOTSTRAP_PASS=$ADMIN_PASS" \
-  sineoda node -e "
+  "$CONTAINER" node -e "
 const bcrypt = require('bcryptjs');
 const Database = require('better-sqlite3');
 const email = process.env.BOOTSTRAP_EMAIL;
