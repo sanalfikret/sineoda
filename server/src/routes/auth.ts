@@ -9,7 +9,7 @@ import { dbAll, dbGet, dbRun, uploadsDir } from '../db.js'
 import { getProfileId, requireAuth, signToken, verifyToken, type AuthRequest } from '../middleware/auth.js'
 import { mapProfile, mapUser } from '../mappers.js'
 import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
-import { sendPasswordResetEmail, sendEmailVerificationEmail } from '../services/email.js'
+import { sendPasswordResetEmail, sendEmailVerificationEmail, sendEmailChangeConfirmationEmail } from '../services/email.js'
 import { getPlan, normalizePlanId, planRequiresStudentId } from '../services/plans.js'
 import { isValidTurkishMobile, normalizePhone, sendVerificationSms } from '../services/sms.js'
 import { recordSignupConsents } from '../services/legalConsent.js'
@@ -57,6 +57,20 @@ async function createEmailVerificationToken(userId: string, email: string) {
 
   const verifyUrl = `${config.frontendUrl}/eposta-dogrula?token=${token}`
   return sendEmailVerificationEmail(email, verifyUrl)
+}
+
+async function createEmailChangeToken(userId: string, newEmail: string) {
+  const token = uuid()
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+
+  dbRun('UPDATE email_change_tokens SET used = 1 WHERE user_id = ? AND used = 0', [userId])
+  dbRun(
+    'INSERT INTO email_change_tokens (id, user_id, new_email, token, expires_at, used) VALUES (?, ?, ?, ?, ?, 0)',
+    [uuid(), userId, newEmail, token, expiresAt],
+  )
+
+  const confirmUrl = `${config.frontendUrl}/eposta-degistir?token=${token}`
+  return sendEmailChangeConfirmationEmail(newEmail, confirmUrl)
 }
 
 router.post('/sms/send', async (req, res) => {
@@ -388,6 +402,82 @@ router.post('/change-password', requireAuth, (req: AuthRequest, res) => {
     req.auth!.userId,
   ])
   res.json({ ok: true })
+})
+
+router.post('/change-email', requireAuth, async (req: AuthRequest, res) => {
+  const newEmail = String(req.body.newEmail ?? '').trim().toLowerCase()
+  const password = String(req.body.password ?? '')
+
+  if (!newEmail || !password) {
+    res.status(400).json({ error: 'Yeni e-posta ve mevcut şifre gerekli.' })
+    return
+  }
+
+  const user = dbGet<UserRow>('SELECT * FROM users WHERE id = ?', [req.auth!.userId])
+  if (!user || user.role !== 'user') {
+    res.status(403).json({ error: 'Bu işlem yalnızca üye hesapları için geçerlidir.' })
+    return
+  }
+
+  if (newEmail === user.email.toLowerCase()) {
+    res.status(400).json({ error: 'Yeni e-posta mevcut adresinle aynı.' })
+    return
+  }
+
+  const taken = dbGet<{ id: string }>('SELECT id FROM users WHERE email = ? AND id != ?', [
+    newEmail,
+    user.id,
+  ])
+  if (taken) {
+    res.status(409).json({ error: 'Bu e-posta adresi başka bir hesapta kayıtlı.' })
+    return
+  }
+
+  if (!bcrypt.compareSync(password, user.password_hash)) {
+    res.status(401).json({ error: 'Mevcut şifre hatalı.' })
+    return
+  }
+
+  const emailResult = await createEmailChangeToken(user.id, newEmail)
+  res.json({
+    message: 'Onay bağlantısı yeni e-posta adresine gönderildi.',
+    ...(emailResult.devMode ? { devConfirmUrl: emailResult.confirmUrl } : {}),
+  })
+})
+
+router.post('/confirm-email-change', (req, res) => {
+  const token = String(req.body.token ?? '').trim()
+  if (!token) {
+    res.status(400).json({ error: 'Onay bağlantısı geçersiz.' })
+    return
+  }
+
+  const record = dbGet<{ user_id: string; new_email: string; expires_at: string; used: number }>(
+    'SELECT user_id, new_email, expires_at, used FROM email_change_tokens WHERE token = ?',
+    [token],
+  )
+
+  if (!record || record.used || new Date(record.expires_at) < new Date()) {
+    res.status(400).json({ error: 'Geçersiz veya süresi dolmuş onay bağlantısı.' })
+    return
+  }
+
+  const taken = dbGet<{ id: string }>(
+    'SELECT id FROM users WHERE email = ? AND id != ?',
+    [record.new_email, record.user_id],
+  )
+  if (taken) {
+    res.status(409).json({ error: 'Bu e-posta adresi artık kullanılamaz.' })
+    return
+  }
+
+  dbRun('UPDATE users SET email = ?, email_verified = 1 WHERE id = ?', [
+    record.new_email,
+    record.user_id,
+  ])
+  dbRun('UPDATE email_change_tokens SET used = 1 WHERE token = ?', [token])
+
+  res.json({ message: 'E-posta adresin güncellendi. Yeni adresinle giriş yapabilirsin.' })
 })
 
 router.patch('/me', requireAuth, (req: AuthRequest, res) => {

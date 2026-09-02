@@ -10,6 +10,7 @@ export const ROUTE_PAIRS: RoutePair[] = [
   { tr: '/giris', en: '/en/login' },
   { tr: '/kayit', en: '/en/signup' },
   { tr: '/eposta-dogrula', en: '/en/verify-email' },
+  { tr: '/eposta-degistir', en: '/en/confirm-email-change' },
   { tr: '/sifremi-unuttum', en: '/en/forgot-password' },
   { tr: '/sifre-sifirla', en: '/en/reset-password' },
   { tr: '/planlar', en: '/en/plans' },

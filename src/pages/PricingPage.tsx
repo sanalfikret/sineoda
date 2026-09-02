@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
@@ -24,6 +24,21 @@ interface Plan {
   enabled?: boolean
 }
 
+type PlanAction = 'subscribe' | 'current' | 'switch' | 'renew'
+
+function resolvePlanAction(
+  planId: string,
+  subscription: { status: string; plan: string | null } | null,
+  hasUser: boolean,
+): PlanAction {
+  if (!hasUser) return 'subscribe'
+  if (!subscription) return 'subscribe'
+  if (subscription.status === 'active' && subscription.plan === planId) return 'current'
+  if (subscription.status === 'active' || subscription.status === 'cancelled') return 'switch'
+  if (subscription.status === 'expired') return 'renew'
+  return 'subscribe'
+}
+
 export function PricingPage() {
   const { t } = useTranslation('pricing')
   const { localizePath, locale } = useLocale()
@@ -40,6 +55,7 @@ export function PricingPage() {
   })
   const [subscription, setSubscription] = useState<{
     status: string
+    plan: string | null
     startedAt: string | null
     expiresAt: string | null
   } | null>(null)
@@ -53,6 +69,11 @@ export function PricingPage() {
   const planParam = searchParams.get('plan')
   const autoCheckout = searchParams.get('checkout') === '1'
   const dateLocale = locale === 'en' ? 'en-US' : 'tr-TR'
+
+  const currentPlanName = useMemo(
+    () => plans.find((plan) => plan.id === subscription?.plan)?.name ?? subscription?.plan,
+    [plans, subscription?.plan],
+  )
 
   const planPriceSuffix = (interval: Plan['interval']) => {
     if (interval === 'once') return t('intervalOnce')
@@ -73,7 +94,14 @@ export function PricingPage() {
         setPlans(billing.plans.filter((plan) => plan.enabled !== false))
         setProviders(billing.providers)
         setProvider('paytr')
-        if (sub) setSubscription({ status: sub.status, startedAt: sub.startedAt, expiresAt: sub.expiresAt })
+        if (sub) {
+          setSubscription({
+            status: sub.status,
+            plan: sub.plan,
+            startedAt: sub.startedAt,
+            expiresAt: sub.expiresAt,
+          })
+        }
       })
       .finally(() => setLoading(false))
   }, [user])
@@ -112,7 +140,12 @@ export function PricingPage() {
           setMessage(result.message)
           await refreshUser()
           const sub = await fetchSubscription()
-          setSubscription({ status: sub.status, startedAt: sub.startedAt, expiresAt: sub.expiresAt })
+          setSubscription({
+            status: sub.status,
+            plan: sub.plan,
+            startedAt: sub.startedAt,
+            expiresAt: sub.expiresAt,
+          })
           setSearchParams({}, { replace: true })
           return
         }
@@ -136,10 +169,19 @@ export function PricingPage() {
 
   useEffect(() => {
     if (loading || !user || !autoCheckout || !planParam || autoCheckoutStarted.current) return
-    if (subscription?.status === 'active') return
+    if (subscription?.status === 'active' && subscription.plan === planParam) return
     autoCheckoutStarted.current = true
     void handleCheckout(planParam)
-  }, [loading, user, autoCheckout, planParam, subscription?.status, handleCheckout])
+  }, [loading, user, autoCheckout, planParam, subscription?.status, subscription?.plan, handleCheckout])
+
+  const planButtonLabel = (action: PlanAction, checkingOut: boolean) => {
+    if (checkingOut) return t('redirecting')
+    if (!providers.paymentReady) return t('paymentSoon')
+    if (action === 'current') return t('currentPlan')
+    if (action === 'switch') return t('switchPlan')
+    if (action === 'renew') return t('renewPlan')
+    return t('payWithCard')
+  }
 
   return (
     <div className="min-h-dvh bg-plooy-bg">
@@ -157,9 +199,20 @@ export function PricingPage() {
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-plooy-gold">{t('eyebrow')}</p>
           <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">{t('title')}</h1>
           <p className="mt-2 text-sm text-plooy-muted">{t('subtitle')}</p>
-          {(subscription?.status === 'active' || subscription?.status === 'expired') && (
+          {(subscription?.status === 'active' || subscription?.status === 'cancelled' || subscription?.status === 'expired') && (
             <div className="mt-3 space-y-1 text-sm text-emerald-300">
-              <p>{subscription.status === 'active' ? t('activeSubscription') : t('expiredSubscription')}</p>
+              <p>
+                {subscription.status === 'active'
+                  ? t('activeSubscription')
+                  : subscription.status === 'cancelled'
+                    ? t('cancelledSubscription')
+                    : t('expiredSubscription')}
+              </p>
+              {currentPlanName && (
+                <p className="text-white/90">
+                  {t('currentPlanLabel')}: <span className="font-medium">{currentPlanName}</span>
+                </p>
+              )}
               {subscription.startedAt && (
                 <p className="text-plooy-muted">
                   {t('startedAt')} {new Date(subscription.startedAt).toLocaleDateString(dateLocale)}
@@ -171,6 +224,9 @@ export function PricingPage() {
                 </p>
               )}
             </div>
+          )}
+          {subscription?.status === 'active' && subscription.plan && (
+            <p className="mx-auto mt-4 max-w-lg text-xs text-plooy-muted">{t('planChangeNote')}</p>
           )}
         </div>
 
@@ -184,16 +240,26 @@ export function PricingPage() {
           </div>
         ) : (
           <div className="mt-10 grid gap-6 md:grid-cols-2">
-            {plans.map((plan) => (
+            {plans.map((plan) => {
+              const action = resolvePlanAction(plan.id, subscription, Boolean(user))
+              const isCurrent = action === 'current'
+              return (
               <article
                 key={plan.id}
                 className={`rounded-2xl border p-8 ${
-                  plan.popular
-                    ? 'border-plooy-gold/40 bg-plooy-gold/5'
-                    : 'border-white/10 bg-[#11141c]'
+                  isCurrent
+                    ? 'border-emerald-400/40 bg-emerald-500/5'
+                    : plan.popular
+                      ? 'border-plooy-gold/40 bg-plooy-gold/5'
+                      : 'border-white/10 bg-[#11141c]'
                 }`}
               >
-                {plan.popular && (
+                {isCurrent && (
+                  <span className="mb-3 inline-block rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-200">
+                    {t('currentPlanBadge')}
+                  </span>
+                )}
+                {!isCurrent && plan.popular && (
                   <span className="mb-3 inline-block rounded-full bg-plooy-gold px-3 py-1 text-xs font-semibold text-plooy-bg">
                     {t('studentBadge')}
                   </span>
@@ -212,7 +278,7 @@ export function PricingPage() {
                   ))}
                 </ul>
 
-                {plan.requiresStudentId && user && !studentIdReady && (
+                {plan.requiresStudentId && user && !studentIdReady && !isCurrent && (
                   <label className="mt-6 block">
                     <span className="mb-1.5 block text-sm font-medium text-white/90">{t('studentId')}</span>
                     <input
@@ -224,24 +290,21 @@ export function PricingPage() {
                   </label>
                 )}
 
-                {plan.requiresStudentId && studentIdReady && (
+                {plan.requiresStudentId && studentIdReady && !isCurrent && (
                   <p className="mt-6 text-xs text-emerald-300">{t('studentIdUploaded')}</p>
                 )}
 
                 <button
                   type="button"
-                  disabled={checkoutPlan === plan.id || !providers.paymentReady}
+                  disabled={isCurrent || checkoutPlan === plan.id || !providers.paymentReady}
                   onClick={() => void handleCheckout(plan.id)}
-                  className="mt-8 w-full rounded-lg bg-plooy-gold py-3.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
+                  className="mt-8 w-full rounded-lg bg-plooy-gold py-3.5 text-sm font-semibold text-plooy-bg disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {checkoutPlan === plan.id
-                    ? t('redirecting')
-                    : providers.paymentReady
-                      ? t('payWithCard')
-                      : t('paymentSoon')}
+                  {planButtonLabel(action, checkoutPlan === plan.id)}
                 </button>
               </article>
-            ))}
+              )
+            })}
           </div>
         )}
 

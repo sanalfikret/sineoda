@@ -6,7 +6,7 @@ export function activateUserSubscription(userId: string, planId: string) {
   const now = new Date().toISOString()
   const expiresAt = planExpiry(normalizedPlanId)
   dbRun(
-    'UPDATE users SET subscription_status = ?, subscription_plan = ?, subscription_started_at = ?, subscription_expires_at = ?, pending_plan_id = NULL WHERE id = ?',
+    'UPDATE users SET subscription_status = ?, subscription_plan = ?, subscription_started_at = ?, subscription_expires_at = ?, subscription_cancelled_at = NULL, pending_plan_id = NULL WHERE id = ?',
     ['active', normalizedPlanId, now, expiresAt, userId],
   )
   return { startedAt: now, expiresAt }

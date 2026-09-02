@@ -23,6 +23,7 @@ import { ProfilesPage } from '../pages/ProfilesPage'
 import { ResetPasswordPage } from '../pages/ResetPasswordPage'
 import { SignupPage } from '../pages/SignupPage'
 import { VerifyEmailPage } from '../pages/VerifyEmailPage'
+import { EmailChangeConfirmPage } from '../pages/EmailChangeConfirmPage'
 import { AuthenticatedProviders } from './providers'
 
 export function publicRoutes() {
@@ -46,6 +47,7 @@ export function publicRoutes() {
       ),
     }),
     ...localeRoutes({ tr: '/eposta-dogrula', en: '/en/verify-email', element: <VerifyEmailPage /> }),
+    ...localeRoutes({ tr: '/eposta-degistir', en: '/en/confirm-email-change', element: <EmailChangeConfirmPage /> }),
     ...localeRoutes({ tr: '/sifremi-unuttum', en: '/en/forgot-password', element: <ForgotPasswordPage /> }),
     ...localeRoutes({ tr: '/sifre-sifirla', en: '/en/reset-password', element: <ResetPasswordPage /> }),
     ...localeRoutes({

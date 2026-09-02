@@ -75,6 +75,34 @@ export async function sendEmailVerificationEmail(email: string, verifyUrl: strin
   return { devMode: false }
 }
 
+export async function sendEmailChangeConfirmationEmail(email: string, confirmUrl: string) {
+  const transport = getTransporter()
+  const subject = `${BRAND_NAME} — E-posta Değişikliğini Onayla`
+  const html = `
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+      <h2 style="color:#e8b84a">${BRAND_NAME}</h2>
+      <p>Hesap e-posta adresini bu adrese değiştirmek için onayla:</p>
+      <p><a href="${confirmUrl}" style="display:inline-block;background:#e8b84a;color:#0d0f14;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600">E-posta Değişikliğini Onayla</a></p>
+      <p style="word-break:break-all"><a href="${confirmUrl}" style="color:#e8b84a">${confirmUrl}</a></p>
+      <p style="color:#888;font-size:13px">Bu bağlantı 24 saat geçerlidir. Sen istemediysen bu e-postayı yok say.</p>
+    </div>
+  `
+
+  if (!transport) {
+    console.log('[email-dev] E-posta değişikliği onay bağlantısı:', confirmUrl)
+    return { devMode: true, confirmUrl }
+  }
+
+  await transport.sendMail({
+    from: config.smtp.from,
+    to: email,
+    subject,
+    html,
+  })
+
+  return { devMode: false }
+}
+
 const CONTACT_SUBJECT_LABELS: Record<string, string> = {
   oneri: 'Öneri',
   istek: 'İstek',
