@@ -8,7 +8,7 @@ INSTALL="${SINEODA_ROOT:-/opt/sineoda}"
 cd "$INSTALL"
 
 if [ ! -f .env ]; then
-  echo "HATA: $INSTALL/.env yok"
+  echo "HATA: $INSTALL/.env yok — önce paste-install.sh"
   exit 1
 fi
 
@@ -24,20 +24,7 @@ else
   printf '\nADMIN_BOOTSTRAP_PASSWORD=%s\n' "$ADMIN_PASS" >> .env
 fi
 
-if ! docker ps --format '{{.Names}}' | grep -qx sineoda; then
-  CONTAINER="$(docker ps --format '{{.Names}}' | grep -E 'sineoda' | head -1 || true)"
-  if [ -z "$CONTAINER" ]; then
-    echo "HATA: sineoda container çalışmıyor — docker ps ile kontrol edin"
-    exit 1
-  fi
-else
-  CONTAINER="sineoda"
-fi
-
-docker exec \
-  -e "BOOTSTRAP_EMAIL=$ADMIN_EMAIL" \
-  -e "BOOTSTRAP_PASS=$ADMIN_PASS" \
-  "$CONTAINER" node -e "
+NODE_SCRIPT="
 const bcrypt = require('bcryptjs');
 const Database = require('better-sqlite3');
 const email = process.env.BOOTSTRAP_EMAIL;
@@ -53,7 +40,42 @@ if (existing) {
     'plooy-admin', 'Plooy Admin', email, hash, now,
   );
 }
+console.log('admin ok');
 "
+
+run_in_container() {
+  local target="$1"
+  docker exec -T \
+    -e "BOOTSTRAP_EMAIL=$ADMIN_EMAIL" \
+    -e "BOOTSTRAP_PASS=$ADMIN_PASS" \
+    "$target" node -e "$NODE_SCRIPT"
+}
+
+if docker compose version >/dev/null 2>&1; then
+  if docker compose exec -T \
+    -e "BOOTSTRAP_EMAIL=$ADMIN_EMAIL" \
+    -e "BOOTSTRAP_PASS=$ADMIN_PASS" \
+    sineoda node -e "$NODE_SCRIPT" 2>/dev/null; then
+    :
+  else
+    CONTAINER="$(docker ps --format '{{.Names}}' | grep -iE 'sineoda|plooy' | head -1 || true)"
+    [ -z "$CONTAINER" ] && CONTAINER="$(docker ps --format '{{.Names}}\t{{.Ports}}' | grep '3001->' | cut -f1 | head -1 || true)"
+    [ -z "$CONTAINER" ] && { echo "HATA: container yok"; docker ps -a; exit 1; }
+    echo ">>> container: $CONTAINER"
+    run_in_container "$CONTAINER"
+  fi
+elif command -v docker-compose >/dev/null 2>&1; then
+  docker-compose exec -T \
+    -e "BOOTSTRAP_EMAIL=$ADMIN_EMAIL" \
+    -e "BOOTSTRAP_PASS=$ADMIN_PASS" \
+    sineoda node -e "$NODE_SCRIPT"
+else
+  CONTAINER="$(docker ps --format '{{.Names}}' | grep -iE 'sineoda|plooy' | head -1 || true)"
+  [ -z "$CONTAINER" ] && CONTAINER="$(docker ps -q | head -1 | xargs docker inspect --format '{{.Name}}' 2>/dev/null | sed 's|^/||')"
+  [ -z "$CONTAINER" ] && { echo "HATA: container yok"; docker ps -a; exit 1; }
+  echo ">>> container: $CONTAINER"
+  run_in_container "$CONTAINER"
+fi
 
 echo ""
 echo "============================================"
