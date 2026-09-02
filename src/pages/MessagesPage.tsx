@@ -87,7 +87,7 @@ export function MessagesPage() {
             <p className="mt-2 text-amber-100/80">{t('viewerOnlyBody')}</p>
             {isAdmin && (
               <Link to="/admin/kullanicilar" className="mt-4 inline-block text-plooy-gold hover:underline">
-                {t('adminViewersLink')}
+                {t('adminLink')}
               </Link>
             )}
           </div>
