@@ -5,7 +5,8 @@ alwaysApply: true
 
 # Commit kuralları
 
-- Commit mesajına **asla** `Co-authored-by: Cursor` veya benzeri AI attribution ekleme.
-- Author her zaman repodaki gerçek geliştirici (Fikret) git config'i ile kalmalı.
-- Commit sonrası hook (`scripts/install-git-hooks.sh`) co-author satırını otomatik siler; yine de mesaja yazma.
-- Push ve commit kullanıcı adına; geçmiş Netflix/Mubi seviyesinde profesyonel görünmeli.
+- Commit mesajına **asla** `Co-authored-by:` satırı ekleme (Cursor, Composer, AI — hiçbiri).
+- Author **asla** `cursoragent@cursor.com` veya `Cursor Agent` olamaz — yalnızca Fikret git config'i.
+- Commit mesajında yalnızca Plooy / teknik açıklama; başka kişi veya bot adı yok.
+- Push öncesi: `bash scripts/install-git-hooks.sh` (hook'lar co-author ve AI author'ı engeller).
+- GitHub'da `cursor/*` branch açma veya bırakma — cloud agent commit'leri repoda görünmesin.

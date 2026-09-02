@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Commit mesajında Co-authored-by / cursoragent kalıntısı engelle
+set -euo pipefail
+msg="$1"
+if grep -qiE 'Co-authored-by:|cursoragent@cursor\.com|Cursor Agent' "$msg"; then
+  echo "HATA: Commit mesajında AI attribution (Co-authored-by / Cursor) olamaz."
+  exit 1
+fi
