@@ -183,6 +183,17 @@ router.patch('/creators/:id', requireAdmin, (req: AuthRequest, res) => {
   res.json({ ok: true, status, publishedFilmIds, publishedCount: publishedFilmIds.length })
 })
 
+router.post('/creators/:id/publish-pending', requireAdmin, (req: AuthRequest, res) => {
+  const creator = dbGet<CreatorRow>('SELECT * FROM creators WHERE id = ?', [req.params.id])
+  if (!creator) {
+    res.status(404).json({ error: 'Yapımcı bulunamadı.' })
+    return
+  }
+
+  const publishedFilmIds = publishPendingStandardFilms(creator.id, req.auth!.userId)
+  res.json({ ok: true, publishedFilmIds, publishedCount: publishedFilmIds.length })
+})
+
 router.get('/content/pending', requireAdmin, (_req: AuthRequest, res) => {
   const rows = dbAll<ContentRow & { studio_name: string; creator_name: string }>(
     `SELECT c.*, cr.studio_name, u.name AS creator_name

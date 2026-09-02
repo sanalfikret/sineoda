@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   fetchAdminCreatorDetail,
   fetchAdminCreators,
+  publishAdminCreatorPendingFilms,
   reviewAdminCreatorContent,
   updateAdminCreatorStatus,
   type AdminCreator,
@@ -67,6 +68,7 @@ export function AdminCreatorsPage() {
   const [query, setQuery] = useState('')
   const [editingContentId, setEditingContentId] = useState<string | null>(null)
   const [publishingId, setPublishingId] = useState<string | null>(null)
+  const [publishingAll, setPublishingAll] = useState(false)
 
   const loadCreators = useCallback(async () => {
     setLoading(true)
@@ -145,10 +147,36 @@ export function AdminCreatorsPage() {
     try {
       await reviewAdminCreatorContent(contentId, 'published', { publishNow: true })
       await handleReviewSaved()
+      setNotice('Film yayına alındı.')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Film yayınlanamadı.')
     } finally {
       setPublishingId(null)
+    }
+  }
+
+  const pendingFilmCount = useMemo(
+    () => (detail?.content ?? []).filter((item) => item.reviewStatus === 'pending').length,
+    [detail?.content],
+  )
+
+  const handlePublishAllPending = async (creatorId: string) => {
+    setPublishingAll(true)
+    setNotice('')
+    setError('')
+    try {
+      const result = await publishAdminCreatorPendingFilms(creatorId)
+      if (result.publishedCount > 0) {
+        setNotice(`${result.publishedCount} film yayına alındı.`)
+      } else {
+        setNotice('Bekleyen film yok — zaten yayında veya red edilmiş.')
+      }
+      await loadCreators()
+      await loadDetail(creatorId)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Filmler yayınlanamadı.')
+    } finally {
+      setPublishingAll(false)
     }
   }
 
@@ -272,6 +300,23 @@ export function AdminCreatorsPage() {
                 filmler otomatik yayına alınır. Tek film için yeşil <strong className="text-emerald-200">Yayınla</strong>{' '}
                 veya inceleme ekranını kullanın.
               </p>
+
+              {selectedCreator.status === 'approved' && pendingFilmCount > 0 && (
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+                  <p className="text-sm text-amber-100">
+                    {pendingFilmCount} film hâlâ <strong>İncelemede</strong>. Hesap onaylı; filmleri ayrıca
+                    yayınlaman gerekiyor.
+                  </p>
+                  <button
+                    type="button"
+                    disabled={publishingAll}
+                    onClick={() => void handlePublishAllPending(selectedCreator.id)}
+                    className="shrink-0 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-black hover:bg-emerald-400 disabled:opacity-60"
+                  >
+                    {publishingAll ? 'Yayınlanıyor...' : `Bekleyen ${pendingFilmCount} filmi yayınla`}
+                  </button>
+                </div>
+              )}
 
               <section className="rounded-xl border border-white/5 bg-[#0d0f14] p-4">
                 <h3 className="text-sm font-semibold text-white">Kişisel bilgiler</h3>

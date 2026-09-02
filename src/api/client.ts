@@ -1739,6 +1739,13 @@ export async function updateAdminCreatorStatus(id: string, status: AdminCreator[
   )
 }
 
+export async function publishAdminCreatorPendingFilms(id: string) {
+  return api<{ ok: boolean; publishedFilmIds: string[]; publishedCount: number }>(
+    `/api/admin/creators/creators/${id}/publish-pending`,
+    { method: 'POST' },
+  )
+}
+
 export async function fetchAdminPendingCreatorContent() {
   return api<{ items: Array<ContentItem & { reviewStatus: string; studioName?: string }> }>(
     '/api/admin/creators/content/pending',
