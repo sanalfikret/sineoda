@@ -1,11 +1,12 @@
 import { Router } from 'express'
 import { sendContactEmail } from '../services/email.js'
+import { contactFormLimiter } from '../security/rateLimit.js'
 
 const router = Router()
 
 const VALID_SUBJECTS = new Set(['oneri', 'istek', 'sikayet', 'diger'])
 
-router.post('/', async (req, res) => {
+router.post('/', contactFormLimiter, async (req, res) => {
   const name = String(req.body.name ?? '').trim()
   const email = String(req.body.email ?? '').trim()
   const subject = String(req.body.subject ?? '').trim()

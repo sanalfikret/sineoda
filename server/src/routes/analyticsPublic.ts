@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { v4 as uuid } from 'uuid'
 import { dbGet, dbRun } from '../db.js'
 import { verifyToken } from '../middleware/auth.js'
+import { analyticsVisitLimiter } from '../security/rateLimit.js'
 
 const router = Router()
 const ONLINE_WINDOW_MS = 2 * 60 * 1000
@@ -20,7 +21,7 @@ function todayKey() {
   return new Date().toISOString().slice(0, 10)
 }
 
-router.post('/visit', (req, res) => {
+router.post('/visit', analyticsVisitLimiter, (req, res) => {
   const sessionId = String(req.body.sessionId ?? '').trim()
   if (!sessionId) {
     res.status(400).json({ error: 'sessionId gerekli.' })

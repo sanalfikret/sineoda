@@ -6,6 +6,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const DEV_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173']
 
+export const DEV_JWT_SECRET = 'sineoda-dev-secret-change-in-production'
+
 function parseCorsOrigins() {
   const primary = process.env.FRONTEND_URL ?? 'http://localhost:5173'
   const extra = String(process.env.CORS_ORIGINS ?? '')
@@ -17,7 +19,7 @@ function parseCorsOrigins() {
 
 export const config = {
   port: Number(process.env.PORT ?? 3001),
-  jwtSecret: process.env.JWT_SECRET ?? 'sineoda-dev-secret-change-in-production',
+  jwtSecret: process.env.JWT_SECRET ?? DEV_JWT_SECRET,
   frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:5173',
   publicUrl: process.env.PUBLIC_URL ?? 'http://localhost:3001',
   corsOrigins: parseCorsOrigins(),

@@ -1,5 +1,6 @@
 import { BROWSE_GENRES } from '../../shared/catalog/genres.js'
 import { dbGet, dbRun } from './db.js'
+import { preserveExistingContent } from './services/seedPolicy.js'
 import { buildGenreToEditorialIdMap } from './editorialCategories.js'
 
 const FEATURED_BROWSE_GENRES = BROWSE_GENRES
@@ -131,6 +132,7 @@ function upsertGenreItem(item: SeedItem) {
   const exists = dbGet('SELECT id FROM content WHERE id = ?', [item.id])
 
   if (exists) {
+    if (preserveExistingContent()) return
     dbRun(
       `UPDATE content SET title=?, description=?, year=?, duration=?, rating=?, type=?, genres=?, poster=?, backdrop=?, video_url=?, trailer_url=?, is_new=1, new_until=? WHERE id=?`,
       [item.title, `${item.title} — ${item.genres[0]} türünde özgün yapım.`, item.year, item.duration, item.rating, item.type, genresJson, item.poster, item.backdrop, item.videoUrl, item.videoUrl, newUntil, item.id],
