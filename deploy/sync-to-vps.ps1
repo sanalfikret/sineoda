@@ -22,4 +22,4 @@ ssh $Remote "curl -fsSL '$RecoverUrl' | bash"
 Write-Host ">>> health kontrol"
 ssh $Remote "curl -sf http://127.0.0.1:3001/api/health | grep -E 'gitSha|dbExists|userCount' || true"
 
-Write-Host ">>> Tamam — tarayici Ctrl+Shift+R"
+Write-Host ">>> Tamam - tarayici Ctrl+Shift+R"
