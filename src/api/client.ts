@@ -1742,10 +1742,18 @@ export async function fetchAdminPendingCreatorContent() {
   )
 }
 
-export async function reviewAdminCreatorContent(contentId: string, reviewStatus: 'published' | 'rejected' | 'pending') {
+export async function reviewAdminCreatorContent(
+  contentId: string,
+  reviewStatus: 'published' | 'rejected' | 'pending',
+  options?: { publishNow?: boolean; reviewNote?: string | null },
+) {
   return api<{ item: ContentItem; reviewStatus: string }>(`/api/admin/creators/content/${contentId}/review`, {
     method: 'PATCH',
-    body: JSON.stringify({ reviewStatus }),
+    body: JSON.stringify({
+      reviewStatus,
+      ...(options?.publishNow ? { publishNow: true } : {}),
+      ...(options?.reviewNote !== undefined ? { reviewNote: options.reviewNote } : {}),
+    }),
   })
 }
 

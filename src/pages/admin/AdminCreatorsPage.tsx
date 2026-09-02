@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   fetchAdminCreatorDetail,
   fetchAdminCreators,
+  reviewAdminCreatorContent,
   updateAdminCreatorStatus,
   type AdminCreator,
   type AdminCreatorContent,
@@ -64,6 +65,7 @@ export function AdminCreatorsPage() {
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
   const [editingContentId, setEditingContentId] = useState<string | null>(null)
+  const [publishingId, setPublishingId] = useState<string | null>(null)
 
   const loadCreators = useCallback(async () => {
     setLoading(true)
@@ -127,6 +129,19 @@ export function AdminCreatorsPage() {
   const handleReviewSaved = async () => {
     await loadCreators()
     if (selectedId) await loadDetail(selectedId)
+  }
+
+  const handlePublishFilm = async (contentId: string) => {
+    setPublishingId(contentId)
+    setError('')
+    try {
+      await reviewAdminCreatorContent(contentId, 'published', { publishNow: true })
+      await handleReviewSaved()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Film yayınlanamadı.')
+    } finally {
+      setPublishingId(null)
+    }
   }
 
   const selectedCreator = detail?.creator ?? creators.find((entry) => entry.id === selectedId) ?? null
@@ -229,6 +244,7 @@ export function AdminCreatorsPage() {
                     void handleStatusChange(selectedCreator.id, event.target.value as AdminCreator['status'])
                   }
                   className="rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white"
+                  aria-label="Yapımcı hesap durumu"
                 >
                   {Object.entries(STATUS_LABELS).map(([value, label]) => (
                     <option key={value} value={value}>
@@ -237,6 +253,10 @@ export function AdminCreatorsPage() {
                   ))}
                 </select>
               </div>
+              <p className="text-xs text-plooy-muted">
+                Üstteki durum yalnızca yapımcı hesabını etkiler. Filmin siteye çıkması için aşağıdan{' '}
+                <strong className="text-white/80">Yayınla</strong> veya inceleme ekranında yayın modunu seçin.
+              </p>
 
               <section className="rounded-xl border border-white/5 bg-[#0d0f14] p-4">
                 <h3 className="text-sm font-semibold text-white">Kişisel bilgiler</h3>
@@ -351,7 +371,17 @@ export function AdminCreatorsPage() {
                             Kaynak: {item.sourceVideoUrl}
                           </p>
                         )}
-                        <div className="mt-3">
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {(item.reviewStatus === 'pending' || item.reviewStatus === 'rejected') && (
+                            <button
+                              type="button"
+                              disabled={publishingId === item.id}
+                              onClick={() => void handlePublishFilm(item.id)}
+                              className="rounded-lg bg-emerald-500/20 px-3 py-1.5 text-xs font-medium text-emerald-200 hover:bg-emerald-500/30 disabled:opacity-60"
+                            >
+                              {publishingId === item.id ? 'Yayınlanıyor...' : 'Yayınla'}
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => setEditingContentId(item.id)}
