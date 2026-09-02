@@ -16,7 +16,14 @@ if [ -f .env ] && grep -qE '^ADMIN_EMAIL=' .env; then
   ADMIN_EMAIL="$(grep -E '^ADMIN_EMAIL=' .env | cut -d= -f2- | tr -d '\r')"
 fi
 
-ADMIN_PASS="PlooyTest$(head -c 48 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 12)"
+ADMIN_PASS="${ADMIN_BOOTSTRAP_PASSWORD:-admin123}"
+if [ -f .env ] && grep -qE '^ADMIN_BOOTSTRAP_PASSWORD=' .env; then
+  ADMIN_PASS="$(grep -E '^ADMIN_BOOTSTRAP_PASSWORD=' .env | cut -d= -f2- | tr -d '\r')"
+fi
+# Test VPS: varsayılan admin123 (production seed'den bağımsız — docker exec ile yazılır)
+if [ -z "$ADMIN_PASS" ] || [ "$ADMIN_PASS" = "admin123" ]; then
+  ADMIN_PASS="admin123"
+fi
 
 if [ -f .env ]; then
   if grep -qE '^ADMIN_BOOTSTRAP_PASSWORD=' .env; then
