@@ -55,7 +55,13 @@ function contentRowPoster(
   item: ContentItem,
   pool?: ContentPoolId,
 ): { src: string; imageClass: string; titleClass: string } {
-  const useHorizontal = pool === 'shooting_notes' || isShootingNotesContent(item)
+  const useHorizontal =
+    pool === 'shooting_notes' ||
+    isShootingNotesContent(item) ||
+    pool === 'film' ||
+    pool === 'belgesel' ||
+    pool === 'platform' ||
+    pool === 'kisa-film'
   if (useHorizontal) {
     return {
       src: item.backdrop || item.poster,
@@ -86,6 +92,8 @@ export function LandingCustomBlockSection({
   catalog?: ContentItem[]
   cekimSections?: CekimNotlariSection[]
 }) {
+  const rowTitle = block.title.trim() || block.adminLabel.trim()
+
   if (block.type === 'contentRow') {
     const items = resolveContentRowItems(block, catalog, cekimSections)
 
@@ -100,7 +108,7 @@ export function LandingCustomBlockSection({
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-plooy-gold">{block.eyebrow}</p>
           )}
           <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
-            {block.title && <h2 className="text-2xl font-bold text-white sm:text-3xl">{block.title}</h2>}
+            {rowTitle && <h2 className="text-2xl font-bold text-white sm:text-3xl">{rowTitle}</h2>}
             {block.ctaLabel && <CtaLink label={block.ctaLabel} link={viewAllLink} />}
           </div>
           {block.body && <p className="mt-3 max-w-3xl text-sm leading-relaxed text-plooy-muted sm:text-base">{block.body}</p>}

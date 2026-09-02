@@ -55,16 +55,30 @@ function parseBlock(raw: unknown): LandingCustomBlock | null {
     ? (source.type as LandingCustomBlockType)
     : 'richText'
 
+  let adminLabel = trim(source.adminLabel) || 'Özel bölüm'
+  let title = trim(source.title)
+
+  if (type === 'contentRow') {
+    if ((!title || title === 'Öne çıkanlar') && adminLabel && adminLabel !== 'İçerik satırı' && adminLabel !== 'Özel bölüm') {
+      title = adminLabel
+    } else if (!title && adminLabel) {
+      title = adminLabel
+    }
+    if (adminLabel === 'İçerik satırı' && title) {
+      adminLabel = title
+    }
+  }
+
   return {
     id,
-    adminLabel: trim(source.adminLabel) || 'Özel bölüm',
+    adminLabel,
     type,
     contentPool: VALID_POOLS.includes(source.contentPool as ContentPoolId)
       ? (source.contentPool as ContentPoolId)
       : undefined,
     sourceCategoryId: trim(source.sourceCategoryId) || undefined,
     eyebrow: trim(source.eyebrow),
-    title: trim(source.title),
+    title,
     body: trim(source.body),
     image: trim(source.image),
     ctaLabel: trim(source.ctaLabel),
