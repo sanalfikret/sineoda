@@ -91,6 +91,12 @@ if [ -z "$SRC" ] || [ ! -f "$SRC/server/src/index.ts" ]; then
 fi
 "$CP" -a "$SRC"/. "$STAGING/"
 
+DEPLOY_SHA="$("$CURL" -fsSL "https://api.github.com/repos/sanalfikret/sineoda/commits/main" 2>/dev/null | sed -n 's/.*"sha": "\([0-9a-f]\{7\}\)[0-9a-f]*".*/\1/p' | head -1)"
+if [ -n "$DEPLOY_SHA" ]; then
+  echo "$DEPLOY_SHA" > "$STAGING/.deploy-sha"
+  echo ">>> GitHub main: $DEPLOY_SHA"
+fi
+
 echo "=== 4) persistent + .env ==="
 "$RM" -rf "$STAGING/persistent"
 "$MKDIR" -p "$STAGING/persistent/data" "$STAGING/persistent/uploads"
