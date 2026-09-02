@@ -1,0 +1,27 @@
+Plooy — ACİL VPS KURTARMA
+==========================
+
+Site bozuldu / dosyalar eksik / dbExists false:
+
+  curl -fsSL https://raw.githubusercontent.com/sanalfikret/sineoda/main/deploy/recover-from-archive.sh | bash
+
+Bu komut:
+- Docker'ı durdurur
+- DB'yi bozuk klasörlerden ve yedeklerden bulur
+- GitHub'dan temiz kod indirir (/opt/sineoda-staging)
+- Bozuk /opt/sineoda → /opt/sineoda-broken-TARIH taşınır
+- Temiz kod + DB ile rebuild yapar
+
+ASLA kullanma:
+- rsync ile /opt/sineoda üzerine yazma
+- ~/sinoda-main veya ~/sineoda-main içinden deploy
+- git pull (auth patlıyorsa)
+- docker-compose down -v
+
+Deploy sonrası doğrula:
+  curl -s http://127.0.0.1:3001/api/health | grep dbExists
+
+dbExists:true ve gitSha yeni olmalı.
+
+Film yayını (admin):
+  Yapımcılar → fikret sanal → "Bekleyen 1 filmi yayınla"
