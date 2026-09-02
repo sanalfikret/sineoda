@@ -17,7 +17,13 @@ const inputClass =
   'w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white outline-none focus:border-plooy-gold'
 
 function pickerThumb(item: ContentItem, poolFilter: ContentPoolId) {
-  const horizontal = poolFilter === 'shooting_notes' || isShootingNotesContent(item)
+  const horizontal =
+    poolFilter === 'shooting_notes' ||
+    isShootingNotesContent(item) ||
+    poolFilter === 'film' ||
+    poolFilter === 'belgesel' ||
+    poolFilter === 'platform' ||
+    poolFilter === 'kisa-film'
   return {
     src: horizontal ? item.backdrop || item.poster : item.poster,
     className: horizontal ? 'h-10 w-16 rounded object-cover' : 'h-12 w-8 rounded object-cover',
@@ -161,7 +167,7 @@ export function AdminLandingCustomBlockEditor({
       ...block,
       type,
       itemIds: block.itemIds ?? [],
-      title: type === 'contentRow' && !block.title ? 'Öne çıkanlar' : block.title,
+      title: type === 'contentRow' && !block.title ? '' : block.title,
       ctaLabel: type === 'contentRow' && !block.ctaLabel ? 'Tümünü gör' : block.ctaLabel,
     })
   }
@@ -211,7 +217,16 @@ export function AdminLandingCustomBlockEditor({
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Panel adı" value={block.adminLabel} onChange={(adminLabel) => patch({ adminLabel })} />
+          <Field
+            label="Başlık (misafir ana sayfada)"
+            value={block.title.trim() || block.adminLabel}
+            onChange={(heading) =>
+              patch({
+                title: heading,
+                adminLabel: heading,
+              })
+            }
+          />
           <label className="block space-y-2">
             <span className="text-sm text-white/85">Bölüm tipi</span>
             <select value={block.type} onChange={(event) => handleTypeChange(event.target.value as LandingCustomBlockType)} className={inputClass}>
@@ -224,7 +239,9 @@ export function AdminLandingCustomBlockEditor({
           </label>
         </div>
 
-        <Field label="Satır başlığı" value={block.title} onChange={(title) => patch({ title })} />
+        <p className="text-xs text-plooy-muted">
+          Yatay poster satırı — filmler geniş (landscape) kart olarak listelenir.
+        </p>
         <label className="block space-y-2">
           <span className="text-sm text-white/85">İçerik havuzu</span>
           <select

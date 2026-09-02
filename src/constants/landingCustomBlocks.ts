@@ -57,7 +57,7 @@ export function createEmptyCustomBlock(type: LandingCustomBlockType = 'richText'
     adminLabel: type === 'contentRow' ? 'İçerik satırı' : 'Yeni özel bölüm',
     type,
     eyebrow: '',
-    title: type === 'contentRow' ? 'Öne çıkanlar' : '',
+    title: '',
     body: '',
     image: '',
     ctaLabel: type === 'contentRow' ? 'Tümünü gör' : '',
