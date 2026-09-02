@@ -1,0 +1,11 @@
+---
+description: Git commit kuralları — profesyonel geçmiş, AI damgası yok
+alwaysApply: true
+---
+
+# Commit kuralları
+
+- Commit mesajına **asla** `Co-authored-by: Cursor` veya benzeri AI attribution ekleme.
+- Author her zaman repodaki gerçek geliştirici (Fikret) git config'i ile kalmalı.
+- Commit sonrası hook (`scripts/install-git-hooks.sh`) co-author satırını otomatik siler; yine de mesaja yazma.
+- Push ve commit kullanıcı adına; geçmiş Netflix/Mubi seviyesinde profesyonel görünmeli.
