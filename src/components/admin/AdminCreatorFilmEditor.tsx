@@ -186,6 +186,9 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
         licenseExpiresAt: form.licenseUnlimited ? null : form.licenseExpiresAt || null,
         reviewStatus,
         publishedAt,
+        ...(form.publishMode === 'live' && new Date(form.publishedAt) <= new Date()
+          ? { publishNow: true }
+          : {}),
       })
       onSaved()
       onClose()
