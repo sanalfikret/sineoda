@@ -225,7 +225,14 @@ export function AdminCekimNotlariPage() {
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-[#11141c] p-4">
-        <h2 className="text-sm font-semibold text-white">Yeni kategori ekle</h2>
+        <h2 className="text-sm font-semibold text-white">Yeni alt bölüm ekle</h2>
+        <p className="mt-1 text-xs text-plooy-muted">
+          Yalnızca Çekim Notları sayfası içindir — ana site kategorileri için{' '}
+          <Link to="/admin/kategoriler" className="text-plooy-gold hover:underline">
+            Kategoriler & Menü
+          </Link>
+          .
+        </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <input
             value={newCategoryTitle}
@@ -242,7 +249,7 @@ export function AdminCekimNotlariPage() {
             onClick={() => void handleAddCategory()}
             className="rounded-lg bg-plooy-gold px-4 py-2.5 text-sm font-semibold text-plooy-bg disabled:opacity-50"
           >
-            Kategori Ekle
+            Alt Bölüm Ekle
           </button>
         </div>
       </div>

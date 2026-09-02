@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAdminCategoryList } from '../../admin/categories/useAdminCategoryList'
 import { AdminCategoryRow } from '../../components/admin/AdminCategoryRow'
 import { AdminSiteNavPanel } from '../../components/admin/AdminSiteNavPanel'
@@ -37,6 +38,8 @@ export function AdminCategoriesPage() {
   const [navSaving, setNavSaving] = useState(false)
   const [navError, setNavError] = useState('')
   const [categoryError, setCategoryError] = useState('')
+  const [categoryMessage, setCategoryMessage] = useState('')
+  const [addingCategory, setAddingCategory] = useState(false)
 
   const {
     orderedCategories,
@@ -65,14 +68,32 @@ export function AdminCategoriesPage() {
   )
 
   const handleAddCategory = async () => {
-    if (!newTitle.trim()) return
-    await addCategory(newTitle)
-    setNewTitle('')
+    const title = newTitle.trim()
+    if (!title) return
+    setAddingCategory(true)
+    setCategoryError('')
+    setCategoryMessage('')
+    try {
+      const created = await addCategory(title)
+      setNewTitle('')
+      setExpandedIds((current) => new Set([...current, created.id]))
+      setCategoryMessage(`"${created.title}" eklendi ve kaydedildi.`)
+    } catch (err) {
+      setCategoryError(err instanceof Error ? err.message : 'Kategori eklenemedi.')
+    } finally {
+      setAddingCategory(false)
+    }
   }
 
   const handleDeleteCategory = async (id: string, title: string) => {
     if (!window.confirm(`"${title}" kategorisini silmek istediğine emin misin?`)) return
-    await deleteCategory(id)
+    setCategoryError('')
+    try {
+      await deleteCategory(id)
+      setCategoryMessage(`"${title}" silindi.`)
+    } catch (err) {
+      setCategoryError(err instanceof Error ? err.message : 'Kategori silinemedi.')
+    }
   }
 
   const handleReset = async () => {
@@ -98,12 +119,24 @@ export function AdminCategoriesPage() {
 
   const saveCategoryTitle = async (categoryId: string, title: string) => {
     patchLocalCategory(categoryId, { title })
-    await updateCategory(categoryId, { title })
+    try {
+      await updateCategory(categoryId, { title })
+    } catch (err) {
+      setCategoryError(err instanceof Error ? err.message : 'Kategori güncellenemedi.')
+    } finally {
+      finishCategorySync(categoryId)
+    }
   }
 
   const saveCategoryItems = async (categoryId: string, itemIds: string[]) => {
     patchLocalCategory(categoryId, { itemIds })
-    await updateCategory(categoryId, { itemIds })
+    try {
+      await updateCategory(categoryId, { itemIds })
+    } catch (err) {
+      setCategoryError(err instanceof Error ? err.message : 'İçerik listesi kaydedilemedi.')
+    } finally {
+      finishCategorySync(categoryId)
+    }
   }
 
   const toggleCategoryHidden = async (categoryId: string, hidden: boolean) => {
@@ -140,8 +173,20 @@ export function AdminCategoriesPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Kategoriler & Menü</h1>
           <p className="mt-1 text-sm text-plooy-muted">
-            Ana sayfa satırları ve üst menü görünürlüğünü yönet. Kapalı öğeler sitede hiç görünmez.
-            {savingOrder && <span className="ml-2 text-plooy-gold">Kaydediliyor…</span>}
+            Ana sayfadaki içerik satırları (Trend, Yeni, sizin ekledikleriniz). Her ekleme anında
+            veritabanına kaydedilir.
+            {savingOrder && <span className="ml-2 text-plooy-gold">Sıra kaydediliyor…</span>}
+          </p>
+          <p className="mt-2 text-xs text-plooy-muted">
+            Ana sayfadaki Dizi / Film <strong className="text-white/80">sekmeleri</strong> farklıdır →{' '}
+            <Link to="/admin/ana-sayfa" className="text-plooy-gold hover:underline">
+              Ana Sayfa → Kategori şeritleri
+            </Link>
+            . Çekim Notları alt bölümleri →{' '}
+            <Link to="/admin/cekim-notlari" className="text-plooy-gold hover:underline">
+              Çekim Notları
+            </Link>
+            .
           </p>
         </div>
         <button
@@ -173,21 +218,34 @@ export function AdminCategoriesPage() {
         </p>
       )}
 
+      {categoryMessage && (
+        <p className="rounded-lg border border-plooy-gold/30 bg-plooy-gold/10 px-4 py-3 text-sm text-plooy-gold">
+          {categoryMessage}
+        </p>
+      )}
+
       <div>
-        <h2 className="mb-3 text-lg font-semibold text-white">Ana sayfa kategorileri</h2>
+        <h2 className="mb-1 text-lg font-semibold text-white">Ana kategori ekle</h2>
+        <p className="mb-3 text-xs text-plooy-muted">
+          Misafir ana sayfada yatay film/dizi satırı olarak görünür.
+        </p>
         <div className="flex gap-2">
           <input
             value={newTitle}
             onChange={(event) => setNewTitle(event.target.value)}
-            placeholder="Yeni kategori adı"
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') void handleAddCategory()
+            }}
+            placeholder="Örn. Belgesel, Yerli Yapımlar"
             className="flex-1 rounded-lg border border-white/10 bg-[#11141c] px-4 py-2.5 text-white outline-none focus:border-plooy-gold"
           />
           <button
             type="button"
+            disabled={addingCategory || !newTitle.trim()}
             onClick={() => void handleAddCategory()}
-            className="rounded-lg bg-plooy-gold px-4 py-2.5 text-sm font-semibold text-plooy-bg"
+            className="rounded-lg bg-plooy-gold px-4 py-2.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
           >
-            Ekle
+            {addingCategory ? 'Ekleniyor…' : 'Kategori Ekle'}
           </button>
         </div>
       </div>

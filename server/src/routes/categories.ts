@@ -6,12 +6,28 @@ import { slugify } from '../mappers.js'
 import { resetContent } from '../seed.js'
 import { dedupeAllCategories } from '../services/categoryDedup.js'
 import { fillCategoriesToTarget } from '../services/categoryFill.js'
-import { mapCategoriesResponse, saveCategoryOrder, getCategoryOrderForBrowse, appendCategoryToOrder, removeCategoryFromOrder } from '../services/categoryOrder.js'
+import {
+  mapCategoriesResponse,
+  saveCategoryOrder,
+  getCategoryOrderForBrowse,
+  appendCategoryToOrder,
+  removeCategoryFromOrder,
+} from '../services/categoryOrder.js'
 import { isCekimCategoryId } from '../services/cekimNotlari.js'
 import { filterContentIdsForCategory } from '../services/contentPools.js'
 import { mapSiteNavResponse, syncLinkedNavForCategory } from '../services/siteNav.js'
 
 const router = Router()
+
+function newMainCategoryId(title: string) {
+  const base = slugify(title) || uuid().slice(0, 8)
+  let id = base
+  let counter = 1
+  while (dbGet('SELECT id FROM categories WHERE id = ?', [id])) {
+    id = `${base}-${counter++}`
+  }
+  return id
+}
 
 router.get('/', (_req, res) => {
   res.set('Cache-Control', 'no-store')
@@ -25,13 +41,24 @@ router.post('/', requireAdmin, (req: AuthRequest, res) => {
     return
   }
 
-  const id = slugify(title) || uuid()
+  const id = newMainCategoryId(title)
   const maxOrder = dbGet<{ max: number | null }>('SELECT MAX(sort_order) as max FROM categories')
-  dbRun('INSERT INTO categories (id, title, sort_order) VALUES (?, ?, ?)', [
-    id, title, (maxOrder?.max ?? -1) + 1,
-  ])
+  try {
+    dbRun('INSERT INTO categories (id, title, sort_order) VALUES (?, ?, ?)', [
+      id,
+      title,
+      (maxOrder?.max ?? -1) + 1,
+    ])
+  } catch {
+    res.status(409).json({ error: 'Bu kategori eklenemedi. Farklı bir ad deneyin.' })
+    return
+  }
   appendCategoryToOrder(id)
-  res.status(201).json({ category: { id, title, itemIds: [], hidden: false } })
+  res.status(201).json({
+    category: { id, title, itemIds: [], hidden: false },
+    categories: mapCategoriesResponse(),
+    categoryOrder: getCategoryOrderForBrowse(),
+  })
 })
 
 function reorderCategories(req: AuthRequest, res: Response) {

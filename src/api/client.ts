@@ -605,6 +605,21 @@ export async function updateLandingLayoutConfig(
   throw lastError
 }
 
+export async function updateLandingShowcasesConfig(
+  showcases: Array<{
+    id: string
+    title: string
+    icon: string
+    description: string
+    itemIds: string[]
+  }>,
+): Promise<Pick<LandingConfigResponse, 'showcases'>> {
+  return api<Pick<LandingConfigResponse, 'showcases'>>('/api/admin/landing/showcases', {
+    method: 'PATCH',
+    body: JSON.stringify({ showcases }),
+  })
+}
+
 export async function saveLandingPageConfig(payload: {
   hero: LandingHeroConfig
   sections: LandingSectionsConfig
