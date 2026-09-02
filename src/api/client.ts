@@ -1665,6 +1665,13 @@ export async function creatorSubmitContent(data: Record<string, unknown>) {
   })
 }
 
+export async function creatorUpdateContent(contentId: string, data: Record<string, unknown>) {
+  return api(`/api/creator/content/${contentId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
 export interface AdminCreator {
   id: string
   userId: string

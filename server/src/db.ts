@@ -393,6 +393,7 @@ function runMigrations() {
       AND (source_video_url IS NULL OR source_video_url = '')
   `)
   ensureColumn('content', 'review_status', "TEXT DEFAULT 'published'")
+  ensureColumn('content', 'review_note', 'TEXT')
   ensureColumn('watch_progress', 'qualified', 'INTEGER DEFAULT 0')
   ensureColumn('watch_progress', 'qualified_seconds', 'REAL DEFAULT 0')
   ensureColumn('watch_activity', 'content_id', 'TEXT')

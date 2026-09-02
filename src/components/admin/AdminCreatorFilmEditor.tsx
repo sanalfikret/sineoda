@@ -197,10 +197,16 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
   }
 
   const handleReject = async () => {
+    const reviewNote = window.prompt('Red gerekçesi (yapımcı panelinde görünür):')?.trim()
+    if (reviewNote === undefined) return
     setSaving(true)
     setError('')
     try {
-      await updateAdminCreatorContent(contentId, { reviewStatus: 'rejected', publishedAt: null })
+      await updateAdminCreatorContent(contentId, {
+        reviewStatus: 'rejected',
+        publishedAt: null,
+        reviewNote: reviewNote || null,
+      })
       onSaved()
       onClose()
     } catch (err) {

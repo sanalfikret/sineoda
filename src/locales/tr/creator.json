@@ -140,6 +140,10 @@
       "closeForm": "Başvuruyu kapat",
       "formTitle": "Film Başvurusu",
       "formDescription": "Film indirme linki, künye, ödüller ve yönetmen/yapımcı belgelerinizi gönderin. İnceleme sonrası yayına alınır.",
+      "editFormTitle": "Başvuruyu düzenle",
+      "editFormDescription": "Reddedilen veya bekleyen başvurunuzu güncelleyip yeniden incelemeye gönderin.",
+      "edit": "Düzenle",
+      "updateSubmit": "Güncelle ve yeniden gönder",
       "uploadRequirementsTitle": "Video yükleme şartları",
       "uploadRequirements": [
         "Codec: H.265 (HEVC) — kaliteden ödün vermeden",
@@ -194,6 +198,7 @@
         "watchMinutes": "İzlenme (dk)",
         "viewers": "İzleyici",
         "likes": "Beğeni",
+        "actions": "İşlem",
         "share": "Paylaş"
       }
     },

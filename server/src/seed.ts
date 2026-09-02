@@ -6,7 +6,7 @@ import { BRAND_NAME, BRAND_STUDIOS } from './constants/brand.js'
 import { contactEmails } from './constants/contact.js'
 import { config } from './config.js'
 import { dbAll, dbExec, dbGet, dbRun } from './db.js'
-import { preserveExistingContent } from './services/seedPolicy.js'
+import { allowDemoAccountSeed, preserveExistingContent } from './services/seedPolicy.js'
 import { parseCredits, serializeCredits } from './services/credits.js'
 import type { UserRow } from './types.js'
 
@@ -338,7 +338,7 @@ export function seedDatabase() {
   ensureDefaultAdmin()
 
   const userCount = dbGet<{ count: number }>('SELECT COUNT(*) as count FROM users')
-  if ((userCount?.count ?? 0) <= 1) {
+  if (allowDemoAccountSeed() && (userCount?.count ?? 0) <= 1) {
     const demoHash = bcrypt.hashSync('demo1234', 10)
     const demoId = uuid()
     dbRun(
@@ -924,6 +924,7 @@ function creatorDemoReviewState(index: number): {
 }
 
 export function ensureCreatorDemoSeed() {
+  if (!allowDemoAccountSeed()) return
   const now = new Date().toISOString()
   const passwordHash = bcrypt.hashSync('creator123', 10)
   let titleIndex = 0

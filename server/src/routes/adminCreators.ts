@@ -282,6 +282,10 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
         reviewStatus,
         previousStatus: existing.review_status ?? null,
         adminUserId: req.auth!.userId,
+        reviewNote:
+          body.reviewNote !== undefined || body.review_note !== undefined
+            ? String(body.reviewNote ?? body.review_note ?? '').trim() || null
+            : undefined,
       })
     }
   } catch (err) {
@@ -319,6 +323,10 @@ router.patch('/content/:id/review', requireAdmin, (req: AuthRequest, res) => {
       reviewStatus,
       previousStatus: existing.review_status ?? null,
       adminUserId: req.auth!.userId,
+      reviewNote:
+        req.body.reviewNote !== undefined || req.body.review_note !== undefined
+          ? String(req.body.reviewNote ?? req.body.review_note ?? '').trim() || null
+          : undefined,
     })
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : 'İnceleme güncellenemedi.' })

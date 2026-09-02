@@ -4,3 +4,8 @@ import { config } from '../config.js'
 export function preserveExistingContent() {
   return config.isProduction
 }
+
+/** Production'da bilinen şifreli demo hesap seed'lerini atla. */
+export function allowDemoAccountSeed() {
+  return !config.isProduction
+}

@@ -19,6 +19,9 @@ import { allowDevSecretLeaks } from '../security/devSecrets.js'
 import {
   authForgotPasswordLimiter,
   authLoginLimiter,
+  authRefreshLimiter,
+  authResetPasswordLimiter,
+  authSignupLimiter,
   authSmsLimiter,
 } from '../security/rateLimit.js'
 import type { JwtPayload, ProfileRow, UserRow } from '../types.js'
@@ -114,7 +117,7 @@ router.post('/sms/send', authSmsLimiter, async (req, res) => {
   }
 })
 
-router.post('/signup', async (req, res) => {
+router.post('/signup', authSignupLimiter, async (req, res) => {
   const siteMode = getSiteMode()
   if (siteMode.enabled && !siteMode.allowViewerSignup) {
     res.status(503).json({
@@ -347,7 +350,7 @@ router.get('/me', requireAuth, (req: AuthRequest, res) => {
 })
 
 /** Süresi dolmuş ama imzası geçerli token ile yeni oturum (admin kaydet 401 önlemi). */
-router.post('/refresh', (req, res) => {
+router.post('/refresh', authRefreshLimiter, (req, res) => {
   const header = req.headers.authorization
   if (!header?.startsWith('Bearer ')) {
     res.status(401).json({ error: 'Oturum gerekli.' })
@@ -633,7 +636,7 @@ router.post('/forgot-password', authForgotPasswordLimiter, async (req, res) => {
   })
 })
 
-router.post('/reset-password', (req, res) => {
+router.post('/reset-password', authResetPasswordLimiter, (req, res) => {
   const token = String(req.body.token ?? '')
   const password = String(req.body.password ?? '')
 

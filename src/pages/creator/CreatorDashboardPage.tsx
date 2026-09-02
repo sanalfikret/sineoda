@@ -10,6 +10,7 @@ import {
   creatorFetchMessages,
   creatorMarkMessageRead,
   creatorSubmitContent,
+  creatorUpdateContent,
   creatorUploadDocument,
   creatorUploadImage,
   creatorUploadVideo,
@@ -31,7 +32,7 @@ import {
 import type { FilmLegalDeclarationId, FilmRightsCategoryId } from '../../constants/filmApplication'
 import type { ContentItem } from '../../types/content'
 import type { CreatorStatus } from '../../types/auth'
-import { buildCredits } from '../../utils/credits'
+import { buildCredits, creditsToForm } from '../../utils/credits'
 import { buildFestivals } from '../../utils/duration'
 import { FestivalCreditsEditor } from '../../components/admin/FestivalCreditsEditor'
 import type { FestivalEntry } from '../../constants/festivals'
@@ -46,6 +47,7 @@ interface CreatorDocument {
 
 interface DashboardContent extends ContentItem {
   reviewStatus: string
+  reviewNote?: string | null
   parentContentId?: string | null
   schoolReviewStatus?: string
   qualifiedMinutes: number
@@ -114,6 +116,7 @@ export function CreatorDashboardPage() {
   const [docUploading, setDocUploading] = useState(false)
 
   const [showForm, setShowForm] = useState(false)
+  const [editingContentId, setEditingContentId] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [rightsDeclaration, setRightsDeclaration] = useState<Record<string, boolean>>({})
   const [applicationDocs, setApplicationDocs] = useState<ApplicationDocument[]>([])
@@ -235,6 +238,7 @@ export function CreatorDashboardPage() {
   }
 
   const resetApplicationForm = () => {
+    setEditingContentId(null)
     setRightsDeclaration({})
     setApplicationDocs([])
     setForm({
@@ -268,6 +272,36 @@ export function CreatorDashboardPage() {
       studio,
     }))
     setShowForm(true)
+  }
+
+  const openEditForm = (item: DashboardContent) => {
+    if (item.reviewStatus === 'published') return
+    const creditFields = creditsToForm(item.credits)
+    setEditingContentId(item.id)
+    setRightsDeclaration({})
+    setApplicationDocs([])
+    setForm({
+      title: item.title,
+      description: item.description ?? '',
+      year: item.year ?? new Date().getFullYear(),
+      duration: item.duration ?? '',
+      durationMinutes: item.durationMinutes != null ? String(item.durationMinutes) : '',
+      rating: item.rating ?? '13+',
+      type: item.type,
+      genres: (item.genres ?? []).join(', '),
+      downloadLink: item.videoUrl ?? '',
+      videoUrl: item.videoUrl ?? '',
+      poster: item.poster ?? '',
+      contentFormat: (item.contentFormat as 'main' | 'bts' | 'teacher_note') ?? 'main',
+      parentContentId: item.parentContentId ?? '',
+      directors: creditFields.directors,
+      producers: creditFields.producers,
+      cast: creditFields.cast,
+      studio: creditFields.studio,
+      festivals: item.festivals ?? [],
+    })
+    setShowForm(true)
+    setError('')
   }
 
   const handleRightsChange = (id: FilmRightsCategoryId | FilmLegalDeclarationId, checked: boolean) => {
@@ -335,7 +369,7 @@ export function CreatorDashboardPage() {
         .split(',')
         .map((g) => g.trim())
         .filter(Boolean)
-      await creatorSubmitContent({
+      const payload = {
         title: form.title,
         description: form.description,
         year: form.year,
@@ -353,9 +387,14 @@ export function CreatorDashboardPage() {
         contentFormat: program === 'student_cinema' ? form.contentFormat : 'main',
         parentContentId:
           program === 'student_cinema' && form.contentFormat !== 'main' ? form.parentContentId : undefined,
-        rightsDeclaration: isMainApplication ? rightsDeclaration : undefined,
-        documentIds: isMainApplication ? applicationDocs.map((doc) => doc.id) : undefined,
-      })
+        rightsDeclaration: isMainApplication && !editingContentId ? rightsDeclaration : undefined,
+        documentIds: isMainApplication && !editingContentId ? applicationDocs.map((doc) => doc.id) : undefined,
+      }
+      if (editingContentId) {
+        await creatorUpdateContent(editingContentId, payload)
+      } else {
+        await creatorSubmitContent(payload)
+      }
       setShowForm(false)
       resetApplicationForm()
       await load()
@@ -687,8 +726,12 @@ export function CreatorDashboardPage() {
               className="mb-6 space-y-4 rounded-xl border border-plooy-gold/20 bg-[#11141c] p-6"
             >
               <div>
-                <h3 className="text-lg font-semibold text-white">{t('applications.formTitle')}</h3>
-                <p className="mt-1 text-sm text-plooy-muted">{t('applications.formDescription')}</p>
+                <h3 className="text-lg font-semibold text-white">
+                  {editingContentId ? t('applications.editFormTitle') : t('applications.formTitle')}
+                </h3>
+                <p className="mt-1 text-sm text-plooy-muted">
+                  {editingContentId ? t('applications.editFormDescription') : t('applications.formDescription')}
+                </p>
               </div>
 
               <div className="rounded-xl border border-plooy-gold/25 bg-plooy-gold/5 p-4">
@@ -926,7 +969,7 @@ export function CreatorDashboardPage() {
                 )}
               </div>
 
-              {(program !== 'student_cinema' || form.contentFormat === 'main') && (
+              {(program !== 'student_cinema' || form.contentFormat === 'main') && !editingContentId && (
                 <FilmApplicationRightsPanel
                   rightsDeclaration={rightsDeclaration}
                   onRightsChange={handleRightsChange}
@@ -941,12 +984,17 @@ export function CreatorDashboardPage() {
                 type="submit"
                 disabled={
                   submitting ||
-                  ((program !== 'student_cinema' || form.contentFormat === 'main') &&
+                  (!editingContentId &&
+                    (program !== 'student_cinema' || form.contentFormat === 'main') &&
                     !isFilmApplicationReady(rightsDeclaration, applicationDocs))
                 }
                 className="rounded-lg bg-plooy-gold px-5 py-2.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
               >
-                {submitting ? t('applications.submitting') : t('applications.submit')}
+                {submitting
+                  ? t('applications.submitting')
+                  : editingContentId
+                    ? t('applications.updateSubmit')
+                    : t('applications.submit')}
               </button>
             </form>
           )}
@@ -973,6 +1021,7 @@ export function CreatorDashboardPage() {
                     <th className="px-4 py-3 font-medium">{t('applications.columns.watchMinutes')}</th>
                     <th className="px-4 py-3 font-medium">{t('applications.columns.viewers')}</th>
                     <th className="px-4 py-3 font-medium">{t('applications.columns.likes')}</th>
+                    <th className="px-4 py-3 font-medium">{t('applications.columns.actions')}</th>
                     <th className="px-4 py-3 font-medium">{t('applications.columns.share')}</th>
                   </tr>
                 </thead>
@@ -986,7 +1035,10 @@ export function CreatorDashboardPage() {
                         </td>
                       )}
                       <td className="px-4 py-3">
-                        {t(REVIEW_KEYS[item.reviewStatus] ?? item.reviewStatus)}
+                        <div>{t(REVIEW_KEYS[item.reviewStatus] ?? item.reviewStatus)}</div>
+                        {item.reviewNote && item.reviewStatus === 'rejected' && (
+                          <p className="mt-1 max-w-xs text-xs text-red-300">{item.reviewNote}</p>
+                        )}
                       </td>
                       {program === 'student_cinema' && (
                         <td className="px-4 py-3 text-plooy-muted">
@@ -996,6 +1048,17 @@ export function CreatorDashboardPage() {
                       <td className="px-4 py-3">{item.watchMinutes || item.qualifiedMinutes}</td>
                       <td className="px-4 py-3">{item.viewers}</td>
                       <td className="px-4 py-3">{item.likes}</td>
+                      <td className="px-4 py-3">
+                        {canSubmitFilms && item.reviewStatus !== 'published' && (
+                          <button
+                            type="button"
+                            onClick={() => openEditForm(item)}
+                            className="text-xs font-medium text-plooy-gold hover:underline"
+                          >
+                            {t('applications.edit')}
+                          </button>
+                        )}
+                      </td>
                       <td className="px-4 py-3">
                         <ShareButton
                           contentId={item.id}
