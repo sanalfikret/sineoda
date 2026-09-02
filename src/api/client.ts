@@ -6,7 +6,7 @@ import { deriveHiddenNavFromCategories } from '../utils/navVisibility'
 import type { AdminContentItem, AdminContentMeta, ContentCategory, ContentItem, Episode } from '../types/content'
 import type { LandingSectionsConfig } from '../constants/landingDefaults'
 import type { LandingCustomBlock } from '../constants/landingCustomBlocks'
-import { isAuthSessionError, isTransientApiError, sleep } from '../utils/authSession'
+import { cacheAuthUser, isAuthSessionError, isTransientApiError, sleep } from '../utils/authSession'
 
 export type { LandingSectionsConfig } from '../constants/landingDefaults'
 
@@ -99,6 +99,16 @@ export function setProfileId(profileId: string | null) {
   writeStorageItem(PROFILE_KEY, LEGACY_PROFILE_KEY, profileId)
 }
 
+/** VPS rebuild / JWT değişince eski token — panel açık kalmasın. */
+export function clearAuthStorage() {
+  setToken(null)
+  setProfileId(null)
+  cacheAuthUser(null)
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('plooy-auth-cleared'))
+  }
+}
+
 export async function refreshSessionToken() {
   const token = getToken()
   if (!token) return false
@@ -116,6 +126,11 @@ export async function refreshSessionToken() {
 
     if (response.status === 404) {
       response = await fetch(`${getApiBase()}/api/auth/me`, { headers, cache: 'no-store' })
+    }
+
+    if (response.status === 401) {
+      clearAuthStorage()
+      return false
     }
 
     if (!response.ok) return false
@@ -170,6 +185,7 @@ export async function api<T>(path: string, options: RequestInit = {}, retried = 
   ) {
     const refreshed = await refreshSessionToken()
     if (refreshed) return api<T>(path, options, true)
+    clearAuthStorage()
   }
 
   if (!response.ok) {

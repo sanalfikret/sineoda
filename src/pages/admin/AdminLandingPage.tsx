@@ -641,7 +641,7 @@ export function AdminLandingPage() {
       const status = (err as Error & { status?: number }).status
       if (status === 401) {
         setMessage(
-          'Oturum yenilenemedi. Admin → Çıkış Yap → tekrar giriş yapın. Sorun sürerse VPS\'te git pull + docker rebuild yapın (jwtExpiresIn: 30d olmalı).',
+          'Oturum süresi doldu veya sunucu yeniden kuruldu. Sol alttan Çıkış Yap → admin@plooy.tv / admin123 ile tekrar giriş yapın.',
         )
       } else if (status === 403) {
         setMessage(err instanceof Error ? err.message : 'Admin yetkisi gerekli.')

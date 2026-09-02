@@ -138,7 +138,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await syncAuthSession()
           break
         } catch {
-          if (attempt === 2) break
+          if (attempt === 2) {
+            clearSession()
+            break
+          }
           await sleep(700 * (attempt + 1))
         }
       }
@@ -150,12 +153,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [syncAuthSession])
 
   useEffect(() => {
+    const onAuthCleared = () => clearSession()
+    window.addEventListener('plooy-auth-cleared', onAuthCleared)
+    return () => window.removeEventListener('plooy-auth-cleared', onAuthCleared)
+  }, [clearSession])
+
+  useEffect(() => {
     if (!getToken()) return
 
     const refresh = () => {
-      void refreshSessionToken().catch(() => undefined)
+      void refreshSessionToken().then((ok) => {
+        if (!ok && !getToken()) clearSession()
+      })
     }
 
+    refresh()
     const interval = window.setInterval(refresh, 60 * 1000)
 
     const onVisible = () => {
