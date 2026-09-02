@@ -5,6 +5,10 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+if [ -d .git ]; then
+  chown -R "$(whoami)" .git 2>/dev/null || true
+fi
+
 if [ "${SINEODA_SKIP_GIT_PULL:-}" = "1" ]; then
   echo ">>> git pull atlandı (kod zaten güncellendi)"
 else
