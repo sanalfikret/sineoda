@@ -15,17 +15,21 @@ router.get('/', (_req, res) => {
 })
 
 router.get('/expiring', (req, res) => {
-  const withinDays = Math.max(1, Math.min(365, Number(req.query.days ?? 30) || 30))
-  const catalog = dbAll<ContentRow>('SELECT * FROM content ORDER BY license_expires_at ASC, title')
-    .map(mapContentAdmin)
-    .filter((item) => item.licenseExpiresAt && isLicenseExpiringSoon(item.licenseExpiresAt, withinDays))
-    .sort((a, b) => {
-      const aDays = a.licenseDaysRemaining ?? 9999
-      const bDays = b.licenseDaysRemaining ?? 9999
-      return aDays - bDays
-    })
+  try {
+    const withinDays = Math.max(1, Math.min(365, Number(req.query.days ?? 30) || 30))
+    const catalog = dbAll<ContentRow>('SELECT * FROM content ORDER BY license_expires_at ASC, title')
+      .map(mapContentAdmin)
+      .filter((item) => item.licenseExpiresAt && isLicenseExpiringSoon(item.licenseExpiresAt, withinDays))
+      .sort((a, b) => {
+        const aDays = a.licenseDaysRemaining ?? 9999
+        const bDays = b.licenseDaysRemaining ?? 9999
+        return aDays - bDays
+      })
 
-  res.json({ items: catalog, withinDays })
+    res.json({ items: catalog, withinDays })
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'Telif listesi yüklenemedi.' })
+  }
 })
 
 router.get('/expired', (_req, res) => {

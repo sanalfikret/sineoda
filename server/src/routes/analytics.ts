@@ -22,72 +22,77 @@ function todayKey() {
 }
 
 router.get('/overview', requireAdmin, (_req: AuthRequest, res) => {
-  const today = todayKey()
-  const onlineSince = new Date(Date.now() - ONLINE_WINDOW_MS).toISOString()
+  try {
+    const today = todayKey()
+    const onlineSince = new Date(Date.now() - ONLINE_WINDOW_MS).toISOString()
 
-  dbRun('DELETE FROM online_presence WHERE last_seen_at < ?', [onlineSince])
+    dbRun('DELETE FROM online_presence WHERE last_seen_at < ?', [onlineSince])
 
-  const visitsToday = dbGet<{ count: number }>(
-    'SELECT COUNT(*) as count FROM site_visits WHERE visit_date = ?',
-    [today],
-  )
+    const visitsToday = dbGet<{ count: number }>(
+      'SELECT COUNT(*) as count FROM site_visits WHERE visit_date = ?',
+      [today],
+    )
 
-  const uniqueUsersToday = dbGet<{ count: number }>(
-    'SELECT COUNT(DISTINCT COALESCE(user_id, session_id)) as count FROM site_visits WHERE visit_date = ?',
-    [today],
-  )
+    const uniqueUsersToday = dbGet<{ count: number }>(
+      'SELECT COUNT(DISTINCT COALESCE(user_id, session_id)) as count FROM site_visits WHERE visit_date = ?',
+      [today],
+    )
 
-  const onlineNow = dbGet<{ count: number }>(
-    'SELECT COUNT(*) as count FROM online_presence WHERE last_seen_at >= ?',
-    [onlineSince],
-  )
+    const onlineNow = dbGet<{ count: number }>(
+      'SELECT COUNT(*) as count FROM online_presence WHERE last_seen_at >= ?',
+      [onlineSince],
+    )
 
-  const watchToday = dbGet<{ total_seconds: number }>(
-    'SELECT COALESCE(SUM(seconds_watched), 0) as total_seconds FROM watch_activity WHERE activity_date = ?',
-    [today],
-  )
+    const watchToday = dbGet<{ total_seconds: number }>(
+      'SELECT COALESCE(SUM(seconds_watched), 0) as total_seconds FROM watch_activity WHERE activity_date = ?',
+      [today],
+    )
 
-  const watchAllTime = dbGet<{ total_seconds: number }>(
-    'SELECT COALESCE(SUM(total_watched_seconds), 0) as total_seconds FROM watch_progress',
-  )
+    const watchAllTime = dbGet<{ total_seconds: number }>(
+      'SELECT COALESCE(SUM(total_watched_seconds), 0) as total_seconds FROM watch_progress',
+    )
 
-  const activeSubscriptions = dbGet<{ count: number }>(
-    "SELECT COUNT(*) as count FROM users WHERE subscription_status = 'active'",
-  )
+    const activeSubscriptions = dbGet<{ count: number }>(
+      "SELECT COUNT(*) as count FROM users WHERE subscription_status = 'active'",
+    )
 
-  const totalUsers = dbGet<{ count: number }>('SELECT COUNT(*) as count FROM users')
+    const totalUsers = dbGet<{ count: number }>('SELECT COUNT(*) as count FROM users')
 
-  const watchSecondsToday = watchToday?.total_seconds ?? 0
-  const watchSecondsAllTime = watchAllTime?.total_seconds ?? 0
+    const watchSecondsToday = watchToday?.total_seconds ?? 0
+    const watchSecondsAllTime = watchAllTime?.total_seconds ?? 0
 
-  res.json({
-    today: {
-      visits: visitsToday?.count ?? 0,
-      uniqueVisitors: uniqueUsersToday?.count ?? 0,
-      watchMinutes: Math.round(watchSecondsToday / 60),
-      watchHours: Math.round((watchSecondsToday / 3600) * 10) / 10,
-    },
-    live: {
-      onlineNow: onlineNow?.count ?? 0,
-    },
-    totals: {
-      users: totalUsers?.count ?? 0,
-      activeSubscriptions: activeSubscriptions?.count ?? 0,
-      watchMinutes: Math.round(watchSecondsAllTime / 60),
-      watchHours: Math.round((watchSecondsAllTime / 3600) * 10) / 10,
-    },
-  })
+    res.json({
+      today: {
+        visits: visitsToday?.count ?? 0,
+        uniqueVisitors: uniqueUsersToday?.count ?? 0,
+        watchMinutes: Math.round(watchSecondsToday / 60),
+        watchHours: Math.round((watchSecondsToday / 3600) * 10) / 10,
+      },
+      live: {
+        onlineNow: onlineNow?.count ?? 0,
+      },
+      totals: {
+        users: totalUsers?.count ?? 0,
+        activeSubscriptions: activeSubscriptions?.count ?? 0,
+        watchMinutes: Math.round(watchSecondsAllTime / 60),
+        watchHours: Math.round((watchSecondsAllTime / 3600) * 10) / 10,
+      },
+    })
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'Özet yüklenemedi.' })
+  }
 })
 
 router.get('/watch-stats', requireAdmin, (_req: AuthRequest, res) => {
-  const rows = dbAll<{
-    id: string
-    title: string
-    type: string
-    total_seconds: number | null
-    viewers: number | null
-    avg_position: number | null
-  }>(`
+  try {
+    const rows = dbAll<{
+      id: string
+      title: string
+      type: string
+      total_seconds: number | null
+      viewers: number | null
+      avg_position: number | null
+    }>(`
     SELECT
       c.id,
       c.title,
@@ -98,21 +103,24 @@ router.get('/watch-stats', requireAdmin, (_req: AuthRequest, res) => {
     FROM content c
     LEFT JOIN watch_progress wp ON wp.content_id = c.id
     GROUP BY c.id
-    HAVING total_seconds > 0
+    HAVING COALESCE(SUM(wp.total_watched_seconds), 0) > 0
     ORDER BY total_seconds DESC
     LIMIT 200
   `)
 
-  res.json({
-    stats: rows.map((row) => ({
-      contentId: row.id,
-      title: row.title,
-      type: row.type,
-      totalWatchedMinutes: Math.round((row.total_seconds ?? 0) / 60),
-      viewerCount: row.viewers ?? 0,
-      avgProgressPercent: Math.round(row.avg_position ?? 0),
-    })),
-  })
+    res.json({
+      stats: rows.map((row) => ({
+        contentId: row.id,
+        title: row.title,
+        type: row.type,
+        totalWatchedMinutes: Math.round((row.total_seconds ?? 0) / 60),
+        viewerCount: row.viewers ?? 0,
+        avgProgressPercent: Math.round(row.avg_position ?? 0),
+      })),
+    })
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'İzleme istatistikleri yüklenemedi.' })
+  }
 })
 
 router.get('/monthly-periods', requireAdmin, (_req: AuthRequest, res) => {
