@@ -15,10 +15,10 @@ import { formatPublishDate } from '../../utils/publish'
 import { fuzzySearchMatch, sortByTurkishTitle } from '../../utils/search'
 
 const STATUS_LABELS: Record<AdminCreator['status'], string> = {
-  pending: 'Onay bekliyor',
-  approved: 'Onaylandı',
-  rejected: 'Reddedildi',
-  suspended: 'Askıya alındı',
+  pending: 'Hesap: Onay bekliyor',
+  approved: 'Hesap: Onaylandı (+ bekleyen filmler yayınlanır)',
+  rejected: 'Hesap: Reddedildi',
+  suspended: 'Hesap: Askıya alındı',
 }
 
 const STATUS_CLASS: Record<AdminCreator['status'], string> = {
@@ -63,6 +63,7 @@ export function AdminCreatorsPage() {
   const [loading, setLoading] = useState(true)
   const [detailLoading, setDetailLoading] = useState(false)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
   const [query, setQuery] = useState('')
   const [editingContentId, setEditingContentId] = useState<string | null>(null)
   const [publishingId, setPublishingId] = useState<string | null>(null)
@@ -117,8 +118,15 @@ export function AdminCreatorsPage() {
   }, [creators, query])
 
   const handleStatusChange = async (id: string, status: AdminCreator['status']) => {
+    setNotice('')
+    setError('')
     try {
-      await updateAdminCreatorStatus(id, status)
+      const result = await updateAdminCreatorStatus(id, status)
+      if (result.publishedCount && result.publishedCount > 0) {
+        setNotice(`${result.publishedCount} film yayına alındı.`)
+      } else if (status === 'approved') {
+        setNotice('Hesap onaylandı. Bekleyen film yoksa zaten yayında veya henüz başvuru gönderilmemiş.')
+      }
       await loadCreators()
       if (selectedId === id) await loadDetail(id)
     } catch (err) {
@@ -162,6 +170,12 @@ export function AdminCreatorsPage() {
         resultCount={filteredCreators.length}
         totalCount={creators.length}
       />
+
+      {notice && (
+        <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+          {notice}
+        </div>
+      )}
 
       {error && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
@@ -254,8 +268,9 @@ export function AdminCreatorsPage() {
                 </select>
               </div>
               <p className="text-xs text-plooy-muted">
-                Üstteki durum yalnızca yapımcı hesabını etkiler. Filmin siteye çıkması için aşağıdan{' '}
-                <strong className="text-white/80">Yayınla</strong> veya inceleme ekranında yayın modunu seçin.
+                <strong className="text-white/80">Hesap: Onaylandı</strong> seçildiğinde bekleyen tüm standart
+                filmler otomatik yayına alınır. Tek film için yeşil <strong className="text-emerald-200">Yayınla</strong>{' '}
+                veya inceleme ekranını kullanın.
               </p>
 
               <section className="rounded-xl border border-white/5 bg-[#0d0f14] p-4">

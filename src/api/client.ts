@@ -1730,10 +1730,13 @@ export async function fetchAdminCreatorDetail(id: string) {
 }
 
 export async function updateAdminCreatorStatus(id: string, status: AdminCreator['status']) {
-  return api<{ ok: boolean; status: string }>(`/api/admin/creators/creators/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ status }),
-  })
+  return api<{ ok: boolean; status: string; publishedFilmIds?: string[]; publishedCount?: number }>(
+    `/api/admin/creators/creators/${id}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    },
+  )
 }
 
 export async function fetchAdminPendingCreatorContent() {
