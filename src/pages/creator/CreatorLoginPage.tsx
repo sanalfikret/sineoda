@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLocale } from '../../i18n/LocaleContext'
 
 export function CreatorLoginPage() {
-  const { t } = useTranslation('creator')
+  const { t } = useTranslation('creator', { keyPrefix: 'login' })
   const { localizePath } = useLocale()
   const { creatorLogin, isCreator, isLoading } = useAuth()
   const navigate = useNavigate()
@@ -25,8 +25,12 @@ export function CreatorLoginPage() {
     setError('')
     setLoading(true)
     try {
-      await creatorLogin(email, password)
-      navigate(localizePath('/creator'), { replace: true })
+      const loggedInUser = await creatorLogin(email, password)
+      const needsPayment = !loggedInUser.creator?.registrationPaidAt
+      navigate(
+        needsPayment ? `${localizePath('/creator/odeme')}?checkout=1` : localizePath('/creator'),
+        { replace: true },
+      )
     } catch (err) {
       setError(err instanceof Error ? err.message : t('loginFailed'))
     } finally {
@@ -43,8 +47,8 @@ export function CreatorLoginPage() {
 
         <div className="rounded-2xl border border-white/10 bg-[#11141c] p-6 sm:p-8">
           <div className="mb-6 text-center">
-            <h1 className="text-xl font-bold text-white">{t('loginTitle')}</h1>
-            <p className="mt-1 text-sm text-plooy-muted">{t('loginSubtitle')}</p>
+            <h1 className="text-xl font-bold text-white">{t('title')}</h1>
+            <p className="mt-1 text-sm text-plooy-muted">{t('subtitle')}</p>
           </div>
 
           {error && (
@@ -79,14 +83,14 @@ export function CreatorLoginPage() {
               disabled={loading}
               className="w-full rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg disabled:opacity-60"
             >
-              {loading ? t('loggingIn') : t('enterPanel')}
+              {loading ? t('submitting') : t('submit')}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-plooy-muted">
             {t('noAccount')}{' '}
             <Link to={localizePath('/creator/kayit')} className="text-plooy-gold hover:underline">
-              {t('registerLink')}
+              {t('signupLink')}
             </Link>
           </p>
         </div>

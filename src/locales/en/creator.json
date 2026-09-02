@@ -37,6 +37,7 @@
     "passwordLabel": "Password (at least 6 characters)",
     "bioLabel": "Short bio (optional)",
     "feeNoticeStandard": "After registration, a ₺69 creator application fee is paid. Your membership is approved automatically; publishing your film is subject to admin review.",
+    "feeNoticeStudent": "After registration, a ₺49 Student Cinema application fee is paid. Your membership opens automatically; your film goes to school and {{brand}} review.",
     "legalHeading": "Legal terms and liability statement",
     "legalAccept": "I accept that I will document ownership of my film, that all legal liability rests with me, and that revenue-sharing terms are set out in the creator agreement.",
     "submitStandard": "Create Creator Account",

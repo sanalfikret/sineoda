@@ -11,7 +11,7 @@ import { useLocale } from '../../i18n/LocaleContext'
 import { groupSchoolsByUniversity, splitSchoolName } from '../../utils/filmSchools'
 
 export function CreatorRegisterPage() {
-  const { t } = useTranslation('creator')
+  const { t } = useTranslation('creator', { keyPrefix: 'register' })
   const { localizePath } = useLocale()
   const { creatorSignup, isCreator, isLoading } = useAuth()
   const navigate = useNavigate()
@@ -56,27 +56,27 @@ export function CreatorRegisterPage() {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     if (!acceptLegal) {
-      setError(t('legalRequired'))
+      setError(t('errors.legalRequired'))
       return
     }
     if (isStudentProgram && !schoolId) {
-      setError(t('schoolRequired'))
+      setError(t('errors.schoolRequired'))
       return
     }
     if (isStudentProgram && !phone.trim()) {
-      setError(t('phoneRequired'))
+      setError(t('errors.phoneRequired'))
       return
     }
     if (isStudentProgram && !projectCrew.trim()) {
-      setError(t('crewRequired'))
+      setError(t('errors.crewRequired'))
       return
     }
     if (isStudentProgram && !filmLink.trim()) {
-      setError(t('filmLinkRequired'))
+      setError(t('errors.filmLinkRequired'))
       return
     }
     if (isStudentProgram && !studentIdFile) {
-      setError(t('studentIdRequired'))
+      setError(t('errors.studentIdRequired'))
       return
     }
     setError('')
@@ -103,7 +103,7 @@ export function CreatorRegisterPage() {
       })
       navigate(`${localizePath('/creator/odeme')}?checkout=1`, { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('registerFailed'))
+      setError(err instanceof Error ? err.message : t('errors.signupFailed'))
     } finally {
       setLoading(false)
     }
@@ -117,12 +117,12 @@ export function CreatorRegisterPage() {
           <PlooyLogo tone="on-dark" className="h-8" />
           <div>
             <h1 className="text-2xl font-bold text-white">
-              {isStudentProgram ? t('studentRegisterTitle') : t('registerTitle')}
+              {isStudentProgram ? t('titleStudent') : t('titleStandard')}
             </h1>
             <p className="text-sm text-plooy-muted">
               {isStudentProgram
-                ? t('studentRegisterSubtitle')
-                : t('registerSubtitle', { brand: BRAND_NAME })}
+                ? t('subtitleStudent')
+                : t('subtitleStandard', { brand: BRAND_NAME })}
             </p>
           </div>
         </div>
@@ -149,7 +149,7 @@ export function CreatorRegisterPage() {
                 onChange={(event) => setSchoolId(event.target.value)}
                 className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-emerald-400"
               >
-                <option value="">{t('selectSchool')}</option>
+                <option value="">{t('schoolPlaceholder')}</option>
                 {groupedSchools.map((group) => (
                   <optgroup key={group.university} label={group.university}>
                     {group.schools.map((school) => {
@@ -168,7 +168,7 @@ export function CreatorRegisterPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-1.5 block text-sm text-white/90">{t('fullName')}</span>
+              <span className="mb-1.5 block text-sm text-white/90">{t('nameLabel')}</span>
               <input
                 required
                 value={name}
@@ -178,7 +178,7 @@ export function CreatorRegisterPage() {
             </label>
             <label className="block">
               <span className="mb-1.5 block text-sm text-white/90">
-                {isStudentProgram ? t('projectName') : t('studioName')}
+                {isStudentProgram ? t('studioLabelStudent') : t('studioLabelStandard')}
               </span>
               <input
                 required
@@ -192,7 +192,7 @@ export function CreatorRegisterPage() {
           {isStudentProgram && (
             <>
               <label className="block">
-                <span className="mb-1.5 block text-sm text-white/90">{t('phone')}</span>
+                <span className="mb-1.5 block text-sm text-white/90">{t('phoneLabel')}</span>
                 <input
                   type="tel"
                   required
@@ -204,20 +204,20 @@ export function CreatorRegisterPage() {
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-sm text-white/90">{t('projectCrew')}</span>
+                <span className="mb-1.5 block text-sm text-white/90">{t('crewLabel')}</span>
                 <textarea
                   required
                   rows={4}
                   value={projectCrew}
                   onChange={(event) => setProjectCrew(event.target.value)}
-                  placeholder={t('projectCrewPlaceholder')}
+                  placeholder={t('crewPlaceholder')}
                   className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-emerald-400"
                 />
-                <span className="mt-1.5 block text-xs text-white/40">{t('projectCrewHint')}</span>
+                <span className="mt-1.5 block text-xs text-white/40">{t('crewHint')}</span>
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-sm text-white/90">{t('filmLink')}</span>
+                <span className="mb-1.5 block text-sm text-white/90">{t('filmLinkLabel')}</span>
                 <input
                   type="url"
                   required
@@ -230,7 +230,7 @@ export function CreatorRegisterPage() {
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-sm text-white/90">{t('studentId')}</span>
+                <span className="mb-1.5 block text-sm text-white/90">{t('studentIdLabel')}</span>
                 <input
                   type="file"
                   required
@@ -247,7 +247,7 @@ export function CreatorRegisterPage() {
           )}
 
           <label className="block">
-            <span className="mb-1.5 block text-sm text-white/90">{t('email')}</span>
+            <span className="mb-1.5 block text-sm text-white/90">{t('emailLabel')}</span>
             <input
               type="email"
               required
@@ -258,7 +258,7 @@ export function CreatorRegisterPage() {
           </label>
 
           <label className="block">
-            <span className="mb-1.5 block text-sm text-white/90">{t('passwordHint')}</span>
+            <span className="mb-1.5 block text-sm text-white/90">{t('passwordLabel')}</span>
             <input
               type="password"
               required
@@ -270,7 +270,7 @@ export function CreatorRegisterPage() {
           </label>
 
           <label className="block">
-            <span className="mb-1.5 block text-sm text-white/90">{t('bioOptional')}</span>
+            <span className="mb-1.5 block text-sm text-white/90">{t('bioLabel')}</span>
             <textarea
               rows={3}
               value={bio}
@@ -279,18 +279,23 @@ export function CreatorRegisterPage() {
             />
           </label>
 
-          {!isStudentProgram && (
-            <div className="rounded-xl border border-plooy-gold/25 bg-plooy-gold/5 px-4 py-4 text-sm text-white/85">
-              <Trans
-                ns="creator"
-                i18nKey="feeNotice"
-                components={{ strong: <strong className="text-plooy-gold" /> }}
-              />
-            </div>
-          )}
+          <div
+            className={`rounded-xl border px-4 py-4 text-sm text-white/85 ${
+              isStudentProgram
+                ? 'border-emerald-500/25 bg-emerald-500/5'
+                : 'border-plooy-gold/25 bg-plooy-gold/5'
+            }`}
+          >
+            <Trans
+              ns="creator"
+              i18nKey={isStudentProgram ? 'register.feeNoticeStudent' : 'register.feeNoticeStandard'}
+              values={{ brand: BRAND_NAME }}
+              components={{ strong: <strong className={isStudentProgram ? 'text-emerald-300' : 'text-plooy-gold'} /> }}
+            />
+          </div>
 
           <div className="rounded-xl border border-white/10 bg-[#0d0f14] p-4">
-            <p className="text-sm font-medium text-white">{t('legalTitle')}</p>
+            <p className="text-sm font-medium text-white">{t('legalHeading')}</p>
             <pre className="mt-3 max-h-48 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-plooy-muted">
               {CREATOR_LEGAL_TERMS}
             </pre>
@@ -315,10 +320,10 @@ export function CreatorRegisterPage() {
             }`}
           >
             {loading
-              ? t('creatingAccount')
+              ? t('submitting')
               : isStudentProgram
-                ? BRAND_STUDENT_CINEMA.registerCta
-                : t('createAccount')}
+                ? t('submitStudent')
+                : t('submitStandard')}
           </button>
         </form>
 
