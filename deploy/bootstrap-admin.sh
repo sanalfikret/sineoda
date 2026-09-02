@@ -1,80 +1,60 @@
 #!/bin/bash
-# Admin oluştur / şifre sıfırla — format sonrası veya giriş yapılamıyorsa
+# Admin oluştur / şifre sıfırla
 # PuTTY: curl -fsSL https://raw.githubusercontent.com/sanalfikret/sineoda/main/deploy/bootstrap-admin.sh | bash
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 set -eu
 
 INSTALL="${SINEODA_ROOT:-/opt/sineoda}"
+if [ ! -d "$INSTALL" ]; then
+  echo "HATA: $INSTALL yok — önce: curl -fsSL .../paste-install.sh | bash"
+  exit 1
+fi
 cd "$INSTALL"
 
-if [ ! -f .env ]; then
-  echo "HATA: $INSTALL/.env yok — önce paste-install.sh"
+ADMIN_EMAIL="admin@plooy.tv"
+if [ -f .env ] && grep -qE '^ADMIN_EMAIL=' .env; then
+  ADMIN_EMAIL="$(grep -E '^ADMIN_EMAIL=' .env | cut -d= -f2- | tr -d '\r')"
+fi
+
+ADMIN_PASS="PlooyTest$(head -c 48 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 12)"
+
+if [ -f .env ]; then
+  if grep -qE '^ADMIN_BOOTSTRAP_PASSWORD=' .env; then
+    sed -i "s|^ADMIN_BOOTSTRAP_PASSWORD=.*|ADMIN_BOOTSTRAP_PASSWORD=${ADMIN_PASS}|" .env
+  else
+    printf '\nADMIN_BOOTSTRAP_PASSWORD=%s\n' "$ADMIN_PASS" >> .env
+  fi
+fi
+
+NODE_SCRIPT='const bcrypt=require("bcryptjs");const Database=require("better-sqlite3");const email=process.env.BOOTSTRAP_EMAIL;const password=process.env.BOOTSTRAP_PASS;const db=new Database("/app/server/data/sineoda.db");const hash=bcrypt.hashSync(password,10);const now=new Date().toISOString();const existing=db.prepare("SELECT id FROM users WHERE email = ?").get(email);if(existing){db.prepare("UPDATE users SET password_hash = ?, role = '\''admin'\'', email_verified = 1 WHERE id = ?").run(hash,existing.id);}else{db.prepare("INSERT INTO users (id,name,email,password_hash,role,created_at,email_verified) VALUES (?,?,?,?,'\''admin'\'',?,1)").run("plooy-admin","Plooy Admin",email,hash,now);}console.log("admin ok");'
+
+pick_container() {
+  local name=""
+  name="$(docker ps --format '{{.Names}}' | grep -iE 'sineoda|plooy' | head -1 || true)"
+  if [ -n "$name" ]; then echo "$name"; return; fi
+  name="$(docker ps --format '{{.Names}}\t{{.Ports}}' | grep -E '3001->|:3001->' | cut -f1 | head -1 || true)"
+  if [ -n "$name" ]; then echo "$name"; return; fi
+  name="$(docker ps --format '{{.Names}}' | head -1 || true)"
+  echo "$name"
+}
+
+CONTAINER="$(pick_container)"
+if [ -z "$CONTAINER" ]; then
+  echo "HATA: hiç container yok. Önce kurulum:"
+  echo "  curl -fsSL https://raw.githubusercontent.com/sanalfikret/sineoda/main/deploy/paste-install.sh | bash"
+  docker ps -a || true
   exit 1
 fi
 
-ADMIN_EMAIL="$(grep -E '^ADMIN_EMAIL=' .env 2>/dev/null | cut -d= -f2- | tr -d '\r' || true)"
-ADMIN_EMAIL="${ADMIN_EMAIL:-admin@plooy.tv}"
+echo ">>> container: $CONTAINER"
 
-ADMIN_PASS="$(head -c 64 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 14)"
-ADMIN_PASS="PlooyTest${ADMIN_PASS}"
-
-if grep -qE '^ADMIN_BOOTSTRAP_PASSWORD=' .env; then
-  sed -i "s|^ADMIN_BOOTSTRAP_PASSWORD=.*|ADMIN_BOOTSTRAP_PASSWORD=${ADMIN_PASS}|" .env
-else
-  printf '\nADMIN_BOOTSTRAP_PASSWORD=%s\n' "$ADMIN_PASS" >> .env
-fi
-
-NODE_SCRIPT="
-const bcrypt = require('bcryptjs');
-const Database = require('better-sqlite3');
-const email = process.env.BOOTSTRAP_EMAIL;
-const password = process.env.BOOTSTRAP_PASS;
-const db = new Database('/app/server/data/sineoda.db');
-const hash = bcrypt.hashSync(password, 10);
-const now = new Date().toISOString();
-const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
-if (existing) {
-  db.prepare(\"UPDATE users SET password_hash = ?, role = 'admin', email_verified = 1 WHERE id = ?\").run(hash, existing.id);
-} else {
-  db.prepare(\"INSERT INTO users (id, name, email, password_hash, role, created_at, email_verified) VALUES (?, ?, ?, ?, 'admin', ?, 1)\").run(
-    'plooy-admin', 'Plooy Admin', email, hash, now,
-  );
-}
-console.log('admin ok');
-"
-
-run_in_container() {
-  local target="$1"
-  docker exec -T \
-    -e "BOOTSTRAP_EMAIL=$ADMIN_EMAIL" \
-    -e "BOOTSTRAP_PASS=$ADMIN_PASS" \
-    "$target" node -e "$NODE_SCRIPT"
-}
-
-if docker compose version >/dev/null 2>&1; then
-  if docker compose exec -T \
-    -e "BOOTSTRAP_EMAIL=$ADMIN_EMAIL" \
-    -e "BOOTSTRAP_PASS=$ADMIN_PASS" \
-    sineoda node -e "$NODE_SCRIPT" 2>/dev/null; then
-    :
-  else
-    CONTAINER="$(docker ps --format '{{.Names}}' | grep -iE 'sineoda|plooy' | head -1 || true)"
-    [ -z "$CONTAINER" ] && CONTAINER="$(docker ps --format '{{.Names}}\t{{.Ports}}' | grep '3001->' | cut -f1 | head -1 || true)"
-    [ -z "$CONTAINER" ] && { echo "HATA: container yok"; docker ps -a; exit 1; }
-    echo ">>> container: $CONTAINER"
-    run_in_container "$CONTAINER"
-  fi
-elif command -v docker-compose >/dev/null 2>&1; then
-  docker-compose exec -T \
-    -e "BOOTSTRAP_EMAIL=$ADMIN_EMAIL" \
-    -e "BOOTSTRAP_PASS=$ADMIN_PASS" \
-    sineoda node -e "$NODE_SCRIPT"
-else
-  CONTAINER="$(docker ps --format '{{.Names}}' | grep -iE 'sineoda|plooy' | head -1 || true)"
-  [ -z "$CONTAINER" ] && CONTAINER="$(docker ps -q | head -1 | xargs docker inspect --format '{{.Name}}' 2>/dev/null | sed 's|^/||')"
-  [ -z "$CONTAINER" ] && { echo "HATA: container yok"; docker ps -a; exit 1; }
-  echo ">>> container: $CONTAINER"
-  run_in_container "$CONTAINER"
+if ! docker exec -T \
+  -e "BOOTSTRAP_EMAIL=$ADMIN_EMAIL" \
+  -e "BOOTSTRAP_PASS=$ADMIN_PASS" \
+  "$CONTAINER" node -e "$NODE_SCRIPT"; then
+  echo "HATA: admin oluşturulamadı — docker logs $CONTAINER | tail -20"
+  docker logs "$CONTAINER" 2>&1 | tail -20 || true
+  exit 1
 fi
 
 echo ""
@@ -83,4 +63,4 @@ echo "  Admin giriş"
 echo "  E-posta:  $ADMIN_EMAIL"
 echo "  Şifre:    $ADMIN_PASS"
 echo "============================================"
-echo "Tarayıcı: /admin/giris — Ctrl+Shift+R"
+echo "http://31.42.127.26/admin/giris — Ctrl+Shift+R"
