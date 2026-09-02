@@ -67,7 +67,16 @@ if [ ! -f "$INSTALL/.env" ]; then
   sed -i "s|^PUBLIC_URL=.*|PUBLIC_URL=http://${IP}|" "$INSTALL/.env"
   sed -i "s|^JWT_SECRET=.*|JWT_SECRET=${JWT}|" "$INSTALL/.env"
   sed -i "s|^PERSIST_DIR=.*|PERSIST_DIR=${INSTALL}/persistent|" "$INSTALL/.env"
+  ADMIN_PASS="PlooyTest$(head -c 48 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 12)"
+  if grep -qE '^ADMIN_BOOTSTRAP_PASSWORD=' "$INSTALL/.env"; then
+    sed -i "s|^ADMIN_BOOTSTRAP_PASSWORD=.*|ADMIN_BOOTSTRAP_PASSWORD=${ADMIN_PASS}|" "$INSTALL/.env"
+  else
+    printf '\nADMIN_BOOTSTRAP_PASSWORD=%s\n' "$ADMIN_PASS" >> "$INSTALL/.env"
+  fi
   echo ">>> .env oluşturuldu (IP: $IP)"
+  echo ">>> Admin şifresi kurulum sonunda bootstrap-admin ile yazdırılacak"
+  BOOTSTRAP_ADMIN_PASS="$ADMIN_PASS"
+  BOOTSTRAP_ADMIN_EMAIL="admin@plooy.tv"
 fi
 
 echo "=== 5) docker rebuild ==="
@@ -77,8 +86,11 @@ cd "$INSTALL"
 /bin/bash deploy/rebuild-vps.sh
 
 echo ""
-echo "=== 6) bitti ==="
+echo "=== 6) admin ==="
+/bin/bash deploy/bootstrap-admin.sh 2>/dev/null || true
+
+echo ""
+echo "=== 7) bitti ==="
 curl -sf "http://127.0.0.1:3001/api/health" | grep -E 'gitSha|dbExists|userCount' || true
 echo ""
-echo ">>> Tarayıcı: Ctrl+Shift+R  http://$(curl -fsSL -4 ifconfig.me 2>/dev/null || echo 31.42.127.26)/"
-echo ">>> Admin: kayıt ol veya seed admin — test aşaması, veri sıfırdan."
+echo ">>> Tarayıcı: Ctrl+Shift+R  http://$(curl -fsSL -4 ifconfig.me 2>/dev/null || echo 31.42.127.26)/admin/giris"

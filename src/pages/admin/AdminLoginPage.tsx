@@ -81,7 +81,9 @@ export function AdminLoginPage() {
           </form>
 
           <p className="mt-6 text-center text-xs text-plooy-muted">
-            Admin: {appConfig.emails.admin} / admin123 · Demo: {appConfig.emails.demo} / demo1234
+            E-posta: {appConfig.emails.admin}
+            <br />
+            İlk kurulumda şifre sunucuda bootstrap-admin.sh çıktısında gösterilir.
           </p>
           <p className="mt-2 text-center text-sm">
             <Link to="/" className="text-plooy-gold hover:underline">
