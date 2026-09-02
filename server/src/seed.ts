@@ -304,7 +304,7 @@ export function ensureDefaultAdmin() {
   if (!existing) {
     const bootstrapPass = process.env.ADMIN_BOOTSTRAP_PASSWORD?.trim()
     const adminPassword =
-      config.isProduction && bootstrapPass && bootstrapPass.length >= 12
+      config.isProduction && bootstrapPass
         ? bootstrapPass
         : config.isProduction
           ? null
@@ -312,7 +312,7 @@ export function ensureDefaultAdmin() {
 
     if (!adminPassword) {
       console.warn(
-        '[seed] Production: varsayılan admin oluşturulmadı. ADMIN_BOOTSTRAP_PASSWORD (min 12 karakter) tanımlayın veya mevcut admin ile giriş yapın.',
+        '[seed] Production: admin yok. .env içine ADMIN_BOOTSTRAP_PASSWORD=admin123 yazın veya deploy/bootstrap-admin.sh çalıştırın.',
       )
       return
     }

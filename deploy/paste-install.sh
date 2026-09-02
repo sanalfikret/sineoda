@@ -67,7 +67,7 @@ if [ ! -f "$INSTALL/.env" ]; then
   sed -i "s|^PUBLIC_URL=.*|PUBLIC_URL=http://${IP}|" "$INSTALL/.env"
   sed -i "s|^JWT_SECRET=.*|JWT_SECRET=${JWT}|" "$INSTALL/.env"
   sed -i "s|^PERSIST_DIR=.*|PERSIST_DIR=${INSTALL}/persistent|" "$INSTALL/.env"
-  ADMIN_PASS="PlooyTest$(head -c 48 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 12)"
+  ADMIN_PASS="admin123"
   if grep -qE '^ADMIN_BOOTSTRAP_PASSWORD=' "$INSTALL/.env"; then
     sed -i "s|^ADMIN_BOOTSTRAP_PASSWORD=.*|ADMIN_BOOTSTRAP_PASSWORD=${ADMIN_PASS}|" "$INSTALL/.env"
   else
