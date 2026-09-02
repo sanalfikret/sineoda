@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { AdminContentActions } from './AdminContentActions'
 import { PlooyLogo } from '../PlooyLogo'
@@ -25,6 +25,13 @@ export function AdminLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return
+    void navigator.serviceWorker.getRegistrations().then((regs) => {
+      void Promise.all(regs.map((reg) => reg.unregister()))
+    })
+  }, [])
 
   const handleLogout = () => {
     logout()

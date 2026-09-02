@@ -382,6 +382,7 @@ export function AdminLandingPage() {
   )
 
   const persistLayout = async (nextLayout: LandingLayoutConfig) => {
+    if (saving) return
     const customIds = customBlocks.map((block) => block.id)
     const normalized = normalizeLandingLayout(nextLayout, customIds)
     const { layout: saved } = await updateLandingLayoutConfig(normalized, customIds)
@@ -548,6 +549,12 @@ export function AdminLandingPage() {
     setSaving(true)
     setMessage('')
     try {
+      const emptyShowcase = showcases.find((showcase) => !showcase.title.trim())
+      if (emptyShowcase) {
+        setMessage('Kategori şeritlerinde boş başlık var — her kategoriye bir ad yazın.')
+        return
+      }
+
       const validIds = new Set(pickerCatalog.map((item) => item.id))
       const persistedSliderIds = sliderIds.filter((id) => validIds.has(id))
       const persistedShowcases = showcases.map((showcase) => ({

@@ -297,57 +297,60 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
   }
 
   if (showcases) {
+    const normalizedShowcases = showcases
+      .map(
+        (
+          showcase: {
+            id: string
+            title: string
+            icon?: string
+            description?: string
+            itemIds?: string[]
+          },
+          index: number,
+        ) => ({
+          id: String(showcase.id ?? '').trim(),
+          title: String(showcase.title ?? '').trim(),
+          icon: String(showcase.icon ?? 'film'),
+          description: String(showcase.description ?? ''),
+          itemIds: Array.isArray(showcase.itemIds) ? showcase.itemIds.map(String) : [],
+          sortOrder: index,
+        }),
+      )
+      .filter((showcase) => showcase.id && showcase.title)
+
+    if (normalizedShowcases.length !== showcases.length) {
+      res.status(400).json({ error: 'Her kategori şeridinin başlığı dolu olmalı.' })
+      return
+    }
+
     dbRun('DELETE FROM landing_showcase_items')
     dbRun('DELETE FROM landing_showcases')
 
-    showcases.forEach(
-      (
-        showcase: {
-          id: string
-          title: string
-          icon?: string
-          description?: string
-          itemIds?: string[]
-        },
-        index: number,
-      ) => {
-        const id = String(showcase.id ?? '').trim()
-        const title = String(showcase.title ?? '').trim()
-        if (!id || !title) return
+    normalizedShowcases.forEach((showcase) => {
+      dbRun(
+        'INSERT INTO landing_showcases (id, title, icon, description, sort_order) VALUES (?, ?, ?, ?, ?)',
+        [showcase.id, showcase.title, showcase.icon, showcase.description, showcase.sortOrder],
+      )
 
+      ;(filterContentIdsForPool(
+        poolForShowcaseIcon(showcase.icon),
+        showcase.itemIds.filter((contentId) => catalogIds.has(contentId)),
+      ) as string[]).forEach((contentId: string, itemIndex: number) => {
         dbRun(
-          'INSERT INTO landing_showcases (id, title, icon, description, sort_order) VALUES (?, ?, ?, ?, ?)',
-          [id, title, String(showcase.icon ?? 'film'), String(showcase.description ?? ''), index],
+          'INSERT INTO landing_showcase_items (showcase_id, content_id, sort_order) VALUES (?, ?, ?)',
+          [showcase.id, contentId, itemIndex],
         )
-
-        ;(filterContentIdsForPool(
-          poolForShowcaseIcon(String(showcase.icon ?? 'film')),
-          (showcase.itemIds ?? [])
-            .map(String)
-            .filter((contentId) => catalogIds.has(contentId)),
-        ) as string[]).forEach((contentId: string, itemIndex: number) => {
-            dbRun(
-              'INSERT INTO landing_showcase_items (showcase_id, content_id, sort_order) VALUES (?, ?, ?)',
-              [id, contentId, itemIndex],
-            )
-          })
-      },
-    )
-  } else if (
-    !body.hero &&
-    !body.sections &&
-    !body.layout &&
-    !body.customBlocks &&
-    !sliderIds &&
-    !showcases &&
-    !monthlyWinnerIds &&
-    !studentPickIds
-  ) {
-    res.status(400).json({ error: 'Kaydedilecek ana sayfa verisi bulunamadı.' })
-    return
+      })
+    })
   }
 
-  res.json(getLandingConfig())
+  try {
+    res.json(getLandingConfig())
+  } catch (err) {
+    console.error('[landing] PUT kayit sonrasi okuma hatasi:', err)
+    res.status(500).json({ error: 'Kaydedildi ancak yanit olusturulamadi. Sayfayi yenileyin.' })
+  }
 })
 
 export default router
