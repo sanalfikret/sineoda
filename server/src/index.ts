@@ -148,13 +148,7 @@ app.use((req, res, next) => {
   const originalJson = res.json.bind(res)
   res.json = (body: unknown) => {
     const refreshedToken = (req as AuthRequest).refreshedToken
-    if (
-      refreshedToken &&
-      body &&
-      typeof body === 'object' &&
-      !Array.isArray(body) &&
-      !('token' in (body as Record<string, unknown>))
-    ) {
+    if (refreshedToken && body && typeof body === 'object' && !Array.isArray(body)) {
       return originalJson({ ...(body as Record<string, unknown>), token: refreshedToken })
     }
     return originalJson(body)
