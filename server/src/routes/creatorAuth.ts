@@ -9,6 +9,7 @@ import { createStudentFilmSubmission } from '../services/studentFilmSubmission.j
 import { LEGAL_VERSION } from '../constants/legal.js'
 import { recordLegalConsent } from '../services/legalConsent.js'
 import { getClientIp, getUserAgent } from '../utils/clientIp.js'
+import { creatorAuthLimiter } from '../security/rateLimit.js'
 import type { UserRow } from '../types.js'
 
 const router = Router()
@@ -53,7 +54,7 @@ function mapCreatorUser(user: UserRow) {
   }
 }
 
-router.post('/signup', (req, res) => {
+router.post('/signup', creatorAuthLimiter, (req, res) => {
   const { name, email, password, studioName, bio, acceptLegal, program, schoolId, phone, projectCrew, filmLink, studentIdFileUrl } = req.body as {
     name?: string
     email?: string
@@ -209,7 +210,7 @@ router.post('/signup', (req, res) => {
   res.status(201).json({ token, user: publicUser, legalVersion: LEGAL_VERSION })
 })
 
-router.post('/login', (req, res) => {
+router.post('/login', creatorAuthLimiter, (req, res) => {
   const { email, password } = req.body as { email?: string; password?: string }
 
   if (!email?.trim() || !password) {

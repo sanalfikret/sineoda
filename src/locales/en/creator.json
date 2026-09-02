@@ -140,6 +140,10 @@
       "closeForm": "Close submission",
       "formTitle": "Film Submission",
       "formDescription": "Submit your download link, credits, awards, and director/producer documents. Content is published after review.",
+      "editFormTitle": "Edit submission",
+      "editFormDescription": "Update a pending or rejected submission and send it back for review.",
+      "edit": "Edit",
+      "updateSubmit": "Update and resubmit",
       "uploadRequirementsTitle": "Video upload requirements",
       "uploadRequirements": [
         "Codec: H.265 (HEVC) — without compromising quality",
@@ -194,6 +198,7 @@
         "watchMinutes": "Watch (min)",
         "viewers": "Viewers",
         "likes": "Likes",
+        "actions": "Actions",
         "share": "Share"
       }
     },

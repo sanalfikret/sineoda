@@ -8,7 +8,7 @@ import type { ContentRow } from '../types.js'
 export function applyCreatorReviewStatus(
   existing: ContentRow,
   reviewStatus: string,
-  options?: { publishedAt?: string | null },
+  options?: { publishedAt?: string | null; reviewNote?: string | null },
 ) {
   let publishedAt: string | null
   if (options?.publishedAt !== undefined) {
@@ -21,9 +21,17 @@ export function applyCreatorReviewStatus(
     publishedAt = existing.published_at ?? null
   }
 
-  dbRun('UPDATE content SET review_status = ?, published_at = ? WHERE id = ?', [
+  const reviewNote =
+    options?.reviewNote !== undefined
+      ? options.reviewNote
+      : reviewStatus === 'published'
+        ? null
+        : existing.review_note ?? null
+
+  dbRun('UPDATE content SET review_status = ?, published_at = ?, review_note = ? WHERE id = ?', [
     reviewStatus,
     publishedAt,
+    reviewNote,
     existing.id,
   ])
 }
@@ -97,6 +105,11 @@ export function resolveCreatorPublishUpdate(
   body: Record<string, unknown>,
   reviewStatus: string,
 ) {
+  const reviewNote =
+    body.reviewNote !== undefined || body.review_note !== undefined
+      ? String(body.reviewNote ?? body.review_note ?? '').trim() || null
+      : undefined
+
   if (body.reviewStatus !== undefined || body.review_status !== undefined) {
     const publishedAtOverride =
       body.publishedAt !== undefined || body.publishNow === true
@@ -107,6 +120,7 @@ export function resolveCreatorPublishUpdate(
         : undefined
     applyCreatorReviewStatus(existing, reviewStatus, {
       publishedAt: publishedAtOverride,
+      reviewNote,
     })
     return
   }
@@ -116,6 +130,6 @@ export function resolveCreatorPublishUpdate(
       publishNow: body.publishNow === true,
       existing: existing.published_at ?? null,
     })
-    applyCreatorReviewStatus(existing, reviewStatus, { publishedAt })
+    applyCreatorReviewStatus(existing, reviewStatus, { publishedAt, reviewNote })
   }
 }

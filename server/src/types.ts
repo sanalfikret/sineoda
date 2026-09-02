@@ -69,6 +69,7 @@ export interface ContentRow {
   parent_content_id?: string | null
   school_id?: string | null
   school_review_status?: SchoolReviewStatus
+  review_note?: string | null
   monthly_award_enabled?: number | null
   monthly_award_period?: string | null
   monthly_award_badge?: string | null

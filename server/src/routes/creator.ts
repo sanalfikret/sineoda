@@ -24,6 +24,8 @@ import {
 import { getContentEngagementStats } from '../services/studentCinema.js'
 import { getMonthlyReport, monthKey } from '../services/watchAccounting.js'
 import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
+import { findStudentMainStub } from '../services/studentFilmSubmission.js'
+import { resolveStreamProvider } from '../services/streamProvider.js'
 import {
   countUnreadMessages,
   listUserMessages,
@@ -121,6 +123,7 @@ router.get('/dashboard', requireCreator, (req: AuthRequest, res) => {
         contentFormat: row.content_format ?? 'main',
         parentContentId: row.parent_content_id ?? null,
         schoolReviewStatus: row.school_review_status ?? 'none',
+        reviewNote: row.review_note ?? null,
         qualifiedMinutes: stat?.qualifiedMinutes ?? 0,
         watchMinutes: stat?.watchMinutes ?? 0,
         likes: stat?.likes ?? 0,
@@ -202,6 +205,7 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
 
   const contentFormat = String(body.contentFormat ?? body.content_format ?? 'main').trim()
   const isMainApplication = contentFormat === 'main'
+  const isStudentProgram = (creator.program ?? 'standard') === 'student_cinema'
   let application: ReturnType<typeof validateFilmApplication> | null = null
 
   if (isMainApplication) {
@@ -251,15 +255,8 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
     return
   }
 
-  let id = body.id ? String(body.id) : slugify(title)
-  let counter = 1
-  while (dbGet('SELECT id FROM content WHERE id = ?', [id])) {
-    id = `${slugify(title)}-${counter++}`
-  }
-
   const type = normalizeContentType(body.type, 'film')
   const now = new Date().toISOString()
-  const isStudentProgram = (creator.program ?? 'standard') === 'student_cinema'
   const parentContentId = String(body.parentContentId ?? body.parent_content_id ?? '').trim() || null
 
   if (!['main', 'bts', 'teacher_note'].includes(contentFormat)) {
@@ -291,54 +288,107 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
     return
   }
 
+  const streamProvider = resolveStreamProvider(body, videoUrl)
+  const studentStub =
+    isStudentProgram && contentFormat === 'main' ? findStudentMainStub(creator.id) : null
+
+  let id = studentStub?.id ?? (body.id ? String(body.id) : slugify(title))
+  if (!studentStub) {
+    let counter = 1
+    while (dbGet('SELECT id FROM content WHERE id = ?', [id])) {
+      id = `${slugify(title)}-${counter++}`
+    }
+  }
+
   const program = isStudentProgram ? 'student_cinema' : 'standard'
   const schoolId = isStudentProgram ? creator.school_id : null
   const schoolReviewStatus = isStudentProgram ? 'pending' : 'none'
   const durationFields = resolveDurationFields(body)
   const festivalsJson = serializeFestivals(parseFestivalsBody(body) ?? [])
 
-  dbRun(
-    `INSERT INTO content (
-      id, title, description, year, duration, duration_minutes, rating, type, genres, poster, backdrop,
-      video_url, source_video_url, stream_provider, trailer_url, video_format, is_new, new_until, featured,
-      subtitles_json, credits_json, festivals_json, content_added_at, license_expires_at, published_at,
-      creator_id, review_status, program, content_format, parent_content_id, school_id, school_review_status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      id,
-      title,
-      String(body.description ?? '').trim(),
-      Number(body.year ?? new Date().getFullYear()),
-      durationFields.duration,
-      durationFields.durationMinutes,
-      String(body.rating ?? '13+').trim(),
-      type,
-      JSON.stringify(body.genres ?? []),
-      String(body.poster ?? '').trim(),
-      String(body.backdrop ?? body.poster ?? '').trim(),
-      videoUrl,
-      downloadLink || videoUrl,
-      String(body.streamProvider ?? body.stream_provider ?? 'custom'),
-      String(body.trailerUrl ?? body.trailer_url ?? ''),
-      String(body.videoFormat ?? body.video_format ?? 'standard'),
-      0,
-      null,
-      0,
-      serializeSubtitles(body.subtitles ?? []),
-      body.credits !== undefined ? serializeCredits(body.credits) : '{}',
-      festivalsJson,
-      parseContentAddedAt(now),
-      null,
-      null,
-      creator.id,
-      'pending',
-      program,
-      contentFormat,
-      parentContentId,
-      schoolId,
-      schoolReviewStatus,
-    ],
-  )
+  const contentValues = [
+    title,
+    String(body.description ?? '').trim(),
+    Number(body.year ?? new Date().getFullYear()),
+    durationFields.duration,
+    durationFields.durationMinutes,
+    String(body.rating ?? '13+').trim(),
+    type,
+    JSON.stringify(body.genres ?? []),
+    String(body.poster ?? '').trim(),
+    String(body.backdrop ?? body.poster ?? '').trim(),
+    videoUrl,
+    downloadLink || videoUrl,
+    streamProvider,
+    String(body.trailerUrl ?? body.trailer_url ?? ''),
+    String(body.videoFormat ?? body.video_format ?? 'standard'),
+    serializeSubtitles(body.subtitles ?? []),
+    body.credits !== undefined ? serializeCredits(body.credits) : '{}',
+    festivalsJson,
+    parseContentAddedAt(now),
+    'pending',
+    program,
+    contentFormat,
+    parentContentId,
+    schoolId,
+    schoolReviewStatus,
+  ] as const
+
+  if (studentStub) {
+    dbRun(
+      `UPDATE content SET
+        title = ?, description = ?, year = ?, duration = ?, duration_minutes = ?, rating = ?, type = ?,
+        genres = ?, poster = ?, backdrop = ?, video_url = ?, source_video_url = ?, stream_provider = ?,
+        trailer_url = ?, video_format = ?, subtitles_json = ?, credits_json = ?, festivals_json = ?,
+        content_added_at = ?, review_status = ?, review_note = NULL, program = ?, content_format = ?,
+        parent_content_id = ?, school_id = ?, school_review_status = ?
+      WHERE id = ? AND creator_id = ?`,
+      [...contentValues, studentStub.id, creator.id],
+    )
+  } else {
+    dbRun(
+      `INSERT INTO content (
+        id, title, description, year, duration, duration_minutes, rating, type, genres, poster, backdrop,
+        video_url, source_video_url, stream_provider, trailer_url, video_format, is_new, new_until, featured,
+        subtitles_json, credits_json, festivals_json, content_added_at, license_expires_at, published_at,
+        creator_id, review_status, program, content_format, parent_content_id, school_id, school_review_status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        title,
+        String(body.description ?? '').trim(),
+        Number(body.year ?? new Date().getFullYear()),
+        durationFields.duration,
+        durationFields.durationMinutes,
+        String(body.rating ?? '13+').trim(),
+        type,
+        JSON.stringify(body.genres ?? []),
+        String(body.poster ?? '').trim(),
+        String(body.backdrop ?? body.poster ?? '').trim(),
+        videoUrl,
+        downloadLink || videoUrl,
+        streamProvider,
+        String(body.trailerUrl ?? body.trailer_url ?? ''),
+        String(body.videoFormat ?? body.video_format ?? 'standard'),
+        0,
+        null,
+        0,
+        serializeSubtitles(body.subtitles ?? []),
+        body.credits !== undefined ? serializeCredits(body.credits) : '{}',
+        festivalsJson,
+        parseContentAddedAt(now),
+        null,
+        null,
+        creator.id,
+        'pending',
+        program,
+        contentFormat,
+        parentContentId,
+        schoolId,
+        schoolReviewStatus,
+      ],
+    )
+  }
 
   const row = dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [id])!
 
@@ -376,13 +426,22 @@ router.patch('/content/:id', requireApprovedCreator, (req: CreatorAuthRequest, r
   }
 
   const body = req.body as Record<string, unknown>
-  const nextVideoUrl = body.videoUrl !== undefined ? String(body.videoUrl).trim() : existing.video_url
+  const nextDownloadLink =
+    body.downloadLink !== undefined || body.sourceVideoUrl !== undefined || body.source_video_url !== undefined
+      ? String(body.downloadLink ?? body.sourceVideoUrl ?? body.source_video_url ?? '').trim()
+      : (existing.source_video_url ?? existing.video_url ?? '')
+  const nextVideoUrl =
+    body.videoUrl !== undefined || body.video_url !== undefined
+      ? String(body.videoUrl ?? body.video_url ?? '').trim()
+      : existing.video_url ?? nextDownloadLink
+  const nextStreamProvider = resolveStreamProvider(body, nextVideoUrl || nextDownloadLink)
   const durationFields = resolveDurationFields(body, existing)
   const festivalsParsed = parseFestivalsBody(body)
   dbRun(
     `UPDATE content SET
       title = ?, description = ?, year = ?, duration = ?, duration_minutes = ?, rating = ?, type = ?,
-      genres = ?, poster = ?, backdrop = ?, video_url = ?, source_video_url = ?, credits_json = ?, festivals_json = ?, review_status = ?
+      genres = ?, poster = ?, backdrop = ?, video_url = ?, source_video_url = ?, stream_provider = ?,
+      credits_json = ?, festivals_json = ?, review_status = ?, review_note = NULL
     WHERE id = ? AND creator_id = ?`,
     [
       body.title !== undefined ? String(body.title) : existing.title,
@@ -395,8 +454,9 @@ router.patch('/content/:id', requireApprovedCreator, (req: CreatorAuthRequest, r
       body.genres !== undefined ? JSON.stringify(body.genres) : existing.genres,
       body.poster !== undefined ? String(body.poster) : existing.poster,
       body.backdrop !== undefined ? String(body.backdrop) : existing.backdrop,
-      nextVideoUrl,
-      nextVideoUrl,
+      nextVideoUrl || nextDownloadLink,
+      nextDownloadLink || nextVideoUrl,
+      nextStreamProvider,
       body.credits !== undefined ? serializeCredits(body.credits) : existing.credits_json ?? '{}',
       festivalsParsed !== undefined
         ? serializeFestivals(festivalsParsed)
@@ -408,7 +468,11 @@ router.patch('/content/:id', requireApprovedCreator, (req: CreatorAuthRequest, r
   )
 
   const row = dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [existing.id])!
-  res.json({ item: mapContent(row), reviewStatus: 'pending' })
+  res.json({
+    item: mapContent(row),
+    reviewStatus: 'pending',
+    message: 'Başvurunuz güncellendi ve yeniden incelemeye gönderildi.',
+  })
 })
 
 router.get('/accounting/months', requireCreator, (req: AuthRequest, res) => {
