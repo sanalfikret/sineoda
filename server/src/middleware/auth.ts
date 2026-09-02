@@ -148,7 +148,11 @@ export function requireApprovedCreator(req: AuthRequest, res: Response, next: Ne
       res.status(403).json({ error: 'Hesabınız askıya alındı.', status: creator.status })
       return
     }
-    if (!isCreatorRegistrationPaid(creator)) {
+    const user = dbGet<Pick<UserRow, 'subscription_expires_at'>>(
+      'SELECT subscription_expires_at FROM users WHERE id = ?',
+      [req.auth!.userId],
+    )
+    if (!isCreatorRegistrationPaid(creator, user)) {
       res.status(402).json({
         error: 'Film başvurusu için başvuru ücretini ödemelisiniz.',
         code: 'CREATOR_PAYMENT_REQUIRED',

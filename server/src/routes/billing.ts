@@ -8,11 +8,12 @@ import { createIyzicoCheckout, retrieveIyzicoCheckout } from '../services/iyzico
 import { createPaytrToken, verifyPaytrCallback } from '../services/paytr.js'
 import { getBillingPlans } from '../services/billingPlansConfig.js'
 import { BRAND_NAME } from '../constants/brand.js'
-import { getCreatorRegistrationPlanId, getPlan, isCreatorApplicationPlan, normalizePlanId, planRequiresStudentId } from '../services/plans.js'
+import { getCreatorRegistrationPlanId, getPlan, isCreatorApplicationPlan, isBuiltInCreatorApplicationPlan, normalizePlanId, planRequiresStudentId } from '../services/plans.js'
 import { activateCreatorRegistration } from '../services/creatorRegistration.js'
 import { canUserPlay, getUserSubscription, isSubscriptionRequired } from '../services/subscription.js'
 import { activateUserSubscription } from '../services/subscriptionActivation.js'
 import { cancelUserSubscription } from '../services/subscriptionCancellation.js'
+import { redeemGiftCode } from '../services/giftCodes.js'
 import { requireAuth, getCreatorForUser, type AuthRequest } from '../middleware/auth.js'
 import type { UserRow } from '../types.js'
 
@@ -215,6 +216,15 @@ router.post('/student-id', requireAuth, studentIdUpload.single('file'), (req: Au
   res.status(201).json({ url })
 })
 
+router.post('/redeem-gift-code', requireAuth, (req: AuthRequest, res) => {
+  try {
+    const result = redeemGiftCode(req.auth!.userId, String(req.body.code ?? ''))
+    res.json({ ok: true, ...result })
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'Kupon kullanılamadı.' })
+  }
+})
+
 router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
   const planId = String(req.body.planId ?? '')
   const provider = String(req.body.provider ?? config.paymentProvider) as 'paytr' | 'iyzico'
@@ -245,12 +255,22 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
     const expectedPlanId = getCreatorRegistrationPlanId(
       (creator.program ?? 'standard') as 'standard' | 'student_cinema',
     )
-    if (normalizedPlanId !== expectedPlanId) {
+    if (isBuiltInCreatorApplicationPlan(normalizedPlanId) && normalizedPlanId !== expectedPlanId) {
       res.status(400).json({ error: 'Bu başvuru ücreti hesap türünüz için geçerli değil.' })
       return
     }
-    if (creator.registration_paid_at) {
+    const creatorPlanInterval = plan?.interval ?? 'once'
+    if (creatorPlanInterval === 'once' && creator.registration_paid_at) {
       res.status(400).json({ error: 'Yapımcı başvuru ücreti zaten ödendi.' })
+      return
+    }
+    if (
+      creatorPlanInterval !== 'once' &&
+      creator.registration_paid_at &&
+      user.subscription_expires_at &&
+      new Date(user.subscription_expires_at) > new Date()
+    ) {
+      res.status(400).json({ error: 'Yapımcı üyeliğiniz hâlâ aktif.' })
       return
     }
   } else if (user.role === 'creator') {
@@ -271,7 +291,7 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
   if (!config.isPaymentConfigured()) {
     if (!config.isProduction) {
       if (isCreatorApplicationPlan(normalizedPlanId)) {
-        const { paidAt } = activateCreatorRegistration(user.id)
+        const { paidAt } = activateCreatorRegistration(user.id, normalizedPlanId)
         res.json({
           message: 'Demo modu: yapımcı başvuru ücreti otomatik onaylandı.',
           demoMode: true,
@@ -403,7 +423,7 @@ router.post('/callback/paytr', (req, res) => {
       order.id,
     ])
     if (isCreatorApplicationPlan(order.plan_id)) {
-      activateCreatorRegistration(order.user_id)
+      activateCreatorRegistration(order.user_id, order.plan_id)
     } else {
       activateUserSubscription(order.user_id, order.plan_id)
     }
@@ -436,7 +456,7 @@ router.post('/callback/iyzico', async (req, res) => {
       order.id,
     ])
     if (isCreatorApplicationPlan(order.plan_id)) {
-      activateCreatorRegistration(order.user_id)
+      activateCreatorRegistration(order.user_id, order.plan_id)
     } else {
       activateUserSubscription(order.user_id, order.plan_id)
     }

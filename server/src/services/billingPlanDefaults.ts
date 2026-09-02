@@ -14,6 +14,7 @@ export type BillingPlanDefinition = {
   popular?: boolean
   requiresStudentId?: boolean
   enabled?: boolean
+  campaignLabel?: string
   features: string[]
 }
 
@@ -73,6 +74,8 @@ export function normalizePlanId(planId: string): BillingPlanId | null {
     ? (normalized as BillingPlanId)
     : null
 }
+
+/** @deprecated use normalizeBillingPlanId from billingPlansConfig for custom plans */
 
 export function isCreatorApplicationPlanId(planId: BillingPlanId) {
   return planId === 'creator_application' || planId === 'student_cinema_application'

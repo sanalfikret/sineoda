@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import {
   fetchBillingPlans,
   fetchSubscription,
+  redeemGiftCode,
   startCheckout,
   uploadBillingStudentId,
 } from '../api/client'
@@ -21,7 +22,7 @@ interface Plan {
   features: string[]
   popular?: boolean
   requiresStudentId?: boolean
-  enabled?: boolean
+  campaignLabel?: string
 }
 
 type PlanAction = 'subscribe' | 'current' | 'switch' | 'renew'
@@ -62,6 +63,8 @@ export function PricingPage() {
   const [loading, setLoading] = useState(true)
   const [checkoutPlan, setCheckoutPlan] = useState<string | null>(null)
   const [message, setMessage] = useState('')
+  const [giftCode, setGiftCode] = useState('')
+  const [redeemingGift, setRedeemingGift] = useState(false)
   const [studentIdFile, setStudentIdFile] = useState<File | null>(null)
   const [studentIdReady, setStudentIdReady] = useState(Boolean(user?.studentIdUrl))
   const autoCheckoutStarted = useRef(false)
@@ -91,7 +94,7 @@ export function PricingPage() {
       user ? fetchSubscription().catch(() => null) : Promise.resolve(null),
     ])
       .then(([billing, sub]) => {
-        setPlans(billing.plans.filter((plan) => plan.enabled !== false))
+        setPlans(billing.plans.filter((plan) => plan.enabled !== false && plan.audience !== 'creator'))
         setProviders(billing.providers)
         setProvider('paytr')
         if (sub) {
@@ -173,6 +176,36 @@ export function PricingPage() {
     autoCheckoutStarted.current = true
     void handleCheckout(planParam)
   }, [loading, user, autoCheckout, planParam, subscription?.status, subscription?.plan, handleCheckout])
+
+  const handleRedeemGiftCode = async () => {
+    if (!user) {
+      navigate(localizePath('/giris'))
+      return
+    }
+    setRedeemingGift(true)
+    setMessage('')
+    try {
+      const result = await redeemGiftCode(giftCode)
+      setGiftCode('')
+      setMessage(
+        locale === 'en'
+          ? `Gift code applied. Access until ${new Date(result.expiresAt).toLocaleDateString('en-US')}.`
+          : `Hediye kodu uygulandı. Erişim ${new Date(result.expiresAt).toLocaleDateString('tr-TR')} tarihine kadar.`,
+      )
+      await refreshUser()
+      const sub = await fetchSubscription()
+      setSubscription({
+        status: sub.status,
+        plan: sub.plan,
+        startedAt: sub.startedAt,
+        expiresAt: sub.expiresAt,
+      })
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : t('giftRedeemFailed'))
+    } finally {
+      setRedeemingGift(false)
+    }
+  }
 
   const planButtonLabel = (action: PlanAction, checkingOut: boolean) => {
     if (checkingOut) return t('redirecting')
@@ -264,6 +297,11 @@ export function PricingPage() {
                     {t('studentBadge')}
                   </span>
                 )}
+                {plan.campaignLabel && (
+                  <span className="mb-3 ml-2 inline-block rounded-full border border-plooy-gold/40 px-3 py-1 text-xs font-semibold text-plooy-gold">
+                    {plan.campaignLabel}
+                  </span>
+                )}
                 <h2 className="text-lg font-semibold text-white">{plan.name}</h2>
                 <p className="mt-2 text-4xl font-bold text-white">
                   ₺{plan.price}
@@ -307,6 +345,30 @@ export function PricingPage() {
             })}
           </div>
         )}
+
+        <section className="mt-10 rounded-2xl border border-white/10 bg-[#11141c] p-6">
+          <h2 className="text-lg font-semibold text-white">{t('giftTitle')}</h2>
+          <p className="mt-1 text-sm text-plooy-muted">{t('giftSubtitle')}</p>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <input
+              value={giftCode}
+              onChange={(event) => setGiftCode(event.target.value.toUpperCase())}
+              placeholder={t('giftPlaceholder')}
+              className="min-w-0 flex-1 rounded-lg border border-white/10 bg-plooy-bg px-3 py-2.5 font-mono text-sm uppercase text-white outline-none focus:border-plooy-gold"
+            />
+            <button
+              type="button"
+              disabled={!giftCode.trim() || redeemingGift}
+              onClick={() => void handleRedeemGiftCode()}
+              className="rounded-lg bg-white/10 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/15 disabled:opacity-60"
+            >
+              {redeemingGift ? t('giftRedeeming') : t('giftRedeem')}
+            </button>
+          </div>
+          {!user && (
+            <p className="mt-3 text-xs text-plooy-muted">{t('giftLoginHint')}</p>
+          )}
+        </section>
 
         {!user && (
           <p className="mt-8 text-center text-sm text-plooy-muted">

@@ -29,5 +29,12 @@
   "currentPlanBadge": "Your current plan",
   "currentPlanLabel": "Active plan",
   "cancelledSubscription": "Subscription cancelled",
-  "planChangeNote": "Changing or renewing your plan starts a new payment step. You can keep watching until your current period ends."
+  "planChangeNote": "Changing or renewing your plan starts a new payment step. You can keep watching until your current period ends.",
+  "giftTitle": "Have a gift code?",
+  "giftSubtitle": "Enter your Plooy TV gift card or corporate coupon — start watching without payment.",
+  "giftPlaceholder": "PLOOY-GIFT-XXXX",
+  "giftRedeem": "Redeem code",
+  "giftRedeeming": "Applying…",
+  "giftLoginHint": "Sign in or create an account to redeem a code.",
+  "giftRedeemFailed": "Could not redeem gift code."
 }
