@@ -70,7 +70,11 @@ if grep -qE '^VITE_API_URL=https?://' .env 2>/dev/null; then
   echo "UYARI: VITE_API_URL dolu — build yine de same-origin (boş) kullanacak."
 fi
 
-GIT_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
+GIT_SHA="$(git rev-parse --short HEAD 2>/dev/null || true)"
+if [ -z "$GIT_SHA" ] && [ -f .deploy-sha ]; then
+  GIT_SHA="$(tr -d '[:space:]' < .deploy-sha)"
+fi
+GIT_SHA="${GIT_SHA:-unknown}"
 export GIT_SHA
 echo ">>> build git: $GIT_SHA"
 BUILD_FLAGS=(--build-arg "VITE_API_URL=" --build-arg "GIT_SHA=${GIT_SHA}")
