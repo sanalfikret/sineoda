@@ -143,6 +143,13 @@ if [ "$ok" -eq 1 ]; then
     echo "HATA: Veritabanı dosyası yok — persistent/data kontrol et!"
     exit 1
   fi
+  if ! echo "$HEALTH" | grep -q "\"gitSha\":\"${GIT_SHA}\""; then
+    echo "HATA: Container eski kod çalıştırıyor — health gitSha beklenen ${GIT_SHA} değil."
+    echo "$HEALTH" | grep -o '"gitSha":"[^"]*"' || true
+    echo "Tekrar deneyin: REBUILD_NO_CACHE=1 bash deploy/rebuild-vps.sh"
+    exit 1
+  fi
+  echo ">>> deploy git SHA OK: ${GIT_SHA}"
   DB_SIZE_AFTER=$(db_size "$DB_FILE")
   echo ">>> DB boyutu (deploy sonrası): ${DB_SIZE_AFTER} byte"
   if [ "$DB_SIZE_BEFORE" -gt 50000 ] && [ "$DB_SIZE_AFTER" -lt $((DB_SIZE_BEFORE / 2)) ]; then
