@@ -111,6 +111,11 @@ export function normalizeLandingLayout(
     if (!order.includes(id)) order.push(id)
   }
 
+  for (const blockId of customBlockIds) {
+    const layoutId = `${CUSTOM_BLOCK_PREFIX}${blockId}` as LandingLayoutBlockId
+    if (!order.includes(layoutId)) order.push(layoutId)
+  }
+
   const hiddenInput = Array.isArray(raw?.hidden) ? raw.hidden : []
   const hidden: LandingLayoutBlockId[] = []
   for (const id of hiddenInput) {

@@ -297,6 +297,8 @@ router.post('/login', authLoginLimiter, (req, res) => {
 
   const publicUser = getUserWithProfiles(user.id)!
   const token = signToken({ userId: user.id, role: user.role })
+  res.setHeader('X-Plooy-Token', token)
+  res.setHeader('X-Sineoda-Token', token)
   res.json({ token, user: publicUser })
 })
 

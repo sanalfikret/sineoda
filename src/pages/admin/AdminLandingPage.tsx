@@ -8,7 +8,6 @@ import {
   fetchBootstrap,
   fetchLandingConfig,
   normalizeStoredMediaPath,
-  refreshSessionToken,
   saveLandingPageConfig,
   updateLandingLayoutConfig,
   type LandingHeroConfig,
@@ -383,17 +382,10 @@ export function AdminLandingPage() {
   )
 
   const persistLayout = async (nextLayout: LandingLayoutConfig) => {
-    const normalized = normalizeLandingLayout(
-      nextLayout,
-      customBlocks.map((block) => block.id),
-    )
-    const { layout: saved } = await updateLandingLayoutConfig(normalized)
-    setLayout(
-      normalizeLandingLayout(
-        saved,
-        customBlocks.map((block) => block.id),
-      ),
-    )
+    const customIds = customBlocks.map((block) => block.id)
+    const normalized = normalizeLandingLayout(nextLayout, customIds)
+    const { layout: saved } = await updateLandingLayoutConfig(normalized, customIds)
+    setLayout(normalizeLandingLayout(saved, customIds))
   }
 
   const toggleBlockHidden = (id: LandingLayoutBlockId) => {
@@ -556,7 +548,6 @@ export function AdminLandingPage() {
     setSaving(true)
     setMessage('')
     try {
-      await refreshSessionToken().catch(() => undefined)
       const validIds = new Set(pickerCatalog.map((item) => item.id))
       const persistedSliderIds = sliderIds.filter((id) => validIds.has(id))
       const persistedShowcases = showcases.map((showcase) => ({
