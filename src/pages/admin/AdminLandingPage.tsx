@@ -7,7 +7,9 @@ import {
   fetchAdminCekimNotlari,
   fetchBootstrap,
   fetchLandingConfig,
+  getToken,
   normalizeStoredMediaPath,
+  refreshSessionToken,
   saveLandingPageConfig,
   updateLandingLayoutConfig,
   updateLandingShowcasesConfig,
@@ -149,6 +151,8 @@ export function AdminLandingPage() {
   const [blockTitles, setBlockTitles] = useState<LandingBlockTitlesConfig>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const savingRef = useRef(false)
+  const saveInFlightRef = useRef(false)
   const [message, setMessage] = useState('')
 
   const pickerCatalog = useMemo(() => {
@@ -410,7 +414,7 @@ export function AdminLandingPage() {
   )
 
   const persistShowcases = async (nextShowcases: ShowcaseDraft[]) => {
-    if (saving) return
+    if (savingRef.current) return
     const validIds = new Set(pickerCatalog.map((item) => item.id))
     const payload = nextShowcases.map((showcase) => ({
       ...showcase,
@@ -429,7 +433,7 @@ export function AdminLandingPage() {
   }
 
   const persistLayout = async (nextLayout: LandingLayoutConfig) => {
-    if (saving) return
+    if (savingRef.current) return
     const customIds = customBlocks.map((block) => block.id)
     const normalized = normalizeLandingLayout(nextLayout, customIds)
     const { layout: saved } = await updateLandingLayoutConfig(normalized, customIds)
@@ -593,6 +597,9 @@ export function AdminLandingPage() {
   }
 
   const handleSave = async () => {
+    if (saveInFlightRef.current) return
+    saveInFlightRef.current = true
+    savingRef.current = true
     setSaving(true)
     setMessage('')
     try {
@@ -601,6 +608,13 @@ export function AdminLandingPage() {
         setMessage('Kategori şeritlerinde boş başlık var — her kategoriye bir ad yazın.')
         return
       }
+
+      if (!getToken()) {
+        setMessage('Oturum bulunamadı. Sol alttan Çıkış Yap → admin@plooy.tv / admin123 ile tekrar giriş yapın.')
+        return
+      }
+
+      await refreshSessionToken()
 
       const validIds = new Set(pickerCatalog.map((item) => item.id))
       const persistedSliderIds = sliderIds.filter((id) => validIds.has(id))
@@ -618,7 +632,7 @@ export function AdminLandingPage() {
             : block.itemIds ?? [],
       }))
 
-      const data = await saveLandingPageConfig({
+      const savePayload = {
         hero,
         sections,
         layout,
@@ -628,63 +642,123 @@ export function AdminLandingPage() {
         showcases: persistedShowcases,
         customBlocks: persistedCustomBlocks,
         blockTitles,
-      })
+      }
 
-      setHero(data.hero ?? hero)
-      const savedFeaturedId = data.hero?.featuredContentId ?? hero.featuredContentId
-      const savedFeatured = savedFeaturedId
-        ? pickerCatalog.find((item) => item.id === savedFeaturedId)
-        : null
-      const featuredUnpublished =
-        savedFeaturedId &&
-        savedFeatured &&
-        (!savedFeatured.publishedAt || new Date(savedFeatured.publishedAt) > new Date())
-      setSections(mergeLandingSections(data.sections))
-      const savedCustomBlocks = data.customBlocks ?? customBlocks
-      setCustomBlocks(savedCustomBlocks)
-      setLayout(
-        normalizeLandingLayout(
-          data.layout,
-          savedCustomBlocks.map((block) => block.id),
-        ),
-      )
-      setSliderIds(
-        data.sliderContentIds?.length
-          ? data.sliderContentIds
-          : data.slider.map((item) => item.id),
-      )
-      setMonthlyWinnerIds(
-        data.monthlyWinnerContentIds?.length
-          ? data.monthlyWinnerContentIds
-          : (data.monthlyWinners ?? []).map((item) => item.id),
-      )
-      setStudentPickIds(
-        data.studentPickContentIds?.length
-          ? data.studentPickContentIds
-          : (data.studentPicks ?? []).map((item) => item.id),
-      )
-      setShowcases(
-        data.showcases.map((showcase) => ({
-          id: showcase.id,
-          title: showcase.title,
-          icon: showcase.icon,
-          description: showcase.description,
-          itemIds: showcase.items.map((item) => item.id),
-        })),
-      )
-      setBlockTitles(data.blockTitles ?? blockTitles)
-      setMessage(
-        featuredUnpublished
-          ? 'Kaydedildi. Seçilen öne çıkan içerik henüz yayında değil — ana sayfada yayındaki bir içerik gösterilir; içeriği yayınlayın veya yayındaki bir film seçin.'
-          : skipped > 0
-          ? `Kaydedildi. ${skipped} demo içerik slider'a eklenemedi — yalnızca veritabanındaki içerikler kullanılır.`
-          : customBlocks.length > 0 && !data.customBlocks
-            ? 'Kaydedildi. Özel bölümler sunucuda henüz desteklenmiyor — plooy-api.zip güncellemesini yükleyin.'
-            : 'Ana sayfa ayarları kaydedildi.',
-      )
+      const applySavedConfig = (data: Awaited<ReturnType<typeof saveLandingPageConfig>>) => {
+        setHero(data.hero ?? hero)
+        const savedFeaturedId = data.hero?.featuredContentId ?? hero.featuredContentId
+        const savedFeatured = savedFeaturedId
+          ? pickerCatalog.find((item) => item.id === savedFeaturedId)
+          : null
+        const featuredUnpublished =
+          savedFeaturedId &&
+          savedFeatured &&
+          (!savedFeatured.publishedAt || new Date(savedFeatured.publishedAt) > new Date())
+        setSections(mergeLandingSections(data.sections))
+        const savedCustomBlocks = data.customBlocks ?? customBlocks
+        setCustomBlocks(savedCustomBlocks)
+        setLayout(
+          normalizeLandingLayout(
+            data.layout,
+            savedCustomBlocks.map((block) => block.id),
+          ),
+        )
+        setSliderIds(
+          data.sliderContentIds?.length
+            ? data.sliderContentIds
+            : data.slider.map((item) => item.id),
+        )
+        setMonthlyWinnerIds(
+          data.monthlyWinnerContentIds?.length
+            ? data.monthlyWinnerContentIds
+            : (data.monthlyWinners ?? []).map((item) => item.id),
+        )
+        setStudentPickIds(
+          data.studentPickContentIds?.length
+            ? data.studentPickContentIds
+            : (data.studentPicks ?? []).map((item) => item.id),
+        )
+        setShowcases(
+          data.showcases.map((showcase) => ({
+            id: showcase.id,
+            title: showcase.title,
+            icon: showcase.icon,
+            description: showcase.description,
+            itemIds: showcase.items.map((item) => item.id),
+          })),
+        )
+        setBlockTitles(data.blockTitles ?? blockTitles)
+        setMessage(
+          featuredUnpublished
+            ? 'Kaydedildi. Seçilen öne çıkan içerik henüz yayında değil — ana sayfada yayındaki bir içerik gösterilir; içeriği yayınlayın veya yayındaki bir film seçin.'
+            : skipped > 0
+            ? `Kaydedildi. ${skipped} demo içerik slider'a eklenemedi — yalnızca veritabanındaki içerikler kullanılır.`
+            : customBlocks.length > 0 && !data.customBlocks
+              ? 'Kaydedildi. Özel bölümler sunucuda henüz desteklenmiyor — plooy-api.zip güncellemesini yükleyin.'
+              : 'Ana sayfa ayarları kaydedildi.',
+        )
+      }
+
+      const data = await saveLandingPageConfig(savePayload)
+      applySavedConfig(data)
     } catch (err) {
       const status = (err as Error & { status?: number }).status
       if (status === 401) {
+        const refreshed = await refreshSessionToken()
+        if (refreshed) {
+          try {
+            const validIds = new Set(pickerCatalog.map((item) => item.id))
+            const retryPayload = {
+              hero,
+              sections,
+              layout,
+              sliderIds: sliderIds.filter((id) => validIds.has(id)),
+              monthlyWinnerIds: monthlyWinnerIds.filter((id) => validIds.has(id)),
+              studentPickIds: studentPickIds.filter((id) => validIds.has(id)),
+              showcases: showcases.map((showcase) => ({
+                ...showcase,
+                itemIds: showcase.itemIds.filter((id) => validIds.has(id)),
+              })),
+              customBlocks: customBlocks.map((block) => ({
+                ...block,
+                itemIds:
+                  block.type === 'contentRow'
+                    ? resolveContentRowItemIds(block, cekimCategoryOptions).filter((id) => validIds.has(id))
+                    : block.itemIds ?? [],
+              })),
+              blockTitles,
+            }
+            const data = await saveLandingPageConfig(retryPayload)
+            setHero(data.hero ?? hero)
+            setSections(mergeLandingSections(data.sections))
+            setCustomBlocks(data.customBlocks ?? customBlocks)
+            setLayout(
+              normalizeLandingLayout(
+                data.layout,
+                (data.customBlocks ?? customBlocks).map((block) => block.id),
+              ),
+            )
+            setSliderIds(
+              data.sliderContentIds?.length
+                ? data.sliderContentIds
+                : data.slider.map((item) => item.id),
+            )
+            setShowcases(
+              data.showcases.map((showcase) => ({
+                id: showcase.id,
+                title: showcase.title,
+                icon: showcase.icon,
+                description: showcase.description,
+                itemIds: showcase.items.map((item) => item.id),
+              })),
+            )
+            setBlockTitles(data.blockTitles ?? blockTitles)
+            setMessage('Ana sayfa ayarları kaydedildi.')
+            return
+          } catch {
+            /* aşağıdaki oturum mesajına düş */
+          }
+        }
         setMessage(
           'Oturum süresi doldu veya sunucu yeniden kuruldu. Sol alttan Çıkış Yap → admin@plooy.tv / admin123 ile tekrar giriş yapın.',
         )
@@ -694,6 +768,8 @@ export function AdminLandingPage() {
         setMessage(err instanceof Error ? err.message : 'Kayıt başarısız.')
       }
     } finally {
+      saveInFlightRef.current = false
+      savingRef.current = false
       setSaving(false)
     }
   }

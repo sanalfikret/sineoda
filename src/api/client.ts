@@ -109,6 +109,18 @@ export function clearAuthStorage() {
   }
 }
 
+/** Ana sayfa PUT/PATCH isteklerini sıraya al — eşzamanlı kayıt 401 tetiklemesin. */
+let landingWriteChain: Promise<unknown> = Promise.resolve()
+
+function withLandingWriteLock<T>(operation: () => Promise<T>): Promise<T> {
+  const run = landingWriteChain.then(operation, operation)
+  landingWriteChain = run.then(
+    () => undefined,
+    () => undefined,
+  )
+  return run
+}
+
 export async function refreshSessionToken() {
   const token = getToken()
   if (!token) return false
@@ -178,6 +190,11 @@ export async function api<T>(path: string, options: RequestInit = {}, retried = 
     path !== '/api/auth/refresh' &&
     path !== '/api/auth/login'
   ) {
+    try {
+      await response.text()
+    } catch {
+      /* gövde tüketilemezse devam */
+    }
     const refreshed = await refreshSessionToken()
     if (refreshed) return api<T>(path, options, true)
   }
@@ -585,24 +602,26 @@ export async function updateLandingLayoutConfig(
   layout: LandingLayoutConfig,
   customBlockIds: string[] = [],
 ): Promise<{ layout: LandingLayoutConfig }> {
-  let lastError: unknown
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    try {
-      return await api<{ layout: LandingLayoutConfig }>('/api/admin/landing/layout', {
-        method: 'PATCH',
-        body: JSON.stringify({ ...layout, customBlockIds }),
-      })
-    } catch (error) {
-      lastError = error
-      if (isAuthSessionError(error) && attempt < 2) {
-        const refreshed = await refreshSessionToken()
-        if (refreshed) continue
+  return withLandingWriteLock(async () => {
+    let lastError: unknown
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        return await api<{ layout: LandingLayoutConfig }>('/api/admin/landing/layout', {
+          method: 'PATCH',
+          body: JSON.stringify({ ...layout, customBlockIds }),
+        })
+      } catch (error) {
+        lastError = error
+        if (isAuthSessionError(error) && attempt < 2) {
+          const refreshed = await refreshSessionToken()
+          if (refreshed) continue
+        }
+        if (!isTransientApiError(error) || attempt === 2) throw error
+        await sleep(900 * (attempt + 1))
       }
-      if (!isTransientApiError(error) || attempt === 2) throw error
-      await sleep(900 * (attempt + 1))
     }
-  }
-  throw lastError
+    throw lastError
+  })
 }
 
 export async function updateLandingShowcasesConfig(
@@ -614,10 +633,12 @@ export async function updateLandingShowcasesConfig(
     itemIds: string[]
   }>,
 ): Promise<Pick<LandingConfigResponse, 'showcases'>> {
-  return api<Pick<LandingConfigResponse, 'showcases'>>('/api/admin/landing/showcases', {
-    method: 'PATCH',
-    body: JSON.stringify({ showcases }),
-  })
+  return withLandingWriteLock(() =>
+    api<Pick<LandingConfigResponse, 'showcases'>>('/api/admin/landing/showcases', {
+      method: 'PATCH',
+      body: JSON.stringify({ showcases }),
+    }),
+  )
 }
 
 export async function saveLandingPageConfig(payload: {
@@ -637,24 +658,27 @@ export async function saveLandingPageConfig(payload: {
   studentPickIds?: string[]
   blockTitles?: Partial<Record<string, string>>
 }): Promise<LandingConfigResponse> {
-  let lastError: unknown
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    try {
-      return await api<LandingConfigResponse>('/api/admin/landing', {
-        method: 'PUT',
-        body: JSON.stringify(payload),
-      })
-    } catch (error) {
-      lastError = error
-      if (isAuthSessionError(error) && attempt < 2) {
-        const refreshed = await refreshSessionToken()
-        if (refreshed) continue
+  return withLandingWriteLock(async () => {
+    await refreshSessionToken()
+    let lastError: unknown
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        return await api<LandingConfigResponse>('/api/admin/landing', {
+          method: 'PUT',
+          body: JSON.stringify(payload),
+        })
+      } catch (error) {
+        lastError = error
+        if (isAuthSessionError(error) && attempt === 0) {
+          const refreshed = await refreshSessionToken()
+          if (refreshed) continue
+        }
+        if (!isTransientApiError(error) || attempt === 1) throw error
+        await sleep(900)
       }
-      if (!isTransientApiError(error) || attempt === 2) throw error
-      await sleep(900 * (attempt + 1))
     }
-  }
-  throw lastError
+    throw lastError
+  })
 }
 
 export async function updateLandingConfig(payload: {
