@@ -58,7 +58,7 @@ export function AdminLayout() {
 
   const handleLogout = () => {
     logout()
-    navigate('/admin/giris')
+    navigate('/admin/giris', { replace: true })
   }
 
   return (

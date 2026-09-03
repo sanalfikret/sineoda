@@ -99,8 +99,11 @@ export function setProfileId(profileId: string | null) {
   writeStorageItem(PROFILE_KEY, LEGACY_PROFILE_KEY, profileId)
 }
 
+let refreshInFlight: Promise<boolean> | null = null
+
 /** Yalnızca explicit logout — arka plan refresh 401 ile silme. */
 export function clearAuthStorage() {
+  refreshInFlight = null
   setToken(null)
   setProfileId(null)
   cacheAuthUser(null)
@@ -128,8 +131,6 @@ export async function refreshSessionToken() {
   })
   return refreshInFlight
 }
-
-let refreshInFlight: Promise<boolean> | null = null
 
 async function refreshSessionTokenInner() {
   const token = getToken()

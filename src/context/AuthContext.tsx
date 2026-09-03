@@ -12,6 +12,7 @@ import {
   creatorLoginRequest,
   creatorSignupRequest,
   deleteProfileRequest,
+  clearAuthStorage,
   fetchMe,
   getProfileId,
   getToken,
@@ -83,11 +84,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   const clearSession = useCallback(() => {
-    setToken(null)
-    setProfileId(null)
+    clearAuthStorage()
     setUser(null)
     setActiveProfile(null)
-    cacheAuthUser(null)
   }, [])
 
   const applyUser = useCallback(
