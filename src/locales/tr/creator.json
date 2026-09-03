@@ -64,9 +64,9 @@
     }
   },
   "payment": {
-    "titleStandard": "Yapımcı Başvuru Ücreti",
-    "titleStudent": "Genç Sinema Başvuru Ücreti",
-    "subtitleStandard": "Yapımcı üyeliğiniz otomatik açılır. Film başvurusu göndermek için tek seferlik başvuru ücretini ödeyin; filminizin yayına alınması admin incelemesine tabidir.",
+    "titleStandard": "Yapımcı Yönetmen Başvuru Ücreti + Üyelik",
+    "titleStudent": "Genç Sinema Başvuru Ücreti + Üyelik",
+    "subtitleStandard": "Yapımcı Yönetmen üyeliğiniz otomatik açılır. Film başvurusu göndermek için başvuru ücretini ödeyin; filminizin yayına alınması admin incelemesine tabidir.",
     "subtitleStudent": "Genç Sinema üyeliğiniz otomatik açılır. Film başvurunuzu göndermek için tek seferlik başvuru ücretini ödeyin; filminiz okul ve {{brand}} incelemesine alınır.",
     "feeLabel": "Başvuru ücreti",
     "paymentNotReady": "PayTR ödeme altyapısı kısa süre içinde aktif olacak. Başvuru ücreti o zaman alınabilir.",

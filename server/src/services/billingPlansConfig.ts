@@ -24,6 +24,7 @@ export type BillingPlanOverrides = Partial<
     | 'audience'
     | 'requiresStudentId'
     | 'campaignLabel'
+    | 'sectionLabel'
   >
 >
 
@@ -40,6 +41,7 @@ export type CustomBillingPlanInput = {
   requiresStudentId?: boolean
   enabled?: boolean
   campaignLabel?: string
+  sectionLabel?: string
 }
 
 function parseConfig(raw: string | undefined): BillingPlansConfig {
@@ -140,6 +142,11 @@ function sanitizeOverrides(planId: string, raw: unknown): BillingPlanOverrides |
     next.campaignLabel = label ? label.slice(0, 80) : undefined
   }
 
+  if (typeof input.sectionLabel === 'string') {
+    const label = input.sectionLabel.trim()
+    next.sectionLabel = label ? label.slice(0, 80) : undefined
+  }
+
   return Object.keys(next).length > 0 ? next : null
 }
 
@@ -170,6 +177,7 @@ export function sanitizeCustomPlan(raw: unknown): BillingPlanDefinition | null {
     requiresStudentId: Boolean(input.requiresStudentId),
     enabled: input.enabled !== false,
     campaignLabel: String(input.campaignLabel ?? '').trim().slice(0, 80) || undefined,
+    sectionLabel: String(input.sectionLabel ?? '').trim().slice(0, 80) || undefined,
   }
 }
 
@@ -197,6 +205,7 @@ export function mergeBillingPlan(
     requiresStudentId: overrides.requiresStudentId ?? base.requiresStudentId,
     popular: overrides.popular ?? base.popular,
     campaignLabel: overrides.campaignLabel ?? base.campaignLabel,
+    sectionLabel: overrides.sectionLabel ?? base.sectionLabel,
   }
 }
 
