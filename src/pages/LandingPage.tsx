@@ -4,11 +4,10 @@ import { PageMeta } from '../components/PageMeta'
 import { GuestSiteShell } from '../components/GuestSiteShell'
 import { LandingPageBlocks } from '../components/landing/LandingPageBlocks'
 import {
-  DEMO_LANDING_SHOWCASES,
   getDemoCatalog,
   resolveLandingShowcases,
 } from '../data/demoLandingPosters'
-import { fetchBootstrap, fetchLandingConfig, type CekimNotlariSection } from '../api/client'
+import { fetchBootstrap, fetchLandingConfig, type CekimNotlariSection, type LandingShowcaseResponse } from '../api/client'
 import type { LandingHeroConfig } from '../api/client'
 import {
   DEFAULT_LANDING_HERO,
@@ -54,7 +53,7 @@ export function LandingPage() {
   const [layout, setLayout] = useState(() => normalizeLandingLayout(null))
   const [customBlocks, setCustomBlocks] = useState<LandingCustomBlock[]>([])
   const [sliderItems, setSliderItems] = useState<ContentItem[]>([])
-  const [showcases, setShowcases] = useState(DEMO_LANDING_SHOWCASES)
+  const [showcases, setShowcases] = useState<LandingShowcaseResponse[]>([])
   const [studentPicks, setStudentPicks] = useState<ContentItem[]>([])
   const [studentMonthlyWinners, setStudentMonthlyWinners] = useState<ContentItem[]>([])
   const [cekimCatalog, setCekimCatalog] = useState<ContentItem[]>([])
@@ -72,8 +71,11 @@ export function LandingPage() {
     const hidden = bootstrap.siteNav?.hidden ?? []
     setHiddenNavIds(hidden)
 
+    const adminCustomized = landing.adminCustomized === true
     const mergedCatalogRaw =
-      bootstrap.catalog.length >= 20 ? bootstrap.catalog : mergeCatalog(bootstrap.catalog)
+      adminCustomized || bootstrap.catalog.length >= 20
+        ? bootstrap.catalog
+        : mergeCatalog(bootstrap.catalog)
     const mergedCatalog = filterCatalogByNavVisibility(mergedCatalogRaw, hidden)
 
     setCatalog(mergedCatalog)
@@ -93,12 +95,7 @@ export function LandingPage() {
       ),
     )
     const apiSlider = resolveLandingSliderItems(landing, mergedCatalog, bootstrap.trailers ?? [])
-    setSliderItems(
-      filterCatalogByNavVisibility(
-        apiSlider.length > 0 ? apiSlider : DEMO_LANDING_SHOWCASES[1].items.slice(0, 8),
-        hidden,
-      ),
-    )
+    setSliderItems(filterCatalogByNavVisibility(apiSlider, hidden))
     setShowcases(
       filterShowcasesByNavVisibility(
         resolveLandingShowcases(landing.showcases).map((showcase) => ({

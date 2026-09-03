@@ -234,17 +234,8 @@ export function mergeWithDemoCatalog(apiCatalog: ContentItem[]): ContentItem[] {
   return merged
 }
 
-/** API'den gelen vitrin yeterli değilse gömülü demo posterlerle doldur */
+/** API vitrin satırları — admin kaydı varsa olduğu gibi kullan; demo yalnızca boş kurulumda. */
 export function resolveLandingShowcases(apiShowcases?: LandingShowcase[]): LandingShowcase[] {
   if (!apiShowcases?.length) return DEMO_LANDING_SHOWCASES
-
-  const hasEnough = apiShowcases.some((showcase) => showcase.items.length >= 10)
-  if (!hasEnough) return DEMO_LANDING_SHOWCASES
-
-  return apiShowcases.map((showcase) => ({
-    ...showcase,
-    items: showcase.items.length >= 10 ? showcase.items : (
-      DEMO_LANDING_SHOWCASES.find((demo) => demo.icon === showcase.icon)?.items ?? showcase.items
-    ),
-  }))
+  return apiShowcases
 }
