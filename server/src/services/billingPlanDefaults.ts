@@ -17,6 +17,8 @@ export type BillingPlanDefinition = {
   campaignLabel?: string
   /** Admin kartı / gruplama başlığı — tamamen özelleştirilebilir */
   sectionLabel?: string
+  /** Yapımcı kayıt formu bilgi kutusu — {{price}} ve {{brand}} yer tutucuları */
+  registrationNotice?: string
   features: string[]
 }
 
@@ -54,6 +56,8 @@ export const DEFAULT_BILLING_PLANS: BillingPlanDefinition[] = [
     audience: 'creator',
     sectionLabel: 'Yapımcı Yönetmen',
     enabled: true,
+    registrationNotice:
+      'Kayıt sonrası ₺{{price}} yapımcı başvuru ücreti ödenir. Üyeliğiniz otomatik onaylanır; filminizin yayına alınması admin incelemesine tabidir.',
     features: [
       'Yapımcı Yönetmen paneli erişimi',
       'Film başvurusu gönderme',
@@ -69,6 +73,8 @@ export const DEFAULT_BILLING_PLANS: BillingPlanDefinition[] = [
     audience: 'creator',
     sectionLabel: 'Genç Sinema',
     enabled: true,
+    registrationNotice:
+      'Kayıt sonrası ₺{{price}} Genç Sinema başvuru ücreti ödenir. Üyeliğiniz otomatik açılır; filminiz okul ve {{brand}} incelemesine alınır.',
     features: ['Genç Sinema paneli erişimi', 'Film başvurusu gönderme', 'Okul ve admin incelemesi'],
   },
 ]

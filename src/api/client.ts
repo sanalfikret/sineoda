@@ -963,6 +963,7 @@ export interface BillingPlan {
   enabled?: boolean
   campaignLabel?: string
   sectionLabel?: string
+  registrationNotice?: string
 }
 
 export type AdminBillingPlan = BillingPlan & { isCustom?: boolean }
@@ -989,6 +990,7 @@ export async function saveAdminBillingPlans(payload: {
       requiresStudentId?: boolean
       campaignLabel?: string
       sectionLabel?: string
+      registrationNotice?: string
       audience?: BillingPlan['audience']
     }
   >
@@ -1004,6 +1006,7 @@ export async function saveAdminBillingPlans(payload: {
     enabled?: boolean
     campaignLabel?: string
     sectionLabel?: string
+    registrationNotice?: string
   }>
 }) {
   return api<{ plans: AdminBillingPlan[]; overrides: Record<string, unknown>; customPlans: BillingPlan[] }>(
