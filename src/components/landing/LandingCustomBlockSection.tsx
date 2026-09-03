@@ -2,10 +2,10 @@ import { Link } from 'react-router-dom'
 import { resolveMediaUrl, type CekimNotlariSection } from '../../api/client'
 import type { LandingCustomBlock } from '../../constants/landingCustomBlocks'
 import type { ContentItem } from '../../types/content'
-import type { ContentPoolId } from '../../utils/contentPools'
-import { isShootingNotesContent } from '../../utils/contentPools'
 import { guestItemHref, viewAllHrefForBlock } from '../../utils/landingContentLinks'
 import { normalizeLandingLink, resolveContentRowItems } from '../../utils/landingContentRow'
+import { FeaturedShowcaseRow } from '../FeaturedShowcaseRow'
+import { useLocale } from '../../i18n/LocaleContext'
 
 function CtaLink({
   label,
@@ -51,38 +51,6 @@ function CtaLink({
   )
 }
 
-function contentRowPoster(
-  item: ContentItem,
-  pool?: ContentPoolId,
-): { src: string; imageClass: string; titleClass: string } {
-  const useHorizontal =
-    pool === 'shooting_notes' ||
-    isShootingNotesContent(item) ||
-    pool === 'film' ||
-    pool === 'belgesel' ||
-    pool === 'platform' ||
-    pool === 'kisa-film'
-  if (useHorizontal) {
-    return {
-      src: item.backdrop || item.poster,
-      imageClass: 'h-[124px] w-[176px] object-cover sm:h-[158px] sm:w-[224px]',
-      titleClass: 'max-w-[224px] truncate px-2 py-2 text-xs font-medium text-white/90 group-hover:text-white',
-    }
-  }
-  if (item.videoFormat === 'vertical') {
-    return {
-      src: item.poster,
-      imageClass: 'h-[220px] w-[124px] object-cover sm:h-[280px] sm:w-[158px]',
-      titleClass: 'max-w-[148px] truncate px-2 py-2 text-xs font-medium text-white/90 group-hover:text-white',
-    }
-  }
-  return {
-    src: item.poster,
-    imageClass: 'h-[220px] w-[148px] object-cover sm:h-[280px] sm:w-[187px]',
-    titleClass: 'max-w-[148px] truncate px-2 py-2 text-xs font-medium text-white/90 group-hover:text-white',
-  }
-}
-
 export function LandingCustomBlockSection({
   block,
   catalog = [],
@@ -92,6 +60,7 @@ export function LandingCustomBlockSection({
   catalog?: ContentItem[]
   cekimSections?: CekimNotlariSection[]
 }) {
+  const { localizePath } = useLocale()
   const rowTitle = block.title.trim() || block.adminLabel.trim()
 
   if (block.type === 'contentRow') {
@@ -102,40 +71,27 @@ export function LandingCustomBlockSection({
     const viewAllLink = normalizeLandingLink(block.ctaLink) || viewAllHrefForBlock(block)
 
     return (
-      <section className="border-y border-white/5 bg-plooy-bg px-4 py-12 sm:px-6 sm:py-16">
-        <div className="mx-auto max-w-[1400px]">
-          {block.eyebrow && (
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-plooy-gold">{block.eyebrow}</p>
-          )}
-          <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
-            {rowTitle && <h2 className="text-2xl font-bold text-white sm:text-3xl">{rowTitle}</h2>}
-            {block.ctaLabel && <CtaLink label={block.ctaLabel} link={viewAllLink} />}
+      <div className="border-y border-white/5 bg-plooy-bg">
+        {(block.eyebrow || block.body) && (
+          <div className="mx-auto max-w-5xl px-4 pt-8 sm:px-6 lg:px-8">
+            {block.eyebrow && (
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-plooy-gold">{block.eyebrow}</p>
+            )}
+            {block.body && (
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-plooy-muted sm:text-base">{block.body}</p>
+            )}
           </div>
-          {block.body && <p className="mt-3 max-w-3xl text-sm leading-relaxed text-plooy-muted sm:text-base">{block.body}</p>}
-
-          <div className="hide-scrollbar mt-6 flex gap-3 overflow-x-auto pb-2 sm:gap-4">
-            {items.map((item) => {
-              const poster = contentRowPoster(item, block.contentPool)
-              return (
-              <Link
-                key={item.id}
-                to={guestItemHref(item)}
-                className="group shrink-0 overflow-hidden rounded-lg bg-white/5 transition hover:ring-2 hover:ring-plooy-gold/40"
-              >
-                <img
-                  src={resolveMediaUrl(poster.src)}
-                  alt={item.title}
-                  className={poster.imageClass}
-                />
-                <p className={poster.titleClass}>
-                  {item.title}
-                </p>
-              </Link>
-              )
-            })}
-          </div>
-        </div>
-      </section>
+        )}
+        <FeaturedShowcaseRow
+          title={rowTitle}
+          items={items}
+          viewAllHref={viewAllLink}
+          viewAllFooterOnly
+          viewAllLabel={block.ctaLabel}
+          getGuestHref={(item) => localizePath(guestItemHref(item))}
+          className="pt-4"
+        />
+      </div>
     )
   }
 

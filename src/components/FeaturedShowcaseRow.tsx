@@ -18,6 +18,11 @@ interface FeaturedShowcaseRowProps {
   onSelect?: (item: ContentItem) => void
   guestMode?: boolean
   viewAllHref?: string
+  /** Misafir satırında üst link yerine yalnızca altta CTA */
+  viewAllFooterOnly?: boolean
+  viewAllLabel?: string
+  /** Kart başına misafir linki (ana sayfa özel satırları) */
+  getGuestHref?: (item: ContentItem) => string
   className?: string
   progressMap?: Record<string, number>
 }
@@ -54,6 +59,9 @@ export function FeaturedShowcaseRow({
   onSelect,
   guestMode = false,
   viewAllHref,
+  viewAllFooterOnly = false,
+  viewAllLabel,
+  getGuestHref,
   className = '',
   progressMap,
 }: FeaturedShowcaseRowProps) {
@@ -66,7 +74,16 @@ export function FeaturedShowcaseRow({
   const visible = items.slice(0, FEATURED_SHOWCASE_MAX_ITEMS)
   const hasMore = items.length > FEATURED_SHOWCASE_MAX_ITEMS
   const loginHref = guestMode ? localizePath('/giris') : viewAllHref ? localizePath(viewAllHref) : undefined
-  const showMoreLink = guestMode || Boolean(viewAllHref && hasMore)
+  const showHeaderLink = !viewAllFooterOnly && loginHref && (guestMode || hasMore)
+  const showFooterLink =
+    Boolean(loginHref) && (viewAllFooterOnly || guestMode || Boolean(viewAllHref && hasMore))
+  const footerLabel = viewAllLabel?.trim() || (guestMode ? t('loginToSeeMore') : t('viewAll'))
+
+  const cardGuestHref = (item: ContentItem) => {
+    if (getGuestHref) return getGuestHref(item)
+    if (guestMode) return localizePath('/giris')
+    return undefined
+  }
 
   return (
     <section className={`overflow-hidden px-4 py-4 sm:px-6 lg:px-8 ${className}`}>
@@ -75,8 +92,8 @@ export function FeaturedShowcaseRow({
           <h2 className="whitespace-pre-line text-lg font-semibold text-white sm:text-xl">
             {translateCategory(title)}
           </h2>
-          {loginHref && (guestMode || hasMore) && (
-            <Link to={loginHref} className="shrink-0 text-sm font-medium text-plooy-gold hover:underline">
+          {showHeaderLink && (
+            <Link to={loginHref!} className="shrink-0 text-sm font-medium text-plooy-gold hover:underline">
               {t('viewAll')}
             </Link>
           )}
@@ -90,7 +107,7 @@ export function FeaturedShowcaseRow({
               onSelect={onSelect}
               progressMap={progressMap}
               variant="grid"
-              guestHref={guestMode ? localizePath('/giris') : undefined}
+              guestHref={cardGuestHref(item)}
             />
           ))}
         </div>
@@ -103,18 +120,18 @@ export function FeaturedShowcaseRow({
               onSelect={onSelect}
               progressMap={progressMap}
               variant="grid"
-              guestHref={guestMode ? localizePath('/giris') : undefined}
+              guestHref={cardGuestHref(item)}
             />
           ))}
         </div>
 
-        {showMoreLink && loginHref && (
+        {showFooterLink && loginHref && (
           <div className="mt-6 text-center">
             <Link
               to={loginHref}
               className="inline-flex items-center justify-center rounded-lg border border-plooy-gold/40 bg-plooy-gold/10 px-5 py-2.5 text-sm font-semibold text-plooy-gold transition hover:bg-plooy-gold/20"
             >
-              {guestMode ? t('loginToSeeMore') : t('viewAll')}
+              {footerLabel}
             </Link>
           </div>
         )}
