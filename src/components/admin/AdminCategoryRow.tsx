@@ -93,14 +93,16 @@ export function AdminCategoryRow({
     >
       <div className="flex items-center gap-3 p-4">
         <div
-          draggable={!savingOrder}
-          onDragStart={onDragStart}
-          onDragEnd={onDragEnd}
-          role="button"
-          tabIndex={0}
-          aria-label="Sürükleyerek sırala"
-          className="cursor-grab rounded-lg border border-white/10 px-2 py-3 text-plooy-muted hover:bg-white/5 active:cursor-grabbing"
-          title="Sürükleyerek sırala"
+          draggable={!savingOrder && !readOnly}
+          onDragStart={readOnly ? undefined : onDragStart}
+          onDragEnd={readOnly ? undefined : onDragEnd}
+          role={readOnly ? undefined : 'button'}
+          tabIndex={readOnly ? undefined : 0}
+          aria-label={readOnly ? undefined : 'Sürükleyerek sırala'}
+          className={`rounded-lg border border-white/10 px-2 py-3 text-plooy-muted ${
+            readOnly ? 'cursor-default opacity-40' : 'cursor-grab hover:bg-white/5 active:cursor-grabbing'
+          }`}
+          title={readOnly ? undefined : 'Sürükleyerek sırala'}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <circle cx="9" cy="7" r="1.5" />
@@ -116,7 +118,7 @@ export function AdminCategoryRow({
           <button
             type="button"
             aria-label="Yukarı taşı"
-            disabled={index === 0 || savingOrder}
+            disabled={readOnly || index === 0 || savingOrder}
             onClick={() => onNudge(-1)}
             className="rounded border border-white/10 px-2 py-0.5 text-xs text-white/70 hover:bg-white/5 disabled:opacity-30"
           >
@@ -125,7 +127,7 @@ export function AdminCategoryRow({
           <button
             type="button"
             aria-label="Aşağı taşı"
-            disabled={index === total - 1 || savingOrder}
+            disabled={readOnly || index === total - 1 || savingOrder}
             onClick={() => onNudge(1)}
             className="rounded border border-white/10 px-2 py-0.5 text-xs text-white/70 hover:bg-white/5 disabled:opacity-30"
           >

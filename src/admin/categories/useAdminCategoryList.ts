@@ -80,8 +80,7 @@ export function useAdminCategoryList({ categories, reorderCategories }: UseAdmin
       orderDirtyRef.current = false
 
       try {
-        const saved = await reorderCategories(next.map((category) => category.id))
-        setOrderedCategories(saved)
+        await reorderCategories(next.map((category) => category.id))
       } catch (error) {
         setOrderError(error instanceof Error ? error.message : 'Sıra kaydedilemedi.')
         setOrderedCategories(categories)

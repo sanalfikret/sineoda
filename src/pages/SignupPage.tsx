@@ -1,7 +1,7 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { sendSmsCode, uploadStudentId } from '../api/client'
+import { fetchBillingPlans, sendSmsCode, uploadStudentId } from '../api/client'
 import { AuthLayout } from '../components/AuthLayout'
 import { LegalDocumentModal } from '../components/LegalDocumentModal'
 import { type LegalSlug } from '../constants/legal'
@@ -63,30 +63,54 @@ export function SignupPage() {
   const [acceptPrivacy, setAcceptPrivacy] = useState(false)
   const [acceptKvkk, setAcceptKvkk] = useState(false)
   const [legalModalSlug, setLegalModalSlug] = useState<LegalSlug | null>(null)
+  const [billingPlansLoading, setBillingPlansLoading] = useState(true)
+  const [standardPrice, setStandardPrice] = useState(69)
+  const [studentPrice, setStudentPrice] = useState(49)
+  const [standardPlanName, setStandardPlanName] = useState('')
+  const [studentPlanName, setStudentPlanName] = useState('')
 
   const legalAccepted = acceptTerms && acceptPrivacy && acceptKvkk
 
-  const signupPlans: {
-    id: SignupPlanId
-    name: string
-    price: number
-    note: string
-    requiresStudentId?: boolean
-  }[] = [
-    {
-      id: 'standard',
-      name: t('standardPlan'),
-      price: 69,
-      note: t('standardPlanNote'),
-    },
-    {
-      id: 'student',
-      name: t('studentPlan'),
-      price: 49,
-      note: t('studentPlanNote'),
-      requiresStudentId: true,
-    },
-  ]
+  useEffect(() => {
+    fetchBillingPlans()
+      .then(({ plans }) => {
+        const viewerPlans = plans.filter(
+          (plan) => plan.enabled !== false && plan.audience !== 'creator',
+        )
+        const standard = viewerPlans.find((plan) => plan.id === 'standard')
+        const student = viewerPlans.find((plan) => plan.id === 'student')
+        if (standard) {
+          setStandardPrice(standard.price)
+          setStandardPlanName(standard.name)
+        }
+        if (student) {
+          setStudentPrice(student.price)
+          setStudentPlanName(student.name)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setBillingPlansLoading(false))
+  }, [])
+
+  const signupPlans = useMemo(
+    () =>
+      [
+        {
+          id: 'standard' as const,
+          name: standardPlanName || t('standardPlan'),
+          price: standardPrice,
+          note: t('standardPlanNote'),
+        },
+        {
+          id: 'student' as const,
+          name: studentPlanName || t('studentPlan'),
+          price: studentPrice,
+          note: t('studentPlanNote'),
+          requiresStudentId: true,
+        },
+      ] as const,
+    [standardPlanName, standardPrice, studentPlanName, studentPrice, t],
+  )
 
   const planLabel = (planId: SignupPlanId) =>
     planId === 'student' ? t('planStudent') : t('planStandard')
@@ -223,7 +247,13 @@ export function SignupPage() {
           <div className="space-y-2">
             <p className="text-sm font-medium text-white/90">{t('subscriptionPlan')}</p>
             <div className="grid gap-2 sm:grid-cols-2">
-              {signupPlans.map((plan) => {
+              {billingPlansLoading ? (
+                <>
+                  <div className="h-24 animate-pulse rounded-xl border border-white/10 bg-white/[0.03]" />
+                  <div className="h-24 animate-pulse rounded-xl border border-white/10 bg-white/[0.03]" />
+                </>
+              ) : (
+                signupPlans.map((plan) => {
                 const active = selectedPlan === plan.id
                 return (
                   <button
@@ -247,7 +277,8 @@ export function SignupPage() {
                     <p className="mt-1 text-xs text-plooy-muted">{plan.note}</p>
                   </button>
                 )
-              })}
+              })
+              )}
             </div>
           </div>
 

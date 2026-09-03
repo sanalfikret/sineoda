@@ -153,8 +153,13 @@ router.delete('/:id', requireAdmin, (req: AuthRequest, res) => {
     return
   }
   removeCategoryFromOrder(categoryId)
+  dbRun('DELETE FROM category_items WHERE category_id = ?', [categoryId])
   dbRun('DELETE FROM categories WHERE id = ?', [categoryId])
-  res.status(204).send()
+  res.json({
+    ok: true,
+    categories: mapCategoriesResponse(),
+    categoryOrder: getCategoryOrderForBrowse(),
+  })
 })
 
 router.post('/reset', requireAdmin, (_req: AuthRequest, res) => {
