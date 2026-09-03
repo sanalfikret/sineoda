@@ -624,6 +624,18 @@ export async function updateLandingLayoutConfig(
   })
 }
 
+export async function updateLandingCustomBlocksConfig(
+  customBlocks: LandingCustomBlock[],
+  layout?: LandingLayoutConfig,
+): Promise<Pick<LandingConfigResponse, 'customBlocks' | 'layout'>> {
+  return withLandingWriteLock(() =>
+    api<Pick<LandingConfigResponse, 'customBlocks' | 'layout'>>('/api/admin/landing/custom-blocks', {
+      method: 'PATCH',
+      body: JSON.stringify({ customBlocks, layout }),
+    }),
+  )
+}
+
 export async function updateLandingShowcasesConfig(
   showcases: Array<{
     id: string

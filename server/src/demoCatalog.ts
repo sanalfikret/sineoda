@@ -1,6 +1,9 @@
 import { v4 as uuid } from 'uuid'
 import { BRAND_NAME } from './constants/brand.js'
 import { dbAll, dbGet, dbRun } from './db.js'
+import { isLandingAdminCustomized } from './services/landingAdminState.js'
+import { getLandingCustomBlocks } from './services/landingCustomBlocks.js'
+import { preserveExistingContent } from './services/seedPolicy.js'
 
 const V = {
   bunny: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
@@ -400,6 +403,9 @@ export function ensureDemoContentById(contentId: string): boolean {
 export function ensureDemoCatalog() {
   const items = buildDemoItems()
   items.forEach((item, index) => upsertDemoContent(item, index))
+  if (preserveExistingContent() && (isLandingAdminCustomized() || getLandingCustomBlocks().length > 0)) {
+    return
+  }
   syncLandingShowcases()
   syncBrowseCategories()
 }

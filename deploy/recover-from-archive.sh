@@ -33,6 +33,9 @@ find_best_db() {
   local best="" size=0 s candidate
   while IFS= read -r candidate; do
     [ -f "$candidate" ] || continue
+    case "$candidate" in
+      */backups/*|*/backup/*) continue ;;
+    esac
     s="$(db_bytes "$candidate")"
     [ "$s" -gt 50000 ] || continue
     if [ "$s" -gt "$size" ]; then best="$candidate"; size="$s"; fi
@@ -61,7 +64,13 @@ echo "=== 0) container durdur ==="
 
 echo "=== 1) DB + .env yedek ==="
 "$MKDIR" -p "$PRESERVE/persistent/data" "$PRESERVE/persistent/uploads"
-BEST_DB="$(find_best_db)"
+BEST_DB=""
+if [ -f "$INSTALL/persistent/data/sineoda.db" ]; then
+  BEST_DB="$INSTALL/persistent/data/sineoda.db"
+  echo ">>> Aktif DB: $BEST_DB ($("$DU" -h "$BEST_DB" | cut -f1))"
+else
+  BEST_DB="$(find_best_db)"
+fi
 if [ -n "$BEST_DB" ]; then
   "$CP" -a "$BEST_DB" "$PRESERVE/persistent/data/sineoda.db"
   echo ">>> DB bulundu: $BEST_DB ($("$DU" -h "$PRESERVE/persistent/data/sineoda.db" | cut -f1))"

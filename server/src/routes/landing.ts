@@ -37,6 +37,7 @@ import {
   saveLandingBlockTitlesConfig,
 } from '../services/landingBlockTitles.js'
 import type { ContentRow } from '../types.js'
+import { markLandingAdminCustomized } from '../services/landingAdminState.js'
 
 const router = Router()
 
@@ -234,6 +235,7 @@ function saveLandingShowcasesPayload(showcases: unknown[]) {
       })
     })
   })
+  markLandingAdminCustomized()
 }
 
 router.patch('/hero', requireAdmin, (req: AuthRequest, res) => {
@@ -262,7 +264,35 @@ router.patch('/layout', requireAdmin, (req: AuthRequest, res) => {
     sanitizeLayout(layoutPayload, customBlockIds),
     customBlockIds,
   )
+  if (pendingIds.length > 0 || body.order || body.hidden) {
+    markLandingAdminCustomized()
+  }
   res.json({ layout })
+})
+
+router.patch('/custom-blocks', requireAdmin, (req: AuthRequest, res) => {
+  const body = req.body as {
+    customBlocks?: unknown
+    layout?: Partial<LandingLayoutConfig>
+  }
+
+  if (!Array.isArray(body.customBlocks)) {
+    res.status(400).json({ error: 'customBlocks dizisi zorunlu.' })
+    return
+  }
+
+  const customBlocks = saveLandingCustomBlocks(body.customBlocks as LandingCustomBlock[])
+  const customBlockIds = customBlocks.map((block) => block.id)
+
+  let layout = getLandingLayoutConfig(customBlockIds)
+  if (body.layout) {
+    layout = saveLandingLayoutConfig(sanitizeLayout(body.layout, customBlockIds), customBlockIds)
+  } else {
+    layout = saveLandingLayoutConfig(layout, customBlockIds)
+  }
+
+  markLandingAdminCustomized()
+  res.json({ customBlocks, layout })
 })
 
 router.patch('/showcases', requireAdmin, (req: AuthRequest, res) => {
@@ -305,6 +335,7 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
   let customBlocks: LandingCustomBlock[] | null = null
   if (Array.isArray(body.customBlocks)) {
     customBlocks = saveLandingCustomBlocks(body.customBlocks as LandingCustomBlock[])
+    markLandingAdminCustomized()
   } else {
     customBlocks = getLandingCustomBlocks()
   }
@@ -322,6 +353,7 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
   }
   if (body.layout) {
     saveLandingLayoutConfig(sanitizeLayout(body.layout, customBlockIds), customBlockIds)
+    markLandingAdminCustomized()
   }
 
   const sliderIds = Array.isArray(body.sliderIds) ? body.sliderIds.map(String) : null
