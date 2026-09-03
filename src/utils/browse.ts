@@ -54,12 +54,11 @@ export function mergeCategoriesForAdminOrder(
   categoryOrder: string[],
 ): ContentCategory[] {
   const byId = new Map(categories.map((category) => [category.id, category]))
-  byId.set(STUDENT_MONTHLY_WINNERS_ROW_ID, virtualMonthlyWinnersCategory())
-
   const merged: ContentCategory[] = []
   const seen = new Set<string>()
 
   for (const id of categoryOrder) {
+    if (isVirtualBrowseCategoryId(id)) continue
     const category = byId.get(id)
     if (category && !seen.has(id)) {
       merged.push(category)
@@ -72,12 +71,6 @@ export function mergeCategoriesForAdminOrder(
       merged.push(category)
       seen.add(category.id)
     }
-  }
-
-  if (!seen.has(STUDENT_MONTHLY_WINNERS_ROW_ID)) {
-    const gencIndex = merged.findIndex((category) => category.id === BRAND_STUDENT_CINEMA.id)
-    if (gencIndex >= 0) merged.splice(gencIndex + 1, 0, virtualMonthlyWinnersCategory())
-    else merged.unshift(virtualMonthlyWinnersCategory())
   }
 
   return merged
@@ -119,6 +112,12 @@ function orderBrowseRows(
       ordered.push(row)
       seen.add(row.id)
     }
+  }
+
+  if (monthlyRow && !seen.has(monthlyRow.id)) {
+    const gencIndex = ordered.findIndex((row) => row.id === BRAND_STUDENT_CINEMA.id)
+    if (gencIndex >= 0) ordered.splice(gencIndex + 1, 0, monthlyRow)
+    else ordered.push(monthlyRow)
   }
 
   return ordered

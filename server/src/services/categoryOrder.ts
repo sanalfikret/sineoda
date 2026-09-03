@@ -33,7 +33,9 @@ function allCategoryIds() {
 
 /** Admin sıralamasını tüm kategori kimliklerini kapsayacak şekilde tamamla. */
 export function normalizeCategoryOrder(orderedIds: string[]) {
-  const unique = [...new Set(orderedIds.map(String).filter(Boolean))]
+  const unique = [...new Set(orderedIds.map(String).filter(Boolean))].filter(
+    (id) => !isVirtualBrowseRowId(id),
+  )
   const known = new Set(unique)
 
   for (const id of allCategoryIds()) {
@@ -132,7 +134,7 @@ export function reconcileCategoryOrder() {
   }
 
   const dbSet = new Set(fromDb)
-  const next = saved.filter((id) => isVirtualBrowseRowId(id) || dbSet.has(id))
+  const next = saved.filter((id) => !isVirtualBrowseRowId(id) && dbSet.has(id))
   for (const id of fromDb) {
     if (!next.includes(id)) next.push(id)
   }
