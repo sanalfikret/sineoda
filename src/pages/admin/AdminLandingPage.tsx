@@ -7,7 +7,6 @@ import {
   fetchAdminCekimNotlari,
   fetchBootstrap,
   fetchLandingConfig,
-  getToken,
   normalizeStoredMediaPath,
   refreshSessionToken,
   saveLandingPageConfig,
@@ -65,6 +64,7 @@ import {
 } from '../../utils/adminPickerCatalog'
 import { resolveContentRowItemIds } from '../../utils/landingContentRow'
 import { fuzzySearchMatch } from '../../utils/search'
+import { ensureAdminWriteSession, forceAdminReLogin } from '../../utils/adminSession'
 
 interface ShowcaseDraft {
   id: string
@@ -738,8 +738,9 @@ export function AdminLandingPage() {
         return
       }
 
-      if (!getToken()) {
-        setMessage('Oturum bulunamadı. Sol alttan Çıkış Yap → admin@plooy.tv / admin123 ile tekrar giriş yapın.')
+      if (!(await ensureAdminWriteSession())) {
+        setMessage('Oturum sona erdi. Giriş sayfasına yönlendiriliyorsunuz…')
+        forceAdminReLogin('Oturum sona erdi. Lütfen tekrar giriş yapın.')
         return
       }
 
@@ -890,9 +891,8 @@ export function AdminLandingPage() {
             /* aşağıdaki oturum mesajına düş */
           }
         }
-        setMessage(
-          'Oturum süresi doldu veya sunucu yeniden kuruldu. Sol alttan Çıkış Yap → admin@plooy.tv / admin123 ile tekrar giriş yapın.',
-        )
+        setMessage('Oturum sona erdi. Giriş sayfasına yönlendiriliyorsunuz…')
+        forceAdminReLogin('Oturum yenilenemedi. Lütfen tekrar giriş yapın.')
       } else if (status === 403) {
         setMessage(err instanceof Error ? err.message : 'Admin yetkisi gerekli.')
       } else {

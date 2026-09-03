@@ -1,21 +1,27 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, useEffect } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { PlooyLogo } from '../../components/PlooyLogo'
-import { getToken } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
 import { useLocale } from '../../i18n/LocaleContext'
 import { appConfig } from '../../config/appConfig'
+import { readAdminLoginHint } from '../../utils/adminSession'
 
 export function AdminLoginPage() {
-  const { login, isAdmin, isLoading } = useAuth()
+  const { login, isAdmin, isLoading, sessionToken } = useAuth()
   const { localizePath } = useLocale()
   const navigate = useNavigate()
   const [email, setEmail] = useState(appConfig.emails.admin)
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [info, setInfo] = useState('')
   const [loading, setLoading] = useState(false)
 
-  if (!isLoading && getToken() && isAdmin) {
+  useEffect(() => {
+    const hint = readAdminLoginHint()
+    if (hint) setInfo(hint)
+  }, [])
+
+  if (!isLoading && sessionToken && isAdmin) {
     return <Navigate to="/admin" replace />
   }
 
@@ -57,6 +63,12 @@ export function AdminLoginPage() {
             <h1 className="text-xl font-bold text-white">Admin Girişi</h1>
             <p className="mt-1 text-sm text-plooy-muted">Plooy yönetim paneli</p>
           </div>
+
+          {info && (
+            <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+              {info}
+            </div>
+          )}
 
           {error && (
             <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">

@@ -1,11 +1,9 @@
 import { type ReactNode } from 'react'
 import { Navigate } from 'react-router-dom'
-import { getToken } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
 
 export function AdminRoute({ children }: { children: ReactNode }) {
-  const { user, isAdmin, isLoading } = useAuth()
-  const token = getToken()
+  const { user, isAdmin, isLoading, sessionToken } = useAuth()
 
   if (isLoading) {
     return (
@@ -15,7 +13,7 @@ export function AdminRoute({ children }: { children: ReactNode }) {
     )
   }
 
-  if (!token || !user || !isAdmin) {
+  if (!sessionToken || !user || !isAdmin) {
     return <Navigate to="/admin/giris" replace />
   }
 

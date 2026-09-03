@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import { adminLogout } from '../../api/client'
+import { adminLogout, refreshSessionToken } from '../../api/client'
 import { AdminContentActions } from './AdminContentActions'
 import { PlooyLogo } from '../PlooyLogo'
 import { useAuth } from '../../context/AuthContext'
 
 const navItems = [
-  { to: '/admin', label: 'Dashboard', end: true },
+  { to: '/admin', label: 'Özet', end: true },
   { to: '/admin/ana-sayfa', label: 'Ana Sayfa', end: false },
   { to: '/admin/yakinda', label: 'Yakında Modu', end: false },
   { to: '/admin/kategoriler', label: 'Kategoriler & Menü', end: false },
@@ -31,6 +31,20 @@ export function AdminLayout() {
     void navigator.serviceWorker.getRegistrations().then((regs) => {
       void Promise.all(regs.map((reg) => reg.unregister()))
     })
+  }, [])
+
+  useEffect(() => {
+    const renewSession = () => {
+      if (document.visibilityState !== 'visible') return
+      void refreshSessionToken().catch(() => undefined)
+    }
+    window.addEventListener('focus', renewSession)
+    document.addEventListener('visibilitychange', renewSession)
+    void refreshSessionToken().catch(() => undefined)
+    return () => {
+      window.removeEventListener('focus', renewSession)
+      document.removeEventListener('visibilitychange', renewSession)
+    }
   }, [])
 
   return (
