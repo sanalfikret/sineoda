@@ -110,11 +110,11 @@ export function CreatorRegisterPage() {
   }
 
   return (
-    <CreatorAuthLayout>
+    <CreatorAuthLayout backTo={localizePath('/creator/giris')}>
       <div className="px-4 py-10">
       <div className="mx-auto w-full max-w-2xl">
         <div className="mb-8 flex items-center gap-3">
-          <PlooyLogo tone="on-dark" className="h-8" />
+          <PlooyLogo tone="on-dark" linked linkTo={localizePath('/')} className="h-8" />
           <div>
             <h1 className="text-2xl font-bold text-white">
               {isStudentProgram ? t('titleStudent') : t('titleStandard')}

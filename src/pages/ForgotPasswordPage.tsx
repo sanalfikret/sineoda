@@ -33,7 +33,7 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <AuthLayout title={t('forgotPasswordTitle')} subtitle={t('forgotPasswordSubtitle')}>
+    <AuthLayout title={t('forgotPasswordTitle')} subtitle={t('forgotPasswordSubtitle')} backTo={localizePath('/giris')}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">

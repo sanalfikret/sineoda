@@ -91,7 +91,7 @@ export function CreatorPaymentPage() {
   const price = plan?.price ?? (isStudentProgram ? 49 : 69)
 
   return (
-    <CreatorAuthLayout>
+    <CreatorAuthLayout backTo={localizePath('/creator')}>
       <div className="mx-auto w-full max-w-lg px-4 py-10">
         <div className="rounded-2xl border border-white/10 bg-[#11141c] p-6 sm:p-8">
           <h1 className="text-2xl font-bold text-white">

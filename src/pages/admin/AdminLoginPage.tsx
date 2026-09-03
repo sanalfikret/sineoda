@@ -2,10 +2,12 @@ import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { PlooyLogo } from '../../components/PlooyLogo'
 import { useAuth } from '../../context/AuthContext'
+import { useLocale } from '../../i18n/LocaleContext'
 import { appConfig } from '../../config/appConfig'
 
 export function AdminLoginPage() {
   const { login, isAdmin, isLoading } = useAuth()
+  const { localizePath } = useLocale()
   const navigate = useNavigate()
   const [email, setEmail] = useState(appConfig.emails.admin)
   const [password, setPassword] = useState('')
@@ -32,11 +34,22 @@ export function AdminLoginPage() {
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-[#0d0f14] px-4 py-10">
-      <div className="w-full max-w-md">
-        <div className="mb-8 flex justify-center">
-          <PlooyLogo tone="on-dark" linked className="h-10 sm:h-12" />
-        </div>
+    <div className="flex min-h-dvh flex-col bg-[#0d0f14]">
+      <header className="safe-top mx-auto w-full max-w-md px-4 pt-10 sm:px-6 sm:pt-12">
+        <button
+          type="button"
+          onClick={() => navigate(localizePath('/'))}
+          className="inline-flex min-h-11 items-center rounded-md px-1 py-2 text-sm text-plooy-muted transition hover:text-white"
+        >
+          ← Geri
+        </button>
+      </header>
+
+      <div className="flex flex-1 items-center justify-center px-4 py-6">
+        <div className="w-full max-w-md">
+          <div className="mb-8 flex justify-center">
+            <PlooyLogo tone="on-dark" linked linkTo={localizePath('/')} className="h-10 sm:h-12" />
+          </div>
 
         <div className="rounded-2xl border border-white/10 bg-[#11141c] p-6 sm:p-8">
           <div className="mb-6 text-center">
@@ -83,13 +96,15 @@ export function AdminLoginPage() {
           <p className="mt-6 text-center text-xs text-plooy-muted">
             Test: {appConfig.emails.admin} / admin123
           </p>
-          <p className="mt-2 text-center text-sm">
-            <Link to="/" className="text-plooy-gold hover:underline">
-              Ana siteye dön
-            </Link>
-          </p>
+        </div>
         </div>
       </div>
+
+      <p className="safe-bottom pb-8 text-center">
+        <Link to={localizePath('/')} className="text-sm font-medium text-plooy-gold hover:underline">
+          Ana sayfaya dön
+        </Link>
+      </p>
     </div>
   )
 }

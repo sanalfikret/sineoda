@@ -165,6 +165,7 @@ export function SignupPage() {
     <AuthLayout
       title={completed ? t('signupTitleCompleted') : t('signupTitle')}
       subtitle={completed ? t('signupSubtitleCompleted') : t('signupSubtitle')}
+      backTo={localizePath('/giris')}
     >
       {completed ? (
         <div className="space-y-4">
