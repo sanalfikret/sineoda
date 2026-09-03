@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
-import { Trans, useTranslation } from 'react-i18next'
-import { fetchFilmSchools, uploadStudentId } from '../../api/client'
+import { useTranslation } from 'react-i18next'
+import { fetchFilmSchools, fetchBillingPlans, uploadStudentId, type BillingPlan } from '../../api/client'
 import { CreatorAuthLayout } from '../../components/creator/CreatorAuthLayout'
 import { PlooyLogo } from '../../components/PlooyLogo'
 import { useAuth } from '../../context/AuthContext'
@@ -9,6 +9,10 @@ import { BRAND_STUDENT_CINEMA, BRAND_NAME } from '../../constants/brand'
 import { CREATOR_LEGAL_TERMS } from '../../constants/creatorLegal'
 import { useLocale } from '../../i18n/LocaleContext'
 import { groupSchoolsByUniversity, splitSchoolName } from '../../utils/filmSchools'
+import {
+  findCreatorRegistrationPlan,
+  formatPlanRegistrationNotice,
+} from '../../utils/planRegistrationNotice'
 
 export function CreatorRegisterPage() {
   const { t } = useTranslation('creator', { keyPrefix: 'register' })
@@ -33,6 +37,16 @@ export function CreatorRegisterPage() {
   const [acceptLegal, setAcceptLegal] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [registrationPlan, setRegistrationPlan] = useState<BillingPlan | null>(null)
+
+  useEffect(() => {
+    void fetchBillingPlans()
+      .then(({ plans }) => {
+        const program = isStudentProgram ? 'student_cinema' : 'standard'
+        setRegistrationPlan(findCreatorRegistrationPlan(plans, program))
+      })
+      .catch(() => setRegistrationPlan(null))
+  }, [isStudentProgram])
 
   useEffect(() => {
     if (!isStudentProgram) return
@@ -42,6 +56,16 @@ export function CreatorRegisterPage() {
   }, [isStudentProgram])
 
   const groupedSchools = useMemo(() => groupSchoolsByUniversity(schools), [schools])
+  const registrationPrice =
+    registrationPlan?.price ?? (isStudentProgram ? 49 : 69)
+  const feeNoticeText = formatPlanRegistrationNotice(
+    registrationPlan?.registrationNotice,
+    { price: registrationPrice, brand: BRAND_NAME },
+    t(isStudentProgram ? 'feeNoticeStudent' : 'feeNoticeStandard', {
+      price: registrationPrice,
+      brand: BRAND_NAME,
+    }),
+  )
 
   if (!isLoading && isCreator) {
     return <Navigate to={localizePath('/creator')} replace />
@@ -286,12 +310,7 @@ export function CreatorRegisterPage() {
                 : 'border-plooy-gold/25 bg-plooy-gold/5'
             }`}
           >
-            <Trans
-              ns="creator"
-              i18nKey={isStudentProgram ? 'register.feeNoticeStudent' : 'register.feeNoticeStandard'}
-              values={{ brand: BRAND_NAME }}
-              components={{ strong: <strong className={isStudentProgram ? 'text-emerald-300' : 'text-plooy-gold'} /> }}
-            />
+            {feeNoticeText}
           </div>
 
           <div className="rounded-xl border border-white/10 bg-[#0d0f14] p-4">

@@ -16,6 +16,7 @@ import {
   creatorUploadVideo,
   fetchCreatorAccounting,
   fetchCreatorAccountingMonths,
+  fetchBillingPlans,
   type CreatorAccountingReport,
 } from '../../api/client'
 import { ShareButton } from '../../components/ShareButton'
@@ -37,6 +38,7 @@ import { buildFestivals } from '../../utils/duration'
 import { FestivalCreditsEditor } from '../../components/admin/FestivalCreditsEditor'
 import type { FestivalEntry } from '../../constants/festivals'
 import { useLocale } from '../../i18n/LocaleContext'
+import { findCreatorRegistrationPlan } from '../../utils/planRegistrationNotice'
 
 interface CreatorDocument {
   id: string
@@ -105,6 +107,7 @@ export function CreatorDashboardPage() {
     Array<{ id: string; subject: string; body: string; createdAt: string; isRead: boolean }>
   >([])
   const [program, setProgram] = useState<'standard' | 'student_cinema'>('standard')
+  const [registrationPrice, setRegistrationPrice] = useState(69)
   const [documentCount, setDocumentCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -169,6 +172,15 @@ export function CreatorDashboardPage() {
   useEffect(() => {
     void load()
   }, [load])
+
+  useEffect(() => {
+    void fetchBillingPlans()
+      .then(({ plans }) => {
+        const plan = findCreatorRegistrationPlan(plans, program)
+        if (plan) setRegistrationPrice(plan.price)
+      })
+      .catch(() => undefined)
+  }, [program])
 
   const loadAccounting = useCallback(async (month?: string) => {
     try {
@@ -456,6 +468,7 @@ export function CreatorDashboardPage() {
             <Trans
               i18nKey="dashboard.studentUnpaidBanner"
               ns="creator"
+              values={{ price: registrationPrice }}
               components={{ strong: <strong className="text-plooy-gold" /> }}
             />{' '}
             <Link to={localizePath(creatorCheckoutPath())} className="font-semibold text-plooy-gold underline">
@@ -475,6 +488,7 @@ export function CreatorDashboardPage() {
             <Trans
               i18nKey="dashboard.standardUnpaidBanner"
               ns="creator"
+              values={{ price: registrationPrice }}
               components={{ strong: <strong className="text-plooy-gold" /> }}
             />{' '}
             <Link to={localizePath(creatorCheckoutPath())} className="font-semibold text-plooy-gold underline">
