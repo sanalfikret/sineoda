@@ -1,17 +1,19 @@
 import type { ContentItem } from '../types/content'
 import {
   isFeaturedShowcaseRowId,
-  isMonthlyEditorialRowTitle,
   STUDENT_CINEMA_ROW_ID,
   STUDENT_MONTHLY_WINNERS_ROW_ID,
+  STUDENT_MONTHLY_WINNERS_ROW_TITLE,
+  STUDENT_PICKS_ROW_TITLE,
   VERTICAL_SERIES_ROW_ID,
 } from '../../shared/catalog/programRows'
 import { isVerticalContent } from '../utils/vertical'
 
-/** Guest home + "Ayın …" rows: centered 3×2 showcase grid. */
+/** Yalnızca program satırları — adminin eklediği "Ayın …" kategorileri carousel kalır. */
 export function usesFeaturedShowcaseRow(title: string, rowId?: string) {
   if (rowId && isFeaturedShowcaseRowId(rowId)) return true
-  if (isMonthlyEditorialRowTitle(title)) return true
+  if (rowId === STUDENT_MONTHLY_WINNERS_ROW_ID) return true
+  if (title === STUDENT_MONTHLY_WINNERS_ROW_TITLE || title === STUDENT_PICKS_ROW_TITLE) return true
   return false
 }
 
