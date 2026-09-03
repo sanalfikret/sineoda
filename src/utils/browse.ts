@@ -283,13 +283,28 @@ function buildAllTypeBrowseRow(catalog: ContentItem[], options: BrowseFilterOpti
   ]
 }
 
-export function genresForCatalog(catalog: ContentItem[], options: BrowseFilterOptions) {
+export function genresForCatalog(
+  catalog: ContentItem[],
+  options: BrowseFilterOptions,
+  categories: ContentCategory[] = [],
+) {
+  const hiddenGenreIds = new Set(
+    categories.filter((category) => category.hidden && category.id.startsWith('genre-row-')).map((category) => category.id),
+  )
   const items = filterCatalog(catalog, { ...options, genre: null })
   const available = new Set<string>()
   for (const item of items) {
     for (const genre of item.genres) available.add(genre)
   }
-  return BROWSE_GENRES.filter((genre) => available.has(genre))
+  return BROWSE_GENRES.filter((genre) => {
+    if (!available.has(genre)) return false
+    return !hiddenGenreIds.has(genreToCategoryId(genre))
+  })
+}
+
+function isGenreCategoryHidden(genre: string, categories: ContentCategory[]) {
+  const category = categories.find((entry) => entry.id === genreToCategoryId(genre))
+  return Boolean(category?.hidden)
 }
 
 export function buildBrowseRows(
@@ -331,6 +346,7 @@ export function buildBrowseRows(
   }
 
   if (options.genre) {
+    if (isGenreCategoryHidden(options.genre, categories)) return []
     const items = filterCatalog(catalog, options).sort((a, b) => a.title.localeCompare(b.title, 'tr'))
     if (items.length === 0) return []
     return [

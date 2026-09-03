@@ -40,7 +40,7 @@ function BrowseContent({
   const { openDetail, openPlayer } = useContentUI()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { visibleCategories, featuredContent, visibleCatalog, getContentById, isLoading, refresh, studentCinemaPicks, studentCinemaCatalog, studentCinemaMonthlyWinners, hiddenNavIds, categoryOrder } = useContent()
+  const { categories, featuredContent, visibleCatalog, getContentById, isLoading, refresh, studentCinemaPicks, studentCinemaCatalog, studentCinemaMonthlyWinners, hiddenNavIds, categoryOrder } = useContent()
   const { watchlistItems } = useWatchlist()
   const { activeProfile } = useAuth()
   const activeGenre = searchParams.get('tur')
@@ -70,13 +70,17 @@ function BrowseContent({
 
   const genreOptions = useMemo(
     () =>
-      genresForCatalog(visibleCatalog, {
-        type: contentType,
-        verticalOnly,
-        genre: null,
-        kidsSafe: Boolean(activeProfile?.isKids),
-      }),
-    [visibleCatalog, contentType, verticalOnly, activeProfile?.isKids],
+      genresForCatalog(
+        visibleCatalog,
+        {
+          type: contentType,
+          verticalOnly,
+          genre: null,
+          kidsSafe: Boolean(activeProfile?.isKids),
+        },
+        categories,
+      ),
+    [visibleCatalog, contentType, verticalOnly, activeProfile?.isKids, categories],
   )
 
   useEffect(() => {
@@ -143,7 +147,7 @@ function BrowseContent({
 
   const rows = useMemo(() => {
     const source = studentCinemaOnly ? studentCinemaCatalog : visibleCatalog
-    return buildBrowseRows(source, browseOptions, visibleCategories, getContentById, {
+    return buildBrowseRows(source, browseOptions, categories, getContentById, {
       studentCinemaPicks,
       studentCinemaMonthlyWinners,
       categoryOrder,
@@ -153,7 +157,7 @@ function BrowseContent({
     studentCinemaCatalog,
     visibleCatalog,
     browseOptions,
-    visibleCategories,
+    categories,
     getContentById,
     studentCinemaPicks,
     studentCinemaMonthlyWinners,
