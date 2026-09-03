@@ -44,7 +44,7 @@ export function AdminLayout() {
     }
 
     keepAlive()
-    const intervalId = window.setInterval(keepAlive, 4 * 60 * 1000)
+    const intervalId = window.setInterval(keepAlive, 10 * 60 * 1000)
     const onVisible = () => {
       if (document.visibilityState === 'visible') keepAlive()
     }
