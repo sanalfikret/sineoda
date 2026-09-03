@@ -1,5 +1,7 @@
 /** Marka — şirket / platform adı */
 export const BRAND_NAME = 'Plooy'
+/** Logo play üçgenindeki kırmızı — header ayırıcı çizgi vb. */
+export const BRAND_RED = '#e41e26'
 export const BRAND_EDITOR = `${BRAND_NAME} Editör`
 export const BRAND_EDUCATION = `${BRAND_NAME} Eğitim`
 export const BRAND_STUDIOS = `${BRAND_NAME} Studios`

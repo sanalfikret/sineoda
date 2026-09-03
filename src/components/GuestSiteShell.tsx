@@ -9,10 +9,12 @@ import { SearchModal } from './SearchModal'
 interface GuestSiteShellProps {
   children: ReactNode
   footer?: ReactNode
+  /** Sabit header altında içerik — planlar, iletişim vb. */
+  offsetHeader?: boolean
 }
 
 /** Misafir sayfaları (ana sayfa, dergi): tek Header + arama — menü tutarlılığı. */
-export function GuestSiteShell({ children, footer }: GuestSiteShellProps) {
+export function GuestSiteShell({ children, footer, offsetHeader = false }: GuestSiteShellProps) {
   const navigate = useNavigate()
   const { localizePath } = useLocale()
 
@@ -23,7 +25,7 @@ export function GuestSiteShell({ children, footer }: GuestSiteShellProps) {
   return (
     <SearchProvider>
       <Header />
-      {children}
+      <div className={offsetHeader ? 'header-offset' : undefined}>{children}</div>
       <SearchModal onSelect={openContentFromSearch} />
       {footer}
     </SearchProvider>

@@ -145,7 +145,7 @@ export function Header() {
 
   return (
     <header
-      className={`safe-top fixed inset-x-0 top-0 z-40 transition-colors duration-300 ${
+      className={`safe-top fixed inset-x-0 top-0 z-40 border-b border-plooy-red transition-colors duration-300 ${
         scrolled || menuOpen
           ? 'bg-plooy-bg/95 backdrop-blur-md'
           : 'bg-gradient-to-b from-black/80 to-transparent'

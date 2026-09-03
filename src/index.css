@@ -8,6 +8,7 @@
   --color-plooy-surface: #111318;
   --color-plooy-elevated: #181b24;
   --color-plooy-gold: #c9a962;
+  --color-plooy-red: #e41e26;
   --color-plooy-accent: #c9a962;
   --color-plooy-blue: #6b8fc7;
   --color-plooy-muted: #9aa3b5;
@@ -63,6 +64,10 @@
 
   .safe-top {
     padding-top: max(0px, env(safe-area-inset-top));
+  }
+
+  .header-offset {
+    padding-top: calc(3.5rem + env(safe-area-inset-top, 0px));
   }
 
   .safe-bottom {
