@@ -36,3 +36,18 @@ export function isTransientApiError(error: unknown) {
 export async function sleep(ms: number) {
   await new Promise((resolve) => window.setTimeout(resolve, ms))
 }
+
+/** Logout sonrası tamamlanan eski isteklerin oturumu geri yazmasını engeller. */
+let authSessionEpoch = 0
+
+export function invalidateAuthSession() {
+  authSessionEpoch += 1
+}
+
+export function getAuthSessionEpoch() {
+  return authSessionEpoch
+}
+
+export function isAuthSessionCurrent(epoch: number) {
+  return epoch === authSessionEpoch
+}
