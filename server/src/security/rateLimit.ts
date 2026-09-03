@@ -60,7 +60,7 @@ export const authResetPasswordLimiter = rateLimit({
 
 export const authRefreshLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 60,
+  max: 240,
   standardHeaders: true,
   legacyHeaders: false,
   message: jsonMessage('Çok fazla oturum yenileme isteği.'),
