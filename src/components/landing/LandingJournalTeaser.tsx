@@ -10,11 +10,7 @@ import { JournalCard } from '../journal/JournalCard'
 
 const TEASER_COUNT = 3
 
-export function LandingJournalTeaser({
-  section: _section,
-}: {
-  section: LandingSectionsConfig['journal']
-}) {
+export function LandingJournalTeaser({ section }: { section: LandingSectionsConfig['journal'] }) {
   const { t } = useTranslation('landing')
   const { localizePath } = useLocale()
   const [posts, setPosts] = useState<JournalPost[]>(DEMO_JOURNAL_POSTS.slice(0, TEASER_COUNT))
@@ -35,12 +31,12 @@ export function LandingJournalTeaser({
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-plooy-accent">
-              {t('journal.eyebrow')}
+              {section.eyebrow}
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              {t('journal.title')}
+              {section.title}
             </h2>
-            <p className="mt-3 max-w-2xl text-base text-plooy-muted">{t('journal.description')}</p>
+            <p className="mt-3 max-w-2xl text-base text-plooy-muted">{section.description}</p>
           </div>
           <Link
             to={localizePath('/dergi')}

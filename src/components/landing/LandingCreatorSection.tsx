@@ -1,30 +1,27 @@
 import { Link } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
 import type { LandingSectionsConfig } from '../../constants/landingDefaults'
 import { useLocale } from '../../i18n/LocaleContext'
 
 export function LandingCreatorSection({ section }: { section: LandingSectionsConfig['creator'] }) {
-  const { t } = useTranslation('landing')
   const { localizePath } = useLocale()
-  const perks = t('creator.perks', { returnObjects: true }) as Array<{ title: string; text: string }>
 
   return (
     <section id="yapimcilar" className="relative overflow-hidden border-t border-plooy-gold/30 bg-[#0a0c10]">
       <div className="relative mx-auto max-w-[1400px] px-5 py-20 sm:px-8 sm:py-28">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-plooy-gold">
-            {t('creator.eyebrow')}
+            {section.eyebrow}
           </p>
           <h2 className="mt-5 text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
-            {t('creator.title')}
+            {section.title}
           </h2>
           <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/60 sm:text-lg">
-            {t('creator.subtitle')}
+            {section.subtitle}
           </p>
         </div>
 
         <div className="mt-16 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {perks.map((perk, index) => (
+          {section.perks.map((perk, index) => (
             <article
               key={perk.title}
               className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6"
@@ -43,17 +40,17 @@ export function LandingCreatorSection({ section }: { section: LandingSectionsCon
             to={localizePath(section.ctaPrimaryLink || '/creator/kayit')}
             className="inline-flex h-14 min-w-[240px] items-center justify-center rounded-lg bg-plooy-gold px-10 text-base font-bold text-plooy-bg shadow-lg shadow-plooy-gold/20 transition hover:brightness-110"
           >
-            {t('creator.ctaPrimary')}
+            {section.ctaPrimary}
           </Link>
           <Link
             to={localizePath(section.ctaSecondaryLink || '/creator/giris')}
             className="inline-flex h-14 min-w-[240px] items-center justify-center rounded-lg border border-white/20 bg-white/5 px-10 text-base font-semibold text-white backdrop-blur-sm transition hover:border-plooy-gold/50 hover:bg-white/10"
           >
-            {t('creator.ctaSecondary')}
+            {section.ctaSecondary}
           </Link>
         </div>
 
-        <p className="mt-8 text-center text-xs text-white/35">{t('creator.footnote')}</p>
+        <p className="mt-8 text-center text-xs text-white/35">{section.footnote}</p>
       </div>
     </section>
   )

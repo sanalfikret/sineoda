@@ -83,10 +83,10 @@ export function LandingCategoryShowcase({ showcases }: LandingCategoryShowcasePr
     /kisa/i.test(showcase.id) ? 'kisaFilm' : showcase.icon
 
   const showcaseLabel = (showcase: LandingShowcase, field: 'title' | 'description') => {
+    const adminValue = (field === 'title' ? showcase.title : showcase.description).trim()
+    if (adminValue) return adminValue
     const key = `showcase.tabs.${showcaseTabKey(showcase)}.${field}`
-    const translated = t(key, { defaultValue: '' })
-    if (translated) return translated
-    return field === 'title' ? showcase.title : showcase.description
+    return t(key)
   }
   const visibleShowcases = useMemo(
     () => showcases.filter((showcase) => showcase.items.length > 0),
