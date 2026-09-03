@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
+import { GuestSiteShell } from '../components/GuestSiteShell'
 import { PageFooter } from '../components/PageFooter'
 import { ProfileAvatar } from '../components/ProfileAvatar'
 import { ProfileAvatarPicker } from '../components/ProfileAvatarPicker'
@@ -35,8 +36,9 @@ export function ProfilesPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-plooy-bg px-4 py-8 sm:px-6">
-      <div className="safe-top mx-auto max-w-4xl text-center">
+    <GuestSiteShell footer={<PageFooter />} offsetHeader>
+      <div className="min-h-dvh bg-plooy-bg px-4 py-8 sm:px-6">
+      <div className="mx-auto max-w-4xl text-center">
         <h1 className="text-2xl font-bold text-white sm:text-4xl">{t('title')}</h1>
         <p className="mt-2 text-sm text-plooy-muted sm:text-base">{t('subtitle')}</p>
 
@@ -138,8 +140,7 @@ export function ProfilesPage() {
           {t('logout')}
         </button>
       </div>
-
-      <PageFooter />
-    </div>
+      </div>
+    </GuestSiteShell>
   )
 }

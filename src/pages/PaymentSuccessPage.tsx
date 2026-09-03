@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
+import { GuestSiteShell } from '../components/GuestSiteShell'
 import { PageFooter } from '../components/PageFooter'
 import { useLocale } from '../i18n/LocaleContext'
 
@@ -17,7 +18,8 @@ export function PaymentSuccessPage() {
   }, [refreshUser])
 
   return (
-    <div className="min-h-dvh bg-plooy-bg">
+    <GuestSiteShell footer={<PageFooter />} offsetHeader>
+      <div className="min-h-dvh bg-plooy-bg">
       <div className="flex min-h-[70dvh] items-center justify-center px-4">
       <div className="max-w-md rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center">
         <p className="text-4xl">✓</p>
@@ -33,7 +35,7 @@ export function PaymentSuccessPage() {
         </Link>
       </div>
       </div>
-      <PageFooter />
-    </div>
+      </div>
+    </GuestSiteShell>
   )
 }
