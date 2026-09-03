@@ -247,5 +247,21 @@
       "submitFailed": "Could not submit film application."
     },
     "defaultStudio": "Creator"
+  },
+  "rights": {
+    "title": "Copyright & distribution rights",
+    "subtitle": "You must confirm and upload a document for each category.",
+    "docUploaded": "Document uploaded",
+    "docRequired": "Document required",
+    "remove": "Remove",
+    "uploading": "Uploading…",
+    "replace": "Replace",
+    "uploadDoc": "Upload document",
+    "legalDeclarations": "Legal declarations"
+  },
+  "validation": {
+    "approveDeclaration": "{{label}} must be confirmed.",
+    "uploadDocument": "A document for {{label}} must be uploaded.",
+    "approveLegal": "All legal declarations must be confirmed."
   }
 }

@@ -78,6 +78,16 @@ function posterSizeClass(item: ContentItem) {
 export function LandingCategoryShowcase({ showcases }: LandingCategoryShowcaseProps) {
   const { t } = useTranslation('landing')
   const { localizePath } = useLocale()
+
+  const showcaseTabKey = (showcase: LandingShowcase) =>
+    /kisa/i.test(showcase.id) ? 'kisaFilm' : showcase.icon
+
+  const showcaseLabel = (showcase: LandingShowcase, field: 'title' | 'description') => {
+    const key = `showcase.tabs.${showcaseTabKey(showcase)}.${field}`
+    const translated = t(key, { defaultValue: '' })
+    if (translated) return translated
+    return field === 'title' ? showcase.title : showcase.description
+  }
   const visibleShowcases = useMemo(
     () => showcases.filter((showcase) => showcase.items.length > 0),
     [showcases],
@@ -152,7 +162,7 @@ export function LandingCategoryShowcase({ showcases }: LandingCategoryShowcasePr
     <section className="bg-black px-4 py-14 sm:px-6 sm:py-20 lg:py-24">
       <div className="mx-auto max-w-[1400px]">
         <h2 className="text-center text-2xl font-bold leading-tight tracking-tight text-white sm:text-3xl lg:text-[2rem]">
-          Sınırsız Eğlence: Filmler, Diziler, Programlar ve Çok Daha Fazlası
+          {t('showcase.sectionTitle')}
         </h2>
 
         <div className="mt-10 flex flex-wrap items-end justify-center gap-x-8 gap-y-6 sm:gap-x-12 lg:gap-x-16">
@@ -171,7 +181,7 @@ export function LandingCategoryShowcase({ showcases }: LandingCategoryShowcasePr
                     isActive ? 'text-plooy-gold' : 'text-white/35 group-hover:text-white/60'
                   }`}
                 >
-                  {showcase.title}
+                  {showcaseLabel(showcase, 'title')}
                 </span>
                 <span
                   className={`h-0.5 w-full rounded-full transition ${
@@ -185,12 +195,12 @@ export function LandingCategoryShowcase({ showcases }: LandingCategoryShowcasePr
 
         {active.description && (
           <p className="mx-auto mt-8 max-w-3xl text-center text-sm leading-relaxed text-white/55 sm:text-base">
-            {active.description}
+            {showcaseLabel(active, 'description')}
           </p>
         )}
 
         <div className="relative mt-10 sm:mt-12">
-          <p className="mb-4 text-left text-lg font-bold text-white sm:text-xl">{active.title}</p>
+          <p className="mb-4 text-left text-lg font-bold text-white sm:text-xl">{showcaseLabel(active, 'title')}</p>
 
           <div className="relative">
             {pages.length > 1 && pageIndex > 0 && (

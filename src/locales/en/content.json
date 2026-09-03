@@ -56,7 +56,32 @@
     "feedback": "Feedback",
     "feedbackCta": "Send feedback",
     "feedbackSubject": "{{brand}} feedback: {{title}}",
-    "resumeMinutes": "{{mins}} min"
+    "resumeMinutes": "{{mins}} min",
+    "defaultAudio": "Turkish",
+    "close": "Close",
+    "noCredits": "Not added yet.",
+    "contentAdvisory": "Content advisory",
+    "noVideoAdmin": "No video has been added for this content yet. You can upload one from the admin panel."
+  },
+  "kidsBlock": {
+    "title": "Kids profile",
+    "message": "This content is not suitable for kids profiles."
+  },
+  "episodes": {
+    "title": "Episodes",
+    "seasonsTitle": "Seasons & episodes",
+    "seasonsMeta": "{{seasons}} seasons · {{episodes}} episodes",
+    "season": "Season {{num}}",
+    "seasonEpisodes": "{{count}} episodes",
+    "episodeLabel": "Episode {{num}}: {{title}}"
+  },
+  "legalModal": {
+    "eyebrow": "Legal document",
+    "updatedAt": "Last updated: {{date}}"
+  },
+  "termsNote": {
+    "prefix": "By continuing, you accept the",
+    "suffix": "."
   },
   "actions": {
     "toolbar": "Content actions",

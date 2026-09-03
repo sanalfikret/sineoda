@@ -1,5 +1,6 @@
 {
   "tagline": "Where independent cinema meets",
+  "metaDescription": "Independent films, series, and documentaries — a festival selection, calm interface, and a viewing experience built for cinephiles.",
   "hero": {
     "line1": "Where independent cinema meets",
     "line2": "Festival films, series, and documentaries",
@@ -148,7 +149,8 @@
     "title": "Writing on independent cinema",
     "description": "Festival notes, curator picks, and news from world independent cinema.",
     "viewAll": "All articles →",
-    "backHome": "Home"
+    "backHome": "Home",
+    "backToProfiles": "Back to profiles"
   },
   "slider": {
     "prev": "Previous",
@@ -156,6 +158,51 @@
     "slide": "Slide {{n}}"
   },
   "showcase": {
-    "emptyCategory": "No content in this category yet."
+    "sectionTitle": "Unlimited entertainment: films, series, shows, and much more",
+    "emptyCategory": "No content in this category yet.",
+    "tabs": {
+      "dizi": {
+        "title": "Series",
+        "description": "Season after season of gripping stories and original series."
+      },
+      "film": {
+        "title": "Films",
+        "description": "Award-winning work, festival favorites, and curated cinema."
+      },
+      "belgesel": {
+        "title": "Documentaries",
+        "description": "True stories, deep discoveries, and nature documentaries."
+      },
+      "cocuk": {
+        "title": "Kids",
+        "description": "Safe, fun content the whole family can watch together."
+      },
+      "dikey": {
+        "title": "Vertical Series",
+        "description": "Mobile-first short episodes — scroll, watch, keep going."
+      },
+      "kisaFilm": {
+        "title": "Short Films",
+        "description": "Festival-winning short-form productions."
+      }
+    }
+  },
+  "creatorBar": {
+    "eyebrow": "For independent producers",
+    "title": "Upload your film, earn through fair revenue sharing",
+    "subtitle": "Plooy isn't just for viewers — it's built for independent filmmakers too.",
+    "ctaPrimary": "Submit a Film",
+    "ctaSecondary": "Creator Sign In"
+  },
+  "hubs": {
+    "title": "Start exploring",
+    "subtitle": "Films, series, and Plooy originals — all in one subscription.",
+    "films": "Films",
+    "filmsText": "Festival favorites, award-winning work, and curated cinema.",
+    "series": "Series",
+    "seriesText": "Original series and compelling season-long stories.",
+    "originals": "{{brand}} Originals",
+    "originalsText": "Platform exclusives and curated selections.",
+    "explore": "Explore"
   }
 }

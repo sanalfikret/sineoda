@@ -247,5 +247,21 @@
       "submitFailed": "Film başvurusu gönderilemedi."
     },
     "defaultStudio": "Yapımcı"
+  },
+  "rights": {
+    "title": "Telif ve yayın hakları",
+    "subtitle": "Her kategori için onay ve belge yüklemeniz gerekir.",
+    "docUploaded": "Belge yüklendi",
+    "docRequired": "Belge gerekli",
+    "remove": "Kaldır",
+    "uploading": "Yükleniyor…",
+    "replace": "Değiştir",
+    "uploadDoc": "Belge yükle",
+    "legalDeclarations": "Yasal beyanlar"
+  },
+  "validation": {
+    "approveDeclaration": "{{label}} onaylanmalıdır.",
+    "uploadDocument": "{{label}} belgesi yüklenmelidir.",
+    "approveLegal": "Tüm yasal beyanlar onaylanmalıdır."
   }
 }

@@ -56,7 +56,32 @@
     "feedback": "Geri bildirim",
     "feedbackCta": "Geri bildirimde bulunun",
     "feedbackSubject": "{{brand}} geri bildirim: {{title}}",
-    "resumeMinutes": "{{mins}} dk"
+    "resumeMinutes": "{{mins}} dk",
+    "defaultAudio": "Türkçe",
+    "close": "Kapat",
+    "noCredits": "Henüz eklenmedi.",
+    "contentAdvisory": "İçerik uyarısı",
+    "noVideoAdmin": "Bu içerik için henüz video eklenmemiş. Admin panelinden video yükleyebilirsiniz."
+  },
+  "kidsBlock": {
+    "title": "Çocuk profili",
+    "message": "Bu içerik çocuk profili için uygun değil."
+  },
+  "episodes": {
+    "title": "Bölümler",
+    "seasonsTitle": "Sezonlar ve bölümler",
+    "seasonsMeta": "{{seasons}} sezon · {{episodes}} bölüm",
+    "season": "Sezon {{num}}",
+    "seasonEpisodes": "{{count}} bölüm",
+    "episodeLabel": "Bölüm {{num}}: {{title}}"
+  },
+  "legalModal": {
+    "eyebrow": "Yasal metin",
+    "updatedAt": "Son güncelleme: {{date}}"
+  },
+  "termsNote": {
+    "prefix": "Devam ederek",
+    "suffix": "'nı kabul etmiş olursunuz."
   },
   "actions": {
     "toolbar": "İçerik işlemleri",
