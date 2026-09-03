@@ -1,6 +1,9 @@
 {
   "all": "All",
   "viewAll": "View all",
+  "loginToSeeMore": "Sign in to see more",
+  "scrollLeft": "Scroll left",
+  "scrollRight": "Scroll right",
   "diziler": "Series",
   "filmler": "Films",
   "belgeseller": "Documentaries",

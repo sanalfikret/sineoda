@@ -32,7 +32,7 @@ export function AgeRatingOverlay({ rating, playbackKey, visibleMs = 5000 }: AgeR
   const badge = formatRatingBadge(rating)
   const age = parseContentRatingAge(rating)
   const isGeneral = age === 0
-  const description = isGeneral ? t('ageRating.general') : t('ageRating.agePlus', { age })
+  const description = isGeneral ? t('rating.generalAudience') : t('rating.ageAndUp', { age })
 
   return (
     <div
@@ -41,7 +41,7 @@ export function AgeRatingOverlay({ rating, playbackKey, visibleMs = 5000 }: AgeR
       }`}
       role="status"
       aria-live="polite"
-      aria-label={t('ageRating.aria', { badge })}
+      aria-label={t('rating.ariaLabel', { badge })}
     >
       <div
         className={`rounded-xl border-2 px-4 py-3 shadow-2xl backdrop-blur-md ${

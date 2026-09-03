@@ -150,7 +150,7 @@ export function ContentDetailView({
 
   const seriesMeta =
     isSeries && episodes.length > 0
-      ? t('detail.seasonsMeta', {
+      ? t('detail.seasonsEpisodes', {
           seasons: new Set(episodes.map((ep) => ep.season)).size,
           episodes: episodes.length,
         })
@@ -164,7 +164,7 @@ export function ContentDetailView({
 
         {item.isNew && (
           <span className="absolute left-4 top-4 rounded bg-plooy-gold px-2.5 py-1 text-xs font-bold text-plooy-bg">
-            {t('detail.new')}
+            {t('detail.newBadge')}
           </span>
         )}
 
@@ -340,7 +340,7 @@ export function ContentDetailView({
         {tab === 'details' && (
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-              <h3 className="text-sm font-semibold text-white">{t('detail.creditsTitle')}</h3>
+              <h3 className="text-sm font-semibold text-white">{t('detail.creditsHeading')}</h3>
               <CreditList label={t('detail.directors')} items={credits.directors ?? []} />
               <CreditList label={t('detail.producers')} items={credits.producers ?? []} />
               <CreditList label={t('detail.cast')} items={credits.cast ?? []} />

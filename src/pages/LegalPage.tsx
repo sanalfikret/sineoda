@@ -88,9 +88,9 @@ export function LegalPage() {
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-plooy-gold">{t('eyebrow')}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-plooy-gold">{t('legalEyebrow')}</p>
         <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">{doc.title}</h1>
-        <p className="mt-2 text-sm text-plooy-muted">{t('lastUpdated')} {doc.updatedAt}</p>
+        <p className="mt-2 text-sm text-plooy-muted">{t('updatedAt')} {doc.updatedAt}</p>
 
         {loading ? (
           <p className="mt-10 text-sm text-plooy-muted">{t('loading')}</p>

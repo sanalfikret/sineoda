@@ -1,5 +1,6 @@
 {
   "tagline": "Bağımsız sinemanın buluşma noktası",
+  "metaDescription": "Bağımsız filmler, diziler ve belgeseller — festival seçkisi, sakin arayüz, sinemaseverlere özel izleme deneyimi.",
   "hero": {
     "line1": "Bağımsız sinemanın buluşma noktası",
     "line2": "Festival filmleri, diziler ve belgeseller",
@@ -148,7 +149,8 @@
     "title": "Bağımsız sinema üzerine yazılar",
     "description": "Festival notları, küratör seçkileri ve dünya bağımsız sinemasından haberler.",
     "viewAll": "Tüm yazılar →",
-    "backHome": "Ana sayfa"
+    "backHome": "Ana sayfa",
+    "backToProfiles": "Profil seçimine dön"
   },
   "slider": {
     "prev": "Önceki",
@@ -156,6 +158,51 @@
     "slide": "Slayt {{n}}"
   },
   "showcase": {
-    "emptyCategory": "Bu kategoride henüz içerik yok."
+    "sectionTitle": "Sınırsız Eğlence: Filmler, Diziler, Programlar ve Çok Daha Fazlası",
+    "emptyCategory": "Bu kategoride henüz içerik yok.",
+    "tabs": {
+      "dizi": {
+        "title": "Dizi",
+        "description": "Sezon sezon sürükleyici hikayeler ve orijinal diziler."
+      },
+      "film": {
+        "title": "Film",
+        "description": "Ödüllü yapımlar, festival favorileri ve seçkin sinema."
+      },
+      "belgesel": {
+        "title": "Belgesel",
+        "description": "Gerçek hikayeler, derin keşifler ve doğa belgeselleri."
+      },
+      "cocuk": {
+        "title": "Çocuk",
+        "description": "Ailece izlenebilecek güvenli ve eğlenceli içerikler."
+      },
+      "dikey": {
+        "title": "Dikey Dizi",
+        "description": "Mobil öncelikli kısa bölümler — kaydır, izle, devam et."
+      },
+      "kisaFilm": {
+        "title": "Kısa Film",
+        "description": "Festival ödüllü kısa metraj yapımlar."
+      }
+    }
+  },
+  "creatorBar": {
+    "eyebrow": "Bağımsız yapımcılar için",
+    "title": "Filmini yükle, adil paylaşımdan kazanç elde et",
+    "subtitle": "Plooy yalnızca izleyiciler için değil — bağımsız sinemacılar için de tasarlandı.",
+    "ctaPrimary": "Film Başvurusu Yap",
+    "ctaSecondary": "Yapımcı Girişi"
+  },
+  "hubs": {
+    "title": "Keşfetmeye başla",
+    "subtitle": "Filmler, diziler ve Plooy özgün yapımları — hepsi tek abonelikte.",
+    "films": "Filmler",
+    "filmsText": "Festival favorileri, ödüllü yapımlar ve seçkin sinema.",
+    "series": "Diziler",
+    "seriesText": "Orijinal diziler ve sürükleyici sezonluk hikâyeler.",
+    "originals": "{{brand}} Originals",
+    "originalsText": "Platforma özel yapımlar ve küratörlü seçkiler.",
+    "explore": "Keşfet"
   }
 }

@@ -137,5 +137,14 @@
     "profileDeleteFailed": "Profil silinemedi.",
     "profileAddFailed": "Profil eklenemedi.",
     "cancelFailed": "Abonelik iptal edilemedi."
+  },
+  "avatar": {
+    "invalidImage": "Lütfen geçerli bir görsel dosyası seçin.",
+    "tooLarge": "Görsel en fazla 2 MB olabilir.",
+    "uploadFailed": "Fotoğraf yüklenemedi.",
+    "uploading": "Yükleniyor…",
+    "uploadPhoto": "Fotoğraf yükle",
+    "photoHint": "JPG, PNG veya WebP · en fazla 2 MB",
+    "useEmoji": "Emoji avatar kullan"
   }
 }

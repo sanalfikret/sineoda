@@ -137,5 +137,14 @@
     "profileDeleteFailed": "Could not delete profile.",
     "profileAddFailed": "Could not add profile.",
     "cancelFailed": "Could not cancel subscription."
+  },
+  "avatar": {
+    "invalidImage": "Please choose a valid image file.",
+    "tooLarge": "Image must be 2 MB or smaller.",
+    "uploadFailed": "Could not upload photo.",
+    "uploading": "Uploading…",
+    "uploadPhoto": "Upload photo",
+    "photoHint": "JPG, PNG, or WebP · max 2 MB",
+    "useEmoji": "Use emoji avatar"
   }
 }

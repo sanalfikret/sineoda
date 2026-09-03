@@ -30,7 +30,7 @@ export function Hero({ item, onPlay, onDetails, eyebrow }: HeroProps) {
             {eyebrowLabel}
             {item.isNew && (
               <span className="rounded-full bg-plooy-gold px-2.5 py-0.5 text-[10px] font-bold tracking-normal text-plooy-bg">
-                {t('hero.new')}
+                {t('hero.newBadge')}
               </span>
             )}
           </p>
