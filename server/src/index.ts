@@ -63,6 +63,7 @@ import { ensureCekimNotlariDemoContent } from './services/cekimNotlariSeed.js'
 import adminCekimNotlariRoutes from './routes/adminCekimNotlari.js'
 import adminBillingPlansRoutes from './routes/adminBillingPlans.js'
 import adminGiftCodesRoutes from './routes/adminGiftCodes.js'
+import internalCronRoutes from './routes/internalCron.js'
 import cekimNotlariRoutes from './routes/cekimNotlari.js'
 import {
   seedDatabase,
@@ -84,6 +85,8 @@ import { getLandingCustomBlocks } from './services/landingCustomBlocks.js'
 import { isLandingAdminCustomized } from './services/landingAdminState.js'
 import type { ContentRow } from './types.js'
 import { assertProductionSecurity, warnProductionReadiness } from './security/startupValidation.js'
+import { seedDemoMonthlyIfEmpty } from './services/watchAccounting.js'
+import { startWatchAccountingScheduler } from './services/watchAccountingScheduler.js'
 import helmet from 'helmet'
 import { globalApiLimiter } from './security/rateLimit.js'
 
@@ -354,6 +357,7 @@ app.use('/api/admin/site-mode', adminSiteModeRoutes)
 app.use('/api/site-mode', siteModeRoutes)
 app.use('/api/admin/billing-plans', adminBillingPlansRoutes)
 app.use('/api/admin/gift-codes', adminGiftCodesRoutes)
+app.use('/api/internal/cron', internalCronRoutes)
 app.use('/api/admin/upload', uploadRoutes)
 app.use(seoRoutes)
 
@@ -434,7 +438,7 @@ app.listen(config.port, () => {
   console.log(`[auth] JWT süresi: ${jwtExpiresIn}`)
 
   try {
-    ensureMonthlyRollover()
+    startWatchAccountingScheduler()
     seedDemoMonthlyIfEmpty()
   } catch (error) {
     console.error('[watch-accounting] startup init failed:', error)
