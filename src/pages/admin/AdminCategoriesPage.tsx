@@ -5,7 +5,7 @@ import { AdminCategoryRow } from '../../components/admin/AdminCategoryRow'
 import { AdminSiteNavPanel } from '../../components/admin/AdminSiteNavPanel'
 import { isCekimCategoryId } from '../../constants/cekimNotlari'
 import type { SiteNavId } from '../../constants/siteNav'
-import { mergeCategoriesForAdminOrder, isVirtualBrowseCategoryId } from '../../utils/browse'
+import { mergeCategoriesForAdminOrder } from '../../utils/browse'
 import { mergeAdminPickerCatalog } from '../../utils/adminPickerCatalog'
 import { useContent } from '../../context/ContentContext'
 
@@ -182,6 +182,10 @@ export function AdminCategoriesPage() {
             <Link to="/admin/ana-sayfa" className="text-plooy-gold hover:underline">
               Ana Sayfa → Kategori şeritleri
             </Link>
+            . Ayın Genç Sinema Birincileri otomatik gelir →{' '}
+            <Link to="/admin/genc-sinema" className="text-plooy-gold hover:underline">
+              Genç Sinema
+            </Link>
             . Çekim Notları alt bölümleri →{' '}
             <Link to="/admin/cekim-notlari" className="text-plooy-gold hover:underline">
               Çekim Notları
@@ -251,9 +255,7 @@ export function AdminCategoriesPage() {
       </div>
 
       <div className="space-y-3">
-        {orderedCategories.map((category, index) => {
-          const virtualRow = isVirtualBrowseCategoryId(category.id)
-          return (
+        {orderedCategories.map((category, index) => (
           <AdminCategoryRow
             key={category.id}
             category={category}
@@ -262,7 +264,6 @@ export function AdminCategoriesPage() {
             expanded={expandedIds.has(category.id)}
             dragging={draggingId === category.id}
             savingOrder={savingOrder}
-            readOnly={virtualRow}
             catalogById={catalogById}
             catalog={adminPickerCatalog}
             search={searchByCategory[category.id] ?? ''}
@@ -281,8 +282,7 @@ export function AdminCategoriesPage() {
             onDrop={handleDrop}
             onDragEnd={handleDragEnd}
           />
-          )
-        })}
+        ))}
       </div>
     </div>
   )
