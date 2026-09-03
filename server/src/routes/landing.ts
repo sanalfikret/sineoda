@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { dbAll, dbGet, dbRun } from '../db.js'
+import { dbAll, dbGet, dbRun, dbRunNoPersist, dbTransaction } from '../db.js'
 import { mapContent } from '../mappers.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import {
@@ -213,23 +213,25 @@ function saveLandingShowcasesPayload(showcases: unknown[]) {
     throw err
   }
 
-  dbRun('DELETE FROM landing_showcase_items')
-  dbRun('DELETE FROM landing_showcases')
+  dbTransaction(() => {
+    dbRunNoPersist('DELETE FROM landing_showcase_items')
+    dbRunNoPersist('DELETE FROM landing_showcases')
 
-  normalizedShowcases.forEach((showcase) => {
-    dbRun(
-      'INSERT INTO landing_showcases (id, title, icon, description, sort_order) VALUES (?, ?, ?, ?, ?)',
-      [showcase.id, showcase.title, showcase.icon, showcase.description, showcase.sortOrder],
-    )
-
-    ;(filterContentIdsForPool(
-      poolForShowcaseIcon(showcase.icon),
-      showcase.itemIds.filter((contentId) => catalogIds.has(contentId)),
-    ) as string[]).forEach((contentId: string, itemIndex: number) => {
-      dbRun(
-        'INSERT INTO landing_showcase_items (showcase_id, content_id, sort_order) VALUES (?, ?, ?)',
-        [showcase.id, contentId, itemIndex],
+    normalizedShowcases.forEach((showcase) => {
+      dbRunNoPersist(
+        'INSERT INTO landing_showcases (id, title, icon, description, sort_order) VALUES (?, ?, ?, ?, ?)',
+        [showcase.id, showcase.title, showcase.icon, showcase.description, showcase.sortOrder],
       )
+
+      ;(filterContentIdsForPool(
+        poolForShowcaseIcon(showcase.icon),
+        showcase.itemIds.filter((contentId) => catalogIds.has(contentId)),
+      ) as string[]).forEach((contentId: string, itemIndex: number) => {
+        dbRunNoPersist(
+          'INSERT INTO landing_showcase_items (showcase_id, content_id, sort_order) VALUES (?, ?, ?)',
+          [showcase.id, contentId, itemIndex],
+        )
+      })
     })
   })
 }

@@ -148,6 +148,8 @@ export function AdminLandingPage() {
   const [monthlyWinnerIds, setMonthlyWinnerIds] = useState<string[]>([])
   const [studentPickIds, setStudentPickIds] = useState<string[]>([])
   const [showcases, setShowcases] = useState<ShowcaseDraft[]>([])
+  const showcasesRef = useRef<ShowcaseDraft[]>([])
+  const showcasePersistTimerRef = useRef<number | null>(null)
   const [blockTitles, setBlockTitles] = useState<LandingBlockTitlesConfig>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -237,15 +239,15 @@ export function AdminLandingPage() {
             ? data.studentPickContentIds
             : (data.studentPicks ?? []).map((item) => item.id),
         )
-        setShowcases(
-          data.showcases.map((showcase) => ({
-            id: showcase.id,
-            title: showcase.title,
-            icon: showcase.icon,
-            description: showcase.description,
-            itemIds: showcase.items.map((item) => item.id),
-          })),
-        )
+        const loadedShowcases = data.showcases.map((showcase) => ({
+          id: showcase.id,
+          title: showcase.title,
+          icon: showcase.icon,
+          description: showcase.description,
+          itemIds: showcase.items.map((item) => item.id),
+        }))
+        showcasesRef.current = loadedShowcases
+        setShowcases(loadedShowcases)
         setBlockTitles(data.blockTitles ?? {})
       })
       .catch((err) => {
@@ -260,6 +262,54 @@ export function AdminLandingPage() {
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    showcasesRef.current = showcases
+  }, [showcases])
+
+  const canPersistShowcases = (nextShowcases: ShowcaseDraft[]) =>
+    nextShowcases.every((showcase) => showcase.title.trim())
+
+  const persistShowcases = async (nextShowcases: ShowcaseDraft[]) => {
+    if (!canPersistShowcases(nextShowcases)) return
+
+    const validIds = new Set(pickerCatalog.map((item) => item.id))
+    const payload = nextShowcases.map((showcase) => ({
+      ...showcase,
+      itemIds: showcase.itemIds.filter((id) => validIds.has(id)),
+    }))
+    const data = await updateLandingShowcasesConfig(payload)
+    const savedShowcases = data.showcases.map((showcase) => ({
+      id: showcase.id,
+      title: showcase.title,
+      icon: showcase.icon,
+      description: showcase.description,
+      itemIds: showcase.items.map((item) => item.id),
+    }))
+    showcasesRef.current = savedShowcases
+    setShowcases(savedShowcases)
+  }
+
+  const flushShowcasePersist = (nextShowcases?: ShowcaseDraft[]) => {
+    if (showcasePersistTimerRef.current !== null) {
+      window.clearTimeout(showcasePersistTimerRef.current)
+      showcasePersistTimerRef.current = null
+    }
+    const payload = nextShowcases ?? showcasesRef.current
+    return persistShowcases(payload)
+  }
+
+  const scheduleShowcasePersist = () => {
+    if (showcasePersistTimerRef.current !== null) {
+      window.clearTimeout(showcasePersistTimerRef.current)
+    }
+    showcasePersistTimerRef.current = window.setTimeout(() => {
+      showcasePersistTimerRef.current = null
+      void flushShowcasePersist().catch((err) => {
+        setMessage(err instanceof Error ? err.message : 'Sekme güncellenemedi.')
+      })
+    }, 600)
+  }
 
   const toggleSliderItem = (contentId: string) => {
     setSliderIds((current) =>
@@ -282,11 +332,8 @@ export function AdminLandingPage() {
   const updateShowcase = (index: number, patch: Partial<ShowcaseDraft>) => {
     setShowcases((current) => {
       const next = current.map((showcase, i) => (i === index ? { ...showcase, ...patch } : showcase))
-      window.setTimeout(() => {
-        void persistShowcases(next).catch((err) => {
-          setMessage(err instanceof Error ? err.message : 'Sekme güncellenemedi.')
-        })
-      }, 600)
+      showcasesRef.current = next
+      scheduleShowcasePersist()
       return next
     })
   }
@@ -300,7 +347,8 @@ export function AdminLandingPage() {
           : [...showcase.itemIds, contentId]
         return { ...showcase, itemIds }
       })
-      void persistShowcases(next).catch((err) => {
+      showcasesRef.current = next
+      void flushShowcasePersist(next).catch((err) => {
         setMessage(err instanceof Error ? err.message : 'İçerik seçimi kaydedilemedi.')
       })
       return next
@@ -318,7 +366,8 @@ export function AdminLandingPage() {
     }
     setShowcases((current) => {
       const next = [...current, nextShowcase]
-      void persistShowcases(next).catch((err) => {
+      showcasesRef.current = next
+      void flushShowcasePersist(next).catch((err) => {
         setMessage(err instanceof Error ? err.message : 'Sekme kaydedilemedi.')
       })
       return next
@@ -329,7 +378,8 @@ export function AdminLandingPage() {
   const removeShowcase = (index: number) => {
     setShowcases((current) => {
       const next = current.filter((_, i) => i !== index)
-      void persistShowcases(next).catch((err) => {
+      showcasesRef.current = next
+      void flushShowcasePersist(next).catch((err) => {
         setMessage(err instanceof Error ? err.message : 'Silme kaydedilemedi.')
       })
       return next
@@ -342,30 +392,44 @@ export function AdminLandingPage() {
       const target = index + direction
       if (target < 0 || target >= next.length) return current
       ;[next[index], next[target]] = [next[target], next[index]]
+      showcasesRef.current = next
+      void flushShowcasePersist(next).catch((err) => {
+        setMessage(err instanceof Error ? err.message : 'Sıralama kaydedilemedi.')
+      })
       return next
     })
   }
 
   const moveShowcaseItem = (showcaseIndex: number, itemIndex: number, direction: -1 | 1) => {
-    setShowcases((current) =>
-      current.map((showcase, index) => {
+    setShowcases((current) => {
+      const next = current.map((showcase, index) => {
         if (index !== showcaseIndex) return showcase
         const itemIds = [...showcase.itemIds]
         const target = itemIndex + direction
         if (target < 0 || target >= itemIds.length) return showcase
         ;[itemIds[itemIndex], itemIds[target]] = [itemIds[target], itemIds[itemIndex]]
         return { ...showcase, itemIds }
-      }),
-    )
+      })
+      showcasesRef.current = next
+      void flushShowcasePersist(next).catch((err) => {
+        setMessage(err instanceof Error ? err.message : 'İçerik sırası kaydedilemedi.')
+      })
+      return next
+    })
   }
 
   const removeShowcaseItem = (showcaseIndex: number, contentId: string) => {
-    setShowcases((current) =>
-      current.map((showcase, index) => {
+    setShowcases((current) => {
+      const next = current.map((showcase, index) => {
         if (index !== showcaseIndex) return showcase
         return { ...showcase, itemIds: showcase.itemIds.filter((id) => id !== contentId) }
-      }),
-    )
+      })
+      showcasesRef.current = next
+      void flushShowcasePersist(next).catch((err) => {
+        setMessage(err instanceof Error ? err.message : 'İçerik kaldırma kaydedilemedi.')
+      })
+      return next
+    })
   }
 
   const setHeroImage = (url: string) => {
@@ -412,25 +476,6 @@ export function AdminLandingPage() {
     () => filterCatalogByPool(pickerCatalog, 'student_cinema'),
     [pickerCatalog],
   )
-
-  const persistShowcases = async (nextShowcases: ShowcaseDraft[]) => {
-    if (savingRef.current) return
-    const validIds = new Set(pickerCatalog.map((item) => item.id))
-    const payload = nextShowcases.map((showcase) => ({
-      ...showcase,
-      itemIds: showcase.itemIds.filter((id) => validIds.has(id)),
-    }))
-    const data = await updateLandingShowcasesConfig(payload)
-    setShowcases(
-      data.showcases.map((showcase) => ({
-        id: showcase.id,
-        title: showcase.title,
-        icon: showcase.icon,
-        description: showcase.description,
-        itemIds: showcase.items.map((item) => item.id),
-      })),
-    )
-  }
 
   const persistLayout = async (nextLayout: LandingLayoutConfig) => {
     if (savingRef.current) return
@@ -615,10 +660,11 @@ export function AdminLandingPage() {
       }
 
       await refreshSessionToken()
+      await flushShowcasePersist().catch(() => undefined)
 
       const validIds = new Set(pickerCatalog.map((item) => item.id))
       const persistedSliderIds = sliderIds.filter((id) => validIds.has(id))
-      const persistedShowcases = showcases.map((showcase) => ({
+      const persistedShowcases = showcasesRef.current.map((showcase) => ({
         ...showcase,
         itemIds: showcase.itemIds.filter((id) => validIds.has(id)),
       }))
@@ -1221,7 +1267,7 @@ export function AdminLandingPage() {
                 <a href="/admin/kategoriler" className="text-plooy-gold hover:underline">
                   Kategoriler & Menü
                 </a>
-                ). Ekleme anında kaydedilir.
+                ). Ekleme anında kaydedilir; yenilemeden önce üstteki mesajı bekleyin.
               </p>
               <button
                 type="button"
