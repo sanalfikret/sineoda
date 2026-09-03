@@ -442,8 +442,20 @@ export function finalizeMonth(month: string) {
   return { month, totalQualifiedMinutes: Math.round(totalQualified / 60), itemCount: qualifiedRows.length }
 }
 
-export function ensureMonthlyRollover() {
+export interface MonthlyRolloverResult {
+  currentMonth: string
+  finalizedMonths: string[]
+  ensuredCurrent: boolean
+}
+
+export function ensureMonthlyRollover(): MonthlyRolloverResult {
   const current = monthKey()
+  const finalizedMonths: string[] = []
+
+  const markFinalized = (month: string) => {
+    if (!finalizedMonths.includes(month)) finalizedMonths.push(month)
+  }
+
   purgeInvalidAccountingData(current)
   const openPast = dbAll<{ month: string }>(
     `SELECT month FROM watch_accounting_periods
@@ -454,6 +466,7 @@ export function ensureMonthlyRollover() {
 
   for (const row of openPast) {
     finalizeMonth(row.month)
+    markFinalized(row.month)
   }
 
   ensurePeriodRow(current)
@@ -473,7 +486,14 @@ export function ensureMonthlyRollover() {
     ])
     if (!archived) {
       finalizeMonth(row.month)
+      markFinalized(row.month)
     }
+  }
+
+  return {
+    currentMonth: current,
+    finalizedMonths,
+    ensuredCurrent: true,
   }
 }
 

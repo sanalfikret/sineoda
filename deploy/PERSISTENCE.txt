@@ -52,6 +52,20 @@ crontab -e
 0 4 * * * cd /opt/sineoda && PERSIST_DIR=/opt/sineoda/persistent bash deploy/backup-vps.sh >> /var/log/sineoda-backup.log 2>&1
 
 
+0 4 * * * cd /opt/sineoda && PERSIST_DIR=/opt/sineoda/persistent bash deploy/backup-vps.sh >> /var/log/sineoda-backup.log 2>&1
+
+AYLIK MUHASEBE DEVRİ (cron — sunucu restart gerekmez)
+-----------------------------------------------------
+Her gece 00:05 İstanbul — geçen ayı kapatır, güncel ayı açar.
+Node içinde de 15 dk'da bir kontrol vardır; cron yedek güvencedir.
+
+crontab -e
+
+5 0 * * * TZ=Europe/Istanbul cd /opt/sineoda && bash deploy/cron-monthly-rollover.sh >> /var/log/sineoda-rollover.log 2>&1
+
+.env içine isteğe bağlı: CRON_SECRET=uzun-rastgele-dize
+
+
 ASLA YAPMA
 ----------
   docker-compose down -v          # volume siler!
