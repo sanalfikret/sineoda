@@ -46,10 +46,16 @@ export function normalizeCategoryOrder(orderedIds: string[]) {
   return unique
 }
 
+function persistedCategoryOrder(): string[] {
+  const saved = loadCategoryOrder()
+  if (saved && saved.length > 0) return saved
+  return listCategoriesOrdered().map((row) => row.id)
+}
+
 export function removeCategoryFromOrder(categoryId: string) {
-  const rows = listCategoriesOrdered()
-  const next = rows.map((row) => row.id).filter((id) => id !== categoryId)
-  if (next.length === rows.length) return
+  const saved = persistedCategoryOrder()
+  const next = saved.filter((id) => id !== categoryId)
+  if (next.length === saved.length) return
   saveCategoryOrder(next)
 }
 
@@ -70,8 +76,8 @@ export function saveCategoryOrder(orderedIds: string[]) {
 }
 
 export function appendCategoryToOrder(categoryId: string) {
-  const rows = listCategoriesOrdered()
-  const next = [...rows.map((row) => row.id).filter((id) => id !== categoryId), categoryId]
+  const saved = persistedCategoryOrder()
+  const next = [...saved.filter((id) => id !== categoryId), categoryId]
   saveCategoryOrder(next)
 }
 
@@ -113,15 +119,25 @@ export function getCategoryOrderForBrowse(): string[] {
 }
 
 export function reconcileCategoryOrder() {
-  const rows = listCategoriesOrdered()
-  if (rows.length === 0) return
+  const fromDb = listCategoriesOrdered().map((row) => row.id)
+  if (fromDb.length === 0) return
 
-  const fromDb = rows.map((row) => row.id)
   const saved = loadCategoryOrder()
-  if (saved && saved.length > 0 && saved.join('|') === fromDb.join('|')) return
+  if (!saved || saved.length === 0) {
+    dbRun('INSERT OR REPLACE INTO site_settings (key, value) VALUES (?, ?)', [
+      SETTINGS_KEY,
+      JSON.stringify(fromDb),
+    ])
+    return
+  }
 
-  dbRun('INSERT OR REPLACE INTO site_settings (key, value) VALUES (?, ?)', [
-    SETTINGS_KEY,
-    JSON.stringify(fromDb),
-  ])
+  const dbSet = new Set(fromDb)
+  const next = saved.filter((id) => isVirtualBrowseRowId(id) || dbSet.has(id))
+  for (const id of fromDb) {
+    if (!next.includes(id)) next.push(id)
+  }
+
+  if (next.join('|') === saved.join('|')) return
+
+  saveCategoryOrder(next)
 }

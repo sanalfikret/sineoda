@@ -276,8 +276,16 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   const deleteCategory = useCallback(
     async (id: string) => {
-      await api(`/api/categories/${id}`, { method: 'DELETE' })
-      setCategories((prev) => prev.filter((entry) => entry.id !== id))
+      const result = await api<{
+        categories: ContentCategory[]
+        categoryOrder?: string[]
+      }>(`/api/categories/${id}`, { method: 'DELETE' })
+      setCategories(result.categories)
+      if (result.categoryOrder?.length) {
+        setCategoryOrder(result.categoryOrder)
+      } else {
+        setCategoryOrder((prev) => prev.filter((entry) => entry !== id))
+      }
     },
     [],
   )
