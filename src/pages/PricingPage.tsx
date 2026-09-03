@@ -9,7 +9,7 @@ import {
   uploadBillingStudentId,
 } from '../api/client'
 import { PageFooter } from '../components/PageFooter'
-import { PlooyLogo } from '../components/PlooyLogo'
+import { GuestSiteShell } from '../components/GuestSiteShell'
 import { useAuth } from '../context/AuthContext'
 import { useLocale } from '../i18n/LocaleContext'
 
@@ -217,16 +217,7 @@ export function PricingPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-plooy-bg">
-      <header className="safe-top border-b border-white/5 px-4 py-5 sm:px-6">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <PlooyLogo tone="on-dark" linked linkTo={localizePath('/')} className="h-8" />
-          <Link to={localizePath(user ? '/hesap' : '/giris')} className="text-sm text-plooy-gold hover:underline">
-            {user ? t('accountLink') : t('loginLink')}
-          </Link>
-        </div>
-      </header>
-
+    <GuestSiteShell footer={<PageFooter />} offsetHeader>
       <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
         <div className="text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-plooy-gold">{t('eyebrow')}</p>
@@ -385,8 +376,6 @@ export function PricingPage() {
           </div>
         )}
       </main>
-
-      <PageFooter />
-    </div>
+    </GuestSiteShell>
   )
 }
