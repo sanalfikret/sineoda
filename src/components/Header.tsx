@@ -248,21 +248,12 @@ export function Header() {
           )}
 
           {!isCreator && !user && (
-            <>
-              <Link
-                to={localizePath('/planlar')}
-                className="hidden whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium text-white/75 transition hover:bg-white/5 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold lg:inline-flex lg:px-3 lg:text-sm"
-              >
-                {t('nav.plans')}
-              </Link>
-              <Link
-                to={localizePath('/iletisim')}
-                aria-label={t('nav.contact')}
-                className="rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold tv:p-3"
-              >
-                <MessagesIcon />
-              </Link>
-            </>
+            <Link
+              to={localizePath('/planlar')}
+              className="hidden whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium text-white/75 transition hover:bg-white/5 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold lg:inline-flex lg:px-3 lg:text-sm"
+            >
+              {t('nav.plans')}
+            </Link>
           )}
 
           {!isCreator && (
@@ -502,15 +493,6 @@ export function Header() {
                     onClick={() => setMenuOpen(false)}
                   >
                     {t('nav.plans')}
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to={localizePath('/iletisim')}
-                    className="block w-full rounded-lg px-3 py-3.5 text-base font-medium text-white/90 hover:bg-white/5"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    {t('nav.sendMessage')}
                   </Link>
                 </li>
                 <li>
