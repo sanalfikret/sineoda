@@ -219,7 +219,7 @@ export function AdminLandingCustomBlockEditor({
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
             label="Başlık (misafir ana sayfada)"
-            value={block.title.trim() || block.adminLabel}
+            value={block.title || block.adminLabel}
             onChange={(heading) =>
               patch({
                 title: heading,
