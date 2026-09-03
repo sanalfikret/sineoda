@@ -2,31 +2,32 @@ import { type ReactNode, useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { getToken, refreshSessionToken } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
-import { readCachedAuthUser } from '../../utils/authSession'
-
-function isAdminRole(role: string | undefined) {
-  return role === 'admin' || role === 'manager'
-}
 
 export function AdminRoute({ children }: { children: ReactNode }) {
   const { user, isAdmin, isLoading, refreshUser } = useAuth()
   const token = getToken()
-  const cachedUser = readCachedAuthUser()
-  const effectiveUser = user ?? (cachedUser && isAdminRole(cachedUser.role) ? cachedUser : null)
-  const effectiveIsAdmin = isAdmin || isAdminRole(effectiveUser?.role)
   const [recoveringSession, setRecoveringSession] = useState(false)
 
   useEffect(() => {
-    if (isLoading || effectiveUser || !token) return
+    if (!token) {
+      setRecoveringSession(false)
+      return
+    }
+
+    if (isLoading || user) {
+      setRecoveringSession(false)
+      return
+    }
 
     let cancelled = false
     setRecoveringSession(true)
+
     void (async () => {
-      await refreshSessionToken()
       try {
+        await refreshSessionToken()
         await refreshUser()
       } catch {
-        /* cached admin oturumu korunur */
+        /* oturum geçersiz — login sayfasına yönlendirilir */
       } finally {
         if (!cancelled) setRecoveringSession(false)
       }
@@ -34,8 +35,13 @@ export function AdminRoute({ children }: { children: ReactNode }) {
 
     return () => {
       cancelled = true
+      setRecoveringSession(false)
     }
-  }, [isLoading, effectiveUser, token, refreshUser])
+  }, [isLoading, user, token, refreshUser])
+
+  if (!token) {
+    return <Navigate to="/admin/giris" replace />
+  }
 
   if (isLoading || recoveringSession) {
     return (
@@ -45,11 +51,7 @@ export function AdminRoute({ children }: { children: ReactNode }) {
     )
   }
 
-  if (!token) {
-    return <Navigate to="/admin/giris" replace />
-  }
-
-  if (!effectiveUser || !effectiveIsAdmin) {
+  if (!user || !isAdmin) {
     return <Navigate to="/admin/giris" replace />
   }
 
