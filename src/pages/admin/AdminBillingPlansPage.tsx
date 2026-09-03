@@ -20,6 +20,7 @@ type PlanDraft = {
   audience: NonNullable<BillingPlan['audience']>
   requiresStudentId: boolean
   campaignLabel: string
+  sectionLabel: string
 }
 
 type CustomPlanDraft = PlanDraft & { id: string }
@@ -45,6 +46,9 @@ function toDraft(plan: BillingPlan): PlanDraft {
     audience: plan.audience ?? 'viewer',
     requiresStudentId: Boolean(plan.requiresStudentId),
     campaignLabel: plan.campaignLabel ?? '',
+    sectionLabel:
+      plan.sectionLabel ??
+      (plan.audience === 'creator' ? 'Yapımcı Yönetmen' : 'İzleyici aboneliği'),
   }
 }
 
@@ -52,10 +56,6 @@ function intervalLabel(interval: BillingPlan['interval']) {
   if (interval === 'once') return 'Tek seferlik'
   if (interval === 'year') return 'Yıllık'
   return 'Aylık'
-}
-
-function audienceLabel(audience?: BillingPlan['audience']) {
-  return audience === 'creator' ? 'Yapımcı / Genç Sinema' : 'İzleyici aboneliği'
 }
 
 function emptyCustomPlan(): CustomPlanDraft {
@@ -70,6 +70,7 @@ function emptyCustomPlan(): CustomPlanDraft {
     audience: 'viewer',
     requiresStudentId: false,
     campaignLabel: 'Kampanya',
+    sectionLabel: 'Kampanya planı',
   }
 }
 
@@ -157,6 +158,7 @@ export function AdminBillingPlansPage() {
               interval: draft.interval,
               requiresStudentId: draft.requiresStudentId,
               campaignLabel: draft.campaignLabel.trim() || undefined,
+              sectionLabel: draft.sectionLabel.trim() || undefined,
             },
           ]
         }),
@@ -176,6 +178,7 @@ export function AdminBillingPlansPage() {
         requiresStudentId: plan.requiresStudentId,
         enabled: plan.enabled,
         campaignLabel: plan.campaignLabel.trim() || undefined,
+        sectionLabel: plan.sectionLabel.trim() || undefined,
       }))
 
       const data = await saveAdminBillingPlans({
@@ -243,19 +246,18 @@ export function AdminBillingPlansPage() {
   const renderPlanFields = (
     draft: PlanDraft,
     onChange: (patch: Partial<PlanDraft>) => void,
-    options?: { showAudience?: boolean; showId?: string },
+    options?: { showAudience?: boolean },
   ) => (
     <div className="space-y-4">
-      {options?.showId && (
-        <label className="block">
-          <span className="mb-1.5 block text-sm text-plooy-muted">Plan kimliği (URL/teknik)</span>
-          <input
-            value={options.showId}
-            readOnly
-            className="w-full rounded-lg border border-white/10 bg-[#0d0f14]/70 px-3 py-2 text-white/60"
-          />
-        </label>
-      )}
+      <label className="block">
+        <span className="mb-1.5 block text-sm text-plooy-muted">Bölüm başlığı (kart üstü)</span>
+        <input
+          value={draft.sectionLabel}
+          onChange={(event) => onChange({ sectionLabel: event.target.value })}
+          placeholder="Örn. Yapımcı Yönetmen, İzleyici aboneliği"
+          className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-plooy-gold"
+        />
+      </label>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block">
@@ -273,9 +275,9 @@ export function AdminBillingPlansPage() {
           </select>
         </label>
 
-        {options?.showAudience && (
-          <label className="block">
-            <span className="mb-1.5 block text-sm text-plooy-muted">Hedef kitle</span>
+        <label className="block">
+          <span className="mb-1.5 block text-sm text-plooy-muted">Hedef kitle (teknik)</span>
+          {options?.showAudience ? (
             <select
               value={draft.audience}
               onChange={(event) =>
@@ -285,11 +287,21 @@ export function AdminBillingPlansPage() {
               }
               className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-plooy-gold"
             >
-              <option value="viewer">İzleyici</option>
-              <option value="creator">Yapımcı / Genç Sinema</option>
+              <option value="viewer">İzleyici — fiyatlandırma sayfası</option>
+              <option value="creator">Yapımcı Yönetmen / Genç Sinema — başvuru ödemesi</option>
             </select>
-          </label>
-        )}
+          ) : (
+            <input
+              value={
+                draft.audience === 'creator'
+                  ? 'Yapımcı Yönetmen / Genç Sinema (sabit)'
+                  : 'İzleyici (sabit)'
+              }
+              readOnly
+              className="w-full rounded-lg border border-white/10 bg-[#0d0f14]/70 px-3 py-2 text-sm text-white/60"
+            />
+          )}
+        </label>
       </div>
 
       <label className="block">
@@ -423,7 +435,7 @@ export function AdminBillingPlansPage() {
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wide text-plooy-gold">
-                        {audienceLabel(draft.audience)}
+                        {draft.sectionLabel || 'Plan'}
                       </p>
                       <p className="text-xs text-plooy-muted">{intervalLabel(draft.interval)}</p>
                     </div>
@@ -465,7 +477,7 @@ export function AdminBillingPlansPage() {
                 <section key={plan.id} className="rounded-2xl border border-dashed border-plooy-gold/30 bg-[#11141c] p-6">
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                     <p className="text-xs font-semibold uppercase tracking-wide text-plooy-gold">
-                      Özel plan
+                      {plan.sectionLabel || 'Özel plan'}
                     </p>
                     <div className="flex items-center gap-3">
                       <label className="flex items-center gap-2 text-sm text-white/80">
@@ -490,11 +502,7 @@ export function AdminBillingPlansPage() {
                       </button>
                     </div>
                   </div>
-                  {renderPlanFields(
-                    plan,
-                    (patch) => updateCustomPlan(index, patch),
-                    { showAudience: true },
-                  )}
+                  {renderPlanFields(plan, (patch) => updateCustomPlan(index, patch), { showAudience: true })}
                   <label className="mt-4 block">
                     <span className="mb-1.5 block text-sm text-plooy-muted">Plan kimliği</span>
                     <input

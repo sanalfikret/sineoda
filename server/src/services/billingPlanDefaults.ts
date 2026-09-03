@@ -15,6 +15,8 @@ export type BillingPlanDefinition = {
   requiresStudentId?: boolean
   enabled?: boolean
   campaignLabel?: string
+  /** Admin kartı / gruplama başlığı — tamamen özelleştirilebilir */
+  sectionLabel?: string
   features: string[]
 }
 
@@ -26,6 +28,7 @@ export const DEFAULT_BILLING_PLANS: BillingPlanDefinition[] = [
     currency: 'TRY',
     interval: 'month',
     audience: 'viewer',
+    sectionLabel: 'İzleyici aboneliği',
     enabled: true,
     features: ['Tüm içerikler', '4 profil', 'HD yayın', 'Android TV desteği'],
   },
@@ -36,6 +39,7 @@ export const DEFAULT_BILLING_PLANS: BillingPlanDefinition[] = [
     currency: 'TRY',
     interval: 'month',
     audience: 'viewer',
+    sectionLabel: 'İzleyici aboneliği',
     popular: true,
     requiresStudentId: true,
     enabled: true,
@@ -43,21 +47,27 @@ export const DEFAULT_BILLING_PLANS: BillingPlanDefinition[] = [
   },
   {
     id: 'creator_application',
-    name: 'Yapımcı Başvuru Ücreti',
+    name: 'Yapımcı Yönetmen Başvuru Ücreti + Üyelik',
     price: 69,
     currency: 'TRY',
     interval: 'once',
     audience: 'creator',
+    sectionLabel: 'Yapımcı Yönetmen',
     enabled: true,
-    features: ['Yapımcı paneli erişimi', 'Film başvurusu gönderme', 'Gelir paylaşımı modeli'],
+    features: [
+      'Yapımcı Yönetmen paneli erişimi',
+      'Film başvurusu gönderme',
+      'Gelir paylaşımı modeli',
+    ],
   },
   {
     id: 'student_cinema_application',
-    name: 'Genç Sinema Başvuru Ücreti',
+    name: 'Genç Sinema Başvuru Ücreti + Üyelik',
     price: 49,
     currency: 'TRY',
     interval: 'once',
     audience: 'creator',
+    sectionLabel: 'Genç Sinema',
     enabled: true,
     features: ['Genç Sinema paneli erişimi', 'Film başvurusu gönderme', 'Okul ve admin incelemesi'],
   },
