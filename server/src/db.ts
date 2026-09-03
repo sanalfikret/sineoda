@@ -627,6 +627,31 @@ export function dbRun(sql: string, params: unknown[] = []) {
   persist()
 }
 
+function runStatement(sql: string, params: unknown[] = []) {
+  db.run(sql, params as (string | number | null)[])
+}
+
+/** DELETE+INSERT gibi cok adimli yazimlar — tek persist, yarim kalmis DB onlenir. */
+export function dbTransaction(run: () => void) {
+  db.run('BEGIN IMMEDIATE')
+  try {
+    run()
+    db.run('COMMIT')
+  } catch (err) {
+    try {
+      db.run('ROLLBACK')
+    } catch {
+      /* rollback hatasi yutulur */
+    }
+    throw err
+  }
+  persist()
+}
+
+export function dbRunNoPersist(sql: string, params: unknown[] = []) {
+  runStatement(sql, params)
+}
+
 export function dbGet<T extends object>(sql: string, params: unknown[] = []) {
   const stmt = db.prepare(sql)
   stmt.bind(params as (string | number | null)[])
