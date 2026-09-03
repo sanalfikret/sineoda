@@ -42,7 +42,7 @@ export function CreatorLoginPage() {
     <CreatorAuthLayout>
       <div className="w-full max-w-md">
         <div className="mb-8 flex justify-center">
-          <PlooyLogo tone="on-dark" linked className="h-10 sm:h-12" />
+          <PlooyLogo tone="on-dark" linked linkTo={localizePath('/')} className="h-10 sm:h-12" />
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-[#11141c] p-6 sm:p-8">

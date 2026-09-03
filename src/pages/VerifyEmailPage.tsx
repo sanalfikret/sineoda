@@ -67,6 +67,7 @@ export function VerifyEmailPage() {
     <AuthLayout
       title={token ? t('verifyEmailVerifying') : t('verifyEmailTitle')}
       subtitle={token ? t('verifyEmailActivating') : t('verifyEmailSubtitle')}
+      backTo={localizePath('/giris')}
     >
       {loading ? (
         <p className="text-sm text-plooy-muted">{t('checkingLink')}</p>
