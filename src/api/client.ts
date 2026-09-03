@@ -418,6 +418,7 @@ export interface LandingConfigResponse {
   studentPickContentIds?: string[]
   studentPicks?: ContentItem[]
   blockTitles?: Partial<Record<string, string>>
+  adminCustomized?: boolean
 }
 
 export async function loginRequest(

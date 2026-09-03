@@ -23,7 +23,6 @@ import {
   saveLandingSectionsConfig,
   type LandingSectionsConfig,
 } from '../services/landingSections.js'
-import { filterContentIdsForPool, poolForShowcaseIcon } from '../services/contentPools.js'
 import {
   fetchStudentCinemaMonthlyWinnersFallback,
   fetchStudentCinemaPicksFallback,
@@ -37,7 +36,7 @@ import {
   saveLandingBlockTitlesConfig,
 } from '../services/landingBlockTitles.js'
 import type { ContentRow } from '../types.js'
-import { markLandingAdminCustomized } from '../services/landingAdminState.js'
+import { markLandingAdminCustomized, isLandingAdminCustomized } from '../services/landingAdminState.js'
 
 const router = Router()
 
@@ -136,6 +135,7 @@ export function getLandingConfig() {
     studentPickContentIds,
     studentPicks,
     blockTitles,
+    adminCustomized: isLandingAdminCustomized(),
   }
 }
 
@@ -224,10 +224,9 @@ function saveLandingShowcasesPayload(showcases: unknown[]) {
         [showcase.id, showcase.title, showcase.icon, showcase.description, showcase.sortOrder],
       )
 
-      ;(filterContentIdsForPool(
-        poolForShowcaseIcon(showcase.icon),
-        showcase.itemIds.filter((contentId) => catalogIds.has(contentId)),
-      ) as string[]).forEach((contentId: string, itemIndex: number) => {
+      ;showcase.itemIds
+        .filter((contentId) => catalogIds.has(contentId))
+        .forEach((contentId: string, itemIndex: number) => {
         dbRunNoPersist(
           'INSERT INTO landing_showcase_items (showcase_id, content_id, sort_order) VALUES (?, ?, ?)',
           [showcase.id, contentId, itemIndex],
@@ -241,11 +240,13 @@ function saveLandingShowcasesPayload(showcases: unknown[]) {
 router.patch('/hero', requireAdmin, (req: AuthRequest, res) => {
   const hero = saveLandingHeroConfig(validateHeroPayload(req.body))
   syncFeaturedFromHero(hero)
+  markLandingAdminCustomized()
   res.json({ hero })
 })
 
 router.patch('/sections', requireAdmin, (req: AuthRequest, res) => {
   const sections = saveLandingSectionsConfig(req.body as Partial<LandingSectionsConfig>)
+  markLandingAdminCustomized()
   res.json({ sections })
 })
 
@@ -344,12 +345,15 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
   if (body.hero) {
     const hero = saveLandingHeroConfig(validateHeroPayload(body.hero))
     syncFeaturedFromHero(hero)
+    markLandingAdminCustomized()
   }
   if (body.sections) {
     saveLandingSectionsConfig(body.sections)
+    markLandingAdminCustomized()
   }
   if (body.blockTitles) {
     saveLandingBlockTitlesConfig(body.blockTitles as Record<string, string>)
+    markLandingAdminCustomized()
   }
   if (body.layout) {
     saveLandingLayoutConfig(sanitizeLayout(body.layout, customBlockIds), customBlockIds)
@@ -376,6 +380,7 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
           index,
         ])
       })
+    markLandingAdminCustomized()
   }
 
   if (studentPickIds) {
@@ -388,6 +393,7 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
           index,
         ])
       })
+    markLandingAdminCustomized()
   }
 
   if (sliderIds) {
@@ -397,6 +403,7 @@ router.put('/', requireAdmin, (req: AuthRequest, res) => {
       .forEach((contentId: string, index: number) => {
         dbRun('INSERT INTO landing_slider (content_id, sort_order) VALUES (?, ?)', [contentId, index])
       })
+    markLandingAdminCustomized()
   }
 
   if (showcases) {
