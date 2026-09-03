@@ -122,6 +122,16 @@ function withLandingWriteLock<T>(operation: () => Promise<T>): Promise<T> {
 }
 
 export async function refreshSessionToken() {
+  if (refreshInFlight) return refreshInFlight
+  refreshInFlight = refreshSessionTokenInner().finally(() => {
+    refreshInFlight = null
+  })
+  return refreshInFlight
+}
+
+let refreshInFlight: Promise<boolean> | null = null
+
+async function refreshSessionTokenInner() {
   const token = getToken()
   if (!token) return false
 
@@ -195,11 +205,21 @@ export async function api<T>(path: string, options: RequestInit = {}, retried = 
     } catch {
       /* gövde tüketilemezse devam */
     }
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      const refreshed = await refreshSessionToken()
-      if (refreshed) return api<T>(path, options, true)
-      if (attempt < 2) await sleep(350 * (attempt + 1))
+    const refreshed = await refreshSessionToken()
+    if (refreshed) return api<T>(path, options, true)
+  }
+
+  if (response.status === 429) {
+    let rateMessage = 'İstek limiti aşıldı. Bir dakika bekleyip tekrar deneyin.'
+    try {
+      const body = (await response.json()) as { error?: string }
+      if (body.error) rateMessage = body.error
+    } catch {
+      /* ignore */
     }
+    const err = new Error(rateMessage) as Error & { status?: number }
+    err.status = 429
+    throw err
   }
 
   if (!response.ok) {
