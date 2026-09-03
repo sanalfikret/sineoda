@@ -12,6 +12,7 @@ import {
   refreshSessionToken,
   saveLandingPageConfig,
   updateLandingLayoutConfig,
+  updateLandingCustomBlocksConfig,
   updateLandingShowcasesConfig,
   type LandingHeroConfig,
 } from '../../api/client'
@@ -137,6 +138,8 @@ export function AdminLandingPage() {
   const [hero, setHero] = useState<LandingHeroConfig>(DEFAULT_HERO)
   const [sections, setSections] = useState(DEFAULT_LANDING_SECTIONS)
   const [customBlocks, setCustomBlocks] = useState<LandingCustomBlock[]>([])
+  const customBlocksRef = useRef<LandingCustomBlock[]>([])
+  const customBlockPersistTimerRef = useRef<number | null>(null)
   const [layout, setLayout] = useState<LandingLayoutConfig>(() =>
     normalizeLandingLayout({ order: DEFAULT_LANDING_BLOCK_ORDER, hidden: [] }),
   )
@@ -264,8 +267,69 @@ export function AdminLandingPage() {
   }, [])
 
   useEffect(() => {
+    customBlocksRef.current = customBlocks
+  }, [customBlocks])
+
+  useEffect(() => {
     showcasesRef.current = showcases
   }, [showcases])
+
+  const persistCustomBlocks = async (
+    nextBlocks?: LandingCustomBlock[],
+    nextLayout?: LandingLayoutConfig,
+  ) => {
+    const blocks = nextBlocks ?? customBlocksRef.current
+    const layoutPayload = normalizeLandingLayout(
+      nextLayout ?? layoutRef.current,
+      blocks.map((block) => block.id),
+    )
+    const validIds = new Set(pickerCatalog.map((item) => item.id))
+    const payload = blocks.map((block) => ({
+      ...block,
+      itemIds:
+        block.type === 'contentRow'
+          ? resolveContentRowItemIds(block, cekimCategoryOptions).filter((id) => validIds.has(id))
+          : block.itemIds ?? [],
+    }))
+    const data = await updateLandingCustomBlocksConfig(payload, layoutPayload)
+    const savedBlocks = data.customBlocks ?? payload
+    customBlocksRef.current = savedBlocks
+    setCustomBlocks(savedBlocks)
+    setLayout(
+      normalizeLandingLayout(
+        data.layout,
+        savedBlocks.map((block) => block.id),
+      ),
+    )
+  }
+
+  const flushCustomBlockPersist = (
+    nextBlocks?: LandingCustomBlock[],
+    nextLayout?: LandingLayoutConfig,
+  ) => {
+    if (customBlockPersistTimerRef.current !== null) {
+      window.clearTimeout(customBlockPersistTimerRef.current)
+      customBlockPersistTimerRef.current = null
+    }
+    return persistCustomBlocks(nextBlocks, nextLayout)
+  }
+
+  const scheduleCustomBlockPersist = (
+    nextBlocks?: LandingCustomBlock[],
+    nextLayout?: LandingLayoutConfig,
+  ) => {
+    if (nextBlocks) customBlocksRef.current = nextBlocks
+    if (nextLayout) layoutRef.current = nextLayout
+    if (customBlockPersistTimerRef.current !== null) {
+      window.clearTimeout(customBlockPersistTimerRef.current)
+    }
+    customBlockPersistTimerRef.current = window.setTimeout(() => {
+      customBlockPersistTimerRef.current = null
+      void flushCustomBlockPersist().catch((err) => {
+        setMessage(err instanceof Error ? err.message : 'Özel bölüm kaydedilemedi.')
+      })
+    }, 600)
+  }
 
   const canPersistShowcases = (nextShowcases: ShowcaseDraft[]) =>
     nextShowcases.every((showcase) => showcase.title.trim())
@@ -601,16 +665,22 @@ export function AdminLandingPage() {
           const order = normalized.order.includes(layoutId)
             ? normalized.order
             : [...normalized.order, layoutId]
-          return { ...normalized, order }
+          const nextLayout = { ...normalized, order }
+          layoutRef.current = nextLayout
+          void flushCustomBlockPersist(nextBlocks, nextLayout).catch((err) => {
+            setMessage(err instanceof Error ? err.message : 'Özel bölüm kaydedilemedi.')
+          })
+          return nextLayout
         })
+        customBlocksRef.current = nextBlocks
         return nextBlocks
       })
 
       setExpandedBlocks((current) => new Set([...current, layoutId]))
       setMessage(
         type === 'contentRow'
-          ? 'İçerik satırı eklendi. Film seçip Kaydet\'e basın.'
-          : 'Özel bölüm eklendi. Yayına almak için Kaydet\'e basın.',
+          ? 'İçerik satırı eklendi ve kaydedildi.'
+          : 'Özel bölüm eklendi ve kaydedildi.',
       )
 
       requestAnimationFrame(() => {
@@ -626,19 +696,33 @@ export function AdminLandingPage() {
 
   const removeCustomBlock = (blockId: string) => {
     const layoutId = customBlockLayoutId(blockId)
-    setCustomBlocks((current) => current.filter((block) => block.id !== blockId))
-    setLayout((current) => {
-      const nextCustomIds = customBlocks.filter((block) => block.id !== blockId).map((block) => block.id)
-      const normalized = normalizeLandingLayout(current, nextCustomIds)
-      return {
-        order: normalized.order.filter((id) => id !== layoutId),
-        hidden: normalized.hidden.filter((id) => id !== layoutId),
-      }
+    setCustomBlocks((current) => {
+      const nextBlocks = current.filter((block) => block.id !== blockId)
+      setLayout((layoutCurrent) => {
+        const nextCustomIds = nextBlocks.map((block) => block.id)
+        const normalized = normalizeLandingLayout(layoutCurrent, nextCustomIds)
+        const nextLayout = {
+          order: normalized.order.filter((id) => id !== layoutId),
+          hidden: normalized.hidden.filter((id) => id !== layoutId),
+        }
+        layoutRef.current = nextLayout
+        customBlocksRef.current = nextBlocks
+        void flushCustomBlockPersist(nextBlocks, nextLayout).catch((err) => {
+          setMessage(err instanceof Error ? err.message : 'Silme kaydedilemedi.')
+        })
+        return nextLayout
+      })
+      return nextBlocks
     })
   }
 
   const updateCustomBlock = (blockId: string, nextBlock: LandingCustomBlock) => {
-    setCustomBlocks((current) => current.map((block) => (block.id === blockId ? nextBlock : block)))
+    setCustomBlocks((current) => {
+      const nextBlocks = current.map((block) => (block.id === blockId ? nextBlock : block))
+      customBlocksRef.current = nextBlocks
+      scheduleCustomBlockPersist(nextBlocks)
+      return nextBlocks
+    })
   }
 
   const handleSave = async () => {
@@ -661,6 +745,7 @@ export function AdminLandingPage() {
 
       await refreshSessionToken()
       await flushShowcasePersist().catch(() => undefined)
+      await flushCustomBlockPersist().catch(() => undefined)
 
       const validIds = new Set(pickerCatalog.map((item) => item.id))
       const persistedSliderIds = sliderIds.filter((id) => validIds.has(id))
@@ -670,7 +755,7 @@ export function AdminLandingPage() {
       }))
       const skipped = sliderIds.length - persistedSliderIds.length
 
-      const persistedCustomBlocks = customBlocks.map((block) => ({
+      const persistedCustomBlocks = customBlocksRef.current.map((block) => ({
         ...block,
         itemIds:
           block.type === 'contentRow'

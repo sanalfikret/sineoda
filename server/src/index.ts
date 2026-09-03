@@ -80,7 +80,8 @@ import {
   migrateLegacyBrandAccounts,
 } from './seed.js'
 import { migrateLegacyBrandText } from './services/brandMigration.js'
-import { ensureMonthlyRollover, seedDemoMonthlyIfEmpty } from './services/watchAccounting.js'
+import { getLandingCustomBlocks } from './services/landingCustomBlocks.js'
+import { isLandingAdminCustomized } from './services/landingAdminState.js'
 import type { ContentRow } from './types.js'
 import { assertProductionSecurity, warnProductionReadiness } from './security/startupValidation.js'
 import helmet from 'helmet'
@@ -186,6 +187,7 @@ app.get('/api/health', (_req, res) => {
     dbExists = false
   }
   const userCount = dbGet<{ count: number }>('SELECT COUNT(*) as count FROM users')?.count ?? 0
+  const customBlockCount = getLandingCustomBlocks().length
 
   res.json({
     ok: true,
@@ -198,6 +200,8 @@ app.get('/api/health', (_req, res) => {
       dbExists,
       dbSizeBytes,
       userCount,
+      customBlockCount,
+      landingAdminCustomized: isLandingAdminCustomized(),
     },
     features: {
       landing: true,
