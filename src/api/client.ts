@@ -195,8 +195,11 @@ export async function api<T>(path: string, options: RequestInit = {}, retried = 
     } catch {
       /* gövde tüketilemezse devam */
     }
-    const refreshed = await refreshSessionToken()
-    if (refreshed) return api<T>(path, options, true)
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const refreshed = await refreshSessionToken()
+      if (refreshed) return api<T>(path, options, true)
+      if (attempt < 2) await sleep(350 * (attempt + 1))
+    }
   }
 
   if (!response.ok) {

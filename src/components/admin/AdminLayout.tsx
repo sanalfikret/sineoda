@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { refreshSessionToken } from '../../api/client'
 import { AdminContentActions } from './AdminContentActions'
 import { PlooyLogo } from '../PlooyLogo'
 import { useAuth } from '../../context/AuthContext'
@@ -22,7 +23,7 @@ const navItems = [
 ]
 
 export function AdminLayout() {
-  const { user, logout } = useAuth()
+  const { user, logout, refreshUser } = useAuth()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -32,6 +33,28 @@ export function AdminLayout() {
       void Promise.all(regs.map((reg) => reg.unregister()))
     })
   }, [])
+
+  useEffect(() => {
+    if (!user) return
+
+    const keepAlive = () => {
+      void refreshSessionToken()
+        .then((ok) => (ok ? refreshUser().catch(() => undefined) : undefined))
+        .catch(() => undefined)
+    }
+
+    keepAlive()
+    const intervalId = window.setInterval(keepAlive, 4 * 60 * 1000)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') keepAlive()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      window.clearInterval(intervalId)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [user, refreshUser])
 
   const handleLogout = () => {
     logout()

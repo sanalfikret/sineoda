@@ -6,7 +6,7 @@ import path from 'node:path'
 import { v4 as uuid } from 'uuid'
 import { config, publicAssetUrl } from '../config.js'
 import { dbAll, dbGet, dbRun, uploadsDir } from '../db.js'
-import { getProfileId, requireAuth, signToken, verifyToken, type AuthRequest } from '../middleware/auth.js'
+import { getProfileId, readAuthPayload, requireAuth, signToken, verifyToken, type AuthRequest } from '../middleware/auth.js'
 import { mapProfile, mapUser } from '../mappers.js'
 import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
 import { sendPasswordResetEmail, sendEmailVerificationEmail, sendEmailChangeConfirmationEmail } from '../services/email.js'
@@ -359,22 +359,10 @@ router.post('/refresh', authRefreshLimiter, (req, res) => {
     return
   }
 
-  const raw = header.slice(7)
-  let payload: JwtPayload
-  try {
-    payload = verifyToken(raw)
-  } catch (err) {
-    if (err instanceof jwt.TokenExpiredError) {
-      try {
-        payload = jwt.verify(raw, config.jwtSecret, { ignoreExpiration: true }) as JwtPayload
-      } catch {
-        res.status(401).json({ error: 'Geçersiz oturum.' })
-        return
-      }
-    } else {
-      res.status(401).json({ error: 'Geçersiz oturum.' })
-      return
-    }
+  const payload = readAuthPayload(header.slice(7))
+  if (!payload) {
+    res.status(401).json({ error: 'Geçersiz oturum.' })
+    return
   }
 
   const user = dbGet<UserRow>('SELECT id, role FROM users WHERE id = ?', [payload.userId])
