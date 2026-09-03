@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { resolveMediaUrl } from '../api/client'
 import { getContentTypeLabel } from '../constants/contentTypes'
 import type { ContentItem } from '../types/content'
@@ -53,6 +54,7 @@ export function ContentCard({
   guestHref,
   forceLandscape = false,
 }: ContentCardProps) {
+  const { t } = useTranslation('content')
   const isGrid = variant === 'grid'
   const isBrowseGrid = isGrid && gridFixedWidth
   const isPortrait = !forceLandscape && (layout === 'portrait' || item.videoFormat === 'vertical')
@@ -126,7 +128,7 @@ export function ContentCard({
     <>
       {item.isNew && !item.monthlyAward?.enabled && (
         <span className="absolute left-2 top-2 z-10 rounded bg-plooy-gold px-2 py-0.5 text-[10px] font-bold text-plooy-bg">
-          YENİ
+          {t('hero.newBadge')}
         </span>
       )}
 
@@ -138,7 +140,7 @@ export function ContentCard({
 
       {item.isNew && item.monthlyAward?.enabled && (
         <span className="absolute left-2 top-8 z-10 rounded bg-plooy-gold px-2 py-0.5 text-[10px] font-bold text-plooy-bg">
-          YENİ
+          {t('hero.newBadge')}
         </span>
       )}
 
