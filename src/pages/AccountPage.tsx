@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { fetchBillingPlans, fetchBillingInvoices, fetchLegalConsents, fetchSubscription, cancelSubscription, changePasswordRequest, changeEmailRequest, openBillingInvoiceReceipt, type BillingInvoice, type LegalConsentRecord } from '../api/client'
+import { GuestSiteShell } from '../components/GuestSiteShell'
 import { DailyWatchQuotaCard } from '../components/member/DailyWatchQuotaCard'
 import { PageFooter } from '../components/PageFooter'
 import { PageMeta } from '../components/PageMeta'
@@ -273,9 +274,10 @@ export function AccountPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-plooy-bg px-4 py-8 text-white sm:px-6">
+    <GuestSiteShell footer={<PageFooter />} offsetHeader>
       <PageMeta title={t('title')} description={t('metaDescription')} noIndex />
-      <div className="safe-top mx-auto max-w-3xl">
+      <div className="min-h-dvh bg-plooy-bg px-4 py-8 text-white sm:px-6">
+      <div className="mx-auto max-w-3xl">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold sm:text-3xl">{t('title')}</h1>
@@ -724,8 +726,7 @@ export function AccountPage() {
           )}
         </section>
       </div>
-
-      <PageFooter />
-    </div>
+      </div>
+    </GuestSiteShell>
   )
 }
