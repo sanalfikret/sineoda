@@ -12,11 +12,13 @@ import {
   creatorLoginRequest,
   creatorSignupRequest,
   deleteProfileRequest,
+  AUTH_TOKEN_CHANGED_EVENT,
   clearAuthStorage,
   fetchMe,
   getProfileId,
   getToken,
   loginRequest,
+  refreshSessionToken,
   setProfileId,
   setToken,
   signupRequest,
@@ -35,6 +37,7 @@ import {
 interface AuthContextValue {
   user: User | null
   activeProfile: Profile | null
+  sessionToken: string | null
   isLoading: boolean
   isAdmin: boolean
   isCreator: boolean
@@ -83,10 +86,25 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [activeProfile, setActiveProfile] = useState<Profile | null>(null)
+  const [sessionToken, setSessionToken] = useState<string | null>(() =>
+    typeof window !== 'undefined' ? getToken() : null,
+  )
   const [isLoading, setIsLoading] = useState(true)
+
+  const syncSessionToken = useCallback(() => {
+    const token = getToken()
+    setSessionToken(token)
+    if (!token) {
+      setUser(null)
+      setActiveProfile(null)
+      cacheAuthUser(null)
+    }
+    return token
+  }, [])
 
   const clearSession = useCallback(() => {
     clearAuthStorage()
+    setSessionToken(null)
     setUser(null)
     setActiveProfile(null)
   }, [])
@@ -146,6 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      syncSessionToken()
       setIsLoading(false)
     }
 
@@ -154,31 +173,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const onAuthCleared = () => {
-      setUser(null)
-      setActiveProfile(null)
+      syncSessionToken()
+    }
+    const onTokenChanged = () => {
+      syncSessionToken()
+    }
+    const onStorage = (event: StorageEvent) => {
+      if (
+        event.key === null ||
+        event.key === 'plooy_token' ||
+        event.key === 'sineoda_token' ||
+        event.key === 'plooy_user_cache' ||
+        event.key === 'sineoda_user_cache'
+      ) {
+        syncSessionToken()
+      }
     }
     window.addEventListener('plooy-auth-cleared', onAuthCleared)
-    return () => window.removeEventListener('plooy-auth-cleared', onAuthCleared)
-  }, [])
+    window.addEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged)
+    window.addEventListener('storage', onStorage)
+    return () => {
+      window.removeEventListener('plooy-auth-cleared', onAuthCleared)
+      window.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged)
+      window.removeEventListener('storage', onStorage)
+    }
+  }, [syncSessionToken])
 
   useEffect(() => {
     if (!user) return
 
     const onVisible = () => {
-      if (document.visibilityState !== 'visible' || !getToken()) return
+      if (document.visibilityState !== 'visible') return
+      if (!getToken()) {
+        syncSessionToken()
+        return
+      }
       void syncAuthSession().catch(() => undefined)
+      void refreshSessionToken().catch(() => undefined)
     }
     document.addEventListener('visibilitychange', onVisible)
 
     return () => {
       document.removeEventListener('visibilitychange', onVisible)
     }
-  }, [user, syncAuthSession])
+  }, [user, syncAuthSession, syncSessionToken])
 
   const login = useCallback(
     async (email: string, password: string, options?: { requireAdmin?: boolean }) => {
       const { token, user: loggedInUser } = await loginRequest(email, password, options?.requireAdmin)
+      if (!token?.trim()) {
+        throw new Error('Sunucu oturum jetonu döndürmedi. Sayfayı yenileyip tekrar deneyin.')
+      }
       setToken(token)
+      setSessionToken(token)
       setProfileId(null)
       setActiveProfile(null)
       applyUser(loggedInUser)
@@ -209,7 +256,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const creatorLogin = useCallback(async (email: string, password: string) => {
     const { token, user: loggedInUser } = await creatorLoginRequest(email, password)
+    if (!token?.trim()) {
+      throw new Error('Sunucu oturum jetonu döndürmedi. Sayfayı yenileyip tekrar deneyin.')
+    }
     setToken(token)
+    setSessionToken(token)
     setProfileId(null)
     setActiveProfile(null)
     applyUser(loggedInUser)
@@ -232,7 +283,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       studentIdFileUrl?: string
     }) => {
       const { token, user: newUser } = await creatorSignupRequest(data)
+      if (!token?.trim()) {
+        throw new Error('Sunucu oturum jetonu döndürmedi. Sayfayı yenileyip tekrar deneyin.')
+      }
       setToken(token)
+      setSessionToken(token)
       setProfileId(null)
       setActiveProfile(null)
       applyUser(newUser)
@@ -308,6 +363,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       activeProfile,
+      sessionToken,
       isLoading,
       isAdmin,
       isCreator,
@@ -324,7 +380,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       updateProfile,
       deleteProfile,
     }),
-    [user, activeProfile, isLoading, isAdmin, isCreator, login, signup, creatorLogin, creatorSignup, logout, clearActiveProfile, refreshUser, selectProfile, addProfile, updateAccount, updateProfile, deleteProfile],
+    [user, activeProfile, sessionToken, isLoading, isAdmin, isCreator, login, signup, creatorLogin, creatorSignup, logout, clearActiveProfile, refreshUser, selectProfile, addProfile, updateAccount, updateProfile, deleteProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

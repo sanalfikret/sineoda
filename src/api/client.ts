@@ -12,6 +12,7 @@ export type { LandingSectionsConfig } from '../constants/landingDefaults'
 
 const TOKEN_KEY = 'plooy_token'
 const LEGACY_TOKEN_KEY = 'sineoda_token'
+export const AUTH_TOKEN_CHANGED_EVENT = 'plooy-auth-token-changed'
 const PROFILE_KEY = 'plooy_profile_id'
 const LEGACY_PROFILE_KEY = 'sineoda_profile_id'
 const AUTH_TOKEN_HEADER = 'X-Plooy-Token'
@@ -89,6 +90,16 @@ export function getToken() {
 
 export function setToken(token: string | null) {
   writeStorageItem(TOKEN_KEY, LEGACY_TOKEN_KEY, token)
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(AUTH_TOKEN_CHANGED_EVENT, { detail: token }))
+  }
+}
+
+/** Kayıt/güncelleme öncesi oturum — token yoksa yenilemeyi dene. */
+export async function ensureWritableSession(): Promise<boolean> {
+  if (getToken()) return true
+  const refreshed = await refreshSessionToken()
+  return Boolean(refreshed && getToken())
 }
 
 function applyAuthToken(token: string | null, epoch: number) {
