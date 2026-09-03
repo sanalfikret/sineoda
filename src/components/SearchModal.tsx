@@ -7,6 +7,7 @@ import { ContentCard } from './ContentCard'
 import { useContent } from '../context/ContentContext'
 import { CONTENT_TYPES } from '../constants/contentTypes'
 import { useSearchUI } from '../context/SearchContext'
+import { useBrowseLabels } from '../i18n/useBrowseLabels'
 
 interface SearchModalProps {
   onSelect: (item: ContentItem) => void
@@ -19,6 +20,7 @@ export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
   const { t: tc } = useTranslation()
   const { visibleCatalog } = useContent()
   const { isOpen, closeSearch } = useSearchUI()
+  const { translateGenre } = useBrowseLabels()
   const [query, setQuery] = useState('')
   const [genre, setGenre] = useState<string | null>(null)
   const [year, setYear] = useState<number | null>(null)
@@ -118,7 +120,7 @@ export function SearchModal({ onSelect, kidsSafe = false }: SearchModalProps) {
             <option value="">{t('search.allGenres')}</option>
             {genres.map((entry) => (
               <option key={entry} value={entry}>
-                {entry}
+                {translateGenre(entry)}
               </option>
             ))}
           </select>
