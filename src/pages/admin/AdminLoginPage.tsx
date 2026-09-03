@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { PlooyLogo } from '../../components/PlooyLogo'
+import { getToken } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
 import { useLocale } from '../../i18n/LocaleContext'
 import { appConfig } from '../../config/appConfig'
@@ -14,7 +15,7 @@ export function AdminLoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  if (!isLoading && isAdmin) {
+  if (!isLoading && getToken() && isAdmin) {
     return <Navigate to="/admin" replace />
   }
 

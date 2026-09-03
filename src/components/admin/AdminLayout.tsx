@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { refreshSessionToken } from '../../api/client'
+import { Link, NavLink, Outlet } from 'react-router-dom'
+import { adminLogout } from '../../api/client'
 import { AdminContentActions } from './AdminContentActions'
 import { PlooyLogo } from '../PlooyLogo'
 import { useAuth } from '../../context/AuthContext'
@@ -23,8 +23,7 @@ const navItems = [
 ]
 
 export function AdminLayout() {
-  const { user, logout, refreshUser } = useAuth()
-  const navigate = useNavigate()
+  const { user } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
@@ -33,33 +32,6 @@ export function AdminLayout() {
       void Promise.all(regs.map((reg) => reg.unregister()))
     })
   }, [])
-
-  useEffect(() => {
-    if (!user) return
-
-    const keepAlive = () => {
-      void refreshSessionToken()
-        .then((ok) => (ok ? refreshUser().catch(() => undefined) : undefined))
-        .catch(() => undefined)
-    }
-
-    keepAlive()
-    const intervalId = window.setInterval(keepAlive, 10 * 60 * 1000)
-    const onVisible = () => {
-      if (document.visibilityState === 'visible') keepAlive()
-    }
-    document.addEventListener('visibilitychange', onVisible)
-
-    return () => {
-      window.clearInterval(intervalId)
-      document.removeEventListener('visibilitychange', onVisible)
-    }
-  }, [user, refreshUser])
-
-  const handleLogout = () => {
-    logout()
-    navigate('/admin/giris', { replace: true })
-  }
 
   return (
     <div className="min-h-dvh bg-[#0d0f14] text-white">
@@ -116,7 +88,7 @@ export function AdminLayout() {
             </Link>
             <button
               type="button"
-              onClick={handleLogout}
+              onClick={adminLogout}
               className="rounded-lg bg-white/5 px-3 py-2 text-xs text-white/80 hover:bg-white/10"
             >
               Çıkış Yap

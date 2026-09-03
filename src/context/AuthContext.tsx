@@ -26,6 +26,8 @@ import {
 import type { Profile, User } from '../types/auth'
 import {
   cacheAuthUser,
+  getAuthSessionEpoch,
+  isAuthSessionCurrent,
   readCachedAuthUser,
   sleep,
 } from '../utils/authSession'
@@ -106,7 +108,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const syncAuthSession = useCallback(async () => {
+    const epoch = getAuthSessionEpoch()
+    if (!getToken()) return null
     const { user: me, token: refreshedToken } = await fetchMe()
+    if (!isAuthSessionCurrent(epoch) || !getToken()) return null
     if (refreshedToken) setToken(refreshedToken)
     applyUser(me)
     return me
@@ -148,16 +153,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [syncAuthSession, applyUser])
 
   useEffect(() => {
-    const onAuthCleared = () => clearSession()
+    const onAuthCleared = () => {
+      setUser(null)
+      setActiveProfile(null)
+    }
     window.addEventListener('plooy-auth-cleared', onAuthCleared)
     return () => window.removeEventListener('plooy-auth-cleared', onAuthCleared)
-  }, [clearSession])
+  }, [])
 
   useEffect(() => {
-    if (!getToken()) return
+    if (!user) return
 
     const onVisible = () => {
-      if (document.visibilityState !== 'visible') return
+      if (document.visibilityState !== 'visible' || !getToken()) return
       void syncAuthSession().catch(() => undefined)
     }
     document.addEventListener('visibilitychange', onVisible)
@@ -165,7 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       document.removeEventListener('visibilitychange', onVisible)
     }
-  }, [syncAuthSession])
+  }, [user, syncAuthSession])
 
   const login = useCallback(
     async (email: string, password: string, options?: { requireAdmin?: boolean }) => {

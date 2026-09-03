@@ -6,7 +6,7 @@ import { deriveHiddenNavFromCategories } from '../utils/navVisibility'
 import type { AdminContentItem, AdminContentMeta, ContentCategory, ContentItem, Episode } from '../types/content'
 import type { LandingSectionsConfig } from '../constants/landingDefaults'
 import type { LandingCustomBlock } from '../constants/landingCustomBlocks'
-import { cacheAuthUser, isAuthSessionError, isTransientApiError, sleep } from '../utils/authSession'
+import { cacheAuthUser, getAuthSessionEpoch, invalidateAuthSession, isAuthSessionCurrent, isAuthSessionError, isTransientApiError, sleep } from '../utils/authSession'
 
 export type { LandingSectionsConfig } from '../constants/landingDefaults'
 
@@ -91,6 +91,11 @@ export function setToken(token: string | null) {
   writeStorageItem(TOKEN_KEY, LEGACY_TOKEN_KEY, token)
 }
 
+function applyAuthToken(token: string | null, epoch: number) {
+  if (!isAuthSessionCurrent(epoch)) return
+  setToken(token)
+}
+
 export function getProfileId() {
   return readStorageItem(PROFILE_KEY, LEGACY_PROFILE_KEY)
 }
@@ -103,12 +108,21 @@ let refreshInFlight: Promise<boolean> | null = null
 
 /** Yalnızca explicit logout — arka plan refresh 401 ile silme. */
 export function clearAuthStorage() {
+  invalidateAuthSession()
   refreshInFlight = null
   setToken(null)
   setProfileId(null)
   cacheAuthUser(null)
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new Event('plooy-auth-cleared'))
+  }
+}
+
+/** Admin panel çıkışı — tam sayfa yönlendirme, takılı spinner/oturum kalmasın. */
+export function adminLogout() {
+  clearAuthStorage()
+  if (typeof window !== 'undefined') {
+    window.location.replace('/admin/giris')
   }
 }
 
@@ -133,8 +147,9 @@ export async function refreshSessionToken() {
 }
 
 async function refreshSessionTokenInner() {
+  const epoch = getAuthSessionEpoch()
   const token = getToken()
-  if (!token) return false
+  if (!token || !isAuthSessionCurrent(epoch)) return false
 
   try {
     const headers = new Headers({ Authorization: `Bearer ${token}` })
@@ -151,18 +166,18 @@ async function refreshSessionTokenInner() {
       response = await fetch(`${getApiBase()}/api/auth/me`, { headers, cache: 'no-store' })
     }
 
-    if (!response.ok) return false
+    if (!response.ok || !isAuthSessionCurrent(epoch)) return false
 
     const headerToken = readAuthTokenHeader(response)
     if (headerToken) {
-      setToken(headerToken)
-      return true
+      applyAuthToken(headerToken, epoch)
+      return isAuthSessionCurrent(epoch)
     }
 
     const body = (await response.json()) as { token?: string }
     if (body.token) {
-      setToken(body.token)
-      return true
+      applyAuthToken(body.token, epoch)
+      return isAuthSessionCurrent(epoch)
     }
   } catch {
     return false
@@ -172,6 +187,7 @@ async function refreshSessionTokenInner() {
 }
 
 export async function api<T>(path: string, options: RequestInit = {}, retried = false): Promise<T> {
+  const authEpoch = getAuthSessionEpoch()
   const headers = new Headers(options.headers)
 
   if (
@@ -263,13 +279,13 @@ export async function api<T>(path: string, options: RequestInit = {}, retried = 
 
   if (response.status === 204) {
     const refreshed = readAuthTokenHeader(response)
-    if (refreshed) setToken(refreshed)
+    if (refreshed) applyAuthToken(refreshed, authEpoch)
     return undefined as T
   }
 
   const data = (await response.json()) as T & { token?: string }
   const refreshed = readAuthTokenHeader(response) ?? data.token
-  if (refreshed) setToken(refreshed)
+  if (refreshed) applyAuthToken(refreshed, authEpoch)
   return data as T
 }
 
