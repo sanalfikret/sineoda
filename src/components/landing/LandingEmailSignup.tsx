@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import type { LandingSectionsConfig } from '../../constants/landingDefaults'
 import { useLocale } from '../../i18n/LocaleContext'
 
-export function LandingEmailSignup({ section: _section }: { section: LandingSectionsConfig['emailSignup'] }) {
+export function LandingEmailSignup({ section }: { section: LandingSectionsConfig['emailSignup'] }) {
   const { t } = useTranslation('landing')
   const { localizePath } = useLocale()
   const navigate = useNavigate()
@@ -19,8 +19,8 @@ export function LandingEmailSignup({ section: _section }: { section: LandingSect
   return (
     <section className="border-t border-white/5 bg-gradient-to-b from-plooy-bg to-black px-4 py-16 sm:px-6 sm:py-20">
       <div className="mx-auto max-w-3xl text-center">
-        <h2 className="text-2xl font-bold text-white sm:text-3xl lg:text-4xl">{t('emailSignup.title')}</h2>
-        <p className="mt-3 text-sm text-white/60 sm:text-base">{t('emailSignup.description')}</p>
+        <h2 className="text-2xl font-bold text-white sm:text-3xl lg:text-4xl">{section.title}</h2>
+        <p className="mt-3 text-sm text-white/60 sm:text-base">{section.description}</p>
 
         <form
           onSubmit={handleSubmit}
@@ -37,7 +37,7 @@ export function LandingEmailSignup({ section: _section }: { section: LandingSect
             type="submit"
             className="h-14 rounded-md bg-plooy-gold px-8 text-base font-bold text-plooy-bg transition hover:brightness-110"
           >
-            {t('emailSignup.buttonLabel')}
+            {section.buttonLabel}
           </button>
         </form>
       </div>
