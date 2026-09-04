@@ -14,7 +14,8 @@ import { canUserPlay, getUserSubscription, isSubscriptionRequired } from '../ser
 import { activateUserSubscription } from '../services/subscriptionActivation.js'
 import { cancelUserSubscription } from '../services/subscriptionCancellation.js'
 import { redeemGiftCode } from '../services/giftCodes.js'
-import { requireAuth, getCreatorForUser, type AuthRequest } from '../middleware/auth.js'
+import { getCreatorForUser, requireAuth, type AuthRequest } from '../middleware/auth.js'
+import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
 import type { UserRow } from '../types.js'
 
 const router = Router()
@@ -58,6 +59,20 @@ router.get('/plans', (_req, res) => {
 
 router.get('/can-play', requireAuth, (req: AuthRequest, res) => {
   const user = getUserSubscription(req.auth!.userId)
+  if (user?.role === 'creator') {
+    const creator = getCreatorForUser(req.auth!.userId)
+    const fullUser = dbGet<Pick<UserRow, 'subscription_expires_at'>>(
+      'SELECT subscription_expires_at FROM users WHERE id = ?',
+      [req.auth!.userId],
+    )
+    const paid = Boolean(creator && isCreatorRegistrationPaid(creator, fullUser))
+    res.json({
+      allowed: paid,
+      paymentRequired: true,
+      reason: paid ? undefined : 'creator_registration',
+    })
+    return
+  }
   res.json({
     allowed: canUserPlay(user),
     paymentRequired: isSubscriptionRequired(),

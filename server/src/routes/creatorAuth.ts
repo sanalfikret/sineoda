@@ -182,7 +182,17 @@ router.post('/signup', creatorAuthLimiter, (req, res) => {
     )
   }
 
-  if (creatorProgram === 'student_cinema' && resolvedSchoolId && !paymentConfigured) {
+  if (creatorProgram === 'student_cinema' && resolvedSchoolId && paymentConfigured) {
+    createStudentFilmSubmission({
+      creatorId,
+      schoolId: resolvedSchoolId,
+      title: studioName.trim(),
+      description: bio?.trim() ?? '',
+      filmLink: String(filmLink ?? '').trim(),
+      now,
+      reviewStatus: 'payment_pending',
+    })
+  } else if (creatorProgram === 'student_cinema' && resolvedSchoolId && !paymentConfigured) {
     const normalizedFilmLink = String(filmLink ?? '').trim()
     createStudentFilmSubmission({
       creatorId,

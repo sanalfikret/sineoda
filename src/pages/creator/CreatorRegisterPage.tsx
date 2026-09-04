@@ -125,7 +125,12 @@ export function CreatorRegisterPage() {
         filmLink: isStudentProgram ? filmLink : undefined,
         studentIdFileUrl,
       })
-      navigate(`${localizePath('/creator/odeme')}?checkout=1`, { replace: true })
+      navigate(
+        isStudentProgram
+          ? `${localizePath('/creator/odeme')}?checkout=1`
+          : localizePath('/creator'),
+        { replace: true },
+      )
     } catch (err) {
       setError(err instanceof Error ? err.message : t('errors.signupFailed'))
     } finally {

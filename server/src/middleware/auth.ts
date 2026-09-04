@@ -133,7 +133,7 @@ export function getCreatorForUser(userId: string) {
   return dbGet<CreatorRow>('SELECT * FROM creators WHERE user_id = ?', [userId])
 }
 
-export function requireApprovedCreator(req: AuthRequest, res: Response, next: NextFunction) {
+export function requireActiveCreator(req: AuthRequest, res: Response, next: NextFunction) {
   requireCreator(req, res, () => {
     const creator = getCreatorForUser(req.auth!.userId)
     if (!creator) {
@@ -148,6 +148,14 @@ export function requireApprovedCreator(req: AuthRequest, res: Response, next: Ne
       res.status(403).json({ error: 'Hesabınız askıya alındı.', status: creator.status })
       return
     }
+    ;(req as AuthRequest & { creator?: CreatorRow }).creator = creator
+    next()
+  })
+}
+
+export function requireApprovedCreator(req: AuthRequest, res: Response, next: NextFunction) {
+  requireActiveCreator(req, res, () => {
+    const creator = getCreatorForUser(req.auth!.userId)!
     const user = dbGet<Pick<UserRow, 'subscription_expires_at'>>(
       'SELECT subscription_expires_at FROM users WHERE id = ?',
       [req.auth!.userId],

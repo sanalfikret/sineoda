@@ -13,7 +13,8 @@ import {
 } from '../services/creatorContentAdmin.js'
 import { attachStats, getContentEngagementStats } from '../services/studentCinema.js'
 import { notifyCreatorFilmReview } from '../services/creatorNotifications.js'
-import type { ContentRow, CreatorRow } from '../types.js'
+import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
+import type { CreatorRow, UserRow } from '../types.js'
 
 const router = Router()
 
@@ -67,33 +68,51 @@ function publishPendingStandardFilms(creatorId: string, adminUserId: string) {
   return publishedIds
 }
 
-router.get('/creators', requireAdmin, (_req: AuthRequest, res) => {
+router.get('/creators', requireAdmin, (req: AuthRequest, res) => {
+  const paymentFilter = String(req.query.payment ?? 'all').trim()
   const rows = dbAll<
-    CreatorRow & { user_name: string; user_email: string; document_count: number; content_count: number }
+    CreatorRow & { user_name: string; user_email: string; document_count: number; content_count: number; payment_pending_count: number }
   >(
     `SELECT c.*, u.name AS user_name, u.email AS user_email,
+      u.subscription_expires_at,
       (SELECT COUNT(*) FROM creator_documents cd WHERE cd.creator_id = c.id) AS document_count,
-      (SELECT COUNT(*) FROM content co WHERE co.creator_id = c.id) AS content_count
+      (SELECT COUNT(*) FROM content co WHERE co.creator_id = c.id) AS content_count,
+      (SELECT COUNT(*) FROM content co WHERE co.creator_id = c.id AND co.review_status = 'payment_pending') AS payment_pending_count
     FROM creators c
     JOIN users u ON u.id = c.user_id
     ORDER BY c.created_at DESC`,
   )
 
-  res.json({
-    creators: rows.map((row) => ({
-      id: row.id,
-      userId: row.user_id,
-      name: row.user_name,
-      email: row.user_email,
-      studioName: row.studio_name,
-      bio: row.bio,
-      status: row.status,
-      legalAcceptedAt: row.legal_accepted_at,
-      createdAt: row.created_at,
-      documentCount: row.document_count,
-      contentCount: row.content_count,
-    })),
-  })
+  const creators = rows
+    .map((row) => {
+      const registrationPaid = isCreatorRegistrationPaid(row, {
+        subscription_expires_at: row.subscription_expires_at ?? null,
+      })
+      return {
+        id: row.id,
+        userId: row.user_id,
+        name: row.user_name,
+        email: row.user_email,
+        studioName: row.studio_name,
+        bio: row.bio,
+        status: row.status,
+        program: row.program ?? 'standard',
+        legalAcceptedAt: row.legal_accepted_at,
+        createdAt: row.created_at,
+        documentCount: row.document_count,
+        contentCount: row.content_count,
+        paymentPendingCount: row.payment_pending_count,
+        registrationPaidAt: row.registration_paid_at ?? null,
+        registrationPaid,
+      }
+    })
+    .filter((creator) => {
+      if (paymentFilter === 'unpaid') return !creator.registrationPaid
+      if (paymentFilter === 'paid') return creator.registrationPaid
+      return true
+    })
+
+  res.json({ creators })
 })
 
 router.get('/creators/:id', requireAdmin, (req: AuthRequest, res) => {
@@ -137,11 +156,15 @@ router.get('/creators/:id', requireAdmin, (req: AuthRequest, res) => {
       studioName: row.studio_name,
       bio: row.bio,
       status: row.status,
+      program: row.program ?? 'standard',
       legalAcceptedAt: row.legal_accepted_at,
       createdAt: row.created_at,
       userCreatedAt: row.user_created_at,
       documentCount: documents.length,
       contentCount: contentRows.length,
+      registrationPaidAt: row.registration_paid_at ?? null,
+      registrationPaid: isCreatorRegistrationPaid(row),
+      paymentPendingCount: contentRows.filter((item) => item.review_status === 'payment_pending').length,
     },
     documents: documents.map((doc) => ({
       id: doc.id,

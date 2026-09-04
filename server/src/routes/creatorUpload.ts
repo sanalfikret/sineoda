@@ -4,7 +4,7 @@ import path from 'node:path'
 import { v4 as uuid } from 'uuid'
 import { publicAssetUrl } from '../config.js'
 import { uploadsDir } from '../db.js'
-import { requireApprovedCreator, requireCreator, type AuthRequest } from '../middleware/auth.js'
+import { requireActiveCreator, requireCreator, type AuthRequest } from '../middleware/auth.js'
 
 const documentUpload = multer({
   storage: multer.diskStorage({
@@ -66,7 +66,7 @@ router.post('/document', requireCreator, documentUpload.single('file'), (req: Au
   res.status(201).json({ url, filename: req.file.filename })
 })
 
-router.post('/image', requireApprovedCreator, imageUpload.single('file'), (req: AuthRequest, res) => {
+router.post('/image', requireActiveCreator, imageUpload.single('file'), (req: AuthRequest, res) => {
   if (!req.file) {
     res.status(400).json({ error: 'Dosya gerekli.' })
     return
@@ -75,7 +75,7 @@ router.post('/image', requireApprovedCreator, imageUpload.single('file'), (req: 
   res.status(201).json({ url, filename: req.file.filename })
 })
 
-router.post('/video', requireApprovedCreator, videoUpload.single('file'), (req: AuthRequest, res) => {
+router.post('/video', requireActiveCreator, videoUpload.single('file'), (req: AuthRequest, res) => {
   if (!req.file) {
     res.status(400).json({ error: 'Dosya gerekli.' })
     return

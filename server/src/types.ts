@@ -2,7 +2,7 @@ import type { ContentType } from './constants/contentTypes.js'
 
 export type UserRole = 'user' | 'admin' | 'manager' | 'creator'
 export type CreatorStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
-export type ContentReviewStatus = 'draft' | 'pending' | 'published' | 'rejected'
+export type ContentReviewStatus = 'draft' | 'payment_pending' | 'pending' | 'published' | 'rejected'
 export type CreatorProgram = 'standard' | 'student_cinema'
 export type ContentProgram = 'standard' | 'student_cinema' | 'shooting_notes'
 export type StudentContentFormat = 'main' | 'bts' | 'teacher_note'

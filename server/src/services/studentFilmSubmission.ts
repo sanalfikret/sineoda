@@ -16,7 +16,7 @@ export function findStudentMainStub(creatorId: string) {
      WHERE creator_id = ?
        AND program = 'student_cinema'
        AND content_format = 'main'
-       AND review_status IN ('pending', 'rejected')
+       AND review_status IN ('pending', 'payment_pending', 'rejected')
      ORDER BY content_added_at ASC
      LIMIT 1`,
     [creatorId],
@@ -32,7 +32,9 @@ export function createStudentFilmSubmission(input: {
   description: string
   filmLink: string
   now: string
+  reviewStatus?: 'pending' | 'payment_pending'
 }) {
+  const reviewStatus = input.reviewStatus ?? 'pending'
   const existing = findStudentMainStub(input.creatorId)
   if (existing) return existing.id
 
@@ -85,7 +87,7 @@ export function createStudentFilmSubmission(input: {
       null,
       null,
       input.creatorId,
-      'pending',
+      reviewStatus,
       'student_cinema',
       'main',
       null,

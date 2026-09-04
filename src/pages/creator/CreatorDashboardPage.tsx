@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation, Trans } from 'react-i18next'
 import { creatorCheckoutPath } from '../../utils/billing'
 import {
@@ -73,6 +73,7 @@ const SCHOOL_REVIEW_KEYS: Record<string, string> = {
 
 const REVIEW_KEYS: Record<string, string> = {
   draft: 'reviewStatus.draft',
+  payment_pending: 'reviewStatus.paymentPending',
   pending: 'reviewStatus.pending',
   published: 'reviewStatus.published',
   rejected: 'reviewStatus.rejected',
@@ -90,6 +91,7 @@ export function CreatorDashboardPage() {
   const { t } = useTranslation('creator', { keyPrefix: 'dashboard' })
   const uploadRequirements = t('applications.uploadRequirements', { returnObjects: true }) as string[]
   const { locale, localizePath } = useLocale()
+  const navigate = useNavigate()
   const { user, logout } = useAuth()
   const [documents, setDocuments] = useState<CreatorDocument[]>([])
   const [content, setContent] = useState<DashboardContent[]>([])
@@ -203,10 +205,13 @@ export function CreatorDashboardPage() {
     if (status === 'approved' && registrationPaid) void loadAccounting()
   }, [status, registrationPaid, loadAccounting])
 
+  const mainFilm = content.find((item) => (item.contentFormat ?? 'main') === 'main')
   const canSubmitFilms =
     status !== 'rejected' &&
     status !== 'suspended' &&
-    registrationPaid
+    (registrationPaid ||
+      !mainFilm ||
+      mainFilm.reviewStatus === 'payment_pending')
 
   const handleDocumentUpload = async (file: File) => {
     setDocUploading(true)
@@ -403,9 +408,15 @@ export function CreatorDashboardPage() {
         documentIds: isMainApplication && !editingContentId ? applicationDocs.map((doc) => doc.id) : undefined,
       }
       if (editingContentId) {
-        await creatorUpdateContent(editingContentId, payload)
+        const updated = await creatorUpdateContent(editingContentId, payload)
+        if ((updated as { paymentRequired?: boolean }).paymentRequired) {
+          navigate(`${localizePath('/creator/odeme')}?checkout=1`)
+        }
       } else {
-        await creatorSubmitContent(payload)
+        const created = await creatorSubmitContent(payload)
+        if ((created as { paymentRequired?: boolean }).paymentRequired) {
+          navigate(`${localizePath('/creator/odeme')}?checkout=1`)
+        }
       }
       setShowForm(false)
       resetApplicationForm()

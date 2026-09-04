@@ -73,6 +73,7 @@
     "payAndContinue": "₺{{price}} Öde ve Başvuruya Devam Et",
     "redirecting": "Yönlendiriliyor...",
     "paymentSoon": "Ödeme yakında",
+    "submitFilmFirst": "Ödeme yapmadan önce panelden film başvurunuzu göndermelisiniz.",
     "backToPanel": "Panele dön",
     "checkoutFailed": "Ödeme başlatılamadı."
   },
@@ -218,6 +219,7 @@
     },
     "reviewStatus": {
       "draft": "Taslak",
+      "paymentPending": "Ödeme bekliyor",
       "pending": "İncelemede",
       "published": "Yayında",
       "rejected": "Reddedildi"
