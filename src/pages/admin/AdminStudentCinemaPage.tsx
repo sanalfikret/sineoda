@@ -66,7 +66,16 @@ function matchesStatusFilter(item: AdminStudentCinemaItem, filter: StatusFilter)
   if (filter === 'published') {
     return item.reviewStatus === 'published' && !isScheduledStudentFilm(item)
   }
+  if (filter === 'pending') {
+    return item.reviewStatus === 'pending' || item.reviewStatus === 'payment_pending'
+  }
   return item.reviewStatus === filter
+}
+
+function matchesPaymentFilter(item: AdminStudentCinemaItem, filter: 'all' | 'paid' | 'unpaid') {
+  if (filter === 'all') return true
+  if (filter === 'paid') return Boolean(item.registrationPaid)
+  return !item.registrationPaid
 }
 
 export function AdminStudentCinemaPage() {
@@ -81,6 +90,7 @@ export function AdminStudentCinemaPage() {
   const [queueQuery, setQueueQuery] = useState('')
   const [filmsQuery, setFilmsQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'unpaid'>('all')
   const [schoolFilter, setSchoolFilter] = useState('all')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [bulkLoading, setBulkLoading] = useState(false)
@@ -125,6 +135,7 @@ export function AdminStudentCinemaPage() {
   const filteredFilms = useMemo(() => {
     return films.filter((item) => {
       if (!matchesStatusFilter(item, statusFilter)) return false
+      if (!matchesPaymentFilter(item, paymentFilter)) return false
       if (schoolFilter !== 'all' && item.schoolId !== schoolFilter) return false
       return fuzzySearchMatch(
         filmsQuery,
@@ -137,7 +148,12 @@ export function AdminStudentCinemaPage() {
         FORMAT_LABELS[item.contentFormat] ?? item.contentFormat,
       )
     })
-  }, [films, filmsQuery, statusFilter, schoolFilter])
+  }, [films, filmsQuery, statusFilter, paymentFilter, schoolFilter])
+
+  const unpaidStudentCount = useMemo(
+    () => films.filter((item) => !item.registrationPaid).length,
+    [films],
+  )
 
   const publishedFilms = useMemo(
     () => filteredFilms.filter((item) => item.reviewStatus === 'published'),
@@ -155,8 +171,9 @@ export function AdminStudentCinemaPage() {
   )
 
   const filteredQueue = useMemo(() => {
-    return queue.filter((item) =>
-      fuzzySearchMatch(
+    return queue.filter((item) => {
+      if (!matchesPaymentFilter(item, paymentFilter)) return false
+      return fuzzySearchMatch(
         queueQuery,
         item.title,
         item.studioName ?? '',
@@ -165,9 +182,9 @@ export function AdminStudentCinemaPage() {
         item.creatorEmail ?? '',
         item.creatorPhone ?? '',
         FORMAT_LABELS[item.contentFormat] ?? item.contentFormat,
-      ),
-    )
-  }, [queue, queueQuery])
+      )
+    })
+  }, [queue, queueQuery, paymentFilter])
 
   const allVisibleSelected =
     filteredFilms.length > 0 && filteredFilms.every((item) => selectedIds.includes(item.id))
@@ -407,6 +424,27 @@ export function AdminStudentCinemaPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {([
+              ['all', 'Tümü'],
+              ['unpaid', `Ödeme yapmayanlar (${unpaidStudentCount})`],
+              ['paid', 'Ödemesi tamam'],
+            ] as const).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setPaymentFilter(id)}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+                  paymentFilter === id
+                    ? 'bg-plooy-gold/15 text-plooy-gold'
+                    : 'bg-white/5 text-white/70 hover:bg-white/10'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
             {STATUS_FILTERS.map((filter) => (
               <button
                 key={filter.id}
@@ -508,6 +546,7 @@ export function AdminStudentCinemaPage() {
                       </th>
                       <th className="px-4 py-3 font-medium">Film</th>
                       <th className="px-4 py-3 font-medium">Öğrenci</th>
+                      <th className="px-4 py-3 font-medium">Ödeme</th>
                       <th className="px-4 py-3 font-medium">İletişim</th>
                       <th className="px-4 py-3 font-medium">Okul</th>
                       <th className="px-4 py-3 font-medium">Tür</th>
@@ -542,6 +581,17 @@ export function AdminStudentCinemaPage() {
                         <td className="px-4 py-3 text-plooy-muted">
                           <p>{resolveStudentLabel(item)}</p>
                           {item.studioName ? <p className="text-xs">{item.studioName}</p> : null}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                              item.registrationPaid
+                                ? 'bg-emerald-500/15 text-emerald-300'
+                                : 'bg-sky-500/15 text-sky-200'
+                            }`}
+                          >
+                            {item.registrationPaid ? 'Ödendi' : 'Ödeme bekliyor'}
+                          </span>
                         </td>
                         <td className="px-4 py-3 text-xs text-plooy-muted">
                           {item.creatorEmail ? <p>{item.creatorEmail}</p> : null}
@@ -688,6 +738,27 @@ export function AdminStudentCinemaPage() {
         </>
       ) : (
         <>
+          <div className="flex flex-wrap gap-2">
+            {([
+              ['all', 'Tümü'],
+              ['unpaid', 'Ödeme yapmayanlar'],
+              ['paid', 'Ödemesi tamam'],
+            ] as const).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setPaymentFilter(id)}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+                  paymentFilter === id
+                    ? 'bg-plooy-gold/15 text-plooy-gold'
+                    : 'bg-white/5 text-white/70 hover:bg-white/10'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           <AdminSearchBar
             value={queueQuery}
             onChange={setQueueQuery}
@@ -712,6 +783,17 @@ export function AdminStudentCinemaPage() {
                       <h3 className="mt-1 text-lg font-semibold text-white">{item.title}</h3>
                       <p className="mt-1 text-sm text-plooy-muted">
                         {resolveStudentLabel(item) === '—' ? 'Öğrenci belirtilmemiş' : resolveStudentLabel(item)} · {item.schoolName ?? 'Okul belirtilmemiş'}
+                      </p>
+                      <p className="mt-1 text-xs">
+                        <span
+                          className={`rounded-full px-2 py-0.5 ${
+                            item.registrationPaid
+                              ? 'bg-emerald-500/15 text-emerald-300'
+                              : 'bg-sky-500/15 text-sky-200'
+                          }`}
+                        >
+                          {item.registrationPaid ? 'Ödeme tamam' : 'Ödeme bekliyor'}
+                        </span>
                       </p>
                       {(item.creatorEmail || item.creatorPhone) && (
                         <p className="mt-1 text-xs text-plooy-muted">

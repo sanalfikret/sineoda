@@ -2036,6 +2036,8 @@ export interface AdminStudentCinemaItem extends ContentItem, AdminContentMeta {
   watchCount?: number
   likes?: number
   viewers?: number
+  registrationPaid?: boolean
+  registrationPaidAt?: string | null
 }
 
 export interface AdminStudentCinemaDocument {

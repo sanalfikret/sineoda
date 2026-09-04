@@ -16,6 +16,7 @@ export function studentFilmStatusLabel(item: StatusItem) {
   if (isScheduledStudentFilm(item)) return 'Planlandı'
   if (item.reviewStatus === 'published') return 'Yayında'
   if (item.reviewStatus === 'rejected') return 'Reddedildi'
+  if (item.reviewStatus === 'payment_pending') return 'Ödeme bekliyor'
   if (item.reviewStatus === 'pending') return 'İncelemede'
   return item.reviewStatus
 }
@@ -24,6 +25,7 @@ export function studentFilmStatusClass(item: StatusItem) {
   if (isScheduledStudentFilm(item)) return 'bg-sky-500/15 text-sky-300'
   if (item.reviewStatus === 'published') return 'bg-emerald-500/15 text-emerald-300'
   if (item.reviewStatus === 'rejected') return 'bg-red-500/15 text-red-300'
+  if (item.reviewStatus === 'payment_pending') return 'bg-sky-500/15 text-sky-200'
   return 'bg-amber-500/15 text-amber-200'
 }
 
