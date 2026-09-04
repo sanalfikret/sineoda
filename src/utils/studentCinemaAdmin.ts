@@ -12,6 +12,13 @@ export function isScheduledStudentFilm(item: StatusItem) {
   )
 }
 
+export function categorizeStudentFilm(item: StatusItem): 'published' | 'scheduled' | 'review' | 'rejected' {
+  if (item.reviewStatus === 'rejected') return 'rejected'
+  if (isScheduledStudentFilm(item)) return 'scheduled'
+  if (item.reviewStatus === 'published') return 'published'
+  return 'review'
+}
+
 export function studentFilmStatusLabel(item: StatusItem) {
   if (isScheduledStudentFilm(item)) return 'Planlandı'
   if (item.reviewStatus === 'published') return 'Yayında'

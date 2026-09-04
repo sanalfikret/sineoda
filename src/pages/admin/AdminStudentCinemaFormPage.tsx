@@ -378,7 +378,7 @@ export function AdminStudentCinemaFormPage() {
               <button
                 type="button"
                 disabled={actionLoading || item.schoolReviewStatus !== 'approved'}
-                onClick={() => void runReviewAction({ reviewStatus: 'published' }, 'Yayına alındı.')}
+                onClick={() => void runReviewAction({ reviewStatus: 'published', publishNow: true }, 'Yayına alındı.')}
                 className="rounded-lg bg-plooy-gold px-3 py-1.5 text-xs font-semibold text-plooy-bg disabled:opacity-40"
               >
                 Yayınla
@@ -386,10 +386,10 @@ export function AdminStudentCinemaFormPage() {
               <button
                 type="button"
                 disabled={actionLoading}
-                onClick={() => void runReviewAction({ reviewStatus: 'pending' }, 'Yayından alındı.')}
-                className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/80"
+                onClick={() => void runReviewAction({ reviewStatus: 'pending' }, 'İncelemeye alındı.')}
+                className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-200"
               >
-                Yayından Al
+                {item.reviewStatus === 'rejected' ? 'İncelemeye Al' : 'Yayından Al / İncelemeye Al'}
               </button>
               <button
                 type="button"
