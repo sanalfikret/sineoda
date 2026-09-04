@@ -10,7 +10,7 @@ import { formatPublishDate, isScheduledStudentFilm, toDateTimeLocalValue } from 
 interface AdminStudentCinemaFilmActionsProps {
   item: AdminStudentCinemaItem
   onDetail: () => void
-  onChanged: () => void
+  onChanged: (options?: { scheduled?: boolean; review?: boolean }) => void
   onError: (message: string) => void
 }
 
@@ -24,12 +24,16 @@ export function AdminStudentCinemaFilmActions({
   const [showSchedule, setShowSchedule] = useState(false)
   const [scheduleAt, setScheduleAt] = useState(toDateTimeLocalValue(item.publishedAt))
 
-  const run = async (action: string, task: () => Promise<void>) => {
+  const run = async (
+    action: string,
+    task: () => Promise<void>,
+    changedOptions?: { scheduled?: boolean; review?: boolean },
+  ) => {
     setLoading(action)
     onError('')
     try {
       await task()
-      onChanged()
+      onChanged(changedOptions)
     } catch (err) {
       onError(err instanceof Error ? err.message : 'İşlem başarısız.')
     } finally {
@@ -51,9 +55,22 @@ export function AdminStudentCinemaFilmActions({
     })
 
   const handleUnpublish = () =>
-    void run('unpublish', async () => {
-      await reviewAdminStudentCinemaContent(item.id, 'pending')
-    })
+    void run(
+      'unpublish',
+      async () => {
+        await reviewAdminStudentCinemaContent(item.id, 'pending')
+      },
+      { review: true },
+    )
+
+  const handleReturnToReview = () =>
+    void run(
+      'review',
+      async () => {
+        await reviewAdminStudentCinemaContent(item.id, 'pending')
+      },
+      { review: true },
+    )
 
   const handleReject = () => {
     if (!window.confirm(`"${item.title}" reddedilsin mi?`)) return
@@ -70,21 +87,33 @@ export function AdminStudentCinemaFilmActions({
   }
 
   const handleSchedule = () =>
-    void run('schedule', async () => {
-      if (!scheduleAt) {
-        throw new Error('Yayın tarihi seçin.')
-      }
-      if (item.schoolReviewStatus !== 'approved') {
-        throw new Error('Planlamadan önce okul onayı gerekli.')
-      }
-      await reviewAdminStudentCinemaContent(item.id, 'published', {
-        publishedAt: new Date(scheduleAt).toISOString(),
-      })
-      setShowSchedule(false)
-    })
+    void run(
+      'schedule',
+      async () => {
+        if (!scheduleAt) {
+          throw new Error('Yayın tarihi seçin.')
+        }
+        const scheduledAt = new Date(scheduleAt)
+        if (Number.isNaN(scheduledAt.getTime())) {
+          throw new Error('Geçersiz yayın tarihi.')
+        }
+        if (scheduledAt <= new Date()) {
+          throw new Error('Planlama için gelecekte bir tarih seçin. Hemen yayınlamak için Yayınla düğmesini kullanın.')
+        }
+        if (item.schoolReviewStatus !== 'approved') {
+          throw new Error('Planlamadan önce okul onayı gerekli.')
+        }
+        await reviewAdminStudentCinemaContent(item.id, 'published', {
+          publishedAt: scheduledAt.toISOString(),
+        })
+        setShowSchedule(false)
+      },
+      { scheduled: true },
+    )
 
-  const isPublished = item.reviewStatus === 'published'
   const isScheduled = isScheduledStudentFilm(item)
+  const isLivePublished = item.reviewStatus === 'published' && !isScheduled
+  const isRejected = item.reviewStatus === 'rejected'
 
   return (
     <div className="min-w-[220px] space-y-2">
@@ -96,7 +125,7 @@ export function AdminStudentCinemaFilmActions({
         >
           Detay / Künye
         </button>
-        {isPublished ? (
+        {isLivePublished || isScheduled ? (
           <button
             type="button"
             disabled={loading !== null}
@@ -159,6 +188,7 @@ export function AdminStudentCinemaFilmActions({
           <input
             type="datetime-local"
             value={scheduleAt}
+            min={toDateTimeLocalValue(new Date(Date.now() + 60_000).toISOString())}
             onChange={(event) => setScheduleAt(event.target.value)}
             className="mt-1 w-full rounded border border-white/10 bg-[#0d0f14] px-2 py-1.5 text-xs text-white"
           />
@@ -185,14 +215,27 @@ export function AdminStudentCinemaFilmActions({
         </div>
       )}
 
-      <button
-        type="button"
-        disabled={loading !== null}
-        onClick={handleReject}
-        className="w-full rounded-lg border border-red-500/20 px-2 py-1 text-[11px] text-red-300 hover:bg-red-500/10 disabled:opacity-60"
-      >
-        {loading === 'reject' ? '...' : 'Reddet'}
-      </button>
+      {isRejected && (
+        <button
+          type="button"
+          disabled={loading !== null}
+          onClick={handleReturnToReview}
+          className="w-full rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-500/20 disabled:opacity-60"
+        >
+          {loading === 'review' ? '...' : 'İncelemeye Al'}
+        </button>
+      )}
+
+      {!isRejected && (
+        <button
+          type="button"
+          disabled={loading !== null}
+          onClick={handleReject}
+          className="w-full rounded-lg border border-red-500/20 px-2 py-1 text-[11px] text-red-300 hover:bg-red-500/10 disabled:opacity-60"
+        >
+          {loading === 'reject' ? '...' : 'Reddet'}
+        </button>
+      )}
     </div>
   )
 }

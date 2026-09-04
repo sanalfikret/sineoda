@@ -150,14 +150,17 @@ function applyReviewStatus(
     publishedAt = existing.published_at ?? null
   }
 
+  const effectiveReviewStatus =
+    publishedAt && new Date(publishedAt) > new Date() ? 'published' : reviewStatus
+
   dbRun('UPDATE content SET review_status = ?, published_at = ? WHERE id = ?', [
-    reviewStatus,
+    effectiveReviewStatus,
     publishedAt,
     existing.id,
   ])
 
   const isLive =
-    reviewStatus === 'published' &&
+    effectiveReviewStatus === 'published' &&
     publishedAt !== null &&
     new Date(publishedAt) <= new Date()
 

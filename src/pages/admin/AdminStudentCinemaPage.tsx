@@ -20,6 +20,7 @@ import { getStudentDisplayName } from '../../utils/studentDisplayName'
 import { formatLicenseDate } from '../../utils/license'
 import { fuzzySearchMatch, sortByTurkishTitle } from '../../utils/search'
 import {
+  categorizeStudentFilm,
   formatPublishDate,
   isScheduledStudentFilm,
   studentFilmStatusClass,
@@ -113,7 +114,7 @@ export function AdminStudentCinemaPage() {
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'unpaid'>('all')
   const [filmSections, setFilmSections] = useState({
     published: true,
-    scheduled: false,
+    scheduled: true,
     review: true,
     rejected: false,
   })
@@ -177,16 +178,25 @@ export function AdminStudentCinemaPage() {
 
   const filmGroups = useMemo(
     () => ({
-      published: filteredFilms.filter(
-        (item) => item.reviewStatus === 'published' && !isScheduledStudentFilm(item),
-      ),
-      scheduled: filteredFilms.filter((item) => isScheduledStudentFilm(item)),
-      review: filteredFilms.filter((item) =>
-        ['pending', 'payment_pending', 'draft'].includes(item.reviewStatus),
-      ),
-      rejected: filteredFilms.filter((item) => item.reviewStatus === 'rejected'),
+      published: filteredFilms.filter((item) => categorizeStudentFilm(item) === 'published'),
+      scheduled: filteredFilms.filter((item) => categorizeStudentFilm(item) === 'scheduled'),
+      review: filteredFilms.filter((item) => categorizeStudentFilm(item) === 'review'),
+      rejected: filteredFilms.filter((item) => categorizeStudentFilm(item) === 'rejected'),
     }),
     [filteredFilms],
+  )
+
+  const handleFilmChanged = useCallback(
+    (options?: { scheduled?: boolean; review?: boolean }) => {
+      if (options?.scheduled) {
+        setFilmSections((current) => ({ ...current, scheduled: true, published: false }))
+      }
+      if (options?.review) {
+        setFilmSections((current) => ({ ...current, review: true, rejected: false }))
+      }
+      void load()
+    },
+    [load],
   )
 
   const toggleFilmSection = (key: keyof typeof filmSections) => {
@@ -458,7 +468,7 @@ export function AdminStudentCinemaPage() {
                 <AdminStudentCinemaFilmActions
                   item={item}
                   onDetail={() => navigate(`/admin/genc-sinema/${item.id}`)}
-                  onChanged={() => void load()}
+                  onChanged={handleFilmChanged}
                   onError={setError}
                 />
               </td>
