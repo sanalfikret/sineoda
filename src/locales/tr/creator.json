@@ -216,7 +216,11 @@
         "inReview": "İncelemede olanlar",
         "rejected": "Reddedilenler",
         "empty": "Bu bölümde içerik yok."
-      }
+      },
+      "paymentNoticeTitle": "Başvuru ücreti gerekli",
+      "paymentNoticeStandard": "Film gönderdikten sonra yapımcı başvuru ücretini ödemeniz gerekir. Ödeme yapmayanların filmleri incelemeye alınmaz.",
+      "paymentNoticeStudent": "Film gönderdikten sonra Genç Sinema başvuru ücretini ödemeniz gerekir. Ödeme yapmayanların filmleri incelemeye alınmaz.",
+      "paymentNoticeBenefit": "Başvuru ücreti hem film incelemenizi hem de platformdaki içerikleri izleme hakkınızı kapsar."
     },
     "formatLabels": {
       "main": "Ana film",

@@ -250,18 +250,18 @@ export function CreatorDashboardPage() {
       !mainFilm ||
       mainFilm.reviewStatus === 'payment_pending')
 
-  const studentContentGroups = useMemo(() => {
-    if (program !== 'student_cinema') return null
-    return {
+  const contentGroups = useMemo(
+    () => ({
       published: content.filter((item) => item.reviewStatus === 'published'),
       review: content.filter((item) =>
         ['pending', 'payment_pending', 'draft'].includes(item.reviewStatus),
       ),
       rejected: content.filter((item) => item.reviewStatus === 'rejected'),
-    }
-  }, [content, program])
+    }),
+    [content],
+  )
 
-  const toggleStudentSection = (key: keyof typeof studentSections) => {
+  const toggleContentSection = (key: keyof typeof studentSections) => {
     setStudentSections((current) => ({ ...current, [key]: !current[key] }))
   }
 
@@ -879,6 +879,22 @@ export function CreatorDashboardPage() {
                 </p>
               </div>
 
+              {!registrationPaid &&
+                !editingContentId &&
+                (program !== 'student_cinema' || form.contentFormat === 'main') && (
+                  <div className="rounded-xl border border-sky-500/30 bg-sky-500/10 px-4 py-3 text-sm text-sky-100">
+                    <p className="font-semibold text-sky-50">{t('applications.paymentNoticeTitle')}</p>
+                    <p className="mt-1">
+                      {t(
+                        program === 'student_cinema'
+                          ? 'applications.paymentNoticeStudent'
+                          : 'applications.paymentNoticeStandard',
+                      )}
+                    </p>
+                    <p className="mt-2 text-xs text-sky-200/90">{t('applications.paymentNoticeBenefit')}</p>
+                  </div>
+                )}
+
               <div className="rounded-xl border border-plooy-gold/25 bg-plooy-gold/5 p-4">
                 <p className="text-sm font-semibold text-plooy-gold">
                   {t('applications.uploadRequirementsTitle')}
@@ -1150,19 +1166,19 @@ export function CreatorDashboardPage() {
             <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-plooy-muted">
               {canSubmitFilms ? t('applications.emptyCanSubmit') : t('applications.emptyNeedPayment')}
             </p>
-          ) : program === 'student_cinema' && studentContentGroups ? (
+          ) : (
             <div className="space-y-4">
               {([
-                ['published', t('applications.sections.published'), studentContentGroups.published],
-                ['review', t('applications.sections.inReview'), studentContentGroups.review],
-                ['rejected', t('applications.sections.rejected'), studentContentGroups.rejected],
+                ['published', t('applications.sections.published'), contentGroups.published],
+                ['review', t('applications.sections.inReview'), contentGroups.review],
+                ['rejected', t('applications.sections.rejected'), contentGroups.rejected],
               ] as const).map(([key, title, items]) => (
                 <StudentContentSection
                   key={key}
                   title={title}
                   count={items.length}
                   expanded={studentSections[key]}
-                  onToggle={() => toggleStudentSection(key)}
+                  onToggle={() => toggleContentSection(key)}
                 >
                   {items.length === 0 ? (
                     <p className="border-t border-white/10 bg-[#0d0f14] px-4 py-4 text-sm text-plooy-muted">
@@ -1173,10 +1189,6 @@ export function CreatorDashboardPage() {
                   )}
                 </StudentContentSection>
               ))}
-            </div>
-          ) : (
-            <div className="overflow-x-auto rounded-xl border border-white/10">
-              {renderContentTable(content)}
             </div>
           )}
         </section>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   bulkReviewAdminStudentCinemaContent,
@@ -46,30 +46,8 @@ const REVIEW_LABELS: Record<string, string> = {
   rejected: 'Reddedildi',
 }
 
-const STATUS_FILTERS = [
-  { id: 'all', label: 'Tümü' },
-  { id: 'published', label: 'Yayında' },
-  { id: 'scheduled', label: 'Planlandı' },
-  { id: 'pending', label: 'İncelemede' },
-  { id: 'rejected', label: 'Reddedildi' },
-] as const
-
-type StatusFilter = (typeof STATUS_FILTERS)[number]['id']
-
 function resolveStudentLabel(item: AdminStudentCinemaItem) {
   return item.displayName ?? item.creatorName ?? getStudentDisplayName(item) ?? '—'
-}
-
-function matchesStatusFilter(item: AdminStudentCinemaItem, filter: StatusFilter) {
-  if (filter === 'all') return true
-  if (filter === 'scheduled') return isScheduledStudentFilm(item)
-  if (filter === 'published') {
-    return item.reviewStatus === 'published' && !isScheduledStudentFilm(item)
-  }
-  if (filter === 'pending') {
-    return item.reviewStatus === 'pending' || item.reviewStatus === 'payment_pending'
-  }
-  return item.reviewStatus === filter
 }
 
 function matchesPaymentFilter(item: AdminStudentCinemaItem, filter: 'all' | 'paid' | 'unpaid') {
@@ -82,6 +60,36 @@ function matchesPaymentFilter(item: AdminStudentCinemaItem, filter: 'all' | 'pai
 function paymentBadgeLabel(item: AdminStudentCinemaItem) {
   if (!item.creatorId) return 'Demo içerik'
   return item.registrationPaid ? 'Ödendi' : 'Ödeme bekliyor'
+}
+
+function CollapsibleFilmGroup({
+  title,
+  count,
+  expanded,
+  onToggle,
+  children,
+}: {
+  title: string
+  count: number
+  expanded: boolean
+  onToggle: () => void
+  children: ReactNode
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-white/10 bg-[#11141c]">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.02]"
+      >
+        <span className="text-white/60">{expanded ? '▼' : '▶'}</span>
+        <span className="font-semibold text-white">{title}</span>
+        <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-plooy-muted">{count}</span>
+      </button>
+      {expanded && children}
+    </section>
+  )
 }
 
 function paymentBadgeClass(item: AdminStudentCinemaItem) {
@@ -102,8 +110,13 @@ export function AdminStudentCinemaPage() {
   const [schoolQuery, setSchoolQuery] = useState('')
   const [queueQuery, setQueueQuery] = useState('')
   const [filmsQuery, setFilmsQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'unpaid'>('all')
+  const [filmSections, setFilmSections] = useState({
+    published: true,
+    scheduled: false,
+    review: true,
+    rejected: false,
+  })
   const [schoolFilter, setSchoolFilter] = useState('all')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [bulkLoading, setBulkLoading] = useState(false)
@@ -147,7 +160,6 @@ export function AdminStudentCinemaPage() {
 
   const filteredFilms = useMemo(() => {
     return films.filter((item) => {
-      if (!matchesStatusFilter(item, statusFilter)) return false
       if (!matchesPaymentFilter(item, paymentFilter)) return false
       if (schoolFilter !== 'all' && item.schoolId !== schoolFilter) return false
       return fuzzySearchMatch(
@@ -161,7 +173,25 @@ export function AdminStudentCinemaPage() {
         FORMAT_LABELS[item.contentFormat] ?? item.contentFormat,
       )
     })
-  }, [films, filmsQuery, statusFilter, paymentFilter, schoolFilter])
+  }, [films, filmsQuery, paymentFilter, schoolFilter])
+
+  const filmGroups = useMemo(
+    () => ({
+      published: filteredFilms.filter(
+        (item) => item.reviewStatus === 'published' && !isScheduledStudentFilm(item),
+      ),
+      scheduled: filteredFilms.filter((item) => isScheduledStudentFilm(item)),
+      review: filteredFilms.filter((item) =>
+        ['pending', 'payment_pending', 'draft'].includes(item.reviewStatus),
+      ),
+      rejected: filteredFilms.filter((item) => item.reviewStatus === 'rejected'),
+    }),
+    [filteredFilms],
+  )
+
+  const toggleFilmSection = (key: keyof typeof filmSections) => {
+    setFilmSections((current) => ({ ...current, [key]: !current[key] }))
+  }
 
   const unpaidStudentCount = useMemo(
     () => films.filter((item) => item.creatorId && !item.registrationPaid).length,
@@ -198,17 +228,6 @@ export function AdminStudentCinemaPage() {
       )
     })
   }, [queue, queueQuery, paymentFilter])
-
-  const allVisibleSelected =
-    filteredFilms.length > 0 && filteredFilms.every((item) => selectedIds.includes(item.id))
-
-  const toggleSelectAll = () => {
-    if (allVisibleSelected) {
-      setSelectedIds((current) => current.filter((id) => !filteredFilms.some((item) => item.id === id)))
-      return
-    }
-    setSelectedIds((current) => [...new Set([...current, ...filteredFilms.map((item) => item.id)])])
-  }
 
   const toggleSelect = (id: string) => {
     setSelectedIds((current) =>
@@ -325,6 +344,130 @@ export function AdminStudentCinemaPage() {
       setDeletingSchoolId(null)
     }
   }
+
+  const renderFilmsTable = (items: AdminStudentCinemaItem[]) => (
+    <div className="overflow-x-auto border-t border-white/10">
+      <table className="min-w-full text-left text-sm">
+        <thead className="bg-[#0d0f14] text-plooy-muted">
+          <tr>
+            <th className="px-4 py-3">
+              <input
+                type="checkbox"
+                checked={items.length > 0 && items.every((item) => selectedIds.includes(item.id))}
+                onChange={() => {
+                  const ids = items.map((item) => item.id)
+                  const allSelected = ids.every((id) => selectedIds.includes(id))
+                  setSelectedIds((current) =>
+                    allSelected
+                      ? current.filter((id) => !ids.includes(id))
+                      : [...new Set([...current, ...ids])],
+                  )
+                }}
+                className="accent-emerald-400"
+              />
+            </th>
+            <th className="px-4 py-3 font-medium">Film</th>
+            <th className="px-4 py-3 font-medium">Öğrenci</th>
+            <th className="px-4 py-3 font-medium">Ödeme</th>
+            <th className="px-4 py-3 font-medium">İletişim</th>
+            <th className="px-4 py-3 font-medium">Okul</th>
+            <th className="px-4 py-3 font-medium">Tür</th>
+            <th className="px-4 py-3 font-medium">Durum</th>
+            <th className="px-4 py-3 font-medium">Ödül</th>
+            <th className="px-4 py-3 font-medium">Yayın</th>
+            <th className="px-4 py-3 font-medium">Telif</th>
+            <th className="px-4 py-3 font-medium">İzlenme</th>
+            <th className="px-4 py-3 font-medium min-w-[240px]">Yönetim</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr key={item.id} className="border-t border-white/5 hover:bg-white/[0.02]">
+              <td className="px-4 py-3">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(item.id)}
+                  onChange={() => toggleSelect(item.id)}
+                  className="accent-emerald-400"
+                />
+              </td>
+              <td className="px-4 py-3">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/admin/genc-sinema/${item.id}`)}
+                  className="font-medium text-white hover:text-emerald-300"
+                >
+                  {item.title}
+                </button>
+              </td>
+              <td className="px-4 py-3 text-plooy-muted">
+                <p>{resolveStudentLabel(item)}</p>
+                {item.studioName ? <p className="text-xs">{item.studioName}</p> : null}
+              </td>
+              <td className="px-4 py-3">
+                <span
+                  className={`inline-block whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${paymentBadgeClass(item)}`}
+                >
+                  {paymentBadgeLabel(item)}
+                </span>
+              </td>
+              <td className="px-4 py-3 text-xs text-plooy-muted">
+                {item.creatorEmail ? <p>{item.creatorEmail}</p> : null}
+                {item.creatorPhone ? <p>{item.creatorPhone}</p> : null}
+                {!item.creatorEmail && !item.creatorPhone ? '—' : null}
+              </td>
+              <td className="px-4 py-3 text-plooy-muted">{item.schoolName ?? '—'}</td>
+              <td className="px-4 py-3 text-plooy-muted">
+                {FORMAT_LABELS[item.contentFormat] ?? item.contentFormat}
+              </td>
+              <td className="px-4 py-3">
+                <span className={`rounded-full px-2.5 py-1 text-xs ${studentFilmStatusClass(item)}`}>
+                  {studentFilmStatusLabel(item)}
+                </span>
+              </td>
+              <td className="px-4 py-3 text-xs">
+                {item.monthlyAward?.enabled ? (
+                  <div>
+                    <p className="font-medium text-emerald-300">{item.monthlyAward.badge}</p>
+                    {item.monthlyAward.prize ? (
+                      <p className="mt-0.5 text-plooy-muted">{item.monthlyAward.prize}</p>
+                    ) : null}
+                  </div>
+                ) : (
+                  <span className="text-plooy-muted">—</span>
+                )}
+              </td>
+              <td className="px-4 py-3 text-xs text-plooy-muted">
+                {formatPublishDate(item.publishedAt)}
+              </td>
+              <td className="px-4 py-3 text-xs text-plooy-muted">
+                {item.licenseUnlimited ? (
+                  <span>Sınırsız</span>
+                ) : item.licenseExpiresAt ? (
+                  <span className={item.licenseExpired ? 'text-red-300' : ''}>
+                    {formatLicenseDate(item.licenseExpiresAt)}
+                  </span>
+                ) : (
+                  '—'
+                )}
+              </td>
+              <td className="px-4 py-3 text-xs text-plooy-muted">
+                {item.watchMinutes ?? 0} dk · {item.likes ?? 0} ♥
+              </td>
+              <td className="px-4 py-3 align-top">
+                <AdminStudentCinemaFilmActions
+                  item={item}
+                  onDetail={() => navigate(`/admin/genc-sinema/${item.id}`)}
+                  onChanged={() => void load()}
+                  onError={setError}
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
 
   return (
     <div className="space-y-6">
@@ -458,20 +601,6 @@ export function AdminStudentCinemaPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {STATUS_FILTERS.map((filter) => (
-              <button
-                key={filter.id}
-                type="button"
-                onClick={() => setStatusFilter(filter.id)}
-                className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                  statusFilter === filter.id
-                    ? 'bg-emerald-500/15 text-emerald-300'
-                    : 'bg-white/5 text-white/70 hover:bg-white/10'
-                }`}
-              >
-                {filter.label}
-              </button>
-            ))}
             <select
               value={schoolFilter}
               onChange={(event) => setSchoolFilter(event.target.value)}
@@ -544,118 +673,29 @@ export function AdminStudentCinemaPage() {
               Filtrelere uygun Genç Sinema içeriği yok.
             </p>
           ) : (
-            <div className="overflow-hidden rounded-xl border border-white/10 bg-[#11141c]">
-              <div className="max-h-[min(70vh,680px)] overflow-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="sticky top-0 z-10 bg-[#11141c] text-plooy-muted shadow-[0_1px_0_rgba(255,255,255,0.06)]">
-                    <tr>
-                      <th className="px-4 py-3">
-                        <input
-                          type="checkbox"
-                          checked={allVisibleSelected}
-                          onChange={toggleSelectAll}
-                          className="accent-emerald-400"
-                        />
-                      </th>
-                      <th className="px-4 py-3 font-medium">Film</th>
-                      <th className="px-4 py-3 font-medium">Öğrenci</th>
-                      <th className="px-4 py-3 font-medium">Ödeme</th>
-                      <th className="px-4 py-3 font-medium">İletişim</th>
-                      <th className="px-4 py-3 font-medium">Okul</th>
-                      <th className="px-4 py-3 font-medium">Tür</th>
-                      <th className="px-4 py-3 font-medium">Durum</th>
-                      <th className="px-4 py-3 font-medium">Ödül</th>
-                      <th className="px-4 py-3 font-medium">Yayın</th>
-                      <th className="px-4 py-3 font-medium">Telif</th>
-                      <th className="px-4 py-3 font-medium">İzlenme</th>
-                      <th className="px-4 py-3 font-medium min-w-[240px]">Yönetim</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredFilms.map((item) => (
-                      <tr key={item.id} className="border-t border-white/5 hover:bg-white/[0.02]">
-                        <td className="px-4 py-3">
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.includes(item.id)}
-                            onChange={() => toggleSelect(item.id)}
-                            className="accent-emerald-400"
-                          />
-                        </td>
-                        <td className="px-4 py-3">
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/admin/genc-sinema/${item.id}`)}
-                            className="font-medium text-white hover:text-emerald-300"
-                          >
-                            {item.title}
-                          </button>
-                        </td>
-                        <td className="px-4 py-3 text-plooy-muted">
-                          <p>{resolveStudentLabel(item)}</p>
-                          {item.studioName ? <p className="text-xs">{item.studioName}</p> : null}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${paymentBadgeClass(item)}`}>
-                            {paymentBadgeLabel(item)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-plooy-muted">
-                          {item.creatorEmail ? <p>{item.creatorEmail}</p> : null}
-                          {item.creatorPhone ? <p>{item.creatorPhone}</p> : null}
-                          {!item.creatorEmail && !item.creatorPhone ? '—' : null}
-                        </td>
-                        <td className="px-4 py-3 text-plooy-muted">{item.schoolName ?? '—'}</td>
-                        <td className="px-4 py-3 text-plooy-muted">
-                          {FORMAT_LABELS[item.contentFormat] ?? item.contentFormat}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`rounded-full px-2.5 py-1 text-xs ${studentFilmStatusClass(item)}`}>
-                            {studentFilmStatusLabel(item)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-xs">
-                          {item.monthlyAward?.enabled ? (
-                            <div>
-                              <p className="font-medium text-emerald-300">{item.monthlyAward.badge}</p>
-                              {item.monthlyAward.prize ? (
-                                <p className="mt-0.5 text-plooy-muted">{item.monthlyAward.prize}</p>
-                              ) : null}
-                            </div>
-                          ) : (
-                            <span className="text-plooy-muted">—</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-xs text-plooy-muted">
-                          {formatPublishDate(item.publishedAt)}
-                        </td>
-                        <td className="px-4 py-3 text-xs text-plooy-muted">
-                          {item.licenseUnlimited ? (
-                            <span>Sınırsız</span>
-                          ) : item.licenseExpiresAt ? (
-                            <span className={item.licenseExpired ? 'text-red-300' : ''}>
-                              {formatLicenseDate(item.licenseExpiresAt)}
-                            </span>
-                          ) : (
-                            '—'
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-xs text-plooy-muted">
-                          {item.watchMinutes ?? 0} dk · {item.likes ?? 0} ♥
-                        </td>
-                        <td className="px-4 py-3 align-top">
-                          <AdminStudentCinemaFilmActions
-                            item={item}
-                            onDetail={() => navigate(`/admin/genc-sinema/${item.id}`)}
-                            onChanged={() => void load()}
-                            onError={setError}
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <div className="space-y-4">
+              {([
+                ['published', 'Yayında olanlar', filmGroups.published],
+                ['scheduled', 'Planlandı', filmGroups.scheduled],
+                ['review', 'İncelemede olanlar', filmGroups.review],
+                ['rejected', 'Reddedilenler', filmGroups.rejected],
+              ] as const).map(([key, title, items]) => (
+                <CollapsibleFilmGroup
+                  key={key}
+                  title={title}
+                  count={items.length}
+                  expanded={filmSections[key]}
+                  onToggle={() => toggleFilmSection(key)}
+                >
+                  {items.length === 0 ? (
+                    <p className="border-t border-white/10 px-4 py-4 text-sm text-plooy-muted">
+                      Bu bölümde film yok.
+                    </p>
+                  ) : (
+                    renderFilmsTable(items)
+                  )}
+                </CollapsibleFilmGroup>
+              ))}
             </div>
           )}
         </>

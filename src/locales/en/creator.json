@@ -216,7 +216,11 @@
         "inReview": "In review",
         "rejected": "Rejected",
         "empty": "No content in this section."
-      }
+      },
+      "paymentNoticeTitle": "Application fee required",
+      "paymentNoticeStandard": "After submitting your film you must pay the creator application fee. Films from unpaid applicants are not reviewed.",
+      "paymentNoticeStudent": "After submitting your film you must pay the Student Cinema application fee. Films from unpaid applicants are not reviewed.",
+      "paymentNoticeBenefit": "The application fee covers both your film review and access to watch content on the platform."
     },
     "formatLabels": {
       "main": "Main film",
