@@ -406,6 +406,7 @@ export function CreatorDashboardPage() {
 
   const handleSubmitContent = async (event: FormEvent) => {
     event.preventDefault()
+    if (submitting || uploadingDocType || docUploading) return
     const isMainApplication = program !== 'student_cinema' || form.contentFormat === 'main'
     if (isMainApplication) {
       if (!form.downloadLink.trim()) {
@@ -793,6 +794,9 @@ export function CreatorDashboardPage() {
               <select
                 value={docType}
                 onChange={(event) => setDocType(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') event.preventDefault()
+                }}
                 className="rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white"
               >
                 {CREATOR_DOC_TYPES.map((type) => (
@@ -868,6 +872,12 @@ export function CreatorDashboardPage() {
           {showForm && canSubmitFilms && (
             <form
               onSubmit={handleSubmitContent}
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter') return
+                const target = event.target as HTMLElement
+                if (target.tagName === 'TEXTAREA') return
+                event.preventDefault()
+              }}
               className="mb-6 space-y-4 rounded-xl border border-plooy-gold/20 bg-[#11141c] p-6"
             >
               <div>

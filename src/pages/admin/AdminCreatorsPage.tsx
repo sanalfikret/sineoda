@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
   fetchAdminCreatorDetail,
+  fetchAdminCreatorStats,
   fetchAdminCreators,
   publishAdminCreatorPendingFilms,
   reviewAdminCreatorContent,
@@ -8,12 +9,14 @@ import {
   type AdminCreator,
   type AdminCreatorContent,
   type AdminCreatorDetail,
+  type AdminCreatorOverviewStats,
 } from '../../api/client'
 import { AdminCreatorFilmEditor } from '../../components/admin/AdminCreatorFilmEditor'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { CREATOR_DOC_TYPES } from '../../constants/creatorLegal'
 import { getContentTypeLabel } from '../../constants/contentTypes'
 import { formatPublishDate } from '../../utils/publish'
+import { categorizeCreatorFilm } from '../../utils/creatorAdmin'
 import { fuzzySearchMatch, sortByTurkishTitle } from '../../utils/search'
 
 const STATUS_LABELS: Record<AdminCreator['status'], string> = {
@@ -60,8 +63,136 @@ function docTypeLabel(value: string) {
   return CREATOR_DOC_TYPES.find((entry) => entry.value === value)?.label ?? value
 }
 
+function CollapsibleFilmGroup({
+  title,
+  count,
+  expanded,
+  onToggle,
+  children,
+}: {
+  title: string
+  count: number
+  expanded: boolean
+  onToggle: () => void
+  children: ReactNode
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-white/10 bg-[#0d0f14]">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.02]"
+      >
+        <span className="text-white/60">{expanded ? '▼' : '▶'}</span>
+        <span className="font-semibold text-white">{title}</span>
+        <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-plooy-muted">{count}</span>
+      </button>
+      {expanded && children}
+    </section>
+  )
+}
+
+function CreatorFilmCard({
+  item,
+  publishingId,
+  reviewingId,
+  onPublish,
+  onReturnToReview,
+  onReject,
+  onEdit,
+}: {
+  item: AdminCreatorContent
+  publishingId: string | null
+  reviewingId: string | null
+  onPublish: (contentId: string) => void
+  onReturnToReview: (contentId: string) => void
+  onReject: (contentId: string) => void
+  onEdit: (contentId: string) => void
+}) {
+  const isPublished = item.reviewStatus === 'published' && item.isPublished
+  const isScheduled = item.reviewStatus === 'published' && item.isScheduled
+  const isRejected = item.reviewStatus === 'rejected'
+  const isReview = item.reviewStatus === 'pending' || item.reviewStatus === 'payment_pending' || item.reviewStatus === 'draft'
+
+  return (
+    <div className="border-t border-white/5 p-4 first:border-t-0">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-medium text-white">{item.title}</p>
+          <p className="mt-1 text-xs text-plooy-muted">
+            {getContentTypeLabel(item.type)} · {item.year} · {item.duration || 'Süre belirtilmemiş'}
+          </p>
+        </div>
+        <span
+          className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+            REVIEW_CLASS[item.reviewStatus] ?? 'bg-white/10 text-white/80'
+          }`}
+        >
+          {reviewBadge(item)}
+        </span>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-plooy-muted">
+        <span>İzlenme: {item.watchMinutes ?? 0} dk</span>
+        <span>Nitelikli: {item.qualifiedMinutes ?? 0} dk</span>
+        <span>İzleyici: {item.viewers ?? 0}</span>
+        <span>Beğeni: {item.likes ?? 0}</span>
+        {item.publishedAt && <span>Yayın: {formatPublishDate(item.publishedAt)}</span>}
+        {item.licenseExpiresAt && (
+          <span>Telif: {new Date(item.licenseExpiresAt).toLocaleDateString('tr-TR')}</span>
+        )}
+      </div>
+      {item.sourceVideoUrl && (
+        <p className="mt-2 truncate text-xs text-sky-300/80" title={item.sourceVideoUrl}>
+          Kaynak: {item.sourceVideoUrl}
+        </p>
+      )}
+      <div className="mt-3 flex flex-wrap gap-2">
+        {(isReview || isRejected) && (
+          <button
+            type="button"
+            disabled={publishingId === item.id}
+            onClick={() => onPublish(item.id)}
+            className="rounded-lg bg-emerald-500/20 px-3 py-1.5 text-xs font-medium text-emerald-200 hover:bg-emerald-500/30 disabled:opacity-60"
+          >
+            {publishingId === item.id ? 'Yayınlanıyor...' : 'Yayınla'}
+          </button>
+        )}
+        {(isPublished || isScheduled || isRejected) && (
+          <button
+            type="button"
+            disabled={reviewingId === item.id}
+            onClick={() => onReturnToReview(item.id)}
+            className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-500/20 disabled:opacity-60"
+          >
+            {reviewingId === item.id ? '...' : 'İncelemeye Al'}
+          </button>
+        )}
+        {!isRejected && (
+          <button
+            type="button"
+            disabled={reviewingId === item.id}
+            onClick={() => onReject(item.id)}
+            className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-medium text-red-300 hover:bg-red-500/10 disabled:opacity-60"
+          >
+            Reddet
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => onEdit(item.id)}
+          className="rounded-lg bg-plooy-gold/15 px-3 py-1.5 text-xs font-medium text-plooy-gold hover:bg-plooy-gold/25"
+        >
+          İncele ve düzenle
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function AdminCreatorsPage() {
   const [creators, setCreators] = useState<AdminCreator[]>([])
+  const [overviewStats, setOverviewStats] = useState<AdminCreatorOverviewStats | null>(null)
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'unpaid'>('all')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detail, setDetail] = useState<AdminCreatorDetail | null>(null)
@@ -72,14 +203,26 @@ export function AdminCreatorsPage() {
   const [query, setQuery] = useState('')
   const [editingContentId, setEditingContentId] = useState<string | null>(null)
   const [publishingId, setPublishingId] = useState<string | null>(null)
+  const [reviewingId, setReviewingId] = useState<string | null>(null)
   const [publishingAll, setPublishingAll] = useState(false)
+  const [statusUpdating, setStatusUpdating] = useState(false)
+  const [filmSections, setFilmSections] = useState({
+    published: true,
+    scheduled: false,
+    review: true,
+    rejected: false,
+  })
 
   const loadCreators = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
-      const { creators: data } = await fetchAdminCreators(paymentFilter)
+      const [{ creators: data }, statsRes] = await Promise.all([
+        fetchAdminCreators(paymentFilter),
+        fetchAdminCreatorStats(),
+      ])
       setCreators(data)
+      setOverviewStats(statsRes.stats)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Yapımcılar yüklenemedi.')
     } finally {
@@ -126,17 +269,22 @@ export function AdminCreatorsPage() {
   const handleStatusChange = async (id: string, status: AdminCreator['status']) => {
     setNotice('')
     setError('')
+    setStatusUpdating(true)
     try {
       const result = await updateAdminCreatorStatus(id, status)
       if (result.publishedCount && result.publishedCount > 0) {
         setNotice(`${result.publishedCount} film yayına alındı.`)
       } else if (status === 'approved') {
         setNotice('Hesap onaylandı. Bekleyen film yoksa zaten yayında veya henüz başvuru gönderilmemiş.')
+      } else if (status === 'pending') {
+        setNotice('Hesap incelemeye alındı.')
       }
       await loadCreators()
       if (selectedId === id) await loadDetail(id)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Durum güncellenemedi.')
+    } finally {
+      setStatusUpdating(false)
     }
   }
 
@@ -157,6 +305,49 @@ export function AdminCreatorsPage() {
     } finally {
       setPublishingId(null)
     }
+  }
+
+  const handleReturnFilmToReview = async (contentId: string) => {
+    setReviewingId(contentId)
+    setError('')
+    try {
+      await reviewAdminCreatorContent(contentId, 'pending')
+      await handleReviewSaved()
+      setNotice('Film incelemeye alındı.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Film incelemeye alınamadı.')
+    } finally {
+      setReviewingId(null)
+    }
+  }
+
+  const handleRejectFilm = async (contentId: string) => {
+    if (!window.confirm('Bu film reddedilsin mi?')) return
+    setReviewingId(contentId)
+    setError('')
+    try {
+      await reviewAdminCreatorContent(contentId, 'rejected')
+      await handleReviewSaved()
+      setNotice('Film reddedildi.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Film reddedilemedi.')
+    } finally {
+      setReviewingId(null)
+    }
+  }
+
+  const filmGroups = useMemo(() => {
+    const items = detail?.content ?? []
+    return {
+      published: items.filter((item) => categorizeCreatorFilm(item) === 'published'),
+      scheduled: items.filter((item) => categorizeCreatorFilm(item) === 'scheduled'),
+      review: items.filter((item) => categorizeCreatorFilm(item) === 'review'),
+      rejected: items.filter((item) => categorizeCreatorFilm(item) === 'rejected'),
+    }
+  }, [detail?.content])
+
+  const toggleFilmSection = (key: keyof typeof filmSections) => {
+    setFilmSections((current) => ({ ...current, [key]: !current[key] }))
   }
 
   const pendingFilmCount = useMemo(
@@ -191,9 +382,29 @@ export function AdminCreatorsPage() {
       <div>
         <h1 className="text-2xl font-bold text-white">Yapımcılar</h1>
         <p className="mt-1 text-sm text-plooy-muted">
-          Creator hesapları, belgeler ve film listesi · {creators.length} kayıt
+          Bağımsız yapımcı hesapları, belgeler ve film listesi · {creators.length} kayıt
         </p>
       </div>
+
+      {overviewStats && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { label: 'Yapımcı', value: String(overviewStats.creatorCount) },
+            { label: 'Toplam izlenme', value: `${overviewStats.watchMinutes} dk` },
+            { label: 'İzlenme sayısı', value: String(overviewStats.watchCount) },
+            { label: 'Toplam izleyici', value: String(overviewStats.viewers) },
+            { label: 'Toplam beğeni', value: String(overviewStats.likes) },
+            { label: 'Yayında film', value: String(overviewStats.publishedCount) },
+            { label: 'İncelemede film', value: String(overviewStats.pendingCount) },
+            { label: 'Ödeme bekleyen film', value: String(overviewStats.paymentPendingCount) },
+          ].map((stat) => (
+            <div key={stat.label} className="rounded-xl border border-white/10 bg-[#11141c] p-4">
+              <p className="text-xs text-plooy-muted">{stat.label}</p>
+              <p className="mt-1 text-2xl font-bold text-emerald-300">{stat.value}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       <AdminSearchBar
         value={query}
@@ -317,20 +528,47 @@ export function AdminCreatorsPage() {
                   <h2 className="text-xl font-bold text-white">{selectedCreator.studioName}</h2>
                   <p className="mt-1 text-sm text-plooy-muted">{selectedCreator.name}</p>
                 </div>
-                <select
-                  value={selectedCreator.status}
-                  onChange={(event) =>
-                    void handleStatusChange(selectedCreator.id, event.target.value as AdminCreator['status'])
-                  }
-                  className="rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white"
-                  aria-label="Yapımcı hesap durumu"
-                >
-                  {Object.entries(STATUS_LABELS).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_CLASS[selectedCreator.status]}`}
+                  >
+                    {STATUS_LABELS[selectedCreator.status]}
+                  </span>
+                  {selectedCreator.status !== 'approved' && (
+                    <button
+                      type="button"
+                      disabled={statusUpdating}
+                      onClick={() => void handleStatusChange(selectedCreator.id, 'approved')}
+                      className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-black hover:bg-emerald-400 disabled:opacity-60"
+                    >
+                      {statusUpdating ? '...' : 'Onayla'}
+                    </button>
+                  )}
+                  {selectedCreator.status !== 'pending' && (
+                    <button
+                      type="button"
+                      disabled={statusUpdating}
+                      onClick={() => void handleStatusChange(selectedCreator.id, 'pending')}
+                      className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-500/20 disabled:opacity-60"
+                    >
+                      {statusUpdating ? '...' : 'İncelemeye Al'}
+                    </button>
+                  )}
+                  <select
+                    value={selectedCreator.status}
+                    onChange={(event) =>
+                      void handleStatusChange(selectedCreator.id, event.target.value as AdminCreator['status'])
+                    }
+                    className="rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white"
+                    aria-label="Diğer hesap durumları"
+                  >
+                    {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <p className="text-xs text-plooy-muted">
                 <strong className="text-white/80">Hesap: Onaylandı</strong> seçildiğinde bekleyen tüm standart
@@ -452,65 +690,38 @@ export function AdminCreatorsPage() {
                   <p className="mt-2 text-sm text-plooy-muted">Henüz film gönderilmemiş.</p>
                 ) : (
                   <div className="mt-3 space-y-3">
-                    {(detail?.content ?? []).map((item: AdminCreatorContent) => (
-                      <div
-                        key={item.id}
-                        className="rounded-xl border border-white/5 bg-[#0d0f14] p-4"
+                    {([
+                      ['published', 'Yayınlanan', filmGroups.published],
+                      ['scheduled', 'Planlandı', filmGroups.scheduled],
+                      ['review', 'İnceleme bekleyen', filmGroups.review],
+                      ['rejected', 'Reddedilen', filmGroups.rejected],
+                    ] as const).map(([key, title, items]) => (
+                      <CollapsibleFilmGroup
+                        key={key}
+                        title={title}
+                        count={items.length}
+                        expanded={filmSections[key]}
+                        onToggle={() => toggleFilmSection(key)}
                       >
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div>
-                            <p className="font-medium text-white">{item.title}</p>
-                            <p className="mt-1 text-xs text-plooy-muted">
-                              {getContentTypeLabel(item.type)} · {item.year} · {item.duration || 'Süre belirtilmemiş'}
-                            </p>
-                          </div>
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                              REVIEW_CLASS[item.reviewStatus] ?? 'bg-white/10 text-white/80'
-                            }`}
-                          >
-                            {reviewBadge(item)}
-                          </span>
-                        </div>
-                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-plooy-muted">
-                          <span>İzlenme: {item.watchMinutes ?? 0} dk</span>
-                          <span>Nitelikli: {item.qualifiedMinutes ?? 0} dk</span>
-                          <span>İzleyici: {item.viewers ?? 0}</span>
-                          <span>Beğeni: {item.likes ?? 0}</span>
-                          {item.publishedAt && (
-                            <span>Yayın: {formatPublishDate(item.publishedAt)}</span>
-                          )}
-                          {item.licenseExpiresAt && (
-                            <span>
-                              Telif: {new Date(item.licenseExpiresAt).toLocaleDateString('tr-TR')}
-                            </span>
-                          )}
-                        </div>
-                        {item.sourceVideoUrl && (
-                          <p className="mt-2 truncate text-xs text-sky-300/80" title={item.sourceVideoUrl}>
-                            Kaynak: {item.sourceVideoUrl}
+                        {items.length === 0 ? (
+                          <p className="border-t border-white/10 px-4 py-4 text-sm text-plooy-muted">
+                            Bu bölümde film yok.
                           </p>
+                        ) : (
+                          items.map((item) => (
+                            <CreatorFilmCard
+                              key={item.id}
+                              item={item}
+                              publishingId={publishingId}
+                              reviewingId={reviewingId}
+                              onPublish={(contentId) => void handlePublishFilm(contentId)}
+                              onReturnToReview={(contentId) => void handleReturnFilmToReview(contentId)}
+                              onReject={(contentId) => void handleRejectFilm(contentId)}
+                              onEdit={setEditingContentId}
+                            />
+                          ))
                         )}
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {(item.reviewStatus === 'pending' || item.reviewStatus === 'rejected') && (
-                            <button
-                              type="button"
-                              disabled={publishingId === item.id}
-                              onClick={() => void handlePublishFilm(item.id)}
-                              className="rounded-lg bg-emerald-500/20 px-3 py-1.5 text-xs font-medium text-emerald-200 hover:bg-emerald-500/30 disabled:opacity-60"
-                            >
-                              {publishingId === item.id ? 'Yayınlanıyor...' : 'Yayınla'}
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => setEditingContentId(item.id)}
-                            className="rounded-lg bg-plooy-gold/15 px-3 py-1.5 text-xs font-medium text-plooy-gold hover:bg-plooy-gold/25"
-                          >
-                            İncele ve düzenle
-                          </button>
-                        </div>
-                      </div>
+                      </CollapsibleFilmGroup>
                     ))}
                   </div>
                 )}

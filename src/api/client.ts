@@ -1919,6 +1919,23 @@ export async function fetchAdminCreators(payment: 'all' | 'paid' | 'unpaid' = 'a
   return api<{ creators: AdminCreator[] }>(`/api/admin/creators/creators${query}`)
 }
 
+export interface AdminCreatorOverviewStats {
+  creatorCount: number
+  filmCount: number
+  watchMinutes: number
+  qualifiedMinutes: number
+  watchCount: number
+  viewers: number
+  likes: number
+  publishedCount: number
+  pendingCount: number
+  paymentPendingCount: number
+}
+
+export async function fetchAdminCreatorStats() {
+  return api<{ stats: AdminCreatorOverviewStats }>('/api/admin/creators/creators/stats')
+}
+
 export async function fetchAdminCreatorDetail(id: string) {
   return api<AdminCreatorDetail>(`/api/admin/creators/creators/${id}`)
 }

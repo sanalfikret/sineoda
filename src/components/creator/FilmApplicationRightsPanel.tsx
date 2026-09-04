@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
 import { CREATOR_DOC_TYPES } from '../../constants/creatorLegal'
@@ -25,6 +26,55 @@ interface FilmApplicationRightsPanelProps {
 
 function docTypeLabel(docType: string) {
   return CREATOR_DOC_TYPES.find((entry) => entry.value === docType)?.label ?? docType
+}
+
+function RightsDocumentUpload({
+  docType,
+  uploaded,
+  uploading,
+  disabled,
+  onUpload,
+  onRemove,
+}: {
+  docType: string
+  uploaded?: ApplicationDocument
+  uploading: boolean
+  disabled: boolean
+  onUpload: (docType: string, file: File) => void | Promise<void>
+  onRemove: () => void
+}) {
+  const { t } = useTranslation('creator')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  return (
+    <div className="flex items-center gap-2">
+      {uploaded && (
+        <button type="button" onClick={onRemove} className="text-xs text-red-400 hover:text-red-300">
+          {t('rights.remove')}
+        </button>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".pdf,image/*"
+        className="hidden"
+        disabled={disabled}
+        onChange={(event) => {
+          const file = event.target.files?.[0]
+          if (file) void onUpload(docType, file)
+          event.target.value = ''
+        }}
+      />
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => inputRef.current?.click()}
+        className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/5 disabled:opacity-60"
+      >
+        {uploading ? t('rights.uploading') : uploaded ? t('rights.replace') : t('rights.uploadDoc')}
+      </button>
+    </div>
+  )
 }
 
 export function FilmApplicationRightsPanel({
@@ -76,33 +126,16 @@ export function FilmApplicationRightsPanel({
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  {uploaded && (
-                    <button
-                      type="button"
-                      onClick={() => onRemoveDocument(uploaded.id)}
-                      className="text-xs text-red-400 hover:text-red-300"
-                    >
-                      {t('rights.remove')}
-                    </button>
-                  )}
-                  <label className="cursor-pointer rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/5">
-                    {uploadingDocType === entry.docType
-                      ? t('rights.uploading')
-                      : uploaded
-                        ? t('rights.replace')
-                        : t('rights.uploadDoc')}
-                    <input
-                      type="file"
-                      accept=".pdf,image/*"
-                      className="hidden"
-                      disabled={uploadingDocType !== null}
-                      onChange={(event) => {
-                        const file = event.target.files?.[0]
-                        if (file) void onUploadDocument(entry.docType, file)
-                        event.target.value = ''
-                      }}
-                    />
-                  </label>
+                  <RightsDocumentUpload
+                    docType={entry.docType}
+                    uploaded={uploaded}
+                    uploading={uploadingDocType === entry.docType}
+                    disabled={uploadingDocType !== null}
+                    onUpload={onUploadDocument}
+                    onRemove={() => {
+                      if (uploaded) onRemoveDocument(uploaded.id)
+                    }}
+                  />
                 </div>
               </div>
             </div>

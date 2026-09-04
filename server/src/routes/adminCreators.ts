@@ -76,10 +76,11 @@ router.get('/creators', requireAdmin, (req: AuthRequest, res) => {
     `SELECT c.*, u.name AS user_name, u.email AS user_email,
       u.subscription_expires_at,
       (SELECT COUNT(*) FROM creator_documents cd WHERE cd.creator_id = c.id) AS document_count,
-      (SELECT COUNT(*) FROM content co WHERE co.creator_id = c.id) AS content_count,
+      (SELECT COUNT(*) FROM content co WHERE co.creator_id = c.id AND COALESCE(co.program, 'standard') = 'standard') AS content_count,
       (SELECT COUNT(*) FROM content co WHERE co.creator_id = c.id AND co.review_status = 'payment_pending') AS payment_pending_count
     FROM creators c
     JOIN users u ON u.id = c.user_id
+    WHERE COALESCE(c.program, 'standard') = 'standard'
     ORDER BY c.created_at DESC`,
   )
 
@@ -115,6 +116,57 @@ router.get('/creators', requireAdmin, (req: AuthRequest, res) => {
   res.json({ creators })
 })
 
+router.get('/creators/stats', requireAdmin, (_req: AuthRequest, res) => {
+  const contentRows = dbAll<ContentRow>(
+    `SELECT c.*
+     FROM content c
+     JOIN creators cr ON cr.id = c.creator_id
+     WHERE COALESCE(cr.program, 'standard') = 'standard'
+       AND COALESCE(c.program, 'standard') = 'standard'`,
+  )
+  const creatorCount =
+    dbGet<{ count: number }>(
+      `SELECT COUNT(*) AS count FROM creators WHERE COALESCE(program, 'standard') = 'standard'`,
+    )?.count ?? 0
+
+  const statsMap = getContentEngagementStats(contentRows.map((row) => row.id))
+  let watchMinutes = 0
+  let qualifiedMinutes = 0
+  let watchCount = 0
+  let viewers = 0
+  let likes = 0
+  let publishedCount = 0
+  let pendingCount = 0
+  let paymentPendingCount = 0
+
+  for (const row of contentRows) {
+    const stats = statsMap.get(row.id)
+    watchMinutes += stats?.watchMinutes ?? 0
+    qualifiedMinutes += stats?.qualifiedMinutes ?? 0
+    watchCount += stats?.watchCount ?? 0
+    viewers += stats?.viewers ?? 0
+    likes += stats?.likes ?? 0
+    if (row.review_status === 'published') publishedCount += 1
+    if (row.review_status === 'pending') pendingCount += 1
+    if (row.review_status === 'payment_pending') paymentPendingCount += 1
+  }
+
+  res.json({
+    stats: {
+      creatorCount,
+      filmCount: contentRows.length,
+      watchMinutes,
+      qualifiedMinutes,
+      watchCount,
+      viewers,
+      likes,
+      publishedCount,
+      pendingCount,
+      paymentPendingCount,
+    },
+  })
+})
+
 router.get('/creators/:id', requireAdmin, (req: AuthRequest, res) => {
   const row = dbGet<
     CreatorRow & { user_name: string; user_email: string; user_created_at: string }
@@ -122,7 +174,7 @@ router.get('/creators/:id', requireAdmin, (req: AuthRequest, res) => {
     `SELECT c.*, u.name AS user_name, u.email AS user_email, u.created_at AS user_created_at
      FROM creators c
      JOIN users u ON u.id = c.user_id
-     WHERE c.id = ?`,
+     WHERE c.id = ? AND COALESCE(c.program, 'standard') = 'standard'`,
     [req.params.id],
   )
 
@@ -141,7 +193,10 @@ router.get('/creators/:id', requireAdmin, (req: AuthRequest, res) => {
   ])
 
   const contentRows = dbAll<ContentRow>(
-    'SELECT * FROM content WHERE creator_id = ? ORDER BY content_added_at DESC',
+    `SELECT * FROM content
+     WHERE creator_id = ?
+       AND COALESCE(program, 'standard') = 'standard'
+     ORDER BY content_added_at DESC`,
     [row.id],
   )
 
