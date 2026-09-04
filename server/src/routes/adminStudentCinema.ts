@@ -18,7 +18,7 @@ import {
 } from '../services/studentCinema.js'
 import { applyMonthlyAward } from '../services/studentCinemaAwards.js'
 import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
-import type { ContentRow, CreatorDocumentRow, FilmSchoolRow } from '../types.js'
+import type { ContentRow, CreatorDocumentRow, CreatorRow, FilmSchoolRow } from '../types.js'
 
 const router = Router()
 
@@ -114,6 +114,21 @@ function fetchStudentContentRow(contentId: string) {
   )
 }
 
+function assertStudentPublishAllowed(existing: ContentRow, reviewStatus: string) {
+  if (reviewStatus !== 'published' || !existing.creator_id) return
+  const row = dbGet<CreatorRow & { subscription_expires_at: string | null }>(
+    `SELECT c.*, u.subscription_expires_at
+     FROM creators c
+     JOIN users u ON u.id = c.user_id
+     WHERE c.id = ?`,
+    [existing.creator_id],
+  )
+  if (!row) return
+  if (!isCreatorRegistrationPaid(row, { subscription_expires_at: row.subscription_expires_at })) {
+    throw new Error('Öğrenci başvuru ücreti ödenmeden film yayınlanamaz.')
+  }
+}
+
 function applyReviewStatus(
   existing: ContentRow,
   reviewStatus: string,
@@ -122,6 +137,7 @@ function applyReviewStatus(
   if (reviewStatus === 'published' && existing.school_review_status !== 'approved') {
     throw new Error('Yayınlamadan önce okul onayı verilmelidir.')
   }
+  assertStudentPublishAllowed(existing, reviewStatus)
 
   let publishedAt: string | null
   if (options?.publishedAt !== undefined) {
