@@ -73,9 +73,22 @@ function matchesStatusFilter(item: AdminStudentCinemaItem, filter: StatusFilter)
 }
 
 function matchesPaymentFilter(item: AdminStudentCinemaItem, filter: 'all' | 'paid' | 'unpaid') {
+  if (!item.creatorId) return filter === 'all'
   if (filter === 'all') return true
   if (filter === 'paid') return Boolean(item.registrationPaid)
   return !item.registrationPaid
+}
+
+function paymentBadgeLabel(item: AdminStudentCinemaItem) {
+  if (!item.creatorId) return 'Demo içerik'
+  return item.registrationPaid ? 'Ödendi' : 'Ödeme bekliyor'
+}
+
+function paymentBadgeClass(item: AdminStudentCinemaItem) {
+  if (!item.creatorId) return 'bg-white/10 text-white/60'
+  return item.registrationPaid
+    ? 'bg-emerald-500/15 text-emerald-300'
+    : 'bg-sky-500/15 text-sky-200'
 }
 
 export function AdminStudentCinemaPage() {
@@ -151,7 +164,7 @@ export function AdminStudentCinemaPage() {
   }, [films, filmsQuery, statusFilter, paymentFilter, schoolFilter])
 
   const unpaidStudentCount = useMemo(
-    () => films.filter((item) => !item.registrationPaid).length,
+    () => films.filter((item) => item.creatorId && !item.registrationPaid).length,
     [films],
   )
 
@@ -583,14 +596,8 @@ export function AdminStudentCinemaPage() {
                           {item.studioName ? <p className="text-xs">{item.studioName}</p> : null}
                         </td>
                         <td className="px-4 py-3">
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                              item.registrationPaid
-                                ? 'bg-emerald-500/15 text-emerald-300'
-                                : 'bg-sky-500/15 text-sky-200'
-                            }`}
-                          >
-                            {item.registrationPaid ? 'Ödendi' : 'Ödeme bekliyor'}
+                          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${paymentBadgeClass(item)}`}>
+                            {paymentBadgeLabel(item)}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-xs text-plooy-muted">
@@ -785,15 +792,13 @@ export function AdminStudentCinemaPage() {
                         {resolveStudentLabel(item) === '—' ? 'Öğrenci belirtilmemiş' : resolveStudentLabel(item)} · {item.schoolName ?? 'Okul belirtilmemiş'}
                       </p>
                       <p className="mt-1 text-xs">
-                        <span
-                          className={`rounded-full px-2 py-0.5 ${
-                            item.registrationPaid
-                              ? 'bg-emerald-500/15 text-emerald-300'
-                              : 'bg-sky-500/15 text-sky-200'
-                          }`}
-                        >
-                          {item.registrationPaid ? 'Ödeme tamam' : 'Ödeme bekliyor'}
-                        </span>
+                        {item.creatorId ? (
+                          <span className={`rounded-full px-2 py-0.5 ${paymentBadgeClass(item)}`}>
+                            {item.registrationPaid ? 'Ödeme tamam' : 'Ödeme bekliyor'}
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-white/10 px-2 py-0.5 text-white/60">Demo içerik</span>
+                        )}
                       </p>
                       {(item.creatorEmail || item.creatorPhone) && (
                         <p className="mt-1 text-xs text-plooy-muted">
