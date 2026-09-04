@@ -9,7 +9,7 @@ import {
 } from 'react'
 import { api, fetchBootstrap, seedCekimNotlariCache, updateAdminSiteNav, type CekimNotlariSection } from '../api/client'
 import { DEFAULT_SITE_NAV, type SiteNavId } from '../constants/siteNav'
-import { mergeWithDemoCatalog } from '../data/demoLandingPosters'
+import { resolveCatalogFromApi } from '../data/demoLandingPosters'
 import type { ContentCategory, ContentItem } from '../types/content'
 import {
   deriveHiddenNavFromCategories,
@@ -70,7 +70,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     const data = await fetchBootstrap()
-    setCatalog(mergeWithDemoCatalog(data.catalog))
+    setCatalog(resolveCatalogFromApi(data.catalog, { adminCustomized: data.landing?.adminCustomized }))
     setCategories(data.categories)
     setCategoryOrder(data.categoryOrder ?? data.categories.map((category) => category.id))
     setHiddenNavIds(data.siteNav?.hidden ?? deriveHiddenNavFromCategories(data.categories))
