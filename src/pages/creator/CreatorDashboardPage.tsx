@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation, Trans } from 'react-i18next'
 import { creatorCheckoutPath } from '../../utils/billing'
@@ -79,6 +79,38 @@ const REVIEW_KEYS: Record<string, string> = {
   rejected: 'reviewStatus.rejected',
 }
 
+function StudentContentSection({
+  title,
+  count,
+  expanded,
+  onToggle,
+  children,
+}: {
+  title: string
+  count: number
+  expanded: boolean
+  onToggle: () => void
+  children: ReactNode
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-white/10">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        className="flex w-full items-center justify-between gap-3 bg-[#11141c] px-4 py-3 text-left"
+      >
+        <span className="flex items-center gap-2">
+          <span className="text-white/60">{expanded ? '▼' : '▶'}</span>
+          <span className="font-semibold text-white">{title}</span>
+          <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-plooy-muted">{count}</span>
+        </span>
+      </button>
+      {expanded && children}
+    </section>
+  )
+}
+
 function formatMonthLabel(month: string, locale: string) {
   const [year, mon] = month.split('-').map(Number)
   return new Date(year, mon - 1, 1).toLocaleDateString(locale === 'en' ? 'en-US' : 'tr-TR', {
@@ -126,6 +158,11 @@ export function CreatorDashboardPage() {
   const [rightsDeclaration, setRightsDeclaration] = useState<Record<string, boolean>>({})
   const [applicationDocs, setApplicationDocs] = useState<ApplicationDocument[]>([])
   const [uploadingDocType, setUploadingDocType] = useState<string | null>(null)
+  const [studentSections, setStudentSections] = useState({
+    published: true,
+    review: true,
+    rejected: false,
+  })
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -212,6 +249,21 @@ export function CreatorDashboardPage() {
     (registrationPaid ||
       !mainFilm ||
       mainFilm.reviewStatus === 'payment_pending')
+
+  const studentContentGroups = useMemo(() => {
+    if (program !== 'student_cinema') return null
+    return {
+      published: content.filter((item) => item.reviewStatus === 'published'),
+      review: content.filter((item) =>
+        ['pending', 'payment_pending', 'draft'].includes(item.reviewStatus),
+      ),
+      rejected: content.filter((item) => item.reviewStatus === 'rejected'),
+    }
+  }, [content, program])
+
+  const toggleStudentSection = (key: keyof typeof studentSections) => {
+    setStudentSections((current) => ({ ...current, [key]: !current[key] }))
+  }
 
   const handleDocumentUpload = async (file: File) => {
     setDocUploading(true)
@@ -430,6 +482,74 @@ export function CreatorDashboardPage() {
 
   const studioName = user?.creator?.studioName ?? t('defaultStudio')
   const mainFilms = content.filter((item) => item.contentFormat === 'main' || !item.contentFormat)
+
+  const renderContentTable = (items: DashboardContent[]) => (
+    <div className="overflow-x-auto">
+      <table className="min-w-full text-left text-sm">
+        <thead className="bg-[#11141c] text-plooy-muted">
+          <tr>
+            <th className="px-4 py-3 font-medium">{t('applications.columns.title')}</th>
+            {program === 'student_cinema' && (
+              <th className="px-4 py-3 font-medium">{t('applications.columns.format')}</th>
+            )}
+            <th className="px-4 py-3 font-medium">{t('applications.columns.status')}</th>
+            {program === 'student_cinema' && (
+              <th className="px-4 py-3 font-medium">{t('applications.columns.school')}</th>
+            )}
+            <th className="px-4 py-3 font-medium">{t('applications.columns.watchMinutes')}</th>
+            <th className="px-4 py-3 font-medium">{t('applications.columns.viewers')}</th>
+            <th className="px-4 py-3 font-medium">{t('applications.columns.likes')}</th>
+            <th className="px-4 py-3 font-medium">{t('applications.columns.actions')}</th>
+            <th className="px-4 py-3 font-medium">{t('applications.columns.share')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr key={item.id} className="border-t border-white/5">
+              <td className="px-4 py-3">{item.title}</td>
+              {program === 'student_cinema' && (
+                <td className="px-4 py-3 text-plooy-muted">
+                  {t(FORMAT_LABEL_KEYS[item.contentFormat ?? 'main'] ?? item.contentFormat ?? 'formatLabels.main')}
+                </td>
+              )}
+              <td className="px-4 py-3">
+                <div>{t(REVIEW_KEYS[item.reviewStatus] ?? item.reviewStatus)}</div>
+                {item.reviewNote && item.reviewStatus === 'rejected' && (
+                  <p className="mt-1 max-w-xs text-xs text-red-300">{item.reviewNote}</p>
+                )}
+              </td>
+              {program === 'student_cinema' && (
+                <td className="px-4 py-3 text-plooy-muted">
+                  {t(SCHOOL_REVIEW_KEYS[item.schoolReviewStatus ?? 'none'] ?? item.schoolReviewStatus ?? 'schoolReviewStatus.none')}
+                </td>
+              )}
+              <td className="px-4 py-3">{item.watchMinutes || item.qualifiedMinutes}</td>
+              <td className="px-4 py-3">{item.viewers}</td>
+              <td className="px-4 py-3">{item.likes}</td>
+              <td className="px-4 py-3">
+                {canSubmitFilms && item.reviewStatus !== 'published' && (
+                  <button
+                    type="button"
+                    onClick={() => openEditForm(item)}
+                    className="text-xs font-medium text-plooy-gold hover:underline"
+                  >
+                    {t('applications.edit')}
+                  </button>
+                )}
+              </td>
+              <td className="px-4 py-3">
+                <ShareButton
+                  contentId={item.id}
+                  title={item.title}
+                  disabled={item.reviewStatus !== 'published'}
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
 
   return (
     <div className="min-h-dvh bg-[#0d0f14] text-white">
@@ -1030,71 +1150,33 @@ export function CreatorDashboardPage() {
             <p className="rounded-xl border border-white/10 bg-[#11141c] p-6 text-sm text-plooy-muted">
               {canSubmitFilms ? t('applications.emptyCanSubmit') : t('applications.emptyNeedPayment')}
             </p>
+          ) : program === 'student_cinema' && studentContentGroups ? (
+            <div className="space-y-4">
+              {([
+                ['published', t('applications.sections.published'), studentContentGroups.published],
+                ['review', t('applications.sections.inReview'), studentContentGroups.review],
+                ['rejected', t('applications.sections.rejected'), studentContentGroups.rejected],
+              ] as const).map(([key, title, items]) => (
+                <StudentContentSection
+                  key={key}
+                  title={title}
+                  count={items.length}
+                  expanded={studentSections[key]}
+                  onToggle={() => toggleStudentSection(key)}
+                >
+                  {items.length === 0 ? (
+                    <p className="border-t border-white/10 bg-[#0d0f14] px-4 py-4 text-sm text-plooy-muted">
+                      {t('applications.sections.empty')}
+                    </p>
+                  ) : (
+                    <div className="border-t border-white/10 bg-[#0d0f14]">{renderContentTable(items)}</div>
+                  )}
+                </StudentContentSection>
+              ))}
+            </div>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-white/10">
-              <table className="min-w-full text-left text-sm">
-                <thead className="bg-[#11141c] text-plooy-muted">
-                  <tr>
-                    <th className="px-4 py-3 font-medium">{t('applications.columns.title')}</th>
-                    {program === 'student_cinema' && (
-                      <th className="px-4 py-3 font-medium">{t('applications.columns.format')}</th>
-                    )}
-                    <th className="px-4 py-3 font-medium">{t('applications.columns.status')}</th>
-                    {program === 'student_cinema' && (
-                      <th className="px-4 py-3 font-medium">{t('applications.columns.school')}</th>
-                    )}
-                    <th className="px-4 py-3 font-medium">{t('applications.columns.watchMinutes')}</th>
-                    <th className="px-4 py-3 font-medium">{t('applications.columns.viewers')}</th>
-                    <th className="px-4 py-3 font-medium">{t('applications.columns.likes')}</th>
-                    <th className="px-4 py-3 font-medium">{t('applications.columns.actions')}</th>
-                    <th className="px-4 py-3 font-medium">{t('applications.columns.share')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {content.map((item) => (
-                    <tr key={item.id} className="border-t border-white/5">
-                      <td className="px-4 py-3">{item.title}</td>
-                      {program === 'student_cinema' && (
-                        <td className="px-4 py-3 text-plooy-muted">
-                          {t(FORMAT_LABEL_KEYS[item.contentFormat ?? 'main'] ?? item.contentFormat ?? 'formatLabels.main')}
-                        </td>
-                      )}
-                      <td className="px-4 py-3">
-                        <div>{t(REVIEW_KEYS[item.reviewStatus] ?? item.reviewStatus)}</div>
-                        {item.reviewNote && item.reviewStatus === 'rejected' && (
-                          <p className="mt-1 max-w-xs text-xs text-red-300">{item.reviewNote}</p>
-                        )}
-                      </td>
-                      {program === 'student_cinema' && (
-                        <td className="px-4 py-3 text-plooy-muted">
-                          {t(SCHOOL_REVIEW_KEYS[item.schoolReviewStatus ?? 'none'] ?? item.schoolReviewStatus ?? 'schoolReviewStatus.none')}
-                        </td>
-                      )}
-                      <td className="px-4 py-3">{item.watchMinutes || item.qualifiedMinutes}</td>
-                      <td className="px-4 py-3">{item.viewers}</td>
-                      <td className="px-4 py-3">{item.likes}</td>
-                      <td className="px-4 py-3">
-                        {canSubmitFilms && item.reviewStatus !== 'published' && (
-                          <button
-                            type="button"
-                            onClick={() => openEditForm(item)}
-                            className="text-xs font-medium text-plooy-gold hover:underline"
-                          >
-                            {t('applications.edit')}
-                          </button>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <ShareButton
-                          contentId={item.id}
-                          title={item.title}
-                          disabled={item.reviewStatus !== 'published'}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              {renderContentTable(content)}
             </div>
           )}
         </section>

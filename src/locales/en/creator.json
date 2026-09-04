@@ -210,6 +210,12 @@
         "likes": "Likes",
         "actions": "Actions",
         "share": "Share"
+      },
+      "sections": {
+        "published": "Published",
+        "inReview": "In review",
+        "rejected": "Rejected",
+        "empty": "No content in this section."
       }
     },
     "formatLabels": {

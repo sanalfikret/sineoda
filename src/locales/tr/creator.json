@@ -210,6 +210,12 @@
         "likes": "Beğeni",
         "actions": "İşlem",
         "share": "Paylaş"
+      },
+      "sections": {
+        "published": "Yayında olanlar",
+        "inReview": "İncelemede olanlar",
+        "rejected": "Reddedilenler",
+        "empty": "Bu bölümde içerik yok."
       }
     },
     "formatLabels": {

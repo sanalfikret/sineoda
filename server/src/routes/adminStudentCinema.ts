@@ -17,6 +17,7 @@ import {
   type ContentEngagementStats,
 } from '../services/studentCinema.js'
 import { applyMonthlyAward } from '../services/studentCinemaAwards.js'
+import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
 import type { ContentRow, CreatorDocumentRow, FilmSchoolRow } from '../types.js'
 
 const router = Router()
@@ -40,17 +41,22 @@ function mapSchool(row: FilmSchoolRow) {
   }
 }
 
-function mapQueueItem(
-  row: ContentRow & {
-    studio_name: string | null
-    school_name: string | null
-    creator_name?: string | null
-    creator_email?: string | null
-    creator_phone?: string | null
-  },
-  stats?: ContentEngagementStats,
-) {
+type StudentListRow = ContentRow & {
+  studio_name: string | null
+  school_name: string | null
+  creator_name?: string | null
+  creator_email?: string | null
+  creator_phone?: string | null
+  registration_paid_at?: string | null
+  subscription_expires_at?: string | null
+}
+
+function mapQueueItem(row: StudentListRow, stats?: ContentEngagementStats) {
   const credits = parseCredits(row.credits_json)
+  const registrationPaid = isCreatorRegistrationPaid(
+    { program: row.program ?? 'student_cinema', registration_paid_at: row.registration_paid_at ?? null },
+    row.subscription_expires_at ? { subscription_expires_at: row.subscription_expires_at } : null,
+  )
   return {
     ...mapContent(row),
     ...mapContentLicense(row),
@@ -73,6 +79,8 @@ function mapQueueItem(
     likes: stats?.likes ?? 0,
     viewers: stats?.viewers ?? 0,
     publishedAt: row.published_at ?? null,
+    registrationPaid,
+    registrationPaidAt: row.registration_paid_at ?? null,
   }
 }
 
@@ -221,21 +229,15 @@ router.patch('/schools/:id', requireAdmin, (req: AuthRequest, res) => {
 })
 
 router.get('/queue', requireAdmin, (_req: AuthRequest, res) => {
-  const rows = dbAll<
-    ContentRow & {
-      studio_name: string | null
-      school_name: string | null
-      creator_name: string | null
-      creator_email: string | null
-      creator_phone: string | null
-    }
-  >(
-    `SELECT c.*, cr.studio_name, fs.name AS school_name, u.name AS creator_name, u.email AS creator_email, u.phone AS creator_phone
+  const rows = dbAll<StudentListRow>(
+    `SELECT c.*, cr.studio_name, cr.registration_paid_at, u.name AS creator_name, u.email AS creator_email,
+            u.phone AS creator_phone, u.subscription_expires_at, fs.name AS school_name
      FROM content c
      LEFT JOIN creators cr ON cr.id = c.creator_id
      LEFT JOIN users u ON u.id = cr.user_id
      LEFT JOIN film_schools fs ON fs.id = c.school_id
      WHERE c.program = 'student_cinema'
+       AND c.review_status != 'payment_pending'
        AND (
          c.review_status = 'pending'
          OR c.school_review_status = 'pending'
@@ -247,16 +249,9 @@ router.get('/queue', requireAdmin, (_req: AuthRequest, res) => {
 })
 
 router.get('/content', requireAdmin, (_req: AuthRequest, res) => {
-  const rows = dbAll<
-    ContentRow & {
-      studio_name: string | null
-      school_name: string | null
-      creator_name: string | null
-      creator_email: string | null
-      creator_phone: string | null
-    }
-  >(
-    `SELECT c.*, cr.studio_name, fs.name AS school_name, u.name AS creator_name, u.email AS creator_email, u.phone AS creator_phone
+  const rows = dbAll<StudentListRow>(
+    `SELECT c.*, cr.studio_name, cr.registration_paid_at, u.name AS creator_name, u.email AS creator_email,
+            u.phone AS creator_phone, u.subscription_expires_at, fs.name AS school_name
      FROM content c
      LEFT JOIN creators cr ON cr.id = c.creator_id
      LEFT JOIN users u ON u.id = cr.user_id
