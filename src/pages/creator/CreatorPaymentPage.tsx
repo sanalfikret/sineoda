@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { fetchBillingPlans, startCheckout, type BillingPlan } from '../../api/client'
+import { creatorFetchDashboard, fetchBillingPlans, startCheckout, type BillingPlan } from '../../api/client'
 import { CreatorAuthLayout } from '../../components/creator/CreatorAuthLayout'
 import { useAuth } from '../../context/AuthContext'
 import { BRAND_NAME } from '../../constants/brand'
@@ -23,6 +23,7 @@ export function CreatorPaymentPage() {
   const [loading, setLoading] = useState(true)
   const [paying, setPaying] = useState(false)
   const [message, setMessage] = useState('')
+  const [awaitingFilmSubmission, setAwaitingFilmSubmission] = useState(false)
   const autoCheckoutStarted = useRef(false)
   const autoCheckout = searchParams.get('checkout') === '1'
 
@@ -30,6 +31,18 @@ export function CreatorPaymentPage() {
   const planId = getCreatorRegistrationPlanId(program)
   const isStudentProgram = program === 'student_cinema'
   const registrationPaid = Boolean(user?.creator?.registrationPaidAt)
+
+  useEffect(() => {
+    if (!user || !isCreator || registrationPaid) return
+    void creatorFetchDashboard()
+      .then((dashboard) => {
+        const awaitingPayment = dashboard.content.some(
+          (item) => item.reviewStatus === 'payment_pending',
+        )
+        setAwaitingFilmSubmission(!awaitingPayment)
+      })
+      .catch(() => setAwaitingFilmSubmission(true))
+  }, [user, isCreator, registrationPaid])
 
   useEffect(() => {
     fetchBillingPlans()
@@ -72,12 +85,21 @@ export function CreatorPaymentPage() {
   }, [plan, provider, navigate, refreshUser, setSearchParams, localizePath, t])
 
   useEffect(() => {
-    if (loading || !user || !isCreator || registrationPaid || !autoCheckout || autoCheckoutStarted.current || !plan) {
+    if (
+      loading ||
+      !user ||
+      !isCreator ||
+      registrationPaid ||
+      !autoCheckout ||
+      autoCheckoutStarted.current ||
+      !plan ||
+      awaitingFilmSubmission
+    ) {
       return
     }
     autoCheckoutStarted.current = true
     void handleCheckout()
-  }, [loading, user, isCreator, registrationPaid, autoCheckout, handleCheckout, plan])
+  }, [loading, user, isCreator, registrationPaid, autoCheckout, handleCheckout, plan, awaitingFilmSubmission])
 
   if (!isLoading && !isCreator) {
     return null
@@ -123,9 +145,18 @@ export function CreatorPaymentPage() {
             <p className="mt-4 text-sm text-amber-200/90">{t('paymentNotReady')}</p>
           )}
 
+          {awaitingFilmSubmission && (
+            <p className="mt-4 rounded-lg border border-sky-500/30 bg-sky-500/10 px-4 py-3 text-sm text-sky-100">
+              {t('submitFilmFirst')}{' '}
+              <Link to={localizePath('/creator')} className="font-semibold text-plooy-gold underline">
+                {t('backToPanel')}
+              </Link>
+            </p>
+          )}
+
           <button
             type="button"
-            disabled={paying || loading || !plan || !paymentReady}
+            disabled={paying || loading || !plan || !paymentReady || awaitingFilmSubmission}
             onClick={() => void handleCheckout()}
             className="mt-6 w-full rounded-lg bg-plooy-gold py-3 text-sm font-semibold text-plooy-bg disabled:opacity-60"
           >

@@ -5,6 +5,7 @@ import { dbAll, dbGet, dbRun } from '../db.js'
 import {
   getCreatorForUser,
   requireAuth,
+  requireActiveCreator,
   requireApprovedCreator,
   requireCreator,
   type AuthRequest,
@@ -31,7 +32,7 @@ import {
   listUserMessages,
   markMessageRead,
 } from '../services/userMessages.js'
-import type { ContentRow, CreatorRow } from '../types.js'
+import type { ContentRow, CreatorRow, UserRow } from '../types.js'
 
 const router = Router()
 
@@ -137,6 +138,7 @@ router.get('/dashboard', requireCreator, (req: AuthRequest, res) => {
       viewers: [...engagementStats.values()].reduce((sum, row) => sum + row.viewers, 0),
       publishedCount: contentRows.filter((row) => row.review_status === 'published').length,
       pendingCount: contentRows.filter((row) => row.review_status === 'pending').length,
+      paymentPendingCount: contentRows.filter((row) => row.review_status === 'payment_pending').length,
     },
   })
 })
@@ -199,13 +201,44 @@ router.get('/content', requireCreator, (req: AuthRequest, res) => {
   res.json({ items: rows.map(mapContent) })
 })
 
-router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) => {
+router.post('/content', requireActiveCreator, (req: CreatorAuthRequest, res) => {
   const creator = req.creator!
   const body = req.body as Record<string, unknown>
+  const user = dbGet<Pick<UserRow, 'subscription_expires_at'>>(
+    'SELECT subscription_expires_at FROM users WHERE id = ?',
+    [req.auth!.userId],
+  )
+  const registrationPaid = isCreatorRegistrationPaid(creator, user)
 
   const contentFormat = String(body.contentFormat ?? body.content_format ?? 'main').trim()
   const isMainApplication = contentFormat === 'main'
   const isStudentProgram = (creator.program ?? 'standard') === 'student_cinema'
+
+  if (!isMainApplication && !registrationPaid) {
+    res.status(402).json({
+      error: 'Ek içerik göndermek için başvuru ücretini ödemelisiniz.',
+      code: 'CREATOR_PAYMENT_REQUIRED',
+    })
+    return
+  }
+
+  if (isMainApplication && !registrationPaid) {
+    const existingMain = dbGet<{ id: string; review_status: string | null }>(
+      `SELECT id, review_status FROM content
+       WHERE creator_id = ? AND content_format = 'main'
+         AND review_status IN ('payment_pending', 'pending', 'published')
+       LIMIT 1`,
+      [creator.id],
+    )
+    const studentStub =
+      isStudentProgram && contentFormat === 'main' ? findStudentMainStub(creator.id) : null
+    if (existingMain && !studentStub) {
+      res.status(400).json({
+        error: 'Ödeme tamamlanana kadar yalnızca bir ana film başvurusu gönderebilirsiniz.',
+      })
+      return
+    }
+  }
   let application: ReturnType<typeof validateFilmApplication> | null = null
 
   if (isMainApplication) {
@@ -303,6 +336,7 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
   const program = isStudentProgram ? 'student_cinema' : 'standard'
   const schoolId = isStudentProgram ? creator.school_id : null
   const schoolReviewStatus = isStudentProgram ? 'pending' : 'none'
+  const reviewStatus = registrationPaid ? 'pending' : 'payment_pending'
   const durationFields = resolveDurationFields(body)
   const festivalsJson = serializeFestivals(parseFestivalsBody(body) ?? [])
 
@@ -326,7 +360,7 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
     body.credits !== undefined ? serializeCredits(body.credits) : '{}',
     festivalsJson,
     parseContentAddedAt(now),
-    'pending',
+    reviewStatus,
     program,
     contentFormat,
     parentContentId,
@@ -380,7 +414,7 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
         null,
         null,
         creator.id,
-        'pending',
+        reviewStatus,
         program,
         contentFormat,
         parentContentId,
@@ -399,18 +433,26 @@ router.post('/content', requireApprovedCreator, (req: CreatorAuthRequest, res) =
 
   res.status(201).json({
     item: mapContent(row),
-    reviewStatus: 'pending',
+    reviewStatus,
     program,
     contentFormat,
     schoolReviewStatus,
-    message: isStudentProgram
-      ? `Film başvurunuz okul onayına gönderildi. Okul onayından sonra ${BRAND_NAME} incelemesine alınır.`
-      : 'Film başvurunuz incelemeye gönderildi. Onaylandıktan sonra yayınlanacaktır.',
+    paymentRequired: !registrationPaid,
+    message: registrationPaid
+      ? isStudentProgram
+        ? `Film başvurunuz okul onayına gönderildi. Okul onayından sonra ${BRAND_NAME} incelemesine alınır.`
+        : 'Film başvurunuz incelemeye gönderildi. Onaylandıktan sonra yayınlanacaktır.'
+      : 'Film başvurunuz kaydedildi. İncelemeye alınması için başvuru ücretini ödemeniz gerekir.',
   })
 })
 
-router.patch('/content/:id', requireApprovedCreator, (req: CreatorAuthRequest, res) => {
+router.patch('/content/:id', requireActiveCreator, (req: CreatorAuthRequest, res) => {
   const creator = req.creator!
+  const user = dbGet<Pick<UserRow, 'subscription_expires_at'>>(
+    'SELECT subscription_expires_at FROM users WHERE id = ?',
+    [req.auth!.userId],
+  )
+  const registrationPaid = isCreatorRegistrationPaid(creator, user)
   const existing = dbGet<ContentRow>('SELECT * FROM content WHERE id = ? AND creator_id = ?', [
     req.params.id,
     creator.id,
@@ -422,6 +464,19 @@ router.patch('/content/:id', requireApprovedCreator, (req: CreatorAuthRequest, r
 
   if (existing.review_status === 'published') {
     res.status(400).json({ error: 'Yayınlanmış içerik düzenlenemez. Destek ile iletişime geçin.' })
+    return
+  }
+
+  if (!registrationPaid && existing.review_status !== 'payment_pending') {
+    res.status(402).json({
+      error: 'Bu içeriği düzenlemek için başvuru ücretini ödemelisiniz.',
+      code: 'CREATOR_PAYMENT_REQUIRED',
+    })
+    return
+  }
+
+  if (registrationPaid && existing.review_status === 'payment_pending') {
+    res.status(400).json({ error: 'Ödeme bekleyen başvuru güncellenemiyor. Önce ödemeyi tamamlayın.' })
     return
   }
 
@@ -437,6 +492,7 @@ router.patch('/content/:id', requireApprovedCreator, (req: CreatorAuthRequest, r
   const nextStreamProvider = resolveStreamProvider(body, nextVideoUrl || nextDownloadLink)
   const durationFields = resolveDurationFields(body, existing)
   const festivalsParsed = parseFestivalsBody(body)
+  const nextReviewStatus = registrationPaid ? 'pending' : 'payment_pending'
   dbRun(
     `UPDATE content SET
       title = ?, description = ?, year = ?, duration = ?, duration_minutes = ?, rating = ?, type = ?,
@@ -461,7 +517,7 @@ router.patch('/content/:id', requireApprovedCreator, (req: CreatorAuthRequest, r
       festivalsParsed !== undefined
         ? serializeFestivals(festivalsParsed)
         : existing.festivals_json ?? '[]',
-      'pending',
+      nextReviewStatus,
       existing.id,
       creator.id,
     ],
@@ -470,8 +526,11 @@ router.patch('/content/:id', requireApprovedCreator, (req: CreatorAuthRequest, r
   const row = dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [existing.id])!
   res.json({
     item: mapContent(row),
-    reviewStatus: 'pending',
-    message: 'Başvurunuz güncellendi ve yeniden incelemeye gönderildi.',
+    reviewStatus: nextReviewStatus,
+    paymentRequired: !registrationPaid,
+    message: registrationPaid
+      ? 'Başvurunuz güncellendi ve yeniden incelemeye gönderildi.'
+      : 'Başvurunuz güncellendi. İncelemeye alınması için başvuru ücretini ödemeniz gerekir.',
   })
 })
 

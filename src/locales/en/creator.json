@@ -73,6 +73,7 @@
     "payAndContinue": "Pay ₺{{price}} and Continue",
     "redirecting": "Redirecting...",
     "paymentSoon": "Payment coming soon",
+    "submitFilmFirst": "Submit your film application from the dashboard before paying.",
     "backToPanel": "Back to dashboard",
     "checkoutFailed": "Could not start payment."
   },
@@ -218,6 +219,7 @@
     },
     "reviewStatus": {
       "draft": "Draft",
+      "paymentPending": "Awaiting payment",
       "pending": "In review",
       "published": "Published",
       "rejected": "Rejected"

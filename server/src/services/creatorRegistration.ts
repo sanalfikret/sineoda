@@ -23,24 +23,49 @@ export function isCreatorRegistrationPaid(
   return new Date(user.subscription_expires_at) >= new Date()
 }
 
+export function promotePaymentPendingFilms(creatorId: string) {
+  dbRun(
+    `UPDATE content
+     SET review_status = 'pending', review_note = NULL
+     WHERE creator_id = ? AND review_status = 'payment_pending'`,
+    [creatorId],
+  )
+}
+
+export function creatorHasPaymentPendingFilm(creatorId: string) {
+  return Boolean(
+    dbGet<{ id: string }>(
+      `SELECT id FROM content
+       WHERE creator_id = ? AND review_status = 'payment_pending'
+       LIMIT 1`,
+      [creatorId],
+    ),
+  )
+}
+
 export function activateCreatorRegistration(userId: string, planId?: string) {
   const now = new Date().toISOString()
   const creator = dbGet<CreatorRow>('SELECT * FROM creators WHERE user_id = ?', [userId])
 
-  if (
-    creator &&
-    (creator.program ?? 'standard') === 'student_cinema' &&
-    creator.pending_film_link?.trim() &&
-    creator.school_id
-  ) {
-    createStudentFilmSubmission({
-      creatorId: creator.id,
-      schoolId: creator.school_id,
-      title: creator.studio_name,
-      description: creator.bio ?? '',
-      filmLink: creator.pending_film_link.trim(),
-      now,
-    })
+  if (creator) {
+    promotePaymentPendingFilms(creator.id)
+
+    if (
+      (creator.program ?? 'standard') === 'student_cinema' &&
+      creator.pending_film_link?.trim() &&
+      creator.school_id &&
+      !creatorHasPaymentPendingFilm(creator.id)
+    ) {
+      createStudentFilmSubmission({
+        creatorId: creator.id,
+        schoolId: creator.school_id,
+        title: creator.studio_name,
+        description: creator.bio ?? '',
+        filmLink: creator.pending_film_link.trim(),
+        now,
+        reviewStatus: 'pending',
+      })
+    }
   }
 
   dbRun(

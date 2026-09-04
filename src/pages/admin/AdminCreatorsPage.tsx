@@ -32,6 +32,7 @@ const STATUS_CLASS: Record<AdminCreator['status'], string> = {
 
 const REVIEW_LABELS: Record<string, string> = {
   draft: 'Taslak',
+  payment_pending: 'Ödeme bekliyor',
   pending: 'İncelemede',
   published: 'Yayında',
   rejected: 'Reddedildi',
@@ -39,6 +40,7 @@ const REVIEW_LABELS: Record<string, string> = {
 
 const REVIEW_CLASS: Record<string, string> = {
   draft: 'bg-white/10 text-white/60',
+  payment_pending: 'bg-sky-500/15 text-sky-200',
   pending: 'bg-amber-500/15 text-amber-200',
   published: 'bg-emerald-500/15 text-emerald-300',
   rejected: 'bg-red-500/15 text-red-300',
@@ -60,6 +62,7 @@ function docTypeLabel(value: string) {
 
 export function AdminCreatorsPage() {
   const [creators, setCreators] = useState<AdminCreator[]>([])
+  const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'unpaid'>('all')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detail, setDetail] = useState<AdminCreatorDetail | null>(null)
   const [loading, setLoading] = useState(true)
@@ -75,14 +78,14 @@ export function AdminCreatorsPage() {
     setLoading(true)
     setError('')
     try {
-      const { creators: data } = await fetchAdminCreators()
+      const { creators: data } = await fetchAdminCreators(paymentFilter)
       setCreators(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Yapımcılar yüklenemedi.')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [paymentFilter])
 
   const loadDetail = useCallback(async (id: string) => {
     setDetailLoading(true)
@@ -200,6 +203,27 @@ export function AdminCreatorsPage() {
         totalCount={creators.length}
       />
 
+      <div className="flex flex-wrap gap-2">
+        {([
+          ['all', 'Tümü'],
+          ['unpaid', 'Ödeme yapmayanlar'],
+          ['paid', 'Ödemesi tamam'],
+        ] as const).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setPaymentFilter(id)}
+            className={`rounded-full px-4 py-2 text-sm font-medium ${
+              paymentFilter === id
+                ? 'bg-plooy-gold/15 text-plooy-gold'
+                : 'bg-white/5 text-white/70 hover:bg-white/10'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       {notice && (
         <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
           {notice}
@@ -224,6 +248,7 @@ export function AdminCreatorsPage() {
                     <th className="px-4 py-3 font-medium">Stüdyo</th>
                     <th className="px-4 py-3 font-medium">Kişi</th>
                     <th className="px-4 py-3 font-medium">Durum</th>
+                    <th className="px-4 py-3 font-medium">Ödeme</th>
                     <th className="px-4 py-3 font-medium">Film</th>
                     <th className="px-4 py-3 font-medium">Belge</th>
                   </tr>
@@ -231,7 +256,7 @@ export function AdminCreatorsPage() {
                 <tbody>
                   {filteredCreators.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-10 text-center text-plooy-muted">
+                      <td colSpan={6} className="px-4 py-10 text-center text-plooy-muted">
                         Aramanızla eşleşen yapımcı bulunamadı.
                       </td>
                     </tr>
@@ -254,6 +279,17 @@ export function AdminCreatorsPage() {
                             className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_CLASS[creator.status]}`}
                           >
                             {STATUS_LABELS[creator.status]}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                              creator.registrationPaid
+                                ? 'bg-emerald-500/15 text-emerald-300'
+                                : 'bg-sky-500/15 text-sky-200'
+                            }`}
+                          >
+                            {creator.registrationPaid ? 'Ödendi' : 'Ödeme bekliyor'}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-white/70">{creator.contentCount}</td>
@@ -338,6 +374,29 @@ export function AdminCreatorsPage() {
                     <dt className="text-plooy-muted">Kayıt tarihi</dt>
                     <dd className="text-white/90">
                       {new Date(selectedCreator.createdAt).toLocaleDateString('tr-TR')}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-plooy-muted">Başvuru ödemesi</dt>
+                    <dd className="text-white/90">
+                      {detail?.creator.registrationPaid ?? selectedCreator.registrationPaid ? (
+                        <>
+                          Ödendi
+                          {(detail?.creator.registrationPaidAt ?? selectedCreator.registrationPaidAt) && (
+                            <span className="block text-xs text-plooy-muted">
+                              {new Date(
+                                detail?.creator.registrationPaidAt ?? selectedCreator.registrationPaidAt!,
+                              ).toLocaleString('tr-TR')}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-sky-200">
+                          Ödeme bekliyor
+                          {(detail?.creator.paymentPendingCount ?? selectedCreator.paymentPendingCount ?? 0) > 0 &&
+                            ' · film gönderildi'}
+                        </span>
+                      )}
                     </dd>
                   </div>
                   {detail?.creator.bio && (

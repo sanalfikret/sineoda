@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { creatorFetchDashboard } from '../../api/client'
 import { CreatorAuthLayout } from '../../components/creator/CreatorAuthLayout'
 import { PlooyLogo } from '../../components/PlooyLogo'
 import { useAuth } from '../../context/AuthContext'
@@ -26,11 +27,21 @@ export function CreatorLoginPage() {
     setLoading(true)
     try {
       const loggedInUser = await creatorLogin(email, password)
-      const needsPayment = !loggedInUser.creator?.registrationPaidAt
-      navigate(
-        needsPayment ? `${localizePath('/creator/odeme')}?checkout=1` : localizePath('/creator'),
-        { replace: true },
-      )
+      const unpaid = !loggedInUser.creator?.registrationPaidAt
+      if (unpaid) {
+        const dashboard = await creatorFetchDashboard()
+        const awaitingPayment = dashboard.content.some(
+          (item) => item.reviewStatus === 'payment_pending',
+        )
+        navigate(
+          awaitingPayment
+            ? `${localizePath('/creator/odeme')}?checkout=1`
+            : localizePath('/creator'),
+          { replace: true },
+        )
+        return
+      }
+      navigate(localizePath('/creator'), { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : t('loginFailed'))
     } finally {

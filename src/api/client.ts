@@ -1869,10 +1869,14 @@ export interface AdminCreator {
   studioName: string
   bio: string
   status: 'pending' | 'approved' | 'rejected' | 'suspended'
+  program?: 'standard' | 'student_cinema'
   legalAcceptedAt: string | null
   createdAt: string
   documentCount: number
   contentCount: number
+  paymentPendingCount?: number
+  registrationPaidAt?: string | null
+  registrationPaid?: boolean
 }
 
 export interface AdminCreatorDocument {
@@ -1910,8 +1914,9 @@ export interface AdminCreatorDetail {
   content: AdminCreatorContent[]
 }
 
-export async function fetchAdminCreators() {
-  return api<{ creators: AdminCreator[] }>('/api/admin/creators/creators')
+export async function fetchAdminCreators(payment: 'all' | 'paid' | 'unpaid' = 'all') {
+  const query = payment === 'all' ? '' : `?payment=${payment}`
+  return api<{ creators: AdminCreator[] }>(`/api/admin/creators/creators${query}`)
 }
 
 export async function fetchAdminCreatorDetail(id: string) {
