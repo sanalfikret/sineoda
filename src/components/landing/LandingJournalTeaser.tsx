@@ -13,17 +13,25 @@ const TEASER_COUNT = 3
 export function LandingJournalTeaser({ section }: { section: LandingSectionsConfig['journal'] }) {
   const { t } = useTranslation('landing')
   const { localizePath } = useLocale()
-  const [posts, setPosts] = useState<JournalPost[]>(DEMO_JOURNAL_POSTS.slice(0, TEASER_COUNT))
+  const [posts, setPosts] = useState<JournalPost[]>([])
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
     void fetchJournalPosts({ limit: TEASER_COUNT })
       .then((data) => {
-        if (data.posts.length > 0) setPosts(data.posts.slice(0, TEASER_COUNT))
+        if (data.posts.length > 0) {
+          setPosts(data.posts.slice(0, TEASER_COUNT))
+          return
+        }
+        setPosts(DEMO_JOURNAL_POSTS.slice(0, TEASER_COUNT))
       })
-      .catch(() => undefined)
+      .catch(() => {
+        setPosts(DEMO_JOURNAL_POSTS.slice(0, TEASER_COUNT))
+      })
+      .finally(() => setReady(true))
   }, [])
 
-  if (posts.length === 0) return null
+  if (!ready || posts.length === 0) return null
 
   return (
     <section className="border-y border-white/[0.06] bg-plooy-bg px-5 py-20 sm:px-8 sm:py-24">

@@ -3,10 +3,7 @@ import { SiteFooter } from '../components/SiteFooter'
 import { PageMeta } from '../components/PageMeta'
 import { GuestSiteShell } from '../components/GuestSiteShell'
 import { LandingPageBlocks } from '../components/landing/LandingPageBlocks'
-import {
-  getDemoCatalog,
-  resolveLandingShowcases,
-} from '../data/demoLandingPosters'
+import { resolveCatalogFromApi, resolveLandingShowcases } from '../data/demoLandingPosters'
 import { fetchBootstrap, fetchLandingConfig, type CekimNotlariSection, type LandingShowcaseResponse } from '../api/client'
 import type { LandingHeroConfig } from '../api/client'
 import {
@@ -23,12 +20,6 @@ import type { SiteNavId } from '../constants/siteNav'
 
 const FALLBACK_HERO =
   'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&h=1080&fit=crop&q=80'
-
-function mergeCatalog(catalog: ContentItem[]) {
-  const demo = getDemoCatalog()
-  const ids = new Set(catalog.map((item) => item.id))
-  return [...catalog, ...demo.filter((item) => !ids.has(item.id))]
-}
 
 function findContent(catalog: ContentItem[], contentId: string | null | undefined) {
   if (!contentId) return null
@@ -71,11 +62,9 @@ export function LandingPage() {
     const hidden = bootstrap.siteNav?.hidden ?? []
     setHiddenNavIds(hidden)
 
-    const adminCustomized = landing.adminCustomized === true
-    const mergedCatalogRaw =
-      adminCustomized || bootstrap.catalog.length >= 20
-        ? bootstrap.catalog
-        : mergeCatalog(bootstrap.catalog)
+    const mergedCatalogRaw = resolveCatalogFromApi(bootstrap.catalog, {
+      adminCustomized: landing.adminCustomized ?? bootstrap.landing?.adminCustomized,
+    })
     const mergedCatalog = filterCatalogByNavVisibility(mergedCatalogRaw, hidden)
 
     setCatalog(mergedCatalog)

@@ -220,6 +220,22 @@ export function getDemoCatalog(): ContentItem[] {
   })
 }
 
+/** Boş veya küçük kurulumlarda demo doldurma; admin özelleştirdiyse devre dışı. */
+export const DEMO_CATALOG_MIN_SIZE = 20
+
+export function shouldFillWithDemoCatalog(
+  apiCatalog: ContentItem[],
+  options?: { adminCustomized?: boolean },
+) {
+  if (options?.adminCustomized) return false
+  return apiCatalog.length < DEMO_CATALOG_MIN_SIZE
+}
+
+function enrichCatalogImages(apiCatalog: ContentItem[]) {
+  const demoById = new Map(getDemoCatalog().map((item) => [item.id, item]))
+  return apiCatalog.map((item) => enrichContentImages(item, demoById.get(item.id)))
+}
+
 /** API kataloğu eksikse veya tür satırları için demo + tür kataloğunu ekle */
 export function mergeWithDemoCatalog(apiCatalog: ContentItem[]): ContentItem[] {
   const demo = getDemoCatalog()
@@ -232,6 +248,17 @@ export function mergeWithDemoCatalog(apiCatalog: ContentItem[]): ContentItem[] {
   }
 
   return merged
+}
+
+/** Gerçek katalog yeterliyse yalnızca görselleri zenginleştir; aksi halde demo ile doldur. */
+export function resolveCatalogFromApi(
+  apiCatalog: ContentItem[],
+  options?: { adminCustomized?: boolean },
+): ContentItem[] {
+  if (shouldFillWithDemoCatalog(apiCatalog, options)) {
+    return mergeWithDemoCatalog(apiCatalog)
+  }
+  return enrichCatalogImages(apiCatalog)
 }
 
 /** API vitrin satırları — admin kaydı varsa olduğu gibi kullan; demo yalnızca boş kurulumda. */

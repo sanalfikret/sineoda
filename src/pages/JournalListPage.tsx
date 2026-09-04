@@ -16,8 +16,8 @@ export function JournalListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const page = Math.max(1, Number(searchParams.get('page') ?? '1') || 1)
 
-  const [posts, setPosts] = useState<JournalPost[]>(DEMO_JOURNAL_POSTS)
-  const [total, setTotal] = useState(DEMO_JOURNAL_POSTS.length)
+  const [posts, setPosts] = useState<JournalPost[]>([])
+  const [total, setTotal] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
 
@@ -29,9 +29,17 @@ export function JournalListPage() {
           setPosts(data.posts)
           setTotal(data.total)
           setTotalPages(data.totalPages)
+          return
         }
+        setPosts(DEMO_JOURNAL_POSTS)
+        setTotal(DEMO_JOURNAL_POSTS.length)
+        setTotalPages(Math.max(1, Math.ceil(DEMO_JOURNAL_POSTS.length / JOURNAL_PAGE_SIZE)))
       })
-      .catch(() => undefined)
+      .catch(() => {
+        setPosts(DEMO_JOURNAL_POSTS)
+        setTotal(DEMO_JOURNAL_POSTS.length)
+        setTotalPages(Math.max(1, Math.ceil(DEMO_JOURNAL_POSTS.length / JOURNAL_PAGE_SIZE)))
+      })
       .finally(() => setLoading(false))
   }, [page])
 
