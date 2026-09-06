@@ -1,3 +1,4 @@
+import { DynamicTranslationEditor } from './DynamicTranslationEditor'
 import type { DragEvent } from 'react'
 import { resolveMediaUrl } from '../../api/client'
 import { AdminCategoryTitleField } from './AdminCategoryTitleField'
@@ -198,6 +199,7 @@ export function AdminCategoryRow({
         ) : null}
       </div>
 
+      {expanded && !readOnly && <DynamicTranslationEditor kind="categories" id={category.id} />}
       {expanded && !readOnly && (
         <div className="border-t border-white/10 p-4 pt-3">
           <AdminCategoryTitleField

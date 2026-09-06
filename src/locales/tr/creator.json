@@ -36,7 +36,7 @@
     "filmLinkPlaceholder": "https://vimeo.com/... veya Google Drive / WeTransfer",
     "filmLinkHint": "Filminizin izlenebilir bağlantısını paylaşın. Vimeo, YouTube (gizli), Google Drive veya WeTransfer kabul edilir.",
     "studentIdLabel": "Öğrenci kimliği",
-    "studentIdHint": "Öğrenci veya mezun olduğunuzu gösteren kimlik kartı fotoğrafı veya PDF (en fazla 10 MB).",
+    "studentIdHint": "Öğrenci veya mezun olduğunuzu gösteren PDF veya Word belgesi (en fazla 15 MB).",
     "emailLabel": "E-posta",
     "email": "E-posta",
     "passwordLabel": "Şifre (en az 6 karakter)",
@@ -88,7 +88,7 @@
     "studentPaidBanner": "Genç Sinema programındasınız. Ana filminizi ve kamera arkası görüntülerinizi yükleyebilirsiniz.",
     "studentUnpaidBanner": "<strong>Genç Sinema</strong> başvuru ücreti (₺{{price}}) henüz ödenmedi.",
     "standardPaidBanner": "Yapımcı üyeliğiniz aktiftir. Film başvurunuzu gönderin.",
-    "standardUnpaidBanner": "<strong>Yapımcı</strong> başvuru ücreti (₺{{price}}) henüz ödenmedi.",
+    "standardUnpaidBanner": "Film başvurusu oluşturabilmek için önce <strong>{{price}} TL</strong> başvuru ücretini ödeyin.",
     "rejectedBanner": "Hesabınız reddedildi. Detaylar için <link>iletişime</link> geçin.",
     "pendingReviewBanner": "Hesabınız inceleniyor. Onaylandıktan sonra ek içerik gönderebilirsiniz.",
     "studentActiveNotice": "Genç Sinema programındasınız. Ana filminizi ve kamera arkası görüntülerinizi yükleyebilirsiniz. Okul onayından sonra {{brand}} incelemesine alınır.",
@@ -128,7 +128,7 @@
       "description": "Yönetmen ve yapımcı olarak telif hakkının size ait olduğunu kanıtlayan belgeler. Tüm yasal sorumluluk size aittir.",
       "count": "{{count}} belge",
       "typeLabel": "Belge türü",
-      "fileLabel": "PDF veya görsel",
+      "fileLabel": "PDF veya Word (DOC/DOCX), en fazla 15 MB",
       "view": "Görüntüle",
       "delete": "Sil",
       "types": {
@@ -192,7 +192,7 @@
       "downloadLinkLabel": "Film indirme linki *",
       "downloadLinkPlaceholder": "https://drive.google.com/... (H.265, Full HD)",
       "downloadLinkHint": "Filmin tam dosyası — H.265 codec, kaliteden ödün vermeden Full HD (1080p+)",
-      "posterLabel": "Poster",
+      "posterLabel": "Afiş linki",
       "videoLabel": "Video (isteğe bağlı — önizleme)",
       "videoUrlLabel": "Yüklenen video URL",
       "submit": "Film Başvurusu Yap",
@@ -218,9 +218,11 @@
         "empty": "Bu bölümde içerik yok."
       },
       "paymentNoticeTitle": "Başvuru ücreti gerekli",
-      "paymentNoticeStandard": "Film gönderdikten sonra yapımcı başvuru ücretini ödemeniz gerekir. Ödeme yapmayanların filmleri incelemeye alınmaz.",
-      "paymentNoticeStudent": "Film gönderdikten sonra Genç Sinema başvuru ücretini ödemeniz gerekir. Ödeme yapmayanların filmleri incelemeye alınmaz.",
-      "paymentNoticeBenefit": "Başvuru ücreti hem film incelemenizi hem de platformdaki içerikleri izleme hakkınızı kapsar."
+      "paymentNoticeStandard": "Film başvurusu oluşturmadan önce başvuru ücretini ödemelisiniz.",
+      "paymentNoticeStudent": "Film başvurusu oluşturmadan önce başvuru ücretini ödemelisiniz.",
+      "paymentNoticeBenefit": "Başvuru ücreti hem film incelemenizi hem de platformdaki içerikleri izleme hakkınızı kapsar.",
+      "trailerLinkLabel": "Fragman linki (varsa)",
+      "linkOnlyHint": "Film ve fragman yalnızca HTTP/HTTPS linkiyle gönderilir. Dosya olarak sadece PDF, DOC ve DOCX belgeleri yüklenebilir."
     },
     "formatLabels": {
       "main": "Ana film",
@@ -232,7 +234,10 @@
       "paymentPending": "Ödeme bekliyor",
       "pending": "İncelemede",
       "published": "Yayında",
-      "rejected": "Reddedildi"
+      "rejected": "Reddedildi",
+      "underReview": "İnceleniyor",
+      "onHold": "Bekletiliyor",
+      "approved": "Onaylandı"
     },
     "schoolReviewStatus": {
       "none": "—",

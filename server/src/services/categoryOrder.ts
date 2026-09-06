@@ -1,3 +1,4 @@
+import { readTranslations } from './dynamicTranslations.js'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { isCekimCategoryId } from '../constants/cekimNotlari.js'
 import { STUDENT_MONTHLY_WINNERS_ROW_ID } from '../../../shared/catalog/programRows.js'
@@ -104,6 +105,7 @@ export function mapCategoriesResponse() {
   return categories.map((category) => ({
     id: category.id,
     title: category.title,
+    translations: readTranslations('categories', category.id),
     hidden: category.hidden === 1,
     itemIds: items
       .filter((item) => item.category_id === category.id)

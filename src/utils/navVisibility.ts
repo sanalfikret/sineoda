@@ -54,7 +54,7 @@ export function isContentBlockedByNav(item: ContentItem, hiddenNav: SiteNavId[])
   return false
 }
 
-export function filterCatalogByNavVisibility(catalog: ContentItem[], hiddenNav: SiteNavId[]) {
+export function filterCatalogByNavVisibility<T extends ContentItem>(catalog: T[], hiddenNav: SiteNavId[]) {
   if (hiddenNav.length === 0) return catalog
   return catalog.filter((item) => !isContentBlockedByNav(item, hiddenNav))
 }

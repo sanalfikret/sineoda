@@ -1,11 +1,10 @@
+import { externalMediaLink } from '../services/creatorMedia.js'
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import { v4 as uuid } from 'uuid'
-import { config } from '../config.js'
 import { dbGet, dbRun } from '../db.js'
 import { signToken } from '../middleware/auth.js'
 import { mapUser } from '../mappers.js'
-import { createStudentFilmSubmission } from '../services/studentFilmSubmission.js'
 import { LEGAL_VERSION } from '../constants/legal.js'
 import { recordLegalConsent } from '../services/legalConsent.js'
 import { getClientIp, getUserAgent } from '../utils/clientIp.js'
@@ -106,6 +105,7 @@ router.post('/signup', creatorAuthLimiter, (req, res) => {
     }
 
     const normalizedFilmLink = String(filmLink ?? '').trim()
+    try { externalMediaLink(normalizedFilmLink, true) } catch(error) { res.status(400).json({ error: (error as Error).message }); return }
     if (!normalizedFilmLink) {
       res.status(400).json({ error: 'Filminizin izlenebilir linkini girmelisiniz.' })
       return
@@ -146,10 +146,9 @@ router.post('/signup', creatorAuthLimiter, (req, res) => {
           .replace(/^\+90/, '0')
           .replace(/^0(\d{10})$/, '+90$1')
       : null
-  const paymentConfigured = config.isPaymentConfigured()
-  const registrationPaidAt = paymentConfigured ? null : now
+  const registrationPaidAt = null
   const pendingFilmLink =
-    creatorProgram === 'student_cinema' && paymentConfigured
+    creatorProgram === 'student_cinema'
       ? String(filmLink ?? '').trim()
       : null
 
@@ -164,7 +163,7 @@ router.post('/signup', creatorAuthLimiter, (req, res) => {
       userId,
       studioName.trim(),
       bio?.trim() ?? '',
-      'approved',
+      'pending',
       now,
       now,
       creatorProgram,
@@ -180,28 +179,6 @@ router.post('/signup', creatorAuthLimiter, (req, res) => {
       'INSERT INTO creator_documents (id, creator_id, doc_type, file_url, uploaded_at) VALUES (?, ?, ?, ?, ?)',
       [uuid(), creatorId, 'student_id', studentIdFileUrl.trim(), now],
     )
-  }
-
-  if (creatorProgram === 'student_cinema' && resolvedSchoolId && paymentConfigured) {
-    createStudentFilmSubmission({
-      creatorId,
-      schoolId: resolvedSchoolId,
-      title: studioName.trim(),
-      description: bio?.trim() ?? '',
-      filmLink: String(filmLink ?? '').trim(),
-      now,
-      reviewStatus: 'payment_pending',
-    })
-  } else if (creatorProgram === 'student_cinema' && resolvedSchoolId && !paymentConfigured) {
-    const normalizedFilmLink = String(filmLink ?? '').trim()
-    createStudentFilmSubmission({
-      creatorId,
-      schoolId: resolvedSchoolId,
-      title: studioName.trim(),
-      description: bio?.trim() ?? '',
-      filmLink: normalizedFilmLink,
-      now,
-    })
   }
 
   recordLegalConsent({

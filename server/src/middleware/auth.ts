@@ -10,7 +10,7 @@ const JWT_EXPIRES_IN = '30d'
 /** Süresi dolmuş token en fazla bu kadar süre sonra yenilenir; sonrası tekrar giriş gerekir. */
 const JWT_REFRESH_GRACE_MS = 7 * 24 * 60 * 60 * 1000
 
-export function resolveJwtExpiresIn() {
+export function resolveJwtExpiresIn(): '30d' {
   return JWT_EXPIRES_IN
 }
 
@@ -44,7 +44,7 @@ export function readAuthPayload(token: string): JwtPayload | null {
   }
 }
 
-export interface AuthRequest extends Request {
+export interface AuthRequest extends Request<Record<string, string>> {
   auth?: JwtPayload
   /** Oturum yenileme — JSON gövdesine de eklenir (CORS header kısıtına karşı). */
   refreshedToken?: string

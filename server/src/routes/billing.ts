@@ -304,6 +304,10 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
   dbRun('UPDATE users SET pending_plan_id = ? WHERE id = ?', [normalizedPlanId, user.id])
 
   if (!config.isPaymentConfigured()) {
+    if (isCreatorApplicationPlan(normalizedPlanId)) {
+      res.status(503).json({ error: 'Ödeme sistemi henüz aktif değil.', code: 'PAYMENT_NOT_READY' })
+      return
+    }
     if (!config.isProduction) {
       if (isCreatorApplicationPlan(normalizedPlanId)) {
         const { paidAt } = activateCreatorRegistration(user.id, normalizedPlanId)

@@ -54,7 +54,7 @@ type StudentListRow = ContentRow & {
 function mapQueueItem(row: StudentListRow, stats?: ContentEngagementStats) {
   const credits = parseCredits(row.credits_json)
   const registrationPaid = isCreatorRegistrationPaid(
-    { program: row.program ?? 'student_cinema', registration_paid_at: row.registration_paid_at ?? null },
+    { program: 'student_cinema', registration_paid_at: row.registration_paid_at ?? null },
     row.subscription_expires_at ? { subscription_expires_at: row.subscription_expires_at } : null,
   )
   return {
@@ -115,7 +115,7 @@ function fetchStudentContentRow(contentId: string) {
 }
 
 function assertStudentPublishAllowed(existing: ContentRow, reviewStatus: string) {
-  if (reviewStatus !== 'published' || !existing.creator_id) return
+  if (!['approved', 'published'].includes(reviewStatus) || !existing.creator_id) return
   const row = dbGet<CreatorRow & { subscription_expires_at: string | null }>(
     `SELECT c.*, u.subscription_expires_at
      FROM creators c
@@ -123,7 +123,7 @@ function assertStudentPublishAllowed(existing: ContentRow, reviewStatus: string)
      WHERE c.id = ?`,
     [existing.creator_id],
   )
-  if (!row) return
+  if (!row || row.status !== 'approved') throw new Error('Öğrenci hesabı onaylanmalıdır.')
   if (!isCreatorRegistrationPaid(row, { subscription_expires_at: row.subscription_expires_at })) {
     throw new Error('Öğrenci başvuru ücreti ödenmeden film yayınlanamaz.')
   }
@@ -134,13 +134,16 @@ function applyReviewStatus(
   reviewStatus: string,
   options?: { publishedAt?: string | null },
 ) {
-  if (reviewStatus === 'published' && existing.school_review_status !== 'approved') {
+  if (['approved', 'published'].includes(reviewStatus) && existing.school_review_status !== 'approved') {
     throw new Error('Yayınlamadan önce okul onayı verilmelidir.')
   }
   assertStudentPublishAllowed(existing, reviewStatus)
 
+  if (!['pending', 'under_review', 'on_hold', 'approved', 'rejected', 'published'].includes(reviewStatus)) throw new Error('Geçersiz inceleme durumu.')
   let publishedAt: string | null
-  if (options?.publishedAt !== undefined) {
+  if (reviewStatus !== 'published') {
+    publishedAt = null
+  } else if (options?.publishedAt !== undefined) {
     publishedAt = options.publishedAt
   } else if (reviewStatus === 'published') {
     publishedAt = existing.published_at ?? new Date().toISOString()
@@ -296,7 +299,7 @@ router.post('/content/bulk-review', requireAdmin, (req: AuthRequest, res) => {
     return
   }
 
-  if (!['published', 'rejected', 'pending'].includes(reviewStatus)) {
+  if (!['published', 'rejected', 'pending', 'under_review', 'on_hold', 'approved'].includes(reviewStatus)) {
     res.status(400).json({ error: 'Geçersiz inceleme durumu.' })
     return
   }
@@ -409,6 +412,7 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
       ? String(body.schoolReviewStatus).trim()
       : existing.school_review_status ?? 'none'
 
+  if (!['none', 'pending', 'approved', 'rejected'].includes(schoolReviewStatus)) { res.status(400).json({ error: 'Geçersiz okul durumu.' }); return }
   if (body.reviewStatus !== undefined) {
     try {
       const publishedAtOverride =
@@ -419,7 +423,7 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
             })
           : undefined
       applyReviewStatus(
-        { ...existing, school_review_status: schoolReviewStatus },
+        { ...existing, school_review_status: schoolReviewStatus as ContentRow['school_review_status'] },
         reviewStatus,
         publishedAtOverride !== undefined ? { publishedAt: publishedAtOverride } : undefined,
       )
@@ -591,7 +595,7 @@ router.patch('/content/:id/school-review', requireAdmin, (req: AuthRequest, res)
 
 router.patch('/content/:id/review', requireAdmin, (req: AuthRequest, res) => {
   const reviewStatus = String(req.body.reviewStatus ?? req.body.status ?? '').trim()
-  if (!['published', 'rejected', 'pending'].includes(reviewStatus)) {
+  if (!['published', 'rejected', 'pending', 'under_review', 'on_hold', 'approved'].includes(reviewStatus)) {
     res.status(400).json({ error: 'Geçersiz inceleme durumu.' })
     return
   }

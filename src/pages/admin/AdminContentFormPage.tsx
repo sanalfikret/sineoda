@@ -1,3 +1,4 @@
+import { DynamicTranslationEditor } from '../../components/admin/DynamicTranslationEditor'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ImageUpload } from '../../components/admin/ImageUpload'
@@ -256,6 +257,7 @@ export function AdminContentFormPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      {id && <DynamicTranslationEditor kind="content" id={id} />}
       <div>
         <Link to="/admin/icerikler" className="text-sm text-plooy-muted hover:text-white">
           ← İçeriklere dön

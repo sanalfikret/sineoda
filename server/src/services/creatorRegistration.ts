@@ -1,4 +1,3 @@
-import { config } from '../config.js'
 import { dbGet, dbRun } from '../db.js'
 import type { CreatorRow, UserRow } from '../types.js'
 import { createStudentFilmSubmission } from './studentFilmSubmission.js'
@@ -11,7 +10,6 @@ export function isCreatorRegistrationPaid(
   user?: Pick<UserRow, 'subscription_expires_at'> | null,
 ) {
   if (!creator.registration_paid_at) {
-    if (!config.isPaymentConfigured()) return !config.isProduction
     return false
   }
 
@@ -47,6 +45,11 @@ export function activateCreatorRegistration(userId: string, planId?: string) {
   const now = new Date().toISOString()
   const creator = dbGet<CreatorRow>('SELECT * FROM creators WHERE user_id = ?', [userId])
 
+  dbRun(
+    "UPDATE creators SET registration_paid_at = COALESCE(registration_paid_at, ?) WHERE user_id = ?",
+    [now, userId],
+  )
+
   if (creator) {
     promotePaymentPendingFilms(creator.id)
 
@@ -68,11 +71,8 @@ export function activateCreatorRegistration(userId: string, planId?: string) {
     }
   }
 
-  dbRun(
-    "UPDATE creators SET registration_paid_at = COALESCE(registration_paid_at, ?), status = 'approved', pending_film_link = NULL WHERE user_id = ?",
-    [now, userId],
-  )
 
+  dbRun('UPDATE creators SET pending_film_link = NULL WHERE user_id = ?', [userId])
   const plan = planId ? getPlan(planId) : undefined
   if (plan && plan.interval !== 'once') {
     const expiresAt = planExpiryFor(plan)

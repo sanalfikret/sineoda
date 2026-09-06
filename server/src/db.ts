@@ -99,6 +99,7 @@ export async function initDatabase() {
     );
   `)
 
+  db.run(`CREATE TABLE IF NOT EXISTS dynamic_translations (entity_type TEXT NOT NULL, entity_id TEXT NOT NULL, locale TEXT NOT NULL, title TEXT NOT NULL, description TEXT NOT NULL, PRIMARY KEY(entity_type, entity_id, locale))`)
   runMigrations()
   persist()
 }

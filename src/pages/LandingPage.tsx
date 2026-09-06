@@ -1,3 +1,5 @@
+import { localizeDynamic } from '../utils/dynamicTranslations'
+import { useTranslation } from 'react-i18next'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { SiteFooter } from '../components/SiteFooter'
 import { PageMeta } from '../components/PageMeta'
@@ -37,6 +39,7 @@ function resolveFeaturedFallback(catalog: ContentItem[], featuredContentId?: str
 }
 
 export function LandingPage() {
+  const { i18n } = useTranslation()
   const [catalog, setCatalog] = useState<ContentItem[]>([])
   const [featuredItem, setFeaturedItem] = useState<ContentItem | null>(null)
   const [heroConfig, setHeroConfig] = useState<LandingHeroConfig>(DEFAULT_LANDING_HERO)
@@ -54,11 +57,13 @@ export function LandingPage() {
   const [ready, setReady] = useState(false)
 
   const loadLanding = useCallback(async () => {
-    const [bootstrap, landing] = await Promise.all([
+    const [rawBootstrap, rawLanding] = await Promise.all([
       fetchBootstrap(),
       fetchLandingConfig(),
     ])
 
+    const bootstrap = localizeDynamic(rawBootstrap, i18n.language)
+    const landing = localizeDynamic(rawLanding, i18n.language)
     const hidden = bootstrap.siteNav?.hidden ?? []
     setHiddenNavIds(hidden)
 
@@ -122,9 +127,9 @@ export function LandingPage() {
         items: filterCatalogByNavVisibility(section.items, hidden),
       })),
     )
-    setBlockTitles(landing.blockTitles ?? bootstrap.landing?.blockTitles ?? {})
+    setBlockTitles(Object.fromEntries(Object.entries(landing.blockTitles ?? bootstrap.landing?.blockTitles ?? {}).filter((entry): entry is [string, string] => typeof entry[1] === 'string')))
     setReady(true)
-  }, [])
+  }, [i18n.language])
 
   useEffect(() => {
     void loadLanding().catch(() => setReady(true))

@@ -22,7 +22,7 @@ function episodeKey(value: unknown) {
 }
 
 function isLimitExempt(req: AuthRequest) {
-  const role = req.user?.role
+  const role = req.auth?.role
   return role === 'admin' || role === 'manager'
 }
 
@@ -36,13 +36,13 @@ router.get('/usage', requireAuth, (req: AuthRequest, res) => {
 })
 
 router.post('/start', requireAuth, (req: AuthRequest, res) => {
-  const blocked = assertSiteOpenForViewers(req.user?.role)
+  const blocked = assertSiteOpenForViewers(req.auth?.role)
   if (blocked) {
     res.status(blocked.status).json(blocked.body)
     return
   }
 
-  const userId = req.user!.id
+  const userId = req.auth!.userId
   const sessionId = String(req.body.sessionId ?? '').trim()
   const contentId = String(req.body.contentId ?? '').trim()
   const profileId = getProfileId(req)
@@ -108,7 +108,7 @@ router.post('/start', requireAuth, (req: AuthRequest, res) => {
 })
 
 router.post('/heartbeat', requireAuth, (req: AuthRequest, res) => {
-  const userId = req.user!.id
+  const userId = req.auth!.userId
   const sessionId = String(req.body.sessionId ?? '').trim()
   const secondsDelta = Number(req.body.secondsDelta ?? 0)
 
@@ -153,7 +153,7 @@ router.post('/heartbeat', requireAuth, (req: AuthRequest, res) => {
 })
 
 router.post('/stop', requireAuth, (req: AuthRequest, res) => {
-  const userId = req.user!.id
+  const userId = req.auth!.userId
   const sessionId = String(req.body.sessionId ?? '').trim()
   const secondsDelta = Number(req.body.secondsDelta ?? 0)
   const profileId = getProfileId(req)

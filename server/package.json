@@ -7,7 +7,8 @@
     "dev": "tsx watch src/index.ts",
     "start": "node --import tsx src/index.ts",
     "build": "tsc",
-    "bootstrap:admin": "node scripts/bootstrap-admin.js"
+    "bootstrap:admin": "node scripts/bootstrap-admin.js",
+    "test:workflow": "node --import tsx scripts/check-film-workflow.mjs"
   },
   "engines": {
     "node": ">=18"

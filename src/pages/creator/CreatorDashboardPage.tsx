@@ -12,8 +12,6 @@ import {
   creatorSubmitContent,
   creatorUpdateContent,
   creatorUploadDocument,
-  creatorUploadImage,
-  creatorUploadVideo,
   fetchCreatorAccounting,
   fetchCreatorAccountingMonths,
   fetchBillingPlans,
@@ -75,6 +73,9 @@ const REVIEW_KEYS: Record<string, string> = {
   draft: 'reviewStatus.draft',
   payment_pending: 'reviewStatus.paymentPending',
   pending: 'reviewStatus.pending',
+  under_review: 'reviewStatus.underReview',
+  on_hold: 'reviewStatus.onHold',
+  approved: 'reviewStatus.approved',
   published: 'reviewStatus.published',
   rejected: 'reviewStatus.rejected',
 }
@@ -173,7 +174,7 @@ export function CreatorDashboardPage() {
     type: 'film' as ContentItem['type'],
     genres: '',
     downloadLink: '',
-    videoUrl: '',
+    trailerUrl: '',
     poster: '',
     contentFormat: 'main' as 'main' | 'bts' | 'teacher_note',
     parentContentId: '',
@@ -242,19 +243,16 @@ export function CreatorDashboardPage() {
     if (status === 'approved' && registrationPaid) void loadAccounting()
   }, [status, registrationPaid, loadAccounting])
 
-  const mainFilm = content.find((item) => (item.contentFormat ?? 'main') === 'main')
   const canSubmitFilms =
     status !== 'rejected' &&
     status !== 'suspended' &&
-    (registrationPaid ||
-      !mainFilm ||
-      mainFilm.reviewStatus === 'payment_pending')
+    registrationPaid
 
   const contentGroups = useMemo(
     () => ({
       published: content.filter((item) => item.reviewStatus === 'published'),
       review: content.filter((item) =>
-        ['pending', 'payment_pending', 'draft'].includes(item.reviewStatus),
+        ['pending', 'under_review', 'on_hold', 'approved', 'payment_pending', 'draft'].includes(item.reviewStatus),
       ),
       rejected: content.filter((item) => item.reviewStatus === 'rejected'),
     }),
@@ -288,24 +286,6 @@ export function CreatorDashboardPage() {
     }
   }
 
-  const handlePosterUpload = async (file: File) => {
-    try {
-      const url = await creatorUploadImage(file)
-      setForm((prev) => ({ ...prev, poster: url }))
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('errors.posterUploadFailed'))
-    }
-  }
-
-  const handleVideoUpload = async (file: File) => {
-    try {
-      const url = await creatorUploadVideo(file)
-      setForm((prev) => ({ ...prev, videoUrl: url }))
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('errors.videoUploadFailed'))
-    }
-  }
-
   const resetApplicationForm = () => {
     setEditingContentId(null)
     setRightsDeclaration({})
@@ -320,7 +300,7 @@ export function CreatorDashboardPage() {
       type: 'film',
       genres: '',
       downloadLink: '',
-      videoUrl: '',
+      trailerUrl: '',
       poster: '',
       contentFormat: 'main',
       parentContentId: '',
@@ -359,7 +339,7 @@ export function CreatorDashboardPage() {
       type: item.type,
       genres: (item.genres ?? []).join(', '),
       downloadLink: item.videoUrl ?? '',
-      videoUrl: item.videoUrl ?? '',
+      trailerUrl: item.trailerUrl ?? '',
       poster: item.poster ?? '',
       contentFormat: (item.contentFormat as 'main' | 'bts' | 'teacher_note') ?? 'main',
       parentContentId: item.parentContentId ?? '',
@@ -451,7 +431,8 @@ export function CreatorDashboardPage() {
         poster: form.poster,
         backdrop: form.poster,
         downloadLink: form.downloadLink.trim(),
-        videoUrl: form.videoUrl.trim() || form.downloadLink.trim(),
+        videoUrl: form.downloadLink.trim(),
+        trailerUrl: form.trailerUrl.trim(),
         credits: buildCredits(form),
         festivals: buildFestivals(form.festivals),
         contentFormat: program === 'student_cinema' ? form.contentFormat : 'main',
@@ -810,7 +791,7 @@ export function CreatorDashboardPage() {
               <span className="mb-1 block text-xs text-plooy-muted">{t('documents.fileLabel')}</span>
               <input
                 type="file"
-                accept=".pdf,image/*"
+                accept=".pdf,.doc,.docx"
                 disabled={docUploading}
                 onChange={(event) => {
                   const file = event.target.files?.[0]
@@ -1106,38 +1087,13 @@ export function CreatorDashboardPage() {
                 </label>
                 <label className="block">
                   <span className="mb-1 block text-sm">{t('applications.posterLabel')}</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) void handlePosterUpload(file)
-                    }}
-                    className="text-sm text-plooy-muted"
-                  />
+                  <input type="url" value={form.poster} onChange={e => setForm({ ...form, poster: e.target.value })} className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white" />
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-sm">{t('applications.videoLabel')}</span>
-                  <input
-                    type="file"
-                    accept="video/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) void handleVideoUpload(file)
-                    }}
-                    className="text-sm text-plooy-muted"
-                  />
+                  <span className="mb-1 block text-sm">{t('applications.trailerLinkLabel')}</span>
+                  <input type="url" value={form.trailerUrl} onChange={e => setForm({ ...form, trailerUrl: e.target.value })} placeholder="https://" className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white" />
+                  <p className="mt-1 text-xs text-plooy-muted">{t('applications.linkOnlyHint')}</p>
                 </label>
-                {form.videoUrl && form.videoUrl !== form.downloadLink && (
-                  <label className="block sm:col-span-2">
-                    <span className="mb-1 block text-sm">{t('applications.videoUrlLabel')}</span>
-                    <input
-                      readOnly
-                      value={form.videoUrl}
-                      className="w-full rounded-lg border border-white/10 bg-[#0d0f14]/50 px-3 py-2 text-sm text-plooy-muted"
-                    />
-                  </label>
-                )}
               </div>
 
               {(program !== 'student_cinema' || form.contentFormat === 'main') && !editingContentId && (

@@ -77,7 +77,7 @@ router.patch('/categories/:categoryId/items/reorder', (req: AuthRequest, res) =>
 
 router.patch('/categories/:categoryId', (req: AuthRequest, res) => {
   try {
-    const body = req.body as { title?: string; hidden?: boolean }
+    const body = req.body as { title?: string; hidden?: boolean | number }
     const updates: { title?: string; hidden?: boolean } = {}
     if (body.title !== undefined) updates.title = String(body.title)
     if (body.hidden !== undefined) updates.hidden = body.hidden === true || body.hidden === 1

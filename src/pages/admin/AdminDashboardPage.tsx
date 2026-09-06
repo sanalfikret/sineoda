@@ -1,3 +1,4 @@
+import { AdminReviewQueues } from '../../components/admin/AdminReviewQueues'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchExpiringLicenses, resolveMediaUrl } from '../../api/client'
@@ -56,6 +57,7 @@ export function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
+      <AdminReviewQueues />
       <div>
         <h1 className="text-2xl font-bold text-white">Dashboard</h1>
         <p className="mt-1 text-sm text-plooy-muted">

@@ -24,7 +24,10 @@ export function studentFilmStatusLabel(item: StatusItem) {
   if (item.reviewStatus === 'published') return 'Yayında'
   if (item.reviewStatus === 'rejected') return 'Reddedildi'
   if (item.reviewStatus === 'payment_pending') return 'Ödeme bekliyor'
-  if (item.reviewStatus === 'pending') return 'İncelemede'
+  if (item.reviewStatus === 'pending') return 'Yeni başvuru'
+  if (item.reviewStatus === 'under_review') return 'İnceleniyor'
+  if (item.reviewStatus === 'on_hold') return 'Bekletiliyor'
+  if (item.reviewStatus === 'approved') return 'Onaylandı'
   return item.reviewStatus
 }
 

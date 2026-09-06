@@ -120,7 +120,7 @@ function WatchHistoryContent() {
                 <ContentCard item={entry.item} onSelect={openDetail} variant="grid" progressPercent={pct} />
                 {entry.episode && (
                   <p className="truncate px-0.5 text-xs text-plooy-muted">
-                    S{entry.episode.season} E{entry.episode.episodeNumber}
+                    S{entry.episode.season} E{entry.episode.episode}
                   </p>
                 )}
                 <button

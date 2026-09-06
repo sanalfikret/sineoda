@@ -1,3 +1,6 @@
+import { useTranslation } from 'react-i18next'
+import { useLocation } from 'react-router-dom'
+import { localizeDynamic } from '../utils/dynamicTranslations'
 import {
   createContext,
   useCallback,
@@ -389,9 +392,15 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 }
 
 export function useContent() {
+  const { i18n } = useTranslation()
+  const { pathname } = useLocation()
   const context = useContext(ContentContext)
+  const localized = useMemo(() => {
+    if (!context || pathname.startsWith('/admin')) return context
+    return { ...localizeDynamic(context, i18n.language), getContentById: (id: string) => localizeDynamic(context.getContentById(id), i18n.language) }
+  }, [context, pathname, i18n.language])
   if (!context) {
     throw new Error('useContent must be used within ContentProvider')
   }
-  return context
+  return localized!
 }

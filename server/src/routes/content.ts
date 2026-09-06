@@ -94,7 +94,7 @@ function contentFields(body: Record<string, unknown>, existing?: ContentRow) {
 
 router.get('/', (_req, res) => {
   const catalog = dbAll<ContentRow>(
-    `SELECT * FROM content WHERE published_at IS NOT NULL AND published_at <= datetime('now') ORDER BY title`,
+    `SELECT * FROM content WHERE (creator_id IS NULL OR review_status = 'published') AND published_at IS NOT NULL AND published_at <= datetime('now') ORDER BY title`,
   ).map(mapContent)
   res.json({ catalog })
 })

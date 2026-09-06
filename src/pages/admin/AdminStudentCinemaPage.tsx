@@ -22,7 +22,6 @@ import { fuzzySearchMatch, sortByTurkishTitle } from '../../utils/search'
 import {
   categorizeStudentFilm,
   formatPublishDate,
-  isScheduledStudentFilm,
   studentFilmStatusClass,
   studentFilmStatusLabel,
 } from '../../utils/studentCinemaAdmin'

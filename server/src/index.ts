@@ -1,3 +1,5 @@
+import adminQueuesRoutes from './routes/adminQueues.js'
+import adminTranslationsRoutes from './routes/adminTranslations.js'
 import cors from 'cors'
 import express from 'express'
 import fs from 'node:fs'
@@ -342,6 +344,8 @@ app.use('/api/admin/landing', landingRoutes)
 app.use('/api/creator/auth', creatorAuthRoutes)
 app.use('/api/creator', creatorRoutes)
 app.use('/api/creator/upload', creatorUploadRoutes)
+app.use('/api/admin/queues', adminQueuesRoutes)
+app.use('/api/admin/translations', adminTranslationsRoutes)
 app.use('/api/admin/creators', adminCreatorsRoutes)
 app.use('/api/admin/student-cinema', adminStudentCinemaRoutes)
 app.use('/api/admin/cekim-notlari', adminCekimNotlariRoutes)

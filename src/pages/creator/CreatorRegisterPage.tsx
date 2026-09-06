@@ -263,7 +263,7 @@ export function CreatorRegisterPage() {
                 <input
                   type="file"
                   required
-                  accept="image/*,application/pdf"
+                  accept=".pdf,.doc,.docx"
                   onChange={handleStudentIdChange}
                   className="w-full rounded-lg border border-dashed border-white/15 bg-[#0d0f14] px-4 py-3 text-sm text-white/80 file:mr-4 file:rounded-md file:border-0 file:bg-emerald-500 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[#07110d]"
                 />

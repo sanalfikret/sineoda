@@ -36,7 +36,7 @@
     "filmLinkPlaceholder": "https://vimeo.com/... or Google Drive / WeTransfer",
     "filmLinkHint": "Share a viewable link to your film. Vimeo, YouTube (unlisted), Google Drive, or WeTransfer are accepted.",
     "studentIdLabel": "Student ID",
-    "studentIdHint": "Photo or PDF of a student or graduate ID card showing your status (max 10 MB).",
+    "studentIdHint": "PDF or Word document proving student or graduate status (maximum 15 MB).",
     "emailLabel": "Email",
     "email": "Email",
     "passwordLabel": "Password (at least 6 characters)",
@@ -88,7 +88,7 @@
     "studentPaidBanner": "You are in the Student Cinema program. You can upload your main film and behind-the-scenes footage.",
     "studentUnpaidBanner": "The <strong>Student Cinema</strong> application fee (₺{{price}}) has not been paid yet.",
     "standardPaidBanner": "Your creator membership is active. Submit your film application.",
-    "standardUnpaidBanner": "The <strong>creator</strong> application fee (₺{{price}}) has not been paid yet.",
+    "standardUnpaidBanner": "Complete the <strong>{{price}} TRY</strong> application payment before submitting a film.",
     "rejectedBanner": "Your account was rejected. Please <link>contact us</link> for details.",
     "pendingReviewBanner": "Your account is under review. You can submit additional content after approval.",
     "studentActiveNotice": "You are in the Student Cinema program. You can upload your main film and behind-the-scenes footage. After school approval, it goes to {{brand}} review.",
@@ -128,7 +128,7 @@
       "description": "Documents proving that you, as director and producer, hold the rights. All legal liability rests with you.",
       "count": "{{count}} documents",
       "typeLabel": "Document type",
-      "fileLabel": "PDF or image",
+      "fileLabel": "PDF or Word (DOC/DOCX), maximum 15 MB",
       "view": "View",
       "delete": "Delete",
       "types": {
@@ -192,7 +192,7 @@
       "downloadLinkLabel": "Film download link *",
       "downloadLinkPlaceholder": "https://drive.google.com/... (H.265, Full HD)",
       "downloadLinkHint": "Full film file — H.265 codec, Full HD (1080p+) without quality loss",
-      "posterLabel": "Poster",
+      "posterLabel": "Poster link",
       "videoLabel": "Video (optional — preview)",
       "videoUrlLabel": "Uploaded video URL",
       "submit": "Submit Film Application",
@@ -218,9 +218,11 @@
         "empty": "No content in this section."
       },
       "paymentNoticeTitle": "Application fee required",
-      "paymentNoticeStandard": "After submitting your film you must pay the creator application fee. Films from unpaid applicants are not reviewed.",
-      "paymentNoticeStudent": "After submitting your film you must pay the Student Cinema application fee. Films from unpaid applicants are not reviewed.",
-      "paymentNoticeBenefit": "The application fee covers both your film review and access to watch content on the platform."
+      "paymentNoticeStandard": "Payment must be completed before a film application can be created.",
+      "paymentNoticeStudent": "Payment must be completed before a film application can be created.",
+      "paymentNoticeBenefit": "The application fee covers both your film review and access to watch content on the platform.",
+      "trailerLinkLabel": "Trailer link (if available)",
+      "linkOnlyHint": "Films and trailers must be submitted as HTTP/HTTPS links. Only PDF, DOC and DOCX documents can be uploaded."
     },
     "formatLabels": {
       "main": "Main film",
@@ -232,7 +234,10 @@
       "paymentPending": "Awaiting payment",
       "pending": "In review",
       "published": "Published",
-      "rejected": "Rejected"
+      "rejected": "Rejected",
+      "underReview": "Under review",
+      "onHold": "On hold",
+      "approved": "Approved"
     },
     "schoolReviewStatus": {
       "none": "—",

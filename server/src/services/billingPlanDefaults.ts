@@ -5,7 +5,7 @@ export type BillingPlanId =
   | 'student_cinema_application'
 
 export type BillingPlanDefinition = {
-  id: BillingPlanId
+  id: string
   name: string
   price: number
   currency: 'TRY'

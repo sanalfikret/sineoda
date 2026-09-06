@@ -14,7 +14,7 @@ import {
 import { attachStats, getContentEngagementStats } from '../services/studentCinema.js'
 import { notifyCreatorFilmReview } from '../services/creatorNotifications.js'
 import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
-import type { CreatorRow, UserRow } from '../types.js'
+import type { ContentRow, CreatorRow, UserRow } from '../types.js'
 
 const router = Router()
 
@@ -71,7 +71,7 @@ function publishPendingStandardFilms(creatorId: string, adminUserId: string) {
 router.get('/creators', requireAdmin, (req: AuthRequest, res) => {
   const paymentFilter = String(req.query.payment ?? 'all').trim()
   const rows = dbAll<
-    CreatorRow & { user_name: string; user_email: string; document_count: number; content_count: number; payment_pending_count: number }
+    CreatorRow & { subscription_expires_at: string | null; user_name: string; user_email: string; document_count: number; content_count: number; payment_pending_count: number }
   >(
     `SELECT c.*, u.name AS user_name, u.email AS user_email,
       u.subscription_expires_at,
@@ -253,10 +253,7 @@ router.patch('/creators/:id', requireAdmin, (req: AuthRequest, res) => {
 
   dbRun('UPDATE creators SET status = ? WHERE id = ?', [status, creator.id])
 
-  let publishedFilmIds: string[] = []
-  if (status === 'approved') {
-    publishedFilmIds = publishPendingStandardFilms(creator.id, req.auth!.userId)
-  }
+  const publishedFilmIds: string[] = []
 
   res.json({ ok: true, status, publishedFilmIds, publishedCount: publishedFilmIds.length })
 })
@@ -389,7 +386,7 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
       : existing.review_status ?? 'pending'
 
   if (body.reviewStatus !== undefined || body.review_status !== undefined) {
-    if (!['published', 'rejected', 'pending'].includes(reviewStatus)) {
+    if (!['published', 'rejected', 'pending', 'under_review', 'on_hold', 'approved'].includes(reviewStatus)) {
       res.status(400).json({ error: 'Geçersiz inceleme durumu.' })
       return
     }
@@ -423,7 +420,7 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
 
 router.patch('/content/:id/review', requireAdmin, (req: AuthRequest, res) => {
   const reviewStatus = String(req.body.reviewStatus ?? req.body.status ?? '').trim()
-  if (!['published', 'rejected', 'pending'].includes(reviewStatus)) {
+  if (!['published', 'rejected', 'pending', 'under_review', 'on_hold', 'approved'].includes(reviewStatus)) {
     res.status(400).json({ error: 'Geçersiz inceleme durumu.' })
     return
   }

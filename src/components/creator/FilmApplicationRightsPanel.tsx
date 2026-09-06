@@ -56,7 +56,7 @@ function RightsDocumentUpload({
       <input
         ref={inputRef}
         type="file"
-        accept=".pdf,image/*"
+        accept=".pdf,.doc,.docx"
         className="hidden"
         disabled={disabled}
         onChange={(event) => {

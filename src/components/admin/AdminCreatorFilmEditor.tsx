@@ -1,3 +1,4 @@
+import { DynamicTranslationEditor } from './DynamicTranslationEditor'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import {
   fetchAdminCreatorContentDetail,
@@ -19,7 +20,10 @@ const todayInput = () => new Date().toISOString().slice(0, 10)
 
 const REVIEW_LABELS: Record<string, string> = {
   draft: 'Taslak',
-  pending: 'İncelemede',
+  pending: 'Yeni başvuru',
+  under_review: 'İnceleniyor',
+  on_hold: 'Bekletiliyor',
+  approved: 'Onaylandı',
   published: 'Yayında',
   rejected: 'Reddedildi',
 }
@@ -244,6 +248,7 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
+          <DynamicTranslationEditor kind="content" id={contentId} />
           {loading || !form ? (
             <p className="text-sm text-plooy-muted">Yükleniyor...</p>
           ) : (

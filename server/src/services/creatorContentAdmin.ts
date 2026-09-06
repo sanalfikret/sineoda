@@ -1,17 +1,25 @@
-import { dbRun } from '../db.js'
+import { dbGet, dbRun } from '../db.js'
 import { normalizeContentType } from '../constants/contentTypes.js'
 import { serializeCredits } from './credits.js'
 import { parseContentAddedAt, parseLicenseDate } from './license.js'
 import { parsePublishedAt } from './publish.js'
-import type { ContentRow } from '../types.js'
+import type { ContentRow, CreatorRow } from '../types.js'
 
 export function applyCreatorReviewStatus(
   existing: ContentRow,
   reviewStatus: string,
   options?: { publishedAt?: string | null; reviewNote?: string | null },
 ) {
+  if (!['pending', 'under_review', 'on_hold', 'approved', 'rejected', 'published'].includes(reviewStatus)) throw new Error('Geçersiz inceleme durumu.')
+  if (['approved', 'published'].includes(reviewStatus) && existing.creator_id) {
+    const creator = dbGet<CreatorRow>('SELECT * FROM creators WHERE id = ?', [existing.creator_id])
+    if (!creator?.registration_paid_at || creator.status !== 'approved') throw new Error('Ödeme ve hesap onayı tamamlanmalıdır.')
+    if (existing.program === 'student_cinema' && existing.school_review_status !== 'approved') throw new Error('Okul onayı tamamlanmalıdır.')
+  }
   let publishedAt: string | null
-  if (options?.publishedAt !== undefined) {
+  if (reviewStatus !== 'published') {
+    publishedAt = null
+  } else if (options?.publishedAt !== undefined) {
     publishedAt = options.publishedAt
   } else if (reviewStatus === 'published') {
     publishedAt = existing.published_at ?? new Date().toISOString()

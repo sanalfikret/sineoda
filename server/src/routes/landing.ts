@@ -159,7 +159,7 @@ function validateHeroPayload(raw: unknown): LandingHeroConfig {
 function sanitizeLayout(raw: Partial<LandingLayoutConfig> | undefined, customBlockIds: string[]) {
   if (!raw) return undefined
   const incomingCustomIds = (raw.order ?? [])
-    .filter((id): id is string => typeof id === 'string' && id.startsWith('custom:'))
+    .filter((id) => typeof id === 'string' && id.startsWith('custom:'))
     .map((id) => id.slice('custom:'.length))
   const allCustomIds = [...new Set([...customBlockIds, ...incomingCustomIds])]
   const validIds = new Set([
@@ -187,6 +187,7 @@ function sanitizeLayout(raw: Partial<LandingLayoutConfig> | undefined, customBlo
 function saveLandingShowcasesPayload(showcases: unknown[]) {
   const catalogIds = new Set(dbAll<{ id: string }>('SELECT id FROM content').map((row) => row.id))
   const normalizedShowcases = showcases
+    .filter((value): value is { id: string; title: string; icon?: string; description?: string; itemIds?: string[] } => !!value && typeof value === 'object')
     .map(
       (
         showcase: {

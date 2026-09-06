@@ -1,3 +1,4 @@
+import { readTranslations } from './services/dynamicTranslations.js'
 import { mapMonthlyAwardRow } from './services/studentCinemaAwards.js'
 import { resolveContentImages } from './services/contentImages.js'
 import { parseCredits } from './services/credits.js'
@@ -101,6 +102,7 @@ export function mapContent(row: ContentRow & { school_name?: string | null; crea
   const images = resolveContentImages(row)
   return {
     id: row.id,
+    translations: readTranslations('content', row.id),
     title: row.title,
     description: row.description,
     year: row.year,

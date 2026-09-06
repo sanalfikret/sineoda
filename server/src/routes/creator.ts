@@ -1,3 +1,4 @@
+import { externalMediaLink } from '../services/creatorMedia.js'
 import { Router } from 'express'
 import { v4 as uuid } from 'uuid'
 import { BRAND_NAME } from '../constants/brand.js'
@@ -214,30 +215,12 @@ router.post('/content', requireActiveCreator, (req: CreatorAuthRequest, res) => 
   const isMainApplication = contentFormat === 'main'
   const isStudentProgram = (creator.program ?? 'standard') === 'student_cinema'
 
-  if (!isMainApplication && !registrationPaid) {
+  if (!registrationPaid) {
     res.status(402).json({
-      error: 'Ek içerik göndermek için başvuru ücretini ödemelisiniz.',
+      error: 'Film başvurusu göndermek için başvuru ücretini ödemelisiniz.',
       code: 'CREATOR_PAYMENT_REQUIRED',
     })
     return
-  }
-
-  if (isMainApplication && !registrationPaid) {
-    const existingMain = dbGet<{ id: string; review_status: string | null }>(
-      `SELECT id, review_status FROM content
-       WHERE creator_id = ? AND content_format = 'main'
-         AND review_status IN ('payment_pending', 'pending', 'published')
-       LIMIT 1`,
-      [creator.id],
-    )
-    const studentStub =
-      isStudentProgram && contentFormat === 'main' ? findStudentMainStub(creator.id) : null
-    if (existingMain && !studentStub) {
-      res.status(400).json({
-        error: 'Ödeme tamamlanana kadar yalnızca bir ana film başvurusu gönderebilirsiniz.',
-      })
-      return
-    }
   }
   let application: ReturnType<typeof validateFilmApplication> | null = null
 
@@ -288,6 +271,11 @@ router.post('/content', requireActiveCreator, (req: CreatorAuthRequest, res) => 
     return
   }
 
+  try {
+    externalMediaLink(downloadLink, true)
+    externalMediaLink(videoUrl, true)
+    externalMediaLink(body.trailerUrl ?? body.trailer_url)
+  } catch(error) { res.status(400).json({ error: (error as Error).message }); return }
   const type = normalizeContentType(body.type, 'film')
   const now = new Date().toISOString()
   const parentContentId = String(body.parentContentId ?? body.parent_content_id ?? '').trim() || null
@@ -489,6 +477,12 @@ router.patch('/content/:id', requireActiveCreator, (req: CreatorAuthRequest, res
     body.videoUrl !== undefined || body.video_url !== undefined
       ? String(body.videoUrl ?? body.video_url ?? '').trim()
       : existing.video_url ?? nextDownloadLink
+  let nextTrailerUrl: string
+  try {
+    externalMediaLink(nextDownloadLink, true)
+    externalMediaLink(nextVideoUrl, true)
+    nextTrailerUrl = externalMediaLink(body.trailerUrl ?? body.trailer_url ?? existing.trailer_url)
+  } catch(error) { res.status(400).json({ error: (error as Error).message }); return }
   const nextStreamProvider = resolveStreamProvider(body, nextVideoUrl || nextDownloadLink)
   const durationFields = resolveDurationFields(body, existing)
   const festivalsParsed = parseFestivalsBody(body)
@@ -497,7 +491,7 @@ router.patch('/content/:id', requireActiveCreator, (req: CreatorAuthRequest, res
     `UPDATE content SET
       title = ?, description = ?, year = ?, duration = ?, duration_minutes = ?, rating = ?, type = ?,
       genres = ?, poster = ?, backdrop = ?, video_url = ?, source_video_url = ?, stream_provider = ?,
-      credits_json = ?, festivals_json = ?, review_status = ?, review_note = NULL
+      trailer_url = ?, credits_json = ?, festivals_json = ?, review_status = ?, review_note = NULL
     WHERE id = ? AND creator_id = ?`,
     [
       body.title !== undefined ? String(body.title) : existing.title,
@@ -513,6 +507,7 @@ router.patch('/content/:id', requireActiveCreator, (req: CreatorAuthRequest, res
       nextVideoUrl || nextDownloadLink,
       nextDownloadLink || nextVideoUrl,
       nextStreamProvider,
+      nextTrailerUrl,
       body.credits !== undefined ? serializeCredits(body.credits) : existing.credits_json ?? '{}',
       festivalsParsed !== undefined
         ? serializeFestivals(festivalsParsed)

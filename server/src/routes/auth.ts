@@ -317,7 +317,7 @@ router.get('/me', requireAuth, (req: AuthRequest, res) => {
       status: string
       legal_accepted_at: string | null
       created_at: string
-      program?: string
+      program?: 'standard' | 'student_cinema'
       school_id?: string | null
       registration_paid_at?: string | null
     }>(

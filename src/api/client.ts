@@ -1,3 +1,5 @@
+import { localizeDynamic } from '../utils/dynamicTranslations'
+import i18n from '../i18n'
 import type { LegalDocument, LegalSlug } from '../constants/legal'
 import type { Profile, User } from '../types/auth'
 import type { AdCampaign, AdCampaignFormInput, AdPlayback } from '../types/ads'
@@ -297,7 +299,7 @@ export async function api<T>(path: string, options: RequestInit = {}, retried = 
   const data = (await response.json()) as T & { token?: string }
   const refreshed = readAuthTokenHeader(response) ?? data.token
   if (refreshed) applyAuthToken(refreshed, authEpoch)
-  return data as T
+  return (typeof window !== 'undefined' && !window.location.pathname.startsWith('/admin') ? localizeDynamic(data, i18n.language) : data) as T
 }
 
 export async function uploadImage(file: File): Promise<string> {
@@ -991,7 +993,6 @@ export async function saveAdminBillingPlans(payload: {
       campaignLabel?: string
       sectionLabel?: string
       registrationNotice?: string
-      audience?: BillingPlan['audience']
     }
   >
   customPlans?: Array<{
@@ -1886,7 +1887,7 @@ export interface AdminCreatorDocument {
   uploadedAt: string
 }
 
-export interface AdminCreatorContent extends ContentItem, AdminContentMeta {
+export interface AdminCreatorContent extends Omit<ContentItem, 'publishedAt'>, AdminContentMeta {
   reviewStatus: string
   sourceVideoUrl?: string
   qualifiedMinutes: number
@@ -2032,7 +2033,7 @@ export interface AdminFilmSchool extends FilmSchool {
   createdAt: string
 }
 
-export interface AdminStudentCinemaItem extends ContentItem, AdminContentMeta {
+export interface AdminStudentCinemaItem extends Omit<ContentItem, 'publishedAt'>, AdminContentMeta {
   reviewStatus: string
   program: 'standard' | 'student_cinema'
   contentFormat: 'main' | 'bts' | 'teacher_note'

@@ -21,7 +21,7 @@ import { fuzzySearchMatch, sortByTurkishTitle } from '../../utils/search'
 
 const STATUS_LABELS: Record<AdminCreator['status'], string> = {
   pending: 'Hesap: Onay bekliyor',
-  approved: 'Hesap: Onaylandı (+ bekleyen filmler yayınlanır)',
+  approved: 'Hesap: Onaylandı',
   rejected: 'Hesap: Reddedildi',
   suspended: 'Hesap: Askıya alındı',
 }
@@ -36,7 +36,10 @@ const STATUS_CLASS: Record<AdminCreator['status'], string> = {
 const REVIEW_LABELS: Record<string, string> = {
   draft: 'Taslak',
   payment_pending: 'Ödeme bekliyor',
-  pending: 'İncelemede',
+  pending: 'Yeni başvuru',
+  under_review: 'İnceleniyor',
+  on_hold: 'Bekletiliyor',
+  approved: 'Onaylandı',
   published: 'Yayında',
   rejected: 'Reddedildi',
 }
@@ -271,11 +274,9 @@ export function AdminCreatorsPage() {
     setError('')
     setStatusUpdating(true)
     try {
-      const result = await updateAdminCreatorStatus(id, status)
-      if (result.publishedCount && result.publishedCount > 0) {
-        setNotice(`${result.publishedCount} film yayına alındı.`)
-      } else if (status === 'approved') {
-        setNotice('Hesap onaylandı. Bekleyen film yoksa zaten yayında veya henüz başvuru gönderilmemiş.')
+      await updateAdminCreatorStatus(id, status)
+      if (status === 'approved') {
+        setNotice('Hesap onaylandı. Film inceleme ve yayın işlemlerini ayrıca yapabilirsiniz.')
       } else if (status === 'pending') {
         setNotice('Hesap incelemeye alındı.')
       }

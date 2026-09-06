@@ -38,7 +38,7 @@ const VIDEOS = [
   'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
 ]
 
-const GENRE_TITLES: Record<(typeof FEATURED_BROWSE_GENRES)[number], string[]> = {
+const GENRE_TITLES: Partial<Record<(typeof FEATURED_BROWSE_GENRES)[number], string[]>> = {
   Aksiyon: ['Hızlı Takip', 'Son Mermi', 'Kaçış Planı', 'Tehlike Hattı', 'Çarpışma', 'Gece Operasyonu', 'Ölümcül Yarış', 'Gölge Savaşçı', 'İntikam Yolu', 'Son Hesaplaşma'],
   Dram: ['Kırık Kalp', 'Sessiz Fırtına', 'Son Vedalaşma', 'Kayıp Rüya', 'Yürek Yanığı', 'Umut Işığı', 'Ağlayan Gök', 'İki Dünya', 'Sonbahar Hikayesi', 'Yeni Şafak'],
   Suç: ['Kara Dosya', 'Gizli Tanık', 'Kan İzi', 'Şehir Avcısı', 'Son İpucu', 'Karanlık Sokak', 'Mafya Gölgesi', 'Sahte Kimlik', 'Gizli Oyun', 'Çatlak İş'],
@@ -57,7 +57,8 @@ const GENRE_TITLES: Record<(typeof FEATURED_BROWSE_GENRES)[number], string[]> = 
 }
 
 function titlesForGenre(genre: (typeof FEATURED_BROWSE_GENRES)[number]) {
-  if (GENRE_TITLES[genre]) return GENRE_TITLES[genre]
+  const titles = GENRE_TITLES[genre]
+  if (titles) return titles
   return Array.from({ length: 10 }, (_, index) => `${genre} Hikayesi ${index + 1}`)
 }
 

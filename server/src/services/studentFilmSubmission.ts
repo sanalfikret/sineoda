@@ -1,3 +1,4 @@
+import { externalMediaLink } from './creatorMedia.js'
 import { dbGet, dbRun } from '../db.js'
 import { slugify } from '../mappers.js'
 import { parseContentAddedAt } from './license.js'
@@ -34,7 +35,9 @@ export function createStudentFilmSubmission(input: {
   now: string
   reviewStatus?: 'pending' | 'payment_pending'
 }) {
-  const reviewStatus = input.reviewStatus ?? 'pending'
+  const creator = dbGet<{ registration_paid_at: string | null }>('SELECT registration_paid_at FROM creators WHERE id = ?', [input.creatorId])
+  if (!creator?.registration_paid_at) throw new Error('CREATOR_PAYMENT_REQUIRED')
+  const reviewStatus = 'pending'
   const existing = findStudentMainStub(input.creatorId)
   if (existing) return existing.id
 
@@ -52,7 +55,7 @@ export function createStudentFilmSubmission(input: {
     contentId = `${slugify(input.title)}-${counter++}`
   }
 
-  const filmLink = input.filmLink.trim()
+  const filmLink = externalMediaLink(input.filmLink, true)
   const streamProvider = inferStreamProvider(filmLink)
 
   dbRun(

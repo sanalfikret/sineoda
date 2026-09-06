@@ -1,3 +1,4 @@
+import { DynamicTranslationEditor } from '../../components/admin/DynamicTranslationEditor'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -31,7 +32,10 @@ const FORMAT_LABELS: Record<string, string> = {
 
 const REVIEW_LABELS: Record<string, string> = {
   draft: 'Taslak',
-  pending: 'Plooy incelemede',
+  pending: 'Yeni başvuru',
+  under_review: 'İnceleniyor',
+  on_hold: 'Bekletiliyor',
+  approved: 'Onaylandı',
   published: 'Yayında',
   rejected: 'Reddedildi',
 }
@@ -231,6 +235,7 @@ export function AdminStudentCinemaFormPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
+      {id && <DynamicTranslationEditor kind="content" id={id} />}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <Link
