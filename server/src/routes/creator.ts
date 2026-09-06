@@ -25,7 +25,7 @@ import {
 } from '../services/filmApplication.js'
 import { getContentEngagementStats } from '../services/studentCinema.js'
 import { getMonthlyReport, monthKey } from '../services/watchAccounting.js'
-import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
+import { isCreatorRegistrationPaid, getCreatorRegistrationStatus } from '../services/creatorRegistration.js'
 import { findStudentMainStub } from '../services/studentFilmSubmission.js'
 import { resolveStreamProvider } from '../services/streamProvider.js'
 import {
@@ -67,7 +67,7 @@ function getCreatorProfile(userId: string) {
       program: creator.program ?? 'standard',
       schoolId: creator.school_id ?? null,
       registrationPaidAt: creator.registration_paid_at ?? null,
-      registrationPaid: isCreatorRegistrationPaid(creator),
+      registrationPaid: getCreatorRegistrationStatus(creator.user_id).paid,
     },
     documents: documents.map((doc) => ({
       id: doc.id,
@@ -111,7 +111,7 @@ router.get('/dashboard', requireCreator, (req: AuthRequest, res) => {
       program: creator.program ?? 'standard',
       schoolId: creator.school_id ?? null,
       registrationPaidAt: creator.registration_paid_at ?? null,
-      registrationPaid: isCreatorRegistrationPaid(creator),
+      registrationPaid: getCreatorRegistrationStatus(creator.user_id).paid,
     },
     payoutRules: {
       note: 'Kazançlar yapımcı anlaşmasında belirtilen adil paylaşım modeline göre hesaplanır.',
@@ -455,16 +455,11 @@ router.patch('/content/:id', requireActiveCreator, (req: CreatorAuthRequest, res
     return
   }
 
-  if (!registrationPaid && existing.review_status !== 'payment_pending') {
+  if (!registrationPaid) {
     res.status(402).json({
       error: 'Bu içeriği düzenlemek için başvuru ücretini ödemelisiniz.',
       code: 'CREATOR_PAYMENT_REQUIRED',
     })
-    return
-  }
-
-  if (registrationPaid && existing.review_status === 'payment_pending') {
-    res.status(400).json({ error: 'Ödeme bekleyen başvuru güncellenemiyor. Önce ödemeyi tamamlayın.' })
     return
   }
 

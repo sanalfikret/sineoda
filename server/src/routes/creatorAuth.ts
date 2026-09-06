@@ -1,3 +1,4 @@
+import { getCreatorRegistrationStatus } from '../services/creatorRegistration.js'
 import { externalMediaLink } from '../services/creatorMedia.js'
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
@@ -48,6 +49,7 @@ function mapCreatorUser(user: UserRow) {
           program: creator.program ?? 'standard',
           schoolId: creator.school_id ?? null,
           registrationPaidAt: creator.registration_paid_at ?? null,
+          registrationPaid: getCreatorRegistrationStatus(user.id).paid,
         }
       : null,
   }

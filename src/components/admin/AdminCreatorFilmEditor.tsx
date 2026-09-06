@@ -53,6 +53,7 @@ interface FilmForm {
   contentAddedAt: string
   licenseUnlimited: boolean
   licenseExpiresAt: string
+  reviewStatus: string
   publishMode: 'review' | 'scheduled' | 'live'
   publishedAt: string
 }
@@ -78,6 +79,7 @@ function itemToForm(item: AdminCreatorContentDetail): FilmForm {
     contentAddedAt: toDateInputValue(item.contentAddedAt) || todayInput(),
     licenseUnlimited: item.licenseUnlimited,
     licenseExpiresAt: toDateInputValue(item.licenseExpiresAt),
+    reviewStatus: item.reviewStatus === 'published' ? 'approved' : item.reviewStatus,
     publishMode: isLive ? 'live' : isScheduled ? 'scheduled' : 'review',
     publishedAt: toDateTimeLocalValue(item.publishedAt) || defaultScheduledDateTime(),
   }
@@ -161,7 +163,7 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
     setError('')
 
     try {
-      let reviewStatus: 'pending' | 'published' = 'pending'
+      let reviewStatus = form.reviewStatus
       let publishedAt: string | null = null
 
       if (form.publishMode === 'scheduled' || form.publishMode === 'live') {
@@ -188,7 +190,7 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
         contentAddedAt: form.contentAddedAt,
         licenseUnlimited: form.licenseUnlimited,
         licenseExpiresAt: form.licenseUnlimited ? null : form.licenseExpiresAt || null,
-        reviewStatus,
+        ...(['pending', 'under_review', 'on_hold', 'approved', 'rejected', 'published'].includes(reviewStatus) ? { reviewStatus } : {}),
         publishedAt,
         ...(form.publishMode === 'live' && new Date(form.publishedAt) <= new Date()
           ? { publishNow: true }
@@ -584,7 +586,7 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
                   <div className="space-y-2">
                     {(
                       [
-                        ['review', 'İncelemede — henüz yayın yok'],
+                        ['review', 'Yayına alma — inceleme durumunu kullan'],
                         ['scheduled', 'Planlı yayın — ileri tarih'],
                         ['live', 'Yayında — belirlenen tarihte görünür'],
                       ] as const
@@ -600,6 +602,16 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
                       </label>
                     ))}
                   </div>
+                  {form.publishMode === 'review' && (
+                    <label className="block">
+                      <span className="mb-1 block text-sm text-white/85">Film inceleme durumu</span>
+                      <select value={form.reviewStatus} onChange={event => update('reviewStatus', event.target.value)} className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white">
+                        {!['pending', 'under_review', 'on_hold', 'approved', 'rejected'].includes(form.reviewStatus) && <option value={form.reviewStatus}>{REVIEW_LABELS[form.reviewStatus] ?? form.reviewStatus}</option>}
+                        {['pending', 'under_review', 'on_hold', 'approved', 'rejected'].map(status => <option key={status} value={status}>{REVIEW_LABELS[status]}</option>)}
+                      </select>
+                      <p className="mt-1 text-xs text-plooy-muted">Film onayı tek başına yayına almaz. Yayın için ayrıca planlı veya hemen yayın seçin.</p>
+                    </label>
+                  )}
                   {form.publishMode !== 'review' && (
                     <label className="block">
                       <span className="mb-1 block text-sm text-white/85">İlk yayın tarihi ve saati *</span>

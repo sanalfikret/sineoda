@@ -57,7 +57,7 @@ export const DEFAULT_BILLING_PLANS: BillingPlanDefinition[] = [
     sectionLabel: 'Yapımcı Yönetmen',
     enabled: true,
     registrationNotice:
-      'Kayıt sonrası ₺{{price}} yapımcı başvuru ücreti ödenir. Üyeliğiniz otomatik onaylanır; filminizin yayına alınması admin incelemesine tabidir.',
+      'Kayıt sonrası ₺{{price}} yapımcı başvuru ücreti ödenir. Hesap onayı ve film incelemesi ayrı yapılır.',
     features: [
       'Yapımcı Yönetmen paneli erişimi',
       'Film başvurusu gönderme',
@@ -74,7 +74,7 @@ export const DEFAULT_BILLING_PLANS: BillingPlanDefinition[] = [
     sectionLabel: 'Genç Sinema',
     enabled: true,
     registrationNotice:
-      'Kayıt sonrası ₺{{price}} Genç Sinema başvuru ücreti ödenir. Üyeliğiniz otomatik açılır; filminiz okul ve {{brand}} incelemesine alınır.',
+      'Kayıt sonrası ₺{{price}} Genç Sinema başvuru ücreti ödenir. Hesap onayı ayrı yapılır; film başvurunuz okul ve {{brand}} incelemesine alınır.',
     features: ['Genç Sinema paneli erişimi', 'Film başvurusu gönderme', 'Okul ve admin incelemesi'],
   },
 ]

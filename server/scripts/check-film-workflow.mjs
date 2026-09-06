@@ -8,6 +8,7 @@ const { initDatabase, dbRun, dbGet } = await import('../src/db.ts')
 await initDatabase()
 const { default: express } = await import('express')
 const { signToken } = await import('../src/middleware/auth.ts')
+const { default: billingRoutes } = await import('../src/routes/billing.ts')
 const { default: creatorRoutes } = await import('../src/routes/creator.ts')
 const { default: adminRoutes } = await import('../src/routes/adminCreators.ts')
 const { default: uploadRoutes } = await import('../src/routes/creatorUpload.ts')
@@ -20,13 +21,19 @@ for (const id of ['standard','student_cinema','admin']) {
  dbRun('INSERT INTO users (id,name,email,password_hash,role,created_at) VALUES (?,?,?,?,?,?)',[id,id,id+'@example.test','unused',id==='admin'?'admin':'creator',now])
  if(id!=='admin') dbRun('INSERT INTO creators (id,user_id,studio_name,bio,status,created_at,program,school_id) VALUES (?,?,?,?,?,?,?,?)',[id,id,id,'','pending',now,id,'school'])
 }
-const app = express(); app.use(express.json()); app.use('/creator',creatorRoutes); app.use('/admin',adminRoutes); app.use('/upload',uploadRoutes)
+const app = express(); app.use(express.json()); app.use('/creator',creatorRoutes); app.use('/billing',billingRoutes); app.use('/admin',adminRoutes); app.use('/upload',uploadRoutes)
 const server = app.listen(0,'127.0.0.1'); await new Promise(resolve => server.once('listening',resolve))
 const base = 'http://127.0.0.1:'+server.address().port
 async function call(url,id,method,body) { return fetch(base+url,{ method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+signToken({userId:id,role:id==='admin'?'admin':'creator'})},body:JSON.stringify(body) }) }
 try {
  assert.equal(isCreatorRegistrationPaid({program:'standard',registration_paid_at:null}),false)
  for (const id of ['standard','student_cinema']) { const response = await call('/creator/content',id,'POST',{title:'Unpaid'}); assert.equal(response.status,402); assert.equal(dbGet('SELECT COUNT(*) AS n FROM content').n,0) }
+ for (const [userId,planId] of [['standard','creator_application'],['student_cinema','student_cinema_application']]) {
+   const checkout = await call('/billing/checkout',userId,'POST',{planId,provider:'paytr'})
+   assert.equal(checkout.status,503)
+   assert.equal((await checkout.json()).code,'PAYMENT_NOT_READY')
+   assert.equal(dbGet('SELECT COUNT(*) AS n FROM content').n,0)
+ }
  assert.throws(() => createStudentFilmSubmission({creatorId:'student_cinema',schoolId:'school',title:'Student',description:'',filmLink:'https://example.test/film',now}),/PAYMENT/)
  activateCreatorRegistration('student_cinema')
  assert.equal(dbGet('SELECT status FROM creators WHERE id = ?',['student_cinema']).status,'pending')
@@ -52,6 +59,21 @@ try {
  assert.equal(localizeDynamic({title:'Legacy',translations},'en').title,'Movie')
  assert.equal(localizeDynamic({title:'Legacy',translations},'tr').title,'Film')
  assert.equal(localizeDynamic({title:'Legacy'},'en').title,'Legacy')
+ const { FILM_RIGHTS_CATEGORIES, FILM_LEGAL_DECLARATIONS, REQUIRED_RIGHTS_DOC_TYPES } = await import('../src/services/filmApplication.ts')
+ for (const userId of ['standard','student_cinema']) {
+   const documentIds = REQUIRED_RIGHTS_DOC_TYPES.map((type,index) => {
+     const docId = userId+'-rights-'+index
+     dbRun('INSERT INTO creator_documents (id,creator_id,doc_type,file_url,uploaded_at) VALUES (?,?,?,?,?)',[docId,userId,type,'/uploads/proof.pdf',now])
+     return docId
+   })
+   const submission = await call('/creator/content',userId,'POST',{title:'Paid film '+userId,downloadLink:'https://example.test/film',trailerUrl:'https://example.test/trailer',documentIds,rightsDeclaration:Object.fromEntries([...FILM_RIGHTS_CATEGORIES,...FILM_LEGAL_DECLARATIONS].map(entry=>[entry.id,true])),credits:{directors:['Director'],producers:['Producer'],cast:[{name:'Actor',character:'Role'}]}})
+   assert.equal(submission.status,201,await submission.text())
+ }
+ dbRun('INSERT OR REPLACE INTO site_settings (key,value) VALUES (?,?)',['billing_plans',JSON.stringify({creator_application:{interval:'month'}})])
+ dbRun('UPDATE users SET subscription_expires_at = ? WHERE id = ?',['2000-01-01T00:00:00.000Z','standard'])
+ const expired = await fetch(base+'/creator/dashboard',{headers:{Authorization:'Bearer '+signToken({userId:'standard',role:'creator'})}})
+ assert.equal((await expired.json()).creator.registrationPaid,false)
+ dbRun('DELETE FROM site_settings WHERE key = ?',['billing_plans'])
  const { isCreatorDocument } = await import('../src/services/creatorDocumentUpload.ts')
  const { externalMediaLink } = await import('../src/services/creatorMedia.ts')
  assert.equal(isCreatorDocument('paper.pdf','application/pdf',Buffer.from('%PDF-1.7')),true)

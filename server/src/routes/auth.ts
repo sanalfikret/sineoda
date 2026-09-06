@@ -8,7 +8,7 @@ import { config, publicAssetUrl } from '../config.js'
 import { dbAll, dbGet, dbRun, uploadsDir } from '../db.js'
 import { getProfileId, readAuthPayload, requireAuth, signToken, verifyToken, type AuthRequest } from '../middleware/auth.js'
 import { mapProfile, mapUser } from '../mappers.js'
-import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
+import { getCreatorRegistrationStatus } from '../services/creatorRegistration.js'
 import { sendPasswordResetEmail, sendEmailVerificationEmail, sendEmailChangeConfirmationEmail } from '../services/email.js'
 import { getPlan, normalizePlanId, planRequiresStudentId } from '../services/plans.js'
 import { isValidTurkishMobile, normalizePhone, sendVerificationSms } from '../services/sms.js'
@@ -339,7 +339,7 @@ router.get('/me', requireAuth, (req: AuthRequest, res) => {
               program: creator.program ?? 'standard',
               schoolId: creator.school_id ?? null,
               registrationPaidAt: creator.registration_paid_at ?? null,
-              registrationPaid: isCreatorRegistrationPaid(creator),
+              registrationPaid: getCreatorRegistrationStatus(user.id).paid,
             }
           : null,
       },
