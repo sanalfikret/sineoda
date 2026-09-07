@@ -1,6 +1,5 @@
 import { dbGet, dbRun } from '../db.js'
 import { dedupeAllCategories } from './categoryDedup.js'
-import { fillCategoriesToTarget } from './categoryFill.js'
 import { reconcileCategoryOrder } from './categoryOrder.js'
 
 const MAINTENANCE_KEY = 'category_maintenance_version'
@@ -25,7 +24,6 @@ function migrateStandUpContentTypes() {
  */
 export function runStartupCategoryMaintenance() {
   migrateStandUpContentTypes()
-  fillCategoriesToTarget()
   runOneTimeCategoryDedupeIfNeeded()
   reconcileCategoryOrder()
 }

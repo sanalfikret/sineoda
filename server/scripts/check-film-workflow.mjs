@@ -107,5 +107,16 @@ try {
  dbRun('INSERT OR REPLACE INTO site_settings (key,value) VALUES (?,?)',['category_pool:test-custom','kisa-film'])
  assert.equal(categoryPool('test-custom'),'kisa-film')
  assert.deepEqual(filterContentIdsForCategory('test-custom',[standardId]),[])
+ const { runStartupCategoryMaintenance } = await import('../src/services/categoryMaintenance.ts')
+ dbRun('INSERT OR REPLACE INTO site_settings (key,value) VALUES (?,?)',['category_maintenance_version','4'])
+ dbRun('INSERT INTO categories (id,title,sort_order) VALUES (?,?,?)',['exact-test','Exact test',999])
+ dbRun('INSERT INTO category_items (category_id,content_id,sort_order) VALUES (?,?,?)',['exact-test',standardId,0])
+ runStartupCategoryMaintenance()
+ assert.equal(dbGet('SELECT COUNT(*) AS n FROM category_items WHERE category_id = ?',['exact-test']).n,1)
+ const { buildCategoryBrowseRows } = await import('../../src/utils/browse.ts')
+ const sample = {id:'sample',type:'film',program:'standard',contentFormat:'main',genres:[],rating:'Genel'}
+ const ids = Array.from({length:25},(_,i)=>'film-'+i)
+ const rows = buildCategoryBrowseRows([{id:'exact',title:'Exact',itemIds:ids}],[],id=>({...sample,id}),{})
+ assert.deepEqual(rows[0].itemIds,ids)
  console.log('PASS: unpaid creator/student, service guard, account separation, review/publication transitions, TR/EN persistence and upload guard')
 } finally { await new Promise(resolve=>server.close(resolve)); fs.rmSync(temp,{recursive:true,force:true}) }

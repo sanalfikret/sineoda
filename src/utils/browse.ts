@@ -173,7 +173,7 @@ export function pickCategoryRow(
   const items = category.itemIds
     .map((id) => getContentById(id))
     .filter((item): item is ContentItem => Boolean(item && itemAllowedInCategory(category, item, rowOptions)))
-    .slice(0, BROWSE_ITEMS_PER_ROW)
+
 
   if (items.length === 0) return null
 
@@ -216,7 +216,7 @@ export function buildCategoryBrowseRows(
       .filter((item): item is ContentItem =>
         Boolean(item && itemAllowedInCategory(category, item, rowOptions)),
       )
-      .slice(0, BROWSE_ITEMS_PER_ROW)
+
 
     if (category.id === BRAND_STUDENT_CINEMA.id && items.length === 0 && extras?.studentCinemaPicks?.length) {
       items = extras.studentCinemaPicks.slice(0, BROWSE_ITEMS_PER_ROW)

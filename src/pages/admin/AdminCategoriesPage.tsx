@@ -13,6 +13,7 @@ export function AdminCategoriesPage() {
   const {
     catalog,
     studentCinemaCatalog,
+    studentCinemaMonthlyWinners,
     cekimNotlariSections,
     categories,
     categoryOrder,
@@ -254,6 +255,12 @@ export function AdminCategoriesPage() {
         </div>
       </div>
 
+      <section className="mb-4 rounded-2xl border border-emerald-500/30 bg-[#11141c] p-4">
+        <h2 className="font-semibold text-white">Ayın Genç Sinema Birincileri</h2>
+        <p className="mt-2 text-sm text-plooy-muted">Bu satır Genç Sinema bölümünde ayın birincisi olarak işaretlenen, yayındaki filmlerden oluşur. {studentCinemaMonthlyWinners.length} görünür içerik.</p>
+        <div className="my-3 flex flex-wrap gap-2">{studentCinemaMonthlyWinners.map(item => <Link key={item.id} to={'/admin/genc-sinema/' + item.id} className="rounded bg-white/10 px-3 py-2 text-sm text-white">{item.title}</Link>)}</div>
+        <Link to="/admin/genc-sinema" className="text-sm text-plooy-gold">Birincileri Genç Sinema bölümünde düzenle →</Link>
+      </section>
       <div className="space-y-3">
         {orderedCategories.map((category, index) => (
           <AdminCategoryRow
