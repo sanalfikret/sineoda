@@ -12,8 +12,7 @@ import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
 import { useWatchlist } from '../context/WatchlistContext'
 import { buildBrowseRows, filterCatalog, genresForCatalog, pickFeatured } from '../utils/browse'
-import { FeaturedShowcaseRow } from '../components/FeaturedShowcaseRow'
-import { browseRowLayout, browseRowOpensPlayer, browseRowViewAllPath, usesFeaturedShowcaseRow } from '../catalog/browseRowUi'
+import { browseRowLayout, browseRowOpensPlayer } from '../catalog/browseRowUi'
 import { restoreBrowseScroll } from '../utils/browseState'
 import { isContentAllowedForKids } from '../utils/contentRating'
 import { useLocale } from '../i18n/LocaleContext'
@@ -43,6 +42,7 @@ function BrowseContent({
   const { categories, featuredContent, visibleCatalog, getContentById, isLoading, refresh, studentCinemaPicks, studentCinemaCatalog, studentCinemaMonthlyWinners, hiddenNavIds, categoryOrder } = useContent()
   const { watchlistItems } = useWatchlist()
   const { activeProfile } = useAuth()
+  const selectedCategory = searchParams.get('kategori')
   const activeGenre = searchParams.get('tur')
   const [progressMap, setProgressMap] = useState<Record<string, number>>({})
   const [resumeEpisodeMap, setResumeEpisodeMap] = useState<Record<string, string>>({})
@@ -147,12 +147,14 @@ function BrowseContent({
 
   const rows = useMemo(() => {
     const source = studentCinemaOnly ? studentCinemaCatalog : visibleCatalog
-    return buildBrowseRows(source, browseOptions, categories, getContentById, {
+    const result = buildBrowseRows(source, browseOptions, categories, getContentById, {
       studentCinemaPicks,
       studentCinemaMonthlyWinners,
       categoryOrder,
     })
+    return selectedCategory ? result.filter(row => row.id === selectedCategory) : result
   }, [
+    selectedCategory,
     studentCinemaOnly,
     studentCinemaCatalog,
     visibleCatalog,
@@ -255,8 +257,8 @@ function BrowseContent({
     : activeGenre
       ? filteredCatalog[0]
       : heroItem ?? filteredCatalog[0] ?? null
-  const isBrowseList = Boolean(activeGenre || contentType || verticalOnly || studentCinemaOnly || classicsOnly)
-  const showSectionExtras = !cekimNotlariOnly && !classicsOnly
+  const isBrowseList = Boolean(selectedCategory || activeGenre || contentType || verticalOnly || studentCinemaOnly || classicsOnly)
+  const showSectionExtras = !selectedCategory && !cekimNotlariOnly && !classicsOnly
 
   const resolvedPageTitle = useMemo(() => {
     if (verticalOnly) return t('dikey')
@@ -286,7 +288,7 @@ function BrowseContent({
   return (
     <main className="bg-plooy-bg">
       <PageMeta title={browseMetaTitle} path={location.pathname} />
-      {displayHero ? (
+      {displayHero && !selectedCategory ? (
       <Hero
         item={displayHero}
         onPlay={openPlayer}
@@ -353,25 +355,6 @@ function BrowseContent({
           </p>
         ) : (
           rows.map((row) => {
-            const viewAllPath = browseRowViewAllPath(row.id, {
-              activeGenre,
-              contentType,
-              hiddenNavIds,
-            })
-            const viewAllHref = viewAllPath ? localizePath(viewAllPath) : undefined
-
-            if (!isBrowseList && usesFeaturedShowcaseRow(row.title, row.id)) {
-              return (
-                <FeaturedShowcaseRow
-                  key={row.id}
-                  title={row.title}
-                  items={row.items}
-                  onSelect={rowSelect(row.id)}
-                  progressMap={progressMap}
-                  viewAllHref={viewAllHref}
-                />
-              )
-            }
 
             return (
             <ContentRow
@@ -380,7 +363,7 @@ function BrowseContent({
               items={row.items}
               onSelect={rowSelect(row.id)}
               progressMap={progressMap}
-              viewAllHref={viewAllHref}
+              viewAllHref={selectedCategory ? undefined : localizePath('/?kategori=' + encodeURIComponent(row.id))}
               prominent={false}
               layout={rowLayout(row.id, row.title, row.items)}
               variant={isBrowseList ? 'grid' : 'carousel'}

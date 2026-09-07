@@ -61,7 +61,7 @@ export function ContentRow({
   return (
     <section data-tv-row className={`relative overflow-visible ${isGrid ? 'mb-5' : CAROUSEL_SECTION_MB}`}>
       <div className="mb-2 flex items-center justify-between px-4 sm:px-6 lg:px-8">
-        <h2 className="text-lg font-semibold text-white sm:text-xl">{translateCategory(title)}</h2>
+        <h2 className="text-lg font-semibold text-white sm:text-xl">{viewAllHref ? <Link to={localizePath(viewAllHref)}>{translateCategory(title)}</Link> : translateCategory(title)}</h2>
         <div className="flex items-center gap-2">
           {viewAllHref && (
             <Link to={localizePath(viewAllHref)} className="text-sm font-medium text-plooy-gold hover:underline">

@@ -1,7 +1,7 @@
 import { useContent } from '../context/ContentContext'
 import type { ContentItem } from '../types/content'
 import { PROGRAM_SHOWCASE_ROWS } from '../../shared/catalog/programRows'
-import { FeaturedShowcaseRow } from './FeaturedShowcaseRow'
+import { ContentRow } from './ContentRow'
 
 export type ProgramShowcaseKind = keyof typeof PROGRAM_SHOWCASE_ROWS
 
@@ -21,19 +21,18 @@ export function ProgramShowcaseRow({
   title,
   onSelect,
   guestMode = false,
-  className = '',
 }: ProgramShowcaseRowProps) {
   const { categories } = useContent()
   const config = PROGRAM_SHOWCASE_ROWS[kind]
   if (kind === 'studentMonthlyWinners' && categories.some(row => row.id === 'student-monthly-winners' && row.hidden)) return null
   return (
-    <FeaturedShowcaseRow
+    <ContentRow
       title={title ?? config.title}
       items={items}
-      onSelect={onSelect}
+      onSelect={onSelect ?? (() => undefined)}
       guestMode={guestMode}
-      viewAllHref={config.viewAllPath}
-      className={className}
+      viewAllHref={kind === 'studentMonthlyWinners' ? '/?kategori=student-monthly-winners' : config.viewAllPath}
+
     />
   )
 }
