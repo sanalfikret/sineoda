@@ -1,3 +1,4 @@
+import { GuestGrid } from './landing/GuestPresentation'
 import { useContent } from '../context/ContentContext'
 import type { ContentItem } from '../types/content'
 import { PROGRAM_SHOWCASE_ROWS } from '../../shared/catalog/programRows'
@@ -25,6 +26,7 @@ export function ProgramShowcaseRow({
   const { categories } = useContent()
   const config = PROGRAM_SHOWCASE_ROWS[kind]
   if (kind === 'studentMonthlyWinners' && categories.some(row => row.id === 'student-monthly-winners' && row.hidden)) return null
+  if (guestMode) return <GuestGrid id={kind} title={title ?? config.title} items={items} href={kind === 'studentMonthlyWinners' ? '/?kategori=student-monthly-winners' : '/?kategori=student-picks'} />
   return (
     <ContentRow
       title={title ?? config.title}

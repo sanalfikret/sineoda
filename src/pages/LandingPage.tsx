@@ -1,3 +1,4 @@
+import { GuestPresentationProvider } from '../components/landing/GuestPresentation'
 import { useSearchParams } from 'react-router-dom'
 import { ContentRow } from '../components/ContentRow'
 import { useContent } from '../context/ContentContext'
@@ -172,7 +173,7 @@ export function LandingPage() {
   }
 
   return (
-    <GuestSiteShell footer={<SiteFooter />}>
+    <GuestPresentationProvider><GuestSiteShell footer={<SiteFooter />}>
       <div className="min-h-dvh bg-plooy-bg text-white">
         <PageMeta path="/" />
         {selectedCategory ? <div className="pt-28 pb-12">{selectedRows.length ? selectedRows.map(row => <ContentRow key={row.id} title={row.title} items={row.items} guestMode variant="grid" onSelect={() => undefined} />) : <p className="px-6">{i18n.language.startsWith('en') ? 'No content found.' : 'İçerik bulunamadı.'}</p>}</div> : <>
@@ -197,6 +198,6 @@ export function LandingPage() {
         />
         </>}
       </div>
-    </GuestSiteShell>
+    </GuestSiteShell></GuestPresentationProvider>
   )
 }

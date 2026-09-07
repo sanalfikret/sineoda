@@ -13,6 +13,7 @@ export const FEATURED_SHOWCASE_COLUMNS = 3
 export { usesFeaturedShowcaseRow }
 
 interface FeaturedShowcaseRowProps {
+  maxItems?: number
   title: string
   items: ContentItem[]
   onSelect?: (item: ContentItem) => void
@@ -64,6 +65,7 @@ export function FeaturedShowcaseRow({
   getGuestHref,
   className = '',
   progressMap,
+  maxItems = FEATURED_SHOWCASE_MAX_ITEMS,
 }: FeaturedShowcaseRowProps) {
   const { t } = useTranslation('browse')
   const { localizePath } = useLocale()
@@ -71,8 +73,8 @@ export function FeaturedShowcaseRow({
 
   if (items.length === 0) return null
 
-  const visible = items.slice(0, FEATURED_SHOWCASE_MAX_ITEMS)
-  const hasMore = items.length > FEATURED_SHOWCASE_MAX_ITEMS
+  const visible = items.slice(0, maxItems)
+  const hasMore = items.length > maxItems
   const loginHref = guestMode ? localizePath('/giris') : viewAllHref ? localizePath(viewAllHref) : undefined
   const showHeaderLink = !viewAllFooterOnly && loginHref && (guestMode || hasMore)
   const showFooterLink =

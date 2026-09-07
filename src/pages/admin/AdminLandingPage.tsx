@@ -1,3 +1,4 @@
+import { AdminGuestPresentation } from '../../components/admin/AdminGuestPresentation'
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import type { CekimNotlariSection } from '../../api/client'
 import {
@@ -131,6 +132,7 @@ function filterPickerCatalog(
 export function AdminLandingPage() {
   const { catalog: platformCatalog, studentCinemaCatalog: bootstrapStudentCatalog, cekimNotlariSections } =
     useContent()
+  const { categories } = useContent()
   const [adminCatalog, setAdminCatalog] = useState<ContentItem[]>([])
   const [adminStudentItems, setAdminStudentItems] = useState<ContentItem[]>([])
   const [adminCekimSections, setAdminCekimSections] = useState<CekimNotlariSection[]>([])
@@ -1525,6 +1527,7 @@ export function AdminLandingPage() {
         </div>
       </div>
 
+      <AdminGuestPresentation blocks={[{id:'studentPicks',title:'Genç Sinema seçkisi'},{id:'studentMonthlyWinners',title:'Ayın Genç Sinema birincileri'},...categories.map(category=>({id:category.id,title:category.title})),...customBlocks.map(block=>({id:'custom:'+block.id,title:block.adminLabel || block.title}))]} />
       {message && (
         <p className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80">
           {message}

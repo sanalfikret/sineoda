@@ -1,11 +1,10 @@
+import { GuestGrid } from './GuestPresentation'
 import { Link } from 'react-router-dom'
 import { resolveMediaUrl, type CekimNotlariSection } from '../../api/client'
 import type { LandingCustomBlock } from '../../constants/landingCustomBlocks'
 import type { ContentItem } from '../../types/content'
-import { guestItemHref, viewAllHrefForBlock } from '../../utils/landingContentLinks'
+import { viewAllHrefForBlock } from '../../utils/landingContentLinks'
 import { normalizeLandingLink, resolveContentRowItems } from '../../utils/landingContentRow'
-import { FeaturedShowcaseRow } from '../FeaturedShowcaseRow'
-import { useLocale } from '../../i18n/LocaleContext'
 
 function CtaLink({
   label,
@@ -60,7 +59,6 @@ export function LandingCustomBlockSection({
   catalog?: ContentItem[]
   cekimSections?: CekimNotlariSection[]
 }) {
-  const { localizePath } = useLocale()
   const rowTitle = block.title.trim() || block.adminLabel.trim()
 
   if (block.type === 'contentRow') {
@@ -82,15 +80,7 @@ export function LandingCustomBlockSection({
             )}
           </div>
         )}
-        <FeaturedShowcaseRow
-          title={rowTitle}
-          items={items}
-          viewAllHref={viewAllLink}
-          viewAllFooterOnly
-          viewAllLabel={block.ctaLabel}
-          getGuestHref={(item) => localizePath(guestItemHref(item))}
-          className="pt-4"
-        />
+        <GuestGrid id={'custom:'+block.id} title={rowTitle} items={items} href={viewAllLink} />
       </div>
     )
   }

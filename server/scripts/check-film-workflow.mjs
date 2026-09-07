@@ -8,6 +8,7 @@ const { initDatabase, dbRun, dbGet, dbAll } = await import('../src/db.ts')
 await initDatabase()
 const { default: express } = await import('express')
 const { signToken } = await import('../src/middleware/auth.ts')
+const { default: presentationRoutes } = await import('../src/routes/landingPresentation.ts')
 const { default: notesRoutes } = await import('../src/routes/adminCekimNotlari.ts')
 const { default: journalRoutes } = await import('../src/routes/adminJournal.ts')
 const { default: modeRoutes } = await import('../src/routes/adminSiteMode.ts')
@@ -29,7 +30,7 @@ for (const id of ['standard','student_cinema','admin']) {
  dbRun('INSERT INTO users (id,name,email,password_hash,role,created_at) VALUES (?,?,?,?,?,?)',[id,id,id+'@example.test','unused',id==='admin'?'admin':'creator',now])
  if(id!=='admin') dbRun('INSERT INTO creators (id,user_id,studio_name,bio,status,created_at,program,school_id) VALUES (?,?,?,?,?,?,?,?)',[id,id,id,'','pending',now,id,'school'])
 }
-const app = express(); app.use(express.json()); app.use('/notes-test',notesRoutes); app.use('/journal-test',journalRoutes); app.use('/mode-test',modeRoutes); app.use('/public-mode',publicModeRoutes); app.use('/queues',queueRoutes); app.use('/creator',creatorRoutes); app.use('/billing',billingRoutes); app.use('/categories',categoryRoutes); app.use('/catalog',contentRoutes); app.use('/admin',adminRoutes); app.use('/upload',uploadRoutes)
+const app = express(); app.use(express.json()); app.use('/presentation-test',presentationRoutes); app.use('/notes-test',notesRoutes); app.use('/journal-test',journalRoutes); app.use('/mode-test',modeRoutes); app.use('/public-mode',publicModeRoutes); app.use('/queues',queueRoutes); app.use('/creator',creatorRoutes); app.use('/billing',billingRoutes); app.use('/categories',categoryRoutes); app.use('/catalog',contentRoutes); app.use('/admin',adminRoutes); app.use('/upload',uploadRoutes)
 const server = app.listen(0,'127.0.0.1'); await new Promise(resolve => server.once('listening',resolve))
 const base = 'http://127.0.0.1:'+server.address().port
 async function call(url,id,method,body) { return fetch(base+url,{ method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+signToken({userId:id,role:id==='admin'?'admin':'creator'})},body:JSON.stringify(body) }) }
@@ -191,5 +192,13 @@ try {
  const noteUpdate=await call('/notes-test/'+note.id,'admin','PATCH',{translations:{tr:{title:'Işık',description:'Işık kullanımı'},en:{title:'Lighting',description:'Lighting guide'}}})
  assert.equal(noteUpdate.status,200)
  assert.equal((await noteUpdate.json()).item.translations.en.description,'Lighting guide')
+
+ assert.equal((await call('/presentation-test','standard','PUT',{})).status,403)
+ for(const count of [3,6,9]){
+ const settings={studentPicks:{count,width:'normal',align:'left'},'custom:banner':{count:3,width:'wide',align:'center'}}
+ assert.equal((await call('/presentation-test','admin','PUT',settings)).status,200)
+ assert.deepEqual(await (await fetch(base+'/presentation-test')).json(),settings)
+ }
+ assert.equal((await call('/presentation-test','admin','PUT',{bad:{count:4,width:'wide',align:'left'}})).status,400)
  console.log('PASS: unpaid creator/student, service guard, account separation, review/publication transitions, TR/EN persistence and upload guard')
 } finally { await new Promise(resolve=>server.close(resolve)); fs.rmSync(temp,{recursive:true,force:true}) }

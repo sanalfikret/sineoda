@@ -1,3 +1,4 @@
+import { GuestBlockFrame } from './GuestPresentation'
 import type { ReactNode } from 'react'
 import type { LandingHeroConfig } from '../../api/client'
 import type { LandingSectionsConfig } from '../../constants/landingDefaults'
@@ -57,11 +58,11 @@ function renderLandingBlock(id: string, ctx: LandingPageBlockContext): ReactNode
     const block = ctx.customBlocks?.find((entry) => entry.id === blockId)
     if (!block) return null
     return (
-      <LandingCustomBlockSection
+      <GuestBlockFrame id={id}><LandingCustomBlockSection
         block={block}
         catalog={ctx.catalog}
         cekimSections={ctx.cekimSections}
-      />
+      /></GuestBlockFrame>
     )
   }
 

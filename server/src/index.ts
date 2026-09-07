@@ -1,3 +1,4 @@
+import landingPresentationRoutes from './routes/landingPresentation.js'
 import adminQueuesRoutes from './routes/adminQueues.js'
 import adminTranslationsRoutes from './routes/adminTranslations.js'
 import cors from 'cors'
@@ -359,6 +360,7 @@ app.use('/api/admin/ads', adminAdsRoutes)
 app.use('/api/admin/site-nav', adminSiteNavRoutes)
 app.use('/api/admin/site-mode', adminSiteModeRoutes)
 app.use('/api/site-mode', siteModeRoutes)
+app.use('/api/landing-presentation',landingPresentationRoutes)
 app.use('/api/admin/billing-plans', adminBillingPlansRoutes)
 app.use('/api/admin/gift-codes', adminGiftCodesRoutes)
 app.use('/api/internal/cron', internalCronRoutes)
