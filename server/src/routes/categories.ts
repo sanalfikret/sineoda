@@ -96,6 +96,12 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
     return
   }
 
+  if (categoryId === 'student-monthly-winners') {
+    if (typeof req.body.hidden !== 'boolean') { res.status(400).json({error:'Birinciler Genç Sinema bölümünden seçilir.'}); return }
+    dbRun('INSERT OR REPLACE INTO site_settings (key,value) VALUES (?,?)',['monthly_winners_hidden',String(req.body.hidden)])
+    const categories = mapCategoriesResponse()
+    res.json({category:categories.find(row=>row.id===categoryId),categories}); return
+  }
   const existing = dbGet('SELECT * FROM categories WHERE id = ?', [categoryId])
   if (!existing) {
     res.status(404).json({ error: 'Kategori bulunamadı.' })

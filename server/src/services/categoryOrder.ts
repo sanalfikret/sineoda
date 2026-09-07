@@ -36,7 +36,7 @@ function allCategoryIds() {
 /** Admin sıralamasını tüm kategori kimliklerini kapsayacak şekilde tamamla. */
 export function normalizeCategoryOrder(orderedIds: string[]) {
   const unique = [...new Set(orderedIds.map(String).filter(Boolean))].filter(
-    (id) => !isVirtualBrowseRowId(id),
+    (id) => Boolean(id),
   )
   const known = new Set(unique)
 
@@ -103,7 +103,7 @@ export function mapCategoriesResponse() {
     'SELECT category_id, content_id, sort_order FROM category_items ORDER BY sort_order',
   )
 
-  return categories.map((category) => ({
+  const mapped = categories.map((category) => ({
     id: category.id,
     contentPool: categoryPool(category.id),
     title: category.title,
@@ -114,6 +114,8 @@ export function mapCategoriesResponse() {
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((item) => item.content_id),
   }))
+  mapped.push({id: STUDENT_MONTHLY_WINNERS_ROW_ID, title: 'Ayın Genç Sinema Birincileri', contentPool: 'student_cinema', translations: readTranslations('categories', STUDENT_MONTHLY_WINNERS_ROW_ID), hidden: dbGet<{value:string}>('SELECT value FROM site_settings WHERE key = ?', ['monthly_winners_hidden'])?.value === 'true', itemIds: []})
+  return mapped
 }
 
 /** Eski site_settings kaydı ile sort_order çelişirse DB sırasını esas al. */
@@ -138,7 +140,7 @@ export function reconcileCategoryOrder() {
   }
 
   const dbSet = new Set(fromDb)
-  const next = saved.filter((id) => !isVirtualBrowseRowId(id) && dbSet.has(id))
+  const next = saved.filter((id) => isVirtualBrowseRowId(id) || dbSet.has(id))
   for (const id of fromDb) {
     if (!next.includes(id)) next.push(id)
   }

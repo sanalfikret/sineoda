@@ -58,7 +58,6 @@ export function mergeCategoriesForAdminOrder(
   const seen = new Set<string>()
 
   for (const id of categoryOrder) {
-    if (isVirtualBrowseCategoryId(id)) continue
     const category = byId.get(id)
     if (category && !seen.has(id)) {
       merged.push(category)

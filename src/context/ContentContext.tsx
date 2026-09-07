@@ -321,10 +321,10 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   const visibleStudentCinemaMonthlyWinners = useMemo(
     () =>
-      hiddenNavIds.includes('gencSinema')
+      (hiddenNavIds.includes('gencSinema') || categories.some(row => row.id === 'student-monthly-winners' && row.hidden))
         ? []
         : filterCatalogByNavVisibility(studentCinemaMonthlyWinners, hiddenNavIds),
-    [studentCinemaMonthlyWinners, hiddenNavIds],
+    [studentCinemaMonthlyWinners, hiddenNavIds, categories],
   )
 
   const value = useMemo(

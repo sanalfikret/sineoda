@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type DragEvent } from 'react'
 import type { ContentCategory } from '../../types/content'
-import { STUDENT_MONTHLY_WINNERS_ROW_ID } from '../../utils/browse'
 import { patchCategoryInList } from './mergeOrderedCategories'
 
 interface UseAdminCategoryListOptions {
@@ -79,7 +78,7 @@ export function useAdminCategoryList({ categories, reorderCategories }: UseAdmin
 
       try {
         await reorderCategories(
-          next.map((category) => category.id).filter((id) => id !== STUDENT_MONTHLY_WINNERS_ROW_ID),
+          next.map((category) => category.id),
         )
       } catch (error) {
         setOrderError(error instanceof Error ? error.message : 'Sıra kaydedilemedi.')

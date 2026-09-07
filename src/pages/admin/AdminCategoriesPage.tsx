@@ -255,14 +255,10 @@ export function AdminCategoriesPage() {
         </div>
       </div>
 
-      <section className="mb-4 rounded-2xl border border-emerald-500/30 bg-[#11141c] p-4">
-        <h2 className="font-semibold text-white">Ayın Genç Sinema Birincileri</h2>
-        <p className="mt-2 text-sm text-plooy-muted">Bu satır Genç Sinema bölümünde ayın birincisi olarak işaretlenen, yayındaki filmlerden oluşur. {studentCinemaMonthlyWinners.length} görünür içerik.</p>
-        <div className="my-3 flex flex-wrap gap-2">{studentCinemaMonthlyWinners.map(item => <Link key={item.id} to={'/admin/genc-sinema/' + item.id} className="rounded bg-white/10 px-3 py-2 text-sm text-white">{item.title}</Link>)}</div>
-        <Link to="/admin/genc-sinema" className="text-sm text-plooy-gold">Birincileri Genç Sinema bölümünde düzenle →</Link>
-      </section>
       <div className="space-y-3">
-        {orderedCategories.map((category, index) => (
+        {orderedCategories.map((category, index) => category.id === 'student-monthly-winners' ? (
+          <section key={category.id} onDragOver={event=>handleDragOver(event,category.id)} onDrop={handleDrop} className="rounded-2xl border border-emerald-500/30 bg-[#11141c] p-4"><div className="flex flex-wrap items-center gap-3"><span draggable={!savingOrder} onDragStart={event=>handleDragStart(event,category.id)} onDragEnd={handleDragEnd} className="cursor-grab text-white">↕</span><h2 className="grow font-semibold text-white">{category.title}</h2><button disabled={savingOrder || index===0} onClick={()=>nudgeCategory(index,-1)} className="text-white disabled:opacity-30">↑</button><button disabled={savingOrder || index===orderedCategories.length-1} onClick={()=>nudgeCategory(index,1)} className="text-white disabled:opacity-30">↓</button><button onClick={()=>void toggleCategoryHidden(category.id,!category.hidden)} className="rounded bg-white/10 px-3 py-2 text-white">{category.hidden ? 'Kapalı — aç' : 'Açık — gizle'}</button></div><p className="mt-2 text-sm text-plooy-muted">Ziyaretçi ve üye ana sayfasındaki birinciler satırı. Filmleri Genç Sinema bölümünde ayın birincisi olarak seçin.</p><div className="my-3 flex flex-wrap gap-2">{studentCinemaMonthlyWinners.map(item=><Link key={item.id} to={'/admin/genc-sinema/'+item.id} className="text-plooy-gold">{item.title}</Link>)}</div><Link to="/admin/genc-sinema" className="text-plooy-gold">Birincileri düzenle →</Link></section>
+        ) : (
           <AdminCategoryRow
             key={category.id}
             category={category}

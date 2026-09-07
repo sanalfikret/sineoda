@@ -8,6 +8,7 @@ const { initDatabase, dbRun, dbGet } = await import('../src/db.ts')
 await initDatabase()
 const { default: express } = await import('express')
 const { signToken } = await import('../src/middleware/auth.ts')
+const { default: categoryRoutes } = await import('../src/routes/categories.ts')
 const { default: billingRoutes } = await import('../src/routes/billing.ts')
 const { default: creatorRoutes } = await import('../src/routes/creator.ts')
 const { default: adminRoutes } = await import('../src/routes/adminCreators.ts')
@@ -21,7 +22,7 @@ for (const id of ['standard','student_cinema','admin']) {
  dbRun('INSERT INTO users (id,name,email,password_hash,role,created_at) VALUES (?,?,?,?,?,?)',[id,id,id+'@example.test','unused',id==='admin'?'admin':'creator',now])
  if(id!=='admin') dbRun('INSERT INTO creators (id,user_id,studio_name,bio,status,created_at,program,school_id) VALUES (?,?,?,?,?,?,?,?)',[id,id,id,'','pending',now,id,'school'])
 }
-const app = express(); app.use(express.json()); app.use('/creator',creatorRoutes); app.use('/billing',billingRoutes); app.use('/admin',adminRoutes); app.use('/upload',uploadRoutes)
+const app = express(); app.use(express.json()); app.use('/creator',creatorRoutes); app.use('/billing',billingRoutes); app.use('/categories',categoryRoutes); app.use('/admin',adminRoutes); app.use('/upload',uploadRoutes)
 const server = app.listen(0,'127.0.0.1'); await new Promise(resolve => server.once('listening',resolve))
 const base = 'http://127.0.0.1:'+server.address().port
 async function call(url,id,method,body) { return fetch(base+url,{ method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+signToken({userId:id,role:id==='admin'?'admin':'creator'})},body:JSON.stringify(body) }) }
@@ -118,5 +119,15 @@ try {
  const ids = Array.from({length:25},(_,i)=>'film-'+i)
  const rows = buildCategoryBrowseRows([{id:'exact',title:'Exact',itemIds:ids}],[],id=>({...sample,id}),{})
  assert.deepEqual(rows[0].itemIds,ids)
+ const { mapCategoriesResponse, saveCategoryOrder, getCategoryOrderForBrowse, reconcileCategoryOrder } = await import('../src/services/categoryOrder.ts')
+ const { mergeCategoriesForAdminOrder } = await import('../../src/utils/browse.ts')
+ const winnerId = 'student-monthly-winners'
+ assert.ok(mergeCategoriesForAdminOrder(mapCategoriesResponse(),[]).some(row=>row.id===winnerId))
+ assert.equal((await call('/categories/'+winnerId,'admin','PATCH',{hidden:true})).status,200)
+ assert.equal(mapCategoriesResponse().find(row=>row.id===winnerId).hidden,true)
+ saveCategoryOrder([winnerId,'exact-test']); reconcileCategoryOrder()
+ assert.equal(getCategoryOrderForBrowse()[0],winnerId)
+ assert.equal((await call('/categories/'+winnerId,'admin','PATCH',{hidden:false})).status,200)
+ assert.equal(mapCategoriesResponse().find(row=>row.id===winnerId).hidden,false)
  console.log('PASS: unpaid creator/student, service guard, account separation, review/publication transitions, TR/EN persistence and upload guard')
 } finally { await new Promise(resolve=>server.close(resolve)); fs.rmSync(temp,{recursive:true,force:true}) }
