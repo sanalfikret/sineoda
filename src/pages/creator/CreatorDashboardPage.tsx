@@ -46,6 +46,7 @@ interface CreatorDocument {
 }
 
 interface DashboardContent extends ContentItem {
+  sourceVideoUrl?: string
   reviewStatus: string
   reviewNote?: string | null
   parentContentId?: string | null
@@ -338,7 +339,7 @@ export function CreatorDashboardPage() {
       rating: item.rating ?? '13+',
       type: item.type,
       genres: (item.genres ?? []).join(', '),
-      downloadLink: item.videoUrl ?? '',
+      downloadLink: item.sourceVideoUrl ?? '',
       trailerUrl: item.trailerUrl ?? '',
       poster: item.poster ?? '',
       contentFormat: (item.contentFormat as 'main' | 'bts' | 'teacher_note') ?? 'main',
@@ -431,7 +432,6 @@ export function CreatorDashboardPage() {
         poster: form.poster,
         backdrop: form.poster,
         downloadLink: form.downloadLink.trim(),
-        videoUrl: form.downloadLink.trim(),
         trailerUrl: form.trailerUrl.trim(),
         credits: buildCredits(form),
         festivals: buildFestivals(form.festivals),

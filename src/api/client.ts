@@ -1781,7 +1781,7 @@ export async function creatorFetchDashboard() {
       registrationPaid?: boolean
     }
     payoutRules: { note: string }
-    content: Array<ContentItem & { reviewStatus: string; qualifiedMinutes: number; likes: number }>
+    content: Array<ContentItem & { sourceVideoUrl?: string; reviewStatus: string; qualifiedMinutes: number; likes: number }>
     totals: { qualifiedMinutes: number; watchMinutes: number; likes: number; viewers: number; publishedCount: number; pendingCount: number }
   }>('/api/creator/dashboard')
 }
@@ -2034,6 +2034,7 @@ export interface AdminFilmSchool extends FilmSchool {
 }
 
 export interface AdminStudentCinemaItem extends Omit<ContentItem, 'publishedAt'>, AdminContentMeta {
+  sourceVideoUrl?: string
   reviewStatus: string
   program: 'standard' | 'student_cinema'
   contentFormat: 'main' | 'bts' | 'teacher_note'

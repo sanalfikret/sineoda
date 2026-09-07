@@ -120,6 +120,7 @@ router.get('/dashboard', requireCreator, (req: AuthRequest, res) => {
       const stat = engagementStats.get(row.id)
       return {
         ...mapContent(row),
+        sourceVideoUrl: row.source_video_url ?? '',
         reviewStatus: row.review_status ?? 'pending',
         program: row.program ?? 'standard',
         contentFormat: row.content_format ?? 'main',
@@ -265,15 +266,10 @@ router.post('/content', requireActiveCreator, (req: CreatorAuthRequest, res) => 
     return
   }
 
-  const videoUrl = String(body.videoUrl ?? body.video_url ?? '').trim() || downloadLink
-  if (!videoUrl) {
-    res.status(400).json({ error: 'Film indirme linki veya video dosyası zorunlu.' })
-    return
-  }
+  const videoUrl = ''
 
   try {
     externalMediaLink(downloadLink, true)
-    externalMediaLink(videoUrl, true)
     externalMediaLink(body.trailerUrl ?? body.trailer_url)
   } catch(error) { res.status(400).json({ error: (error as Error).message }); return }
   const type = normalizeContentType(body.type, 'film')
@@ -468,14 +464,10 @@ router.patch('/content/:id', requireActiveCreator, (req: CreatorAuthRequest, res
     body.downloadLink !== undefined || body.sourceVideoUrl !== undefined || body.source_video_url !== undefined
       ? String(body.downloadLink ?? body.sourceVideoUrl ?? body.source_video_url ?? '').trim()
       : (existing.source_video_url ?? existing.video_url ?? '')
-  const nextVideoUrl =
-    body.videoUrl !== undefined || body.video_url !== undefined
-      ? String(body.videoUrl ?? body.video_url ?? '').trim()
-      : existing.video_url ?? nextDownloadLink
+  const nextVideoUrl = existing.video_url ?? ''
   let nextTrailerUrl: string
   try {
     externalMediaLink(nextDownloadLink, true)
-    externalMediaLink(nextVideoUrl, true)
     nextTrailerUrl = externalMediaLink(body.trailerUrl ?? body.trailer_url ?? existing.trailer_url)
   } catch(error) { res.status(400).json({ error: (error as Error).message }); return }
   const nextStreamProvider = resolveStreamProvider(body, nextVideoUrl || nextDownloadLink)
@@ -499,8 +491,8 @@ router.patch('/content/:id', requireActiveCreator, (req: CreatorAuthRequest, res
       body.genres !== undefined ? JSON.stringify(body.genres) : existing.genres,
       body.poster !== undefined ? String(body.poster) : existing.poster,
       body.backdrop !== undefined ? String(body.backdrop) : existing.backdrop,
-      nextVideoUrl || nextDownloadLink,
-      nextDownloadLink || nextVideoUrl,
+      nextVideoUrl,
+      nextDownloadLink,
       nextStreamProvider,
       nextTrailerUrl,
       body.credits !== undefined ? serializeCredits(body.credits) : existing.credits_json ?? '{}',

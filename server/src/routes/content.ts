@@ -1,3 +1,4 @@
+import { assertCreatorPlayback } from '../services/creatorPlayback.js'
 import { Router } from 'express'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
@@ -176,6 +177,7 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
   let fields
   try {
     fields = contentFields(req.body as Record<string, unknown>, existing)
+    assertCreatorPlayback({ ...existing, video_url: fields.videoUrl }, fields.publishedAt ? 'published' : existing.review_status ?? 'pending')
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : 'Geçersiz içerik verisi.' })
     return

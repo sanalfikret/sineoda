@@ -8,7 +8,7 @@ import {
   type AdminCreatorContentDetail,
 } from '../../api/client'
 import { ImageUpload } from './ImageUpload'
-import { VideoUpload } from './VideoUpload'
+import { BunnyVideoField } from './BunnyVideoField'
 import { CONTENT_TYPES } from '../../constants/contentTypes'
 import { CREATOR_DOC_TYPES } from '../../constants/creatorLegal'
 import { buildCredits, creditsToForm } from '../../utils/credits'
@@ -185,7 +185,7 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
         poster: form.poster.trim(),
         backdrop: form.backdrop.trim() || form.poster.trim(),
         sourceVideoUrl: form.sourceVideoUrl.trim(),
-        videoUrl: form.videoUrl.trim() || form.sourceVideoUrl.trim(),
+        videoUrl: form.videoUrl.trim(),
         credits: buildCredits(form),
         contentAddedAt: form.contentAddedAt,
         licenseUnlimited: form.licenseUnlimited,
@@ -374,14 +374,15 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
                       İndirdiğiniz videoyu CDN&apos;e yükleyin; üyelerin izleyeceği link buraya yazılır.
                     </p>
                   </div>
-                  <VideoUpload label="CDN video" value={form.videoUrl} onChange={(url) => update('videoUrl', url)} />
+                  <BunnyVideoField value={form.videoUrl} onChange={(url) => update('videoUrl', url)} />
                   <label className="block">
                     <span className="mb-1 block text-sm text-white/85">CDN / yayın URL</span>
                     <input
                       type="url"
                       value={form.videoUrl}
                       onChange={(event) => update('videoUrl', event.target.value)}
-                      placeholder="Boş bırakılırsa kaynak link kullanılır"
+                      placeholder="Bunny alanlarıyla oluşturulur"
+                      readOnly
                       className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-sm text-white"
                     />
                   </label>

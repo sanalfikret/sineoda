@@ -45,6 +45,9 @@ try {
  assert.throws(()=>applyCreatorReviewStatus(row,'published'),/Okul/)
  dbRun("UPDATE content SET school_review_status = 'approved' WHERE id = ?",[id]); row=dbGet('SELECT * FROM content WHERE id = ?',[id])
  applyCreatorReviewStatus(row,'approved',{publishedAt:now}); assert.equal(dbGet('SELECT published_at FROM content WHERE id = ?',[id]).published_at,null)
+ assert.throws(()=>applyCreatorReviewStatus(row,'published'),/Bunny/)
+ const bunnyUrl = 'https://vz-test.b-cdn.net/11111111-1111-4111-8111-111111111111/playlist.m3u8'
+ dbRun('UPDATE content SET video_url = ? WHERE id = ?',[bunnyUrl,id]); row=dbGet('SELECT * FROM content WHERE id = ?',[id])
  applyCreatorReviewStatus(row,'published'); assert.ok(dbGet('SELECT published_at FROM content WHERE id = ?',[id]).published_at)
  applyCreatorReviewStatus(row,'rejected'); assert.equal(dbGet('SELECT published_at FROM content WHERE id = ?',[id]).published_at,null)
  const translations={tr:{title:'Film',description:'Türkçe'},en:{title:'Movie',description:'English'}}
@@ -55,6 +58,11 @@ try {
  dbRun("UPDATE content SET program = 'standard' WHERE id = ?",[standardId])
  assert.equal((await call('/admin/creators/standard','admin','PATCH',{status:'approved'})).status,200)
  assert.equal(dbGet('SELECT review_status FROM content WHERE id = ?',[standardId]).review_status,'pending')
+ const sourceBefore = dbGet('SELECT source_video_url FROM content WHERE id = ?',[standardId]).source_video_url
+ assert.equal((await call('/admin/content/'+standardId,'admin','PATCH',{videoUrl:bunnyUrl,reviewStatus:'published'})).status,200)
+ const linked = dbGet('SELECT * FROM content WHERE id = ?',[standardId])
+ assert.equal(linked.creator_id,'standard'); assert.equal(linked.video_url,bunnyUrl); assert.equal(linked.source_video_url,sourceBefore)
+ assert.equal((await call('/admin/content/'+standardId,'admin','PATCH',{videoUrl:'https://example.test/delivery'})).status,400)
  const { localizeDynamic } = await import('../../src/utils/dynamicTranslations.ts')
  assert.equal(localizeDynamic({title:'Legacy',translations},'en').title,'Movie')
  assert.equal(localizeDynamic({title:'Legacy',translations},'tr').title,'Film')

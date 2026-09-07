@@ -11,7 +11,7 @@ import {
   type AdminStudentCinemaItem,
 } from '../../api/client'
 import { ImageUpload } from '../../components/admin/ImageUpload'
-import { VideoUpload } from '../../components/admin/VideoUpload'
+import { BunnyVideoField } from '../../components/admin/BunnyVideoField'
 import { AdminStudentCinemaAwardPanel } from '../../components/admin/AdminStudentCinemaAwardPanel'
 import { FestivalCreditsEditor } from '../../components/admin/FestivalCreditsEditor'
 import { CREATOR_DOC_TYPES } from '../../constants/creatorLegal'
@@ -592,8 +592,8 @@ export function AdminStudentCinemaFormPage() {
             </div>
 
             <ImageUpload label="Poster" value={form.poster} onChange={(url) => setForm({ ...form, poster: url })} />
-            <VideoUpload
-              label="Video URL"
+            {item?.sourceVideoUrl && <a href={resolveMediaUrl(item.sourceVideoUrl)} target="_blank" rel="noreferrer" className="block text-plooy-gold">Creator teslim linkini aç</a>}
+            <BunnyVideoField
               value={form.videoUrl}
               onChange={(url) => setForm({ ...form, videoUrl: url })}
             />

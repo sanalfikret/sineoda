@@ -1,3 +1,4 @@
+import { assertCreatorPlayback } from '../services/creatorPlayback.js'
 import { Router } from 'express'
 import { v4 as uuid } from 'uuid'
 import { dbAll, dbGet, dbRun } from '../db.js'
@@ -60,6 +61,7 @@ function mapQueueItem(row: StudentListRow, stats?: ContentEngagementStats) {
   return {
     ...mapContent(row),
     ...mapContentLicense(row),
+    sourceVideoUrl: row.source_video_url ?? '',
     reviewStatus: row.review_status ?? 'pending',
     program: row.program ?? 'standard',
     contentFormat: row.content_format ?? 'main',
@@ -138,6 +140,7 @@ function applyReviewStatus(
     throw new Error('Yayınlamadan önce okul onayı verilmelidir.')
   }
   assertStudentPublishAllowed(existing, reviewStatus)
+  assertCreatorPlayback(existing, reviewStatus)
 
   if (!['pending', 'under_review', 'on_hold', 'approved', 'rejected', 'published'].includes(reviewStatus)) throw new Error('Geçersiz inceleme durumu.')
   let publishedAt: string | null
@@ -405,6 +408,8 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
   }
 
   const body = req.body as Record<string, unknown>
+  try { assertCreatorPlayback({ ...existing, video_url: String(body.videoUrl ?? body.video_url ?? existing.video_url) }, String(body.reviewStatus ?? existing.review_status)) }
+  catch (error) { res.status(400).json({ error: (error as Error).message }); return }
   const reviewStatus =
     body.reviewStatus !== undefined ? String(body.reviewStatus).trim() : existing.review_status ?? 'pending'
   const schoolReviewStatus =
@@ -423,7 +428,7 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
             })
           : undefined
       applyReviewStatus(
-        { ...existing, school_review_status: schoolReviewStatus as ContentRow['school_review_status'] },
+        { ...existing, video_url: String(body.videoUrl ?? body.video_url ?? existing.video_url), school_review_status: schoolReviewStatus as ContentRow['school_review_status'] },
         reviewStatus,
         publishedAtOverride !== undefined ? { publishedAt: publishedAtOverride } : undefined,
       )

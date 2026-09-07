@@ -394,7 +394,7 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
 
   try {
     updateCreatorContentFields(existing, body)
-    resolveCreatorPublishUpdate(existing, body, reviewStatus)
+    resolveCreatorPublishUpdate(dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [existing.id])!, body, reviewStatus)
     if (body.reviewStatus !== undefined || body.review_status !== undefined) {
       notifyCreatorFilmReview({
         content: existing,

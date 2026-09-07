@@ -1,3 +1,4 @@
+import { assertCreatorPlayback } from './creatorPlayback.js'
 import { dbGet, dbRun } from '../db.js'
 import { normalizeContentType } from '../constants/contentTypes.js'
 import { serializeCredits } from './credits.js'
@@ -16,6 +17,7 @@ export function applyCreatorReviewStatus(
     if (!creator?.registration_paid_at || creator.status !== 'approved') throw new Error('Ödeme ve hesap onayı tamamlanmalıdır.')
     if (existing.program === 'student_cinema' && existing.school_review_status !== 'approved') throw new Error('Okul onayı tamamlanmalıdır.')
   }
+  assertCreatorPlayback(existing, reviewStatus)
   let publishedAt: string | null
   if (reviewStatus !== 'published') {
     publishedAt = null
@@ -57,6 +59,8 @@ export function updateCreatorContentFields(existing: ContentRow, body: Record<st
       ? String(body.sourceVideoUrl ?? body.source_video_url ?? '').trim()
       : existing.source_video_url ?? existing.video_url
 
+  const nextVideoUrl = String(body.videoUrl ?? body.video_url ?? existing.video_url).trim()
+  assertCreatorPlayback({ ...existing, video_url: nextVideoUrl }, String(body.reviewStatus ?? body.review_status ?? existing.review_status))
   dbRun(
     `UPDATE content SET
       title = ?,

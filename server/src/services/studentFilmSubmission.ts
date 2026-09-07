@@ -76,7 +76,7 @@ export function createStudentFilmSubmission(input: {
       '[]',
       '',
       '',
-      filmLink,
+      '',
       filmLink,
       streamProvider,
       '',
