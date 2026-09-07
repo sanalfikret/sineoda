@@ -1,3 +1,4 @@
+import { saveTranslations, validateTranslations } from '../services/dynamicTranslations.js'
 import { assertCreatorPlayback } from '../services/creatorPlayback.js'
 import { Router } from 'express'
 import { dbAll, dbGet, dbRun } from '../db.js'
@@ -15,6 +16,7 @@ import type { ContentRow } from '../types.js'
 const router = Router()
 
 function contentFields(body: Record<string, unknown>, existing?: ContentRow) {
+  if (body.translations !== undefined) validateTranslations('content', existing?.id ?? '', body.translations)
   const featured = body.featured !== undefined ? Boolean(body.featured) : Boolean(existing?.featured)
   const durationFields = resolveDurationFields(body, existing)
   const festivalsParsed = parseFestivalsBody(body)
@@ -162,6 +164,7 @@ router.post('/', requireAdmin, (req: AuthRequest, res) => {
     ],
   )
 
+  if (body.translations !== undefined) saveTranslations('content', id, body.translations)
   if (fields.featured) syncFeaturedContentSelection(id)
 
   res.status(201).json({ item: mapContent(dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [id])!) })
@@ -195,6 +198,7 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
     ],
   )
 
+  if (req.body.translations !== undefined) saveTranslations('content', existing.id, req.body.translations)
   if (fields.featured) syncFeaturedContentSelection(existing.id)
 
   res.json({ item: mapContent(dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [existing.id])!) })

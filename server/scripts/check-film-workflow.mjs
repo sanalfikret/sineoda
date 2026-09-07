@@ -8,6 +8,7 @@ const { initDatabase, dbRun, dbGet, dbAll } = await import('../src/db.ts')
 await initDatabase()
 const { default: express } = await import('express')
 const { signToken } = await import('../src/middleware/auth.ts')
+const { default: contentRoutes } = await import('../src/routes/content.ts')
 const { default: categoryRoutes } = await import('../src/routes/categories.ts')
 const { default: billingRoutes } = await import('../src/routes/billing.ts')
 const { default: creatorRoutes } = await import('../src/routes/creator.ts')
@@ -22,7 +23,7 @@ for (const id of ['standard','student_cinema','admin']) {
  dbRun('INSERT INTO users (id,name,email,password_hash,role,created_at) VALUES (?,?,?,?,?,?)',[id,id,id+'@example.test','unused',id==='admin'?'admin':'creator',now])
  if(id!=='admin') dbRun('INSERT INTO creators (id,user_id,studio_name,bio,status,created_at,program,school_id) VALUES (?,?,?,?,?,?,?,?)',[id,id,id,'','pending',now,id,'school'])
 }
-const app = express(); app.use(express.json()); app.use('/creator',creatorRoutes); app.use('/billing',billingRoutes); app.use('/categories',categoryRoutes); app.use('/admin',adminRoutes); app.use('/upload',uploadRoutes)
+const app = express(); app.use(express.json()); app.use('/creator',creatorRoutes); app.use('/billing',billingRoutes); app.use('/categories',categoryRoutes); app.use('/catalog',contentRoutes); app.use('/admin',adminRoutes); app.use('/upload',uploadRoutes)
 const server = app.listen(0,'127.0.0.1'); await new Promise(resolve => server.once('listening',resolve))
 const base = 'http://127.0.0.1:'+server.address().port
 async function call(url,id,method,body) { return fetch(base+url,{ method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+signToken({userId:id,role:id==='admin'?'admin':'creator'})},body:JSON.stringify(body) }) }
@@ -140,5 +141,13 @@ try {
  }
  assert.deepEqual(getLandingConfig().studentPicks.map(item=>item.id),pickIds)
  assert.equal(getLandingConfig().monthlyWinners.length,7)
+ const bilingual = {tr:{title:'Denizin Dibinde',description:'Denizde bir yolculuk.'},en:{title:'At the Bottom of the Sea',description:'A journey at sea.'}}
+ const createdBilingual = await call('/catalog','admin','POST',{title:bilingual.tr.title,description:bilingual.tr.description,translations:bilingual})
+ assert.equal(createdBilingual.status,201)
+ const bilingualId = (await createdBilingual.json()).item.id
+ assert.deepEqual(readTranslations('content',bilingualId),bilingual)
+ const corrected = {...bilingual,en:{...bilingual.en,title:'Beneath the Sea'}}
+ assert.equal((await call('/catalog/'+bilingualId,'admin','PATCH',{translations:corrected})).status,200)
+ assert.equal(readTranslations('content',bilingualId).en.title,'Beneath the Sea')
  console.log('PASS: unpaid creator/student, service guard, account separation, review/publication transitions, TR/EN persistence and upload guard')
 } finally { await new Promise(resolve=>server.close(resolve)); fs.rmSync(temp,{recursive:true,force:true}) }

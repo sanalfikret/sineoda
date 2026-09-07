@@ -1,4 +1,3 @@
-import { DynamicTranslationEditor } from '../../components/admin/DynamicTranslationEditor'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ImageUpload } from '../../components/admin/ImageUpload'
@@ -31,6 +30,8 @@ const LICENSE_DEFAULTS = {
 const EMPTY_FORM = {
   title: '',
   description: '',
+  titleEn: '',
+  descriptionEn: '',
   year: new Date().getFullYear(),
   duration: '',
   durationMinutes: '',
@@ -111,8 +112,10 @@ export function AdminContentFormPage() {
         if (!item) return
 
         setForm({
-          title: item.title,
-          description: item.description,
+          title: item.translations?.tr?.title ?? item.title,
+          description: item.translations?.tr?.description ?? item.description,
+          titleEn: item.translations?.en?.title ?? '',
+          descriptionEn: item.translations?.en?.description ?? '',
           year: item.year,
           duration: item.duration,
           durationMinutes: item.durationMinutes ? String(item.durationMinutes) : '',
@@ -189,7 +192,9 @@ export function AdminContentFormPage() {
       return
     }
 
+    if (!form.titleEn.trim()) { setError('İngilizce başlık alanını doldurun.'); return }
     const payload = {
+      translations: { tr: { title: form.title.trim(), description: form.description.trim() }, en: { title: form.titleEn.trim(), description: form.descriptionEn.trim() } },
       title: form.title.trim(),
       description: form.description.trim(),
       year: form.year,
@@ -257,7 +262,7 @@ export function AdminContentFormPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      {id && <DynamicTranslationEditor kind="content" id={id} />}
+
       <div>
         <Link to="/admin/icerikler" className="text-sm text-plooy-muted hover:text-white">
           ← İçeriklere dön
@@ -318,7 +323,7 @@ export function AdminContentFormPage() {
         )}
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Başlık *">
+          <Field label="Türkçe başlık *">
             <input
               value={form.title}
               onChange={(event) => update('title', event.target.value)}
@@ -326,6 +331,7 @@ export function AdminContentFormPage() {
               required
             />
           </Field>
+          <Field label="English title *"><input required value={form.titleEn} onChange={event => update('titleEn', event.target.value)} className={inputClass} /></Field>
           <Field label="İçerik Türü">
             <select
               value={form.type}
@@ -351,7 +357,8 @@ export function AdminContentFormPage() {
           </Field>
         </div>
 
-        <Field label="Açıklama">
+        <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Türkçe açıklama">
           <textarea
             value={form.description}
             onChange={(event) => update('description', event.target.value)}
@@ -361,6 +368,8 @@ export function AdminContentFormPage() {
           />
         </Field>
 
+        <Field label="English description"><textarea value={form.descriptionEn} onChange={event => update('descriptionEn', event.target.value)} rows={5} className={inputClass} /></Field>
+        </div>
         <section className="space-y-3">
           <div>
             <h3 className="text-sm font-semibold text-white">Künye</h3>
