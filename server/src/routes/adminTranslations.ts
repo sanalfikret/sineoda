@@ -1,9 +1,15 @@
+import { translateEnglish } from '../services/googleTranslation.js'
 import { Router } from 'express'
 import { requireAdmin } from '../middleware/auth.js'
 import { dbGet } from '../db.js'
 import { readTranslations, saveTranslations, type TranslationKind } from '../services/dynamicTranslations.js'
 const router = Router()
 router.use(requireAdmin)
+router.post('/suggest', async (req, res) => {
+  if (typeof req.body?.text !== 'string' || req.body.text.length > 20000) { res.status(400).json({error:'Geçerli bir metin girin.'}); return }
+  try { res.json({text:await translateEnglish(req.body.text)}) }
+  catch(e) { res.status(400).json({error:e instanceof Error ? e.message : 'Çeviri yapılamadı.'}) }
+})
 router.get('/:kind/:id', (req, res) => {
   const kind = req.params.kind as TranslationKind
   if (!['content', 'categories'].includes(kind)) { res.sendStatus(404); return }

@@ -1,11 +1,11 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ImageUpload } from '../../components/admin/ImageUpload'
 import { VideoUpload } from '../../components/admin/VideoUpload'
 import { SubtitleUpload } from '../../components/admin/SubtitleUpload'
 import { AdminEpisodesPanel } from '../../components/admin/AdminEpisodesPanel'
 import { FestivalCreditsEditor } from '../../components/admin/FestivalCreditsEditor'
-import { resolveMediaUrl, fetchAdminCatalog } from '../../api/client'
+import { api, resolveMediaUrl, fetchAdminCatalog } from '../../api/client'
 import { useContent } from '../../context/ContentContext'
 import { BROWSE_GENRES, CONTENT_GENRES, STREAM_PROVIDERS } from '../../constants/genres'
 import { buildSubtitles, subtitlesToForm } from '../../utils/subtitles'
@@ -102,6 +102,24 @@ export function AdminContentFormPage() {
   const [form, setForm] = useState(() => buildInitialForm({ vertical: isVerticalNew && !id, standup: isStandUpNew && !id }))
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [translating, setTranslating] = useState(false)
+  const [translationError, setTranslationError] = useState('')
+  const translationBusy = useRef(false)
+  async function suggestEnglish() {
+    if (translationBusy.current) return
+    const snapshot = form
+    const fields = (['title', 'description'] as const).filter(field => snapshot[field].trim() && !snapshot[field === 'title' ? 'titleEn' : 'descriptionEn'].trim())
+    if (!fields.length) return
+    translationBusy.current = true; setTranslating(true); setTranslationError('')
+    try {
+      for (const field of fields) {
+        const target = field === 'title' ? 'titleEn' : 'descriptionEn'
+        const result = await api<{text:string}>('/api/admin/translations/suggest', {method:'POST',body:JSON.stringify({text:snapshot[field]})})
+        setForm(current => current[field] === snapshot[field] && !current[target].trim() ? {...current,[target]:result.text} : current)
+      }
+    } catch(e) { setTranslationError(e instanceof Error ? e.message : 'Çeviri yapılamadı.') }
+    finally { translationBusy.current=false; setTranslating(false) }
+  }
 
   useEffect(() => {
     if (!id) return
@@ -327,6 +345,7 @@ export function AdminContentFormPage() {
             <input
               value={form.title}
               onChange={(event) => update('title', event.target.value)}
+              onBlur={() => void suggestEnglish()}
               className={inputClass}
               required
             />
@@ -362,6 +381,7 @@ export function AdminContentFormPage() {
           <textarea
             value={form.description}
             onChange={(event) => update('description', event.target.value)}
+            onBlur={() => void suggestEnglish()}
             rows={5}
             placeholder="Filmin veya dizinin kısa özeti..."
             className={inputClass}
@@ -369,6 +389,11 @@ export function AdminContentFormPage() {
         </Field>
 
         <Field label="English description"><textarea value={form.descriptionEn} onChange={event => update('descriptionEn', event.target.value)} rows={5} className={inputClass} /></Field>
+        </div>
+        <div className="space-y-2 text-sm">
+          <button type="button" disabled={translating} onClick={() => void suggestEnglish()} className="rounded border border-plooy-gold px-4 py-2 text-plooy-gold disabled:opacity-50">{translating ? 'Çevriliyor…' : 'Boş İngilizce alanları çevir'}</button>
+          <p className="text-plooy-muted">Türkçe alandan çıkınca boş İngilizce alanlar çevrilir. Taslağı düzenleyip kaydedin. Dolu İngilizce alanlar korunur.</p>
+          {translationError && <p role="alert" className="text-red-400">{translationError}</p>}
         </div>
         <section className="space-y-3">
           <div>
