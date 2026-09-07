@@ -8,6 +8,7 @@ const { initDatabase, dbRun, dbGet, dbAll } = await import('../src/db.ts')
 await initDatabase()
 const { default: express } = await import('express')
 const { signToken } = await import('../src/middleware/auth.ts')
+const { default: queueRoutes } = await import('../src/routes/adminQueues.ts')
 const { default: contentRoutes } = await import('../src/routes/content.ts')
 const { default: categoryRoutes } = await import('../src/routes/categories.ts')
 const { default: billingRoutes } = await import('../src/routes/billing.ts')
@@ -23,11 +24,19 @@ for (const id of ['standard','student_cinema','admin']) {
  dbRun('INSERT INTO users (id,name,email,password_hash,role,created_at) VALUES (?,?,?,?,?,?)',[id,id,id+'@example.test','unused',id==='admin'?'admin':'creator',now])
  if(id!=='admin') dbRun('INSERT INTO creators (id,user_id,studio_name,bio,status,created_at,program,school_id) VALUES (?,?,?,?,?,?,?,?)',[id,id,id,'','pending',now,id,'school'])
 }
-const app = express(); app.use(express.json()); app.use('/creator',creatorRoutes); app.use('/billing',billingRoutes); app.use('/categories',categoryRoutes); app.use('/catalog',contentRoutes); app.use('/admin',adminRoutes); app.use('/upload',uploadRoutes)
+const app = express(); app.use(express.json()); app.use('/queues',queueRoutes); app.use('/creator',creatorRoutes); app.use('/billing',billingRoutes); app.use('/categories',categoryRoutes); app.use('/catalog',contentRoutes); app.use('/admin',adminRoutes); app.use('/upload',uploadRoutes)
 const server = app.listen(0,'127.0.0.1'); await new Promise(resolve => server.once('listening',resolve))
 const base = 'http://127.0.0.1:'+server.address().port
 async function call(url,id,method,body) { return fetch(base+url,{ method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+signToken({userId:id,role:id==='admin'?'admin':'creator'})},body:JSON.stringify(body) }) }
 try {
+ assert.equal((await call('/queues','standard','GET')).status,403)
+ const initialQueues=await (await call('/queues?status=new_student','admin','GET')).json()
+ assert.equal(initialQueues.counts.new_student,1)
+ assert.equal(initialQueues.counts.new_creator,1)
+ assert.equal(initialQueues.counts.paid_accounts,0)
+ assert.equal(initialQueues.items[0].id,'student_cinema')
+ assert.equal((await call('/queues?status=invalid','admin','GET')).status,400)
+ assert.equal((await (await call('/queues?status=new_student&offset=50','admin','GET')).json()).items.length,0)
  assert.equal(isCreatorRegistrationPaid({program:'standard',registration_paid_at:null}),false)
  for (const id of ['standard','student_cinema']) { const response = await call('/creator/content',id,'POST',{title:'Unpaid'}); assert.equal(response.status,402); assert.equal(dbGet('SELECT COUNT(*) AS n FROM content').n,0) }
  for (const [userId,planId] of [['standard','creator_application'],['student_cinema','student_cinema_application']]) {
@@ -38,6 +47,9 @@ try {
  }
  assert.throws(() => createStudentFilmSubmission({creatorId:'student_cinema',schoolId:'school',title:'Student',description:'',filmLink:'https://example.test/film',now}),/PAYMENT/)
  activateCreatorRegistration('student_cinema')
+ const paidQueue=await (await call('/queues?status=paid_accounts','admin','GET')).json()
+ assert.equal(paidQueue.counts.paid_accounts,1)
+ assert.equal(paidQueue.items[0].id,'student_cinema')
  assert.equal(dbGet('SELECT status FROM creators WHERE id = ?',['student_cinema']).status,'pending')
  const id = createStudentFilmSubmission({creatorId:'student_cinema',schoolId:'school',title:'Student',description:'',filmLink:'https://example.test/film',now})
  assert.equal((await call('/admin/creators/student_cinema','admin','PATCH',{status:'approved'})).status,200)

@@ -407,7 +407,7 @@ export function AdminContentFormPage() {
             label="Yönetmen"
             value={form.directors}
             onChange={(value) => update('directors', value)}
-            placeholder="Uğur Bayraktar"
+            placeholder="Fikret Sanal"
             rows={3}
           />
           <CreditBox
