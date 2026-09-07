@@ -1526,7 +1526,7 @@ export function AdminLandingPage() {
         </div>
       </div>
 
-      <AdminGuestPresentation blocks={[{id:'studentPicks',title:'Genç Sinema seçkisi'},{id:'studentMonthlyWinners',title:'Ayın Genç Sinema birincileri'},...showcases.map(showcase=>({id:'showcase:'+showcase.id,title:showcase.title})),...customBlocks.map(block=>({id:'custom:'+block.id,title:block.adminLabel || block.title}))]} />
+      <AdminGuestPresentation blocks={[...layout.order.filter(id=>!isCustomLandingBlockId(id)).map(id=>({id,title:getLayoutBlockLabel(id,customBlocks,blockTitles)})),...showcases.map(showcase=>({id:'showcase:'+showcase.id,title:showcase.title})),...customBlocks.map(block=>({id:'custom:'+block.id,title:block.adminLabel || block.title}))]} />
       {message && (
         <p className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80">
           {message}
@@ -1605,7 +1605,7 @@ function SingleContentPicker({
     [catalog, query],
   )
 
-  const visibleItems = filteredCatalog.slice(0, 24)
+  const visibleItems = filteredCatalog
 
   return (
     <div className="space-y-3">
@@ -1642,7 +1642,7 @@ function SingleContentPicker({
         className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-sm text-white outline-none focus:border-plooy-gold"
       />
 
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid max-h-[32rem] overflow-y-auto gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {visibleItems.map((item) => (
           <button
             key={item.id}
@@ -1677,7 +1677,7 @@ function ContentPicker({
   poolFilters,
   defaultPool = 'platform',
   searchPlaceholder = 'İçerik ara...',
-  maxResults = 48,
+
 }: {
   catalog: ContentItem[]
   selectedIds: string[]
@@ -1685,7 +1685,7 @@ function ContentPicker({
   poolFilters?: Array<{ id: ContentPoolId; label: string }>
   defaultPool?: ContentPoolId
   searchPlaceholder?: string
-  maxResults?: number
+
 }) {
   const [query, setQuery] = useState('')
   const [poolFilter, setPoolFilter] = useState<ContentPoolId>(defaultPool)
@@ -1695,7 +1695,7 @@ function ContentPicker({
     [catalog, query, poolFilter, poolFilters],
   )
 
-  const visibleItems = filteredCatalog.slice(0, maxResults)
+  const visibleItems = filteredCatalog
 
   return (
     <div className="mt-4 space-y-3">
@@ -1729,9 +1729,7 @@ function ContentPicker({
       <p className="text-xs text-plooy-muted">
         {filteredCatalog.length === 0
           ? 'Eşleşen içerik yok.'
-          : filteredCatalog.length > maxResults
-            ? `${maxResults} / ${filteredCatalog.length} sonuç gösteriliyor — aramayı daraltın.`
-            : `${filteredCatalog.length} içerik listeleniyor.`}
+          : `${filteredCatalog.length} içerik listeleniyor.`}
         {selectedIds.length > 0 && ` Seçili: ${selectedIds.length}.`}
       </p>
 
@@ -1740,7 +1738,7 @@ function ContentPicker({
           {query.trim() ? 'Aramanızla eşleşen içerik bulunamadı.' : 'Bu filtrede içerik yok.'}
         </p>
       ) : (
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid max-h-[32rem] overflow-y-auto gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {visibleItems.map((item) => {
             const checked = selectedIds.includes(item.id)
             return (

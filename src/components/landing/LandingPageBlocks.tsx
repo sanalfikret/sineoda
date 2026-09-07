@@ -1,3 +1,6 @@
+import { useContext } from 'react'
+import {useTranslation} from 'react-i18next'
+import {Context} from './GuestPresentation'
 import { GuestBlockFrame } from './GuestPresentation'
 import type { ReactNode } from 'react'
 import type { LandingHeroConfig } from '../../api/client'
@@ -123,17 +126,37 @@ function renderLandingBlock(id: string, ctx: LandingPageBlockContext): ReactNode
 }
 
 export function LandingPageBlocks({ ctx }: { ctx: LandingPageBlockContext }) {
+  const presentation=useContext(Context)
+  const {i18n}=useTranslation()
+  const english=i18n.language.startsWith('en')
+  const blockTitles={...ctx.blockTitles}
+  const customBlocks=ctx.customBlocks?.map(block=>{const setting=presentation['custom:'+block.id];return {...block,title:(english?setting?.titleEn:setting?.titleTr)||block.title,body:(english?setting?.bodyEn:setting?.bodyTr)||block.body}})
+  const sections={...ctx.sections}
+  for(const [id,setting] of Object.entries(presentation)){
+    const title=english?setting.titleEn:setting.titleTr,body=english?setting.bodyEn:setting.bodyTr
+    if(title) (blockTitles as Record<string,string>)[id]=title
+    const section=(sections as unknown as Record<string,Record<string,unknown>>)[id]
+    if(section) (sections as unknown as Record<string,unknown>)[id]={...section,...(title?{title}:{}),...(body?{body,description:body,subtitle:body}: {})}
+  }
+  const heroSetting=presentation.hero
+  const heroTitle=english?heroSetting?.titleEn:heroSetting?.titleTr
+  const heroBody=english?heroSetting?.bodyEn:heroSetting?.bodyTr
+  ctx={...ctx,blockTitles,customBlocks,sections,heroConfig:{...ctx.heroConfig,...(heroTitle?{line1:heroTitle}:{}),...(heroBody?{description:heroBody}:{})}}
+
   const customBlockIds = ctx.customBlocks?.map((block) => block.id) ?? []
   const layout = normalizeLandingLayout(ctx.layout, customBlockIds)
   const hiddenNavIds = ctx.hiddenNavIds ?? []
   const visibleOrder = layout.order.filter(
-    (id) => !layout.hidden.includes(id) && !isLandingBlockHidden(id, hiddenNavIds),
+    (id) => !presentation[id]?.removed && !layout.hidden.includes(id) && !isLandingBlockHidden(id, hiddenNavIds),
   )
 
   return (
     <>
       {visibleOrder.map((id) => (
-        <div key={id}>{renderLandingBlock(id, ctx)}</div>
+        <div key={id}>{!presentation[id]||isCustomLandingBlockId(id)||['studentPicks','studentMonthlyWinners'].includes(id)?renderLandingBlock(id,ctx):<GuestBlockFrame id={id}>
+          {['slider','showcases','hero','features','faq'].includes(id)&&((english?presentation[id]?.titleEn:presentation[id]?.titleTr)||(english?presentation[id]?.bodyEn:presentation[id]?.bodyTr))&&<div className="py-4"><h2 className="text-xl font-bold">{english?presentation[id]?.titleEn:presentation[id]?.titleTr}</h2><p>{english?presentation[id]?.bodyEn:presentation[id]?.bodyTr}</p></div>}
+          {renderLandingBlock(id,ctx)}
+        </GuestBlockFrame>}</div>
       ))}
     </>
   )

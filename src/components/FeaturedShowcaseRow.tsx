@@ -14,6 +14,7 @@ export { usesFeaturedShowcaseRow }
 
 interface FeaturedShowcaseRowProps {
   maxItems?: number
+  columns?: 3 | 4
   title: string
   items: ContentItem[]
   onSelect?: (item: ContentItem) => void
@@ -66,6 +67,7 @@ export function FeaturedShowcaseRow({
   className = '',
   progressMap,
   maxItems = FEATURED_SHOWCASE_MAX_ITEMS,
+  columns = 3,
 }: FeaturedShowcaseRowProps) {
   const { t } = useTranslation('browse')
   const { localizePath } = useLocale()
@@ -114,7 +116,7 @@ export function FeaturedShowcaseRow({
           ))}
         </div>
 
-        <div className="hidden gap-3 sm:grid sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-5">
+        <div className={'hidden gap-3 sm:grid sm:grid-cols-2 sm:gap-4 lg:gap-5 '+(columns===4?'lg:grid-cols-4':'lg:grid-cols-3')}>
           {visible.map((item) => (
             <ShowcaseCard
               key={item.id}

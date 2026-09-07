@@ -212,9 +212,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       void refreshSessionToken().catch(() => undefined)
     }
     document.addEventListener('visibilitychange', onVisible)
+    const keepAlive = window.setInterval(onVisible, 5 * 60 * 1000)
 
     return () => {
       document.removeEventListener('visibilitychange', onVisible)
+      window.clearInterval(keepAlive)
     }
   }, [user, syncAuthSession, syncSessionToken])
 

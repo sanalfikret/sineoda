@@ -194,11 +194,11 @@ try {
  assert.equal((await noteUpdate.json()).item.translations.en.description,'Lighting guide')
 
  assert.equal((await call('/presentation-test','standard','PUT',{})).status,403)
- for(const count of [3,6,9]){
- const settings={studentPicks:{count,width:'normal',align:'left'},'custom:banner':{count:3,width:'wide',align:'center'}}
+ for(const count of [3,6,9,4,8,12,16,20]){
+ const settings={studentPicks:{count,width:'normal',align:'left',titleTr:'Seçki',titleEn:'Selection',bodyTr:'Açıklama',bodyEn:'Description',removed:true,size:'large'},'custom:banner':{count:3,width:'wide',align:'center'}}
  assert.equal((await call('/presentation-test','admin','PUT',settings)).status,200)
  assert.deepEqual(await (await fetch(base+'/presentation-test')).json(),settings)
  }
- assert.equal((await call('/presentation-test','admin','PUT',{bad:{count:4,width:'wide',align:'left'}})).status,400)
+ assert.equal((await call('/presentation-test','admin','PUT',{bad:{count:5,width:'wide',align:'left'}})).status,400)
  console.log('PASS: unpaid creator/student, service guard, account separation, review/publication transitions, TR/EN persistence and upload guard')
 } finally { await new Promise(resolve=>server.close(resolve)); fs.rmSync(temp,{recursive:true,force:true}) }
