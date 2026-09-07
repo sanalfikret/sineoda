@@ -152,9 +152,19 @@ function BrowseContent({
       studentCinemaMonthlyWinners,
       categoryOrder,
     })
-    return selectedCategory ? result.filter(row => row.id === selectedCategory) : result
+    if (!selectedCategory) return result
+    const category = categories.find(row => row.id === selectedCategory && !row.hidden)
+    if (category && selectedCategory !== 'student-monthly-winners') {
+      const items = category.itemIds.map(getContentById).filter((item): item is ContentItem => Boolean(item && (!activeProfile?.isKids || isContentAllowedForKids(item.rating))))
+      return items.length ? [{ id: category.id, title: category.title, itemIds: items.map(item => item.id), items }] : []
+    }
+    if (selectedCategory.startsWith('all-')) {
+      const type = selectedCategory.slice(4)
+      return buildBrowseRows(source, { kidsSafe: Boolean(activeProfile?.isKids), ...(type === 'vertical' ? { verticalOnly: true } : { type: type as ContentType }) }, categories, getContentById)
+    }
+    return result.filter(row => row.id === selectedCategory)
   }, [
-    selectedCategory,
+    selectedCategory, activeProfile?.isKids,
     studentCinemaOnly,
     studentCinemaCatalog,
     visibleCatalog,
@@ -252,7 +262,7 @@ function BrowseContent({
     openPlayer(item)
   }
 
-  const displayHero = cekimNotlariOnly
+  const displayHero = selectedCategory ? rows[0]?.items[0] ?? null : cekimNotlariOnly
     ? heroItem
     : activeGenre
       ? filteredCatalog[0]
@@ -288,7 +298,7 @@ function BrowseContent({
   return (
     <main className="bg-plooy-bg">
       <PageMeta title={browseMetaTitle} path={location.pathname} />
-      {displayHero && !selectedCategory ? (
+      {displayHero ? (
       <Hero
         item={displayHero}
         onPlay={openPlayer}
