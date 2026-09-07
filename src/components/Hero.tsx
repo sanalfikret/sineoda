@@ -16,15 +16,15 @@ export function Hero({ item, onPlay, onDetails, eyebrow }: HeroProps) {
   const eyebrowLabel = eyebrow ?? t('hero.featured')
 
   return (
-    <section className="relative min-h-[58vh] overflow-hidden sm:min-h-[72vh] lg:min-h-[88vh] tv:min-h-[85vh]">
+    <section className="relative mx-3 mt-20 min-h-[65dvh] overflow-hidden rounded-2xl border border-white/10 sm:mx-8 sm:min-h-[78dvh] lg:mx-12 tv:min-h-[85vh]">
       <TrailerBackdrop item={item} />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(232,184,74,0.12),transparent_50%)]" />
-      <div className="absolute inset-0 bg-gradient-to-r from-plooy-bg via-plooy-bg/90 to-plooy-bg/20" />
-      <div className="absolute inset-0 bg-gradient-to-t from-plooy-bg via-plooy-bg/30 to-black/20" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/25 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/10" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-plooy-gold/40 to-transparent" />
 
-      <div className="relative mx-auto flex h-full max-w-7xl items-end px-4 pb-10 pt-24 sm:px-6 sm:pb-16 sm:pt-28 lg:px-8 lg:pb-20 tv:pb-24 tv:pt-32">
-        <div className="max-w-3xl">
+      <div className="relative flex min-h-[65dvh] w-full items-end px-6 pb-10 pt-24 sm:min-h-[78dvh] sm:px-10 sm:pb-12 lg:px-12 tv:min-h-[85vh] tv:pb-24">
+        <div className="max-w-2xl">
           <p className="mb-3 inline-flex max-w-full flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-plooy-gold sm:mb-4 sm:text-sm sm:tracking-[0.28em]">
             <span className="h-px w-8 bg-plooy-gold/70" />
             {eyebrowLabel}
@@ -60,7 +60,7 @@ export function Hero({ item, onPlay, onDetails, eyebrow }: HeroProps) {
               </span>
             ))}
           </div>
-          <p className="mt-4 max-w-2xl line-clamp-3 text-sm leading-relaxed text-white/80 sm:mt-5 sm:line-clamp-none sm:text-lg">
+          <p className="mt-4 max-w-2xl line-clamp-3 text-sm leading-relaxed text-white/80 sm:mt-5 sm:line-clamp-3 sm:text-lg">
             {item.description}
           </p>
           <div className="mt-6 flex flex-wrap gap-2 sm:mt-8 sm:gap-3">
