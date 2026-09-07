@@ -102,7 +102,7 @@ function renderLandingBlock(id: string, ctx: LandingPageBlockContext): ReactNode
         />
       )
     case 'showcases':
-      return <LandingCategoryRows />
+      return <LandingCategoryRows showcases={ctx.showcases} />
     case 'journal':
       return <LandingJournalTeaser section={ctx.sections.journal} />
     case 'features':

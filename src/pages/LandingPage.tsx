@@ -49,7 +49,7 @@ export function LandingPage() {
   const selectedCategory = searchParams.get('kategori')
   const content = useContent()
   const categoryRows = buildBrowseRows(content.visibleCatalog, {}, content.categories, content.getContentById, {studentCinemaPicks:content.studentCinemaPicks,studentCinemaMonthlyWinners:content.studentCinemaMonthlyWinners,categoryOrder:content.categoryOrder})
-  const selectedRows = selectedCategory === 'student-picks' ? [{id:'student-picks',title:i18n.language.startsWith('en') ? 'Student Cinema Selection' : 'Genç Sinema Seçkisi',items:content.studentCinemaPicks}] : categoryRows.filter(row => row.id === selectedCategory)
+
   const [catalog, setCatalog] = useState<ContentItem[]>([])
   const [featuredItem, setFeaturedItem] = useState<ContentItem | null>(null)
   const [heroConfig, setHeroConfig] = useState<LandingHeroConfig>(DEFAULT_LANDING_HERO)
@@ -164,8 +164,14 @@ export function LandingPage() {
     return resolveFeaturedFallback(lookupCatalog, heroConfig?.featuredContentId)
   }, [featuredItem, lookupCatalog, heroConfig?.featuredContentId])
 
+
+    const selectedRows = selectedCategory?.startsWith('showcase:')
+    ? showcases.filter(row => 'showcase:'+row.id === selectedCategory)
+    : selectedCategory === 'student-picks'
+      ? [{id:'student-picks',title:i18n.language.startsWith('en') ? 'Student Cinema Selection' : 'Genç Sinema Seçkisi',items:studentPicks}]
+      : categoryRows.filter(row => row.id === selectedCategory)
   if (!ready) {
-    return (
+  return (
       <div className="flex min-h-dvh items-center justify-center bg-plooy-bg">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-plooy-gold border-t-transparent" />
       </div>
