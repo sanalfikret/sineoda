@@ -82,6 +82,7 @@ export interface PlayTarget {
 }
 
 export interface ContentCategory {
+  contentPool?: string
   id: string
   title: string
   itemIds: string[]

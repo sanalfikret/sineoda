@@ -6,13 +6,11 @@ export function resolveHeroBackground(
   content: ContentItem | null,
   fallbackImage: string,
 ) {
-  if (hero.backgroundImage) {
-    return { kind: 'image' as const, src: resolveMediaUrl(hero.backgroundImage) }
-  }
-
   if (hero.backgroundVideo) {
     return { kind: 'video' as const, src: resolveMediaUrl(hero.backgroundVideo) }
   }
+
+  if (hero.backgroundImage) return { kind: 'image' as const, src: resolveMediaUrl(hero.backgroundImage) }
 
   if (content) {
     return {

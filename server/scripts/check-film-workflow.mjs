@@ -100,5 +100,12 @@ try {
  process.env.CREATOR_DIRECT_VIDEO_UPLOAD_ENABLED='true'
  assert.equal((await call('/upload/image','standard','POST',{})).status,409)
  assert.equal((await call('/upload/video','standard','POST',{})).status,409)
+ const { categoryPool, filterContentIdsForCategory } = await import('../src/services/contentPools.ts')
+ dbRun("UPDATE content SET type = 'dizi', program = 'standard', content_format = 'main' WHERE id = ?",[standardId])
+ assert.deepEqual(filterContentIdsForCategory('series',[standardId]),[standardId])
+ assert.deepEqual(filterContentIdsForCategory('kisa-film',[standardId]),[])
+ dbRun('INSERT OR REPLACE INTO site_settings (key,value) VALUES (?,?)',['category_pool:test-custom','kisa-film'])
+ assert.equal(categoryPool('test-custom'),'kisa-film')
+ assert.deepEqual(filterContentIdsForCategory('test-custom',[standardId]),[])
  console.log('PASS: unpaid creator/student, service guard, account separation, review/publication transitions, TR/EN persistence and upload guard')
 } finally { await new Promise(resolve=>server.close(resolve)); fs.rmSync(temp,{recursive:true,force:true}) }

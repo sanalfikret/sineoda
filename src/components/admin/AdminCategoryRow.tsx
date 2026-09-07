@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { api } from '../../api/client'
+import { matchesContentPool, LANDING_CONTENT_POOL_FILTERS, type ContentPoolId } from '../../utils/contentPools'
 import { DynamicTranslationEditor } from './DynamicTranslationEditor'
 import type { DragEvent } from 'react'
 import { resolveMediaUrl } from '../../api/client'
@@ -60,6 +63,8 @@ export function AdminCategoryRow({
   onDrop,
   onDragEnd,
 }: AdminCategoryRowProps) {
+  const [pool, setPool] = useState<ContentPoolId>((category.contentPool ?? 'platform') as ContentPoolId)
+  const [poolError, setPoolError] = useState('')
   const linkedNavId = getNavIdForCategory(category.id)
   const linkedNavLabel = linkedNavId ? NAV_LABELS[linkedNavId] : null
   const isStandalone = STANDALONE_CATEGORY_IDS.has(category.id)
@@ -70,7 +75,7 @@ export function AdminCategoryRow({
 
   const addableItems = catalog.filter(
     (item) =>
-      contentAllowedInCategory(category.id, item) &&
+      contentAllowedInCategory(category.id, item) && matchesContentPool(item, pool) &&
       !category.itemIds.includes(item.id) &&
       fuzzySearchMatch(search, item.title, item.id, item.genres.join(' ')),
   )
@@ -92,6 +97,7 @@ export function AdminCategoryRow({
         dragging ? 'border-plooy-gold/50 opacity-70' : category.hidden ? 'border-white/10 opacity-75' : 'border-white/10'
       }`}
     >
+      {!readOnly && !['genc-sinema'].includes(category.id) && <div className="px-4 pt-4 text-sm text-white"><label>Eklenecek içerik türü <select className="ml-2 rounded bg-zinc-800 p-2" value={pool} onChange={async e => { const next = e.target.value as ContentPoolId; try { await api('/api/categories/' + encodeURIComponent(category.id), {method:'PATCH',body:JSON.stringify({contentPool:next})}); setPool(next); setPoolError('') } catch { setPoolError('Tür kaydedilemedi.') } }}>{LANDING_CONTENT_POOL_FILTERS.filter(p => !['student_cinema','shooting_notes'].includes(p.id)).map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select></label><p role="alert">{poolError}</p></div>}
       <div className="flex items-center gap-3 p-4">
         <div
           draggable={!savingOrder && !readOnly}

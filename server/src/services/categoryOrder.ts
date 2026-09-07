@@ -1,3 +1,4 @@
+import { categoryPool } from './contentPools.js'
 import { readTranslations } from './dynamicTranslations.js'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { isCekimCategoryId } from '../constants/cekimNotlari.js'
@@ -104,6 +105,7 @@ export function mapCategoriesResponse() {
 
   return categories.map((category) => ({
     id: category.id,
+    contentPool: categoryPool(category.id),
     title: category.title,
     translations: readTranslations('categories', category.id),
     hidden: category.hidden === 1,

@@ -69,6 +69,7 @@ function renderLandingBlock(id: string, ctx: LandingPageBlockContext): ReactNode
     case 'hero':
       return (
         <LandingHero
+          items={ctx.sliderItems}
           hero={ctx.heroConfig}
           backgroundContent={ctx.backgroundContent}
           featuredItem={ctx.featuredItem}

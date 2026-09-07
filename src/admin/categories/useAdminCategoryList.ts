@@ -57,20 +57,17 @@ export function useAdminCategoryList({ categories, reorderCategories }: UseAdmin
   const moveCategory = useCallback((sourceId: string, targetId: string) => {
     if (sourceId === targetId) return null
 
-    let nextOrder: ContentCategory[] | null = null
-    setOrderedCategories((current) => {
-      const sourceIndex = current.findIndex((category) => category.id === sourceId)
-      const targetIndex = current.findIndex((category) => category.id === targetId)
-      if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return current
-
-      const next = [...current]
-      const [moved] = next.splice(sourceIndex, 1)
-      next.splice(targetIndex, 0, moved)
-      nextOrder = next
-      orderDirtyRef.current = true
-      return next
-    })
-    return nextOrder
+    const current = orderedRef.current
+    const sourceIndex = current.findIndex(category => category.id === sourceId)
+    const targetIndex = current.findIndex(category => category.id === targetId)
+    if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return null
+    const next = [...current]
+    const [moved] = next.splice(sourceIndex, 1)
+    next.splice(targetIndex, 0, moved)
+    orderedRef.current = next
+    orderDirtyRef.current = true
+    setOrderedCategories(next)
+    return next
   }, [])
 
   const persistOrder = useCallback(

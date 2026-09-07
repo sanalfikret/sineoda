@@ -102,6 +102,11 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
     return
   }
 
+  if (req.body.contentPool !== undefined) {
+    const pool = String(req.body.contentPool)
+    if (!['platform','film','dizi','belgesel','kisa-film','stand-up','vertical'].includes(pool)) { res.status(400).json({error:'Geçersiz içerik türü.'}); return }
+    dbRun('INSERT OR REPLACE INTO site_settings (key,value) VALUES (?,?)', ['category_pool:' + categoryId, pool])
+  }
   if (req.body.title !== undefined) {
     const title = String(req.body.title).trim()
     if (!title) {

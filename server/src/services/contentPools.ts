@@ -61,18 +61,18 @@ export function rowMatchesContentPool(
 
 export function contentAllowedInCategory(
   categoryId: string,
-  row: Pick<ContentRow, 'program' | 'content_format'>,
+  row: Pick<ContentRow, 'program' | 'content_format' | 'type' | 'video_format'>,
 ) {
   if (categoryId === GENC_SINEMA_CATEGORY_ID) return isStudentMainContent(row)
   if (isCekimCategoryId(categoryId)) return isShootingNotesRow(row)
-  return isPlatformMainContent(row)
+  return rowMatchesContentPool(row, categoryPool(categoryId))
 }
 
 export function filterContentIdsForCategory(categoryId: string, itemIds: string[]) {
   const unique: string[] = []
   for (const contentId of itemIds) {
-    const row = dbGet<Pick<ContentRow, 'program' | 'content_format'>>(
-      'SELECT program, content_format FROM content WHERE id = ?',
+    const row = dbGet<Pick<ContentRow, 'program' | 'content_format' | 'type' | 'video_format'>>(
+      'SELECT program, content_format, type, video_format FROM content WHERE id = ?',
       [contentId],
     )
     if (row && contentAllowedInCategory(categoryId, row) && !unique.includes(contentId)) {
@@ -94,4 +94,9 @@ export function filterContentIdsForPool(pool: ContentPoolId, itemIds: string[]) 
     }
   }
   return unique
+}
+
+export function categoryPool(id: string): ContentPoolId {
+ const saved = dbGet<{value:string}>('SELECT value FROM site_settings WHERE key = ?', ['category_pool:' + id])
+ return (saved?.value ?? ({ series: 'dizi', 'anime-animation': 'dizi', crime: 'dizi', documentary: 'belgesel', standup: 'stand-up', 'vertical-series': 'vertical', 'kisa-film': 'kisa-film', 'short-films': 'kisa-film' } as Record<string,string>)[id] ?? 'platform') as ContentPoolId
 }

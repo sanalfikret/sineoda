@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { resolveMediaUrl } from '../api/client'
 import { getContentTypeLabel } from '../constants/contentTypes'
@@ -55,6 +55,8 @@ export function ContentCard({
   forceLandscape = false,
 }: ContentCardProps) {
   const { t } = useTranslation('content')
+  const navigate = useNavigate()
+  const selectItem = () => guestHref ? navigate(guestHref) : onSelect(item)
   const isGrid = variant === 'grid'
   const isBrowseGrid = isGrid && gridFixedWidth
   const isPortrait = !forceLandscape && (layout === 'portrait' || item.videoFormat === 'vertical')
@@ -78,7 +80,7 @@ export function ContentCard({
   const aspectClass = isPortrait ? 'aspect-[9/16]' : 'aspect-video'
   const genreLine = item.genres.slice(0, 3).join(' · ')
   const isTv = isTvDevice()
-  const enableNetflixHover = !guestHref && (!isGrid || isBrowseGrid) && !isTv
+  const enableNetflixHover = (!isGrid || isBrowseGrid) && !isTv
 
   const clearLeaveTimer = () => {
     if (leaveTimerRef.current) {
@@ -264,15 +266,15 @@ export function ContentCard({
             className="fixed z-[9999] shadow-[0_16px_48px_rgba(0,0,0,0.75)]"
             style={{
               top: anchor.top,
-              left: expandedLeft,
-              width: expandedWidth,
+              left: Math.max(8, Math.min(expandedLeft, window.innerWidth - expandedWidth - 8)),
+              width: Math.min(expandedWidth, window.innerWidth - 16),
             }}
             onMouseEnter={handleEnter}
             onMouseLeave={handleLeave}
           >
             <button
               type="button"
-              onClick={() => onSelect(item)}
+              onClick={selectItem}
               className="block w-full border-0 bg-transparent p-0 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold"
             >
               <div className="overflow-hidden rounded-t-md bg-plooy-surface ring-1 ring-white/25">
@@ -302,7 +304,7 @@ export function ContentCard({
         <button
           type="button"
           aria-label={item.title}
-          onClick={() => onSelect(item)}
+          onClick={selectItem}
           onMouseEnter={handleEnter}
           onMouseLeave={handleLeave}
           onFocus={(event) => {
@@ -343,7 +345,7 @@ export function ContentCard({
   }
 
   return (
-    <button type="button" onClick={() => onSelect(item)} className="border-0 bg-transparent p-0 text-left">
+    <button type="button" onClick={selectItem} className="border-0 bg-transparent p-0 text-left">
       {standardCard}
     </button>
   )
