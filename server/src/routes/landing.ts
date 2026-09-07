@@ -115,11 +115,6 @@ export function getLandingConfig() {
     studentPicks = fetchStudentCinemaPicksFallback()
   }
 
-  // Birinciler seçkide tekrar etmesin
-  if (monthlyWinners.length > 0) {
-    const winnerIds = new Set(monthlyWinners.map((item) => item.id))
-    studentPicks = studentPicks.filter((item) => !winnerIds.has(item.id))
-  }
 
   return {
     slider,

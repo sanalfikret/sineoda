@@ -4,7 +4,7 @@ import os from 'node:os'
 import path from 'node:path'
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'plooy-workflow-'))
 process.env.DATA_DIR = path.join(temp,'data'); process.env.UPLOADS_DIR = path.join(temp,'uploads'); process.env.NODE_ENV='test'
-const { initDatabase, dbRun, dbGet } = await import('../src/db.ts')
+const { initDatabase, dbRun, dbGet, dbAll } = await import('../src/db.ts')
 await initDatabase()
 const { default: express } = await import('express')
 const { signToken } = await import('../src/middleware/auth.ts')
@@ -129,5 +129,16 @@ try {
  assert.equal(getCategoryOrderForBrowse()[0],winnerId)
  assert.equal((await call('/categories/'+winnerId,'admin','PATCH',{hidden:false})).status,200)
  assert.equal(mapCategoriesResponse().find(row=>row.id===winnerId).hidden,false)
+ const { getLandingConfig } = await import('../src/routes/landing.ts')
+ dbRun('DELETE FROM landing_student_picks'); dbRun('DELETE FROM landing_monthly_winners')
+ const columns = dbAll('PRAGMA table_info(content)').map(column=>column.name)
+ const pickIds = Array.from({length:10},(_,i)=>'chosen-pick-'+i)
+ for (const [i,pickId] of pickIds.entries()) {
+   dbRun('INSERT INTO content ('+columns.join(',')+') SELECT '+columns.map(column=>column==='id'?'?':column).join(',')+' FROM content WHERE id = ?',[pickId,standardId])
+   dbRun('INSERT INTO landing_student_picks (content_id,sort_order) VALUES (?,?)',[pickId,i])
+   if (i<7) dbRun('INSERT INTO landing_monthly_winners (content_id,sort_order) VALUES (?,?)',[pickId,i])
+ }
+ assert.deepEqual(getLandingConfig().studentPicks.map(item=>item.id),pickIds)
+ assert.equal(getLandingConfig().monthlyWinners.length,7)
  console.log('PASS: unpaid creator/student, service guard, account separation, review/publication transitions, TR/EN persistence and upload guard')
 } finally { await new Promise(resolve=>server.close(resolve)); fs.rmSync(temp,{recursive:true,force:true}) }
