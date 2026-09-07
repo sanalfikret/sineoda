@@ -1,3 +1,4 @@
+import { readJournalTranslations } from './services/journalTranslations.js'
 import { readTranslations } from './services/dynamicTranslations.js'
 import { mapMonthlyAwardRow } from './services/studentCinemaAwards.js'
 import { resolveContentImages } from './services/contentImages.js'
@@ -157,6 +158,7 @@ export function slugify(text: string) {
 
 export function mapJournalPost(row: import('./types.js').JournalPostRow) {
   return {
+    translations: {tr:{title:row.title,excerpt:row.excerpt,body:row.body},...readJournalTranslations(row.id)},
     id: row.id,
     slug: row.slug,
     title: row.title,

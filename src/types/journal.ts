@@ -1,6 +1,7 @@
 export type JournalPostStatus = 'draft' | 'published'
 
 export interface JournalPost {
+  translations?: Record<string,{title:string;excerpt:string;body:string}>
   id: string
   slug: string
   title: string

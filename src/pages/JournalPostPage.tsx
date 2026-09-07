@@ -28,7 +28,7 @@ export function JournalPostPage() {
       .then((data) => setPost(data.post))
       .catch(() => setPost(resolveJournalPost(slug)))
       .finally(() => setLoading(false))
-  }, [slug])
+  }, [slug, locale])
 
   const linkedContent = post?.contentId ? catalog.find((item) => item.id === post.contentId) : null
 

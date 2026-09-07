@@ -1,3 +1,4 @@
+import { saveJournalEnglish } from '../services/journalTranslations.js'
 import { Router } from 'express'
 import { v4 as uuid } from 'uuid'
 import { dbAll, dbGet, dbRun } from '../db.js'
@@ -95,6 +96,7 @@ router.post('/', (req: AuthRequest, res) => {
     ],
   )
 
+  saveJournalEnglish(id, req.body)
   const row = dbGet<JournalPostRow>('SELECT * FROM journal_posts WHERE id = ?', [id])
   res.status(201).json({ post: mapJournalPost(row!) })
 })
@@ -155,6 +157,7 @@ router.put('/:id', (req: AuthRequest, res) => {
     ],
   )
 
+  saveJournalEnglish(existing.id, req.body)
   const row = dbGet<JournalPostRow>('SELECT * FROM journal_posts WHERE id = ?', [existing.id])
   res.json({ post: mapJournalPost(row!) })
 })

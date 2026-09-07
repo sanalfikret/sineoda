@@ -1,3 +1,4 @@
+import { BilingualField } from '../../components/admin/BilingualField'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
@@ -14,7 +15,9 @@ const RATINGS = ['Genel', '7+', '13+', '16+', '18+']
 
 const EMPTY_FORM = {
   title: '',
+  titleEn: '',
   description: '',
+  descriptionEn: '',
   expert: '',
   categoryId: '',
   year: new Date().getFullYear(),
@@ -61,8 +64,10 @@ export function AdminCekimNotlariFormPage() {
     void fetchAdminCekimNotlariItem(id!)
       .then(({ item, categoryId }) => {
         setForm({
-          title: item.title,
-          description: item.description,
+          title: item.translations?.tr?.title ?? item.title,
+          titleEn: item.translations?.en?.title ?? '',
+          description: item.translations?.tr?.description ?? item.description,
+          descriptionEn: item.translations?.en?.description ?? '',
           expert: item.credits?.directors?.[0] ?? '',
           categoryId,
           year: item.year,
@@ -81,14 +86,15 @@ export function AdminCekimNotlariFormPage() {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
-    if (!form.title.trim()) {
-      setError('Başlık zorunlu.')
+    if (!form.title.trim() || !form.titleEn.trim()) {
+      setError('Türkçe ve İngilizce başlık zorunlu. Çevirinin tamamlanmasını bekleyin veya elle girin.')
       return
     }
     setSaving(true)
     setError('')
     try {
       const payload = {
+        translations: {tr:{title:form.title,description:form.description},en:{title:form.titleEn,description:form.descriptionEn}},
         title: form.title.trim(),
         description: form.description.trim(),
         expert: form.expert.trim(),
@@ -154,25 +160,9 @@ export function AdminCekimNotlariFormPage() {
           </select>
         </label>
 
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-white/80">Başlık</span>
-          <input
-            value={form.title}
-            onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
-            className="w-full rounded-lg border border-white/10 bg-plooy-surface px-3 py-2.5 text-white outline-none focus:border-plooy-gold"
-            required
-          />
-        </label>
+        <BilingualField label="Başlık" tr={form.title} en={form.titleEn} onTr={value => setForm(current => ({...current,title:value}))} onEn={value => setForm(current => ({...current,titleEn:value}))}  />
 
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-white/80">Açıklama</span>
-          <textarea
-            value={form.description}
-            onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-            rows={4}
-            className="w-full rounded-lg border border-white/10 bg-plooy-surface px-3 py-2.5 text-white outline-none focus:border-plooy-gold"
-          />
-        </label>
+        <BilingualField label="Açıklama" tr={form.description} en={form.descriptionEn} onTr={value => setForm(current => ({...current,description:value}))} onEn={value => setForm(current => ({...current,descriptionEn:value}))} multiline />
 
         <label className="block space-y-2">
           <span className="text-sm font-medium text-white/80">Uzman / Eğitmen</span>

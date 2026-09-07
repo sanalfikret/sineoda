@@ -12,7 +12,7 @@ import type { JournalPost } from '../types/journal'
 export function JournalListPage() {
   const { t } = useTranslation('journal')
   const { t: tl } = useTranslation('landing')
-  const { localizePath } = useLocale()
+  const { localizePath, locale } = useLocale()
   const [searchParams, setSearchParams] = useSearchParams()
   const page = Math.max(1, Number(searchParams.get('page') ?? '1') || 1)
 
@@ -41,7 +41,7 @@ export function JournalListPage() {
         setTotalPages(Math.max(1, Math.ceil(DEMO_JOURNAL_POSTS.length / JOURNAL_PAGE_SIZE)))
       })
       .finally(() => setLoading(false))
-  }, [page])
+  }, [page, locale])
 
   const handlePageChange = (nextPage: number) => {
     if (nextPage <= 1) {

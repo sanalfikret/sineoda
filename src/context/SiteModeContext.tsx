@@ -22,7 +22,7 @@ export function SiteModeProvider({ children }: { children: ReactNode }) {
       const mode = await fetchSiteMode()
       setSiteMode(mode)
     } catch {
-      setSiteMode(null)
+      // Keep the last known mode on a transient failure.
     } finally {
       setLoading(false)
     }
@@ -30,6 +30,10 @@ export function SiteModeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void refreshSiteMode()
+    const refresh = () => { if(document.visibilityState === 'visible') void refreshSiteMode() }
+    window.addEventListener('focus',refresh)
+    const timer=window.setInterval(refresh,30000)
+    return ()=>{window.removeEventListener('focus',refresh);window.clearInterval(timer)}
   }, [refreshSiteMode])
 
   const canBypassComingSoon = user?.role === 'admin' || user?.role === 'manager'

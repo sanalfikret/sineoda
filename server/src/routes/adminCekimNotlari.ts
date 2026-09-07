@@ -1,3 +1,4 @@
+import { saveTranslations, validateTranslations } from '../services/dynamicTranslations.js'
 import { Router } from 'express'
 import { dbGet, dbRun } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
@@ -121,6 +122,7 @@ router.get('/:id', (req, res) => {
 
 router.post('/', (req: AuthRequest, res) => {
   const body = req.body as Record<string, unknown>
+  if (body.translations !== undefined) { try { validateTranslations('content','',body.translations) } catch(e) { res.status(400).json({error:e instanceof Error?e.message:'Geçersiz çeviri'});return } }
   const title = String(body.title ?? '').trim()
   const categoryId = String(body.categoryId ?? '').trim()
   if (!title) {
@@ -191,6 +193,7 @@ router.post('/', (req: AuthRequest, res) => {
 
   addToCekimCategory(id, categoryId)
 
+  if (body.translations !== undefined) saveTranslations('content',id,body.translations)
   res.status(201).json({
     item: mapContent(dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [id])!),
     categoryId,
@@ -209,6 +212,7 @@ router.patch('/:id', (req: AuthRequest, res) => {
   }
 
   const body = req.body as Record<string, unknown>
+  if (body.translations !== undefined) { try { validateTranslations('content','',body.translations) } catch(e) { res.status(400).json({error:e instanceof Error?e.message:'Geçersiz çeviri'});return } }
   const durationFields = resolveDurationFields(body, existing)
   const expert = body.expert !== undefined ? String(body.expert).trim() : undefined
   const nextVideoUrl =
@@ -273,6 +277,7 @@ router.patch('/:id', (req: AuthRequest, res) => {
     [existing.id],
   )
 
+  if (body.translations !== undefined) saveTranslations('content',existing.id,body.translations)
   res.json({
     item: mapContent(dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [existing.id])!),
     categoryId: categoryRow?.category_id ?? null,

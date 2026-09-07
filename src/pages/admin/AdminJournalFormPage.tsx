@@ -1,3 +1,4 @@
+import { BilingualField } from '../../components/admin/BilingualField'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -12,9 +13,12 @@ import { BRAND_EDITOR } from '../../constants/brand'
 
 const EMPTY = {
   title: '',
+  titleEn: '',
   slug: '',
   excerpt: '',
+  excerptEn: '',
   body: '',
+  bodyEn: '',
   coverImage: '',
   author: BRAND_EDITOR,
   contentId: '',
@@ -37,10 +41,13 @@ export function AdminJournalFormPage() {
       .then((data) => {
         const post = data.post
         setForm({
-          title: post.title,
+          title: post.translations?.tr?.title ?? post.title,
+          titleEn: post.translations?.en?.title ?? '',
           slug: post.slug,
-          excerpt: post.excerpt,
-          body: post.body,
+          excerpt: post.translations?.tr?.excerpt ?? post.excerpt,
+          excerptEn: post.translations?.en?.excerpt ?? '',
+          body: post.translations?.tr?.body ?? post.body,
+          bodyEn: post.translations?.en?.body ?? '',
           coverImage: post.coverImage,
           author: post.author,
           contentId: post.contentId ?? '',
@@ -97,15 +104,7 @@ export function AdminJournalFormPage() {
       </div>
 
       <form onSubmit={(event) => void handleSubmit(event)} className="space-y-5">
-        <label className="block space-y-2">
-          <span className="text-sm text-white/85">Başlık</span>
-          <input
-            value={form.title}
-            onChange={(event) => update('title', event.target.value)}
-            required
-            className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-plooy-gold"
-          />
-        </label>
+        <BilingualField label="Başlık" tr={form.title} en={form.titleEn} onTr={value => setForm(current => ({...current,title:value}))} onEn={value => setForm(current => ({...current,titleEn:value}))}  />
 
         <label className="block space-y-2">
           <span className="text-sm text-white/85">URL slug (boş bırakılırsa otomatik)</span>
@@ -117,15 +116,7 @@ export function AdminJournalFormPage() {
           />
         </label>
 
-        <label className="block space-y-2">
-          <span className="text-sm text-white/85">Özet</span>
-          <textarea
-            value={form.excerpt}
-            onChange={(event) => update('excerpt', event.target.value)}
-            rows={2}
-            className="w-full resize-y rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 text-white outline-none focus:border-plooy-gold"
-          />
-        </label>
+        <BilingualField label="Özet" tr={form.excerpt} en={form.excerptEn} onTr={value => setForm(current => ({...current,excerpt:value}))} onEn={value => setForm(current => ({...current,excerptEn:value}))} multiline />
 
         <ImageUpload label="Kapak görseli" value={form.coverImage} onChange={(url) => update('coverImage', url)} />
 
@@ -166,16 +157,7 @@ export function AdminJournalFormPage() {
           </select>
         </label>
 
-        <label className="block space-y-2">
-          <span className="text-sm text-white/85">İçerik</span>
-          <textarea
-            value={form.body}
-            onChange={(event) => update('body', event.target.value)}
-            rows={14}
-            placeholder="Paragraflar arasında boş satır bırakın."
-            className="w-full resize-y rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-2.5 font-mono text-sm leading-relaxed text-white outline-none focus:border-plooy-gold"
-          />
-        </label>
+        <BilingualField label="Yazı" tr={form.body} en={form.bodyEn} onTr={value => setForm(current => ({...current,body:value}))} onEn={value => setForm(current => ({...current,bodyEn:value}))} multiline />
 
         {error && <p className="text-sm text-red-300">{error}</p>}
 

@@ -8,6 +8,11 @@ const { initDatabase, dbRun, dbGet, dbAll } = await import('../src/db.ts')
 await initDatabase()
 const { default: express } = await import('express')
 const { signToken } = await import('../src/middleware/auth.ts')
+const { default: notesRoutes } = await import('../src/routes/adminCekimNotlari.ts')
+const { default: journalRoutes } = await import('../src/routes/adminJournal.ts')
+const { default: modeRoutes } = await import('../src/routes/adminSiteMode.ts')
+const { default: publicModeRoutes } = await import('../src/routes/siteMode.ts')
+const { localizeDynamic } = await import('../../src/utils/dynamicTranslations.ts')
 const { default: queueRoutes } = await import('../src/routes/adminQueues.ts')
 const { default: contentRoutes } = await import('../src/routes/content.ts')
 const { default: categoryRoutes } = await import('../src/routes/categories.ts')
@@ -24,7 +29,7 @@ for (const id of ['standard','student_cinema','admin']) {
  dbRun('INSERT INTO users (id,name,email,password_hash,role,created_at) VALUES (?,?,?,?,?,?)',[id,id,id+'@example.test','unused',id==='admin'?'admin':'creator',now])
  if(id!=='admin') dbRun('INSERT INTO creators (id,user_id,studio_name,bio,status,created_at,program,school_id) VALUES (?,?,?,?,?,?,?,?)',[id,id,id,'','pending',now,id,'school'])
 }
-const app = express(); app.use(express.json()); app.use('/queues',queueRoutes); app.use('/creator',creatorRoutes); app.use('/billing',billingRoutes); app.use('/categories',categoryRoutes); app.use('/catalog',contentRoutes); app.use('/admin',adminRoutes); app.use('/upload',uploadRoutes)
+const app = express(); app.use(express.json()); app.use('/notes-test',notesRoutes); app.use('/journal-test',journalRoutes); app.use('/mode-test',modeRoutes); app.use('/public-mode',publicModeRoutes); app.use('/queues',queueRoutes); app.use('/creator',creatorRoutes); app.use('/billing',billingRoutes); app.use('/categories',categoryRoutes); app.use('/catalog',contentRoutes); app.use('/admin',adminRoutes); app.use('/upload',uploadRoutes)
 const server = app.listen(0,'127.0.0.1'); await new Promise(resolve => server.once('listening',resolve))
 const base = 'http://127.0.0.1:'+server.address().port
 async function call(url,id,method,body) { return fetch(base+url,{ method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+signToken({userId:id,role:id==='admin'?'admin':'creator'})},body:JSON.stringify(body) }) }
@@ -161,5 +166,30 @@ try {
  const corrected = {...bilingual,en:{...bilingual.en,title:'Beneath the Sea'}}
  assert.equal((await call('/catalog/'+bilingualId,'admin','PATCH',{translations:corrected})).status,200)
  assert.equal(readTranslations('content',bilingualId).en.title,'Beneath the Sea')
+
+ assert.equal((await call('/mode-test','standard','PATCH',{enabled:true})).status,403)
+ assert.equal((await call('/mode-test','admin','PATCH',{enabled:true,allowViewerSignup:false})).status,200)
+ assert.equal((await (await fetch(base+'/public-mode')).json()).enabled,true)
+ assert.equal((await call('/mode-test','admin','GET')).status,200)
+ await call('/mode-test','admin','PATCH',{enabled:false})
+ assert.equal((await (await fetch(base+'/public-mode')).json()).enabled,false)
+ const journal=await call('/journal-test','admin','POST',{title:'Çekim Günlüğü',titleEn:'Production Diary',excerpt:'Özet',excerptEn:'Summary',body:'Türkçe yazı',bodyEn:'English article',status:'draft'})
+ assert.equal(journal.status,201)
+ const post=(await journal.json()).post
+ assert.equal(localizeDynamic(post,'en').body,'English article')
+ assert.equal(localizeDynamic(post,'tr').title,'Çekim Günlüğü')
+ await call('/journal-test/'+post.id,'admin','PUT',{titleEn:'Edited Diary'})
+ const updated=(await (await call('/journal-test/'+post.id,'admin','GET')).json()).post
+ assert.equal(updated.translations.en.title,'Edited Diary')
+ assert.equal(updated.translations.en.body,'English article')
+
+ const noteCategory=(await (await call('/notes-test/categories','admin','POST',{title:'Test Notları'})).json()).category
+ const noteResponse=await call('/notes-test','admin','POST',{title:'Işık',categoryId:noteCategory.id,translations:{tr:{title:'Işık',description:'Işık kullanımı'},en:{title:'Light',description:'Using light'}}})
+ assert.equal(noteResponse.status,201)
+ const note=(await noteResponse.json()).item
+ assert.equal(note.translations.en.title,'Light')
+ const noteUpdate=await call('/notes-test/'+note.id,'admin','PATCH',{translations:{tr:{title:'Işık',description:'Işık kullanımı'},en:{title:'Lighting',description:'Lighting guide'}}})
+ assert.equal(noteUpdate.status,200)
+ assert.equal((await noteUpdate.json()).item.translations.en.description,'Lighting guide')
  console.log('PASS: unpaid creator/student, service guard, account separation, review/publication transitions, TR/EN persistence and upload guard')
 } finally { await new Promise(resolve=>server.close(resolve)); fs.rmSync(temp,{recursive:true,force:true}) }
