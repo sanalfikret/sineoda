@@ -31,7 +31,7 @@ export function ProgramShowcaseRow({
       items={items}
       onSelect={onSelect ?? (() => undefined)}
       guestMode={guestMode}
-      viewAllHref={kind === 'studentMonthlyWinners' ? '/?kategori=student-monthly-winners' : config.viewAllPath}
+      viewAllHref={kind === 'studentMonthlyWinners' ? '/?kategori=student-monthly-winners' : '/?kategori=student-picks'}
 
     />
   )

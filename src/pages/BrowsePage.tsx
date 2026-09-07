@@ -153,11 +153,7 @@ function BrowseContent({
       categoryOrder,
     })
     if (!selectedCategory) return result
-    const category = categories.find(row => row.id === selectedCategory && !row.hidden)
-    if (category && selectedCategory !== 'student-monthly-winners') {
-      const items = category.itemIds.map(getContentById).filter((item): item is ContentItem => Boolean(item && (!activeProfile?.isKids || isContentAllowedForKids(item.rating))))
-      return items.length ? [{ id: category.id, title: category.title, itemIds: items.map(item => item.id), items }] : []
-    }
+    if (selectedCategory === 'student-picks') return [{id:'student-picks',title:'Genç Sinema Seçkisi',itemIds:studentCinemaPicks.map(item => item.id),items:studentCinemaPicks.filter(item => !activeProfile?.isKids || isContentAllowedForKids(item.rating))}]
     if (selectedCategory.startsWith('all-')) {
       const type = selectedCategory.slice(4)
       return buildBrowseRows(source, { kidsSafe: Boolean(activeProfile?.isKids), ...(type === 'vertical' ? { verticalOnly: true } : { type: type as ContentType }) }, categories, getContentById)

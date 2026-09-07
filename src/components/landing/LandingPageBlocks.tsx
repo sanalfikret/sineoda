@@ -9,7 +9,7 @@ import { isCustomLandingBlockId, normalizeLandingLayout } from '../../constants/
 import { LandingCustomBlockSection } from './LandingCustomBlockSection'
 import { LandingFeatures } from './LandingFeatures'
 import { LandingManifesto } from './LandingManifesto'
-import { LandingCategoryShowcase } from './LandingCategoryShowcase'
+import { LandingCategoryRows } from './LandingCategoryRows'
 import { LandingSlider } from './LandingSlider'
 import { LandingEmailSignup } from './LandingEmailSignup'
 import { LandingFaq } from './LandingFaq'
@@ -101,7 +101,7 @@ function renderLandingBlock(id: string, ctx: LandingPageBlockContext): ReactNode
         />
       )
     case 'showcases':
-      return ctx.showcases.length > 0 ? <LandingCategoryShowcase showcases={ctx.showcases} /> : null
+      return <LandingCategoryRows />
     case 'journal':
       return <LandingJournalTeaser section={ctx.sections.journal} />
     case 'features':

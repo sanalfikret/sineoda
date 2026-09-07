@@ -80,7 +80,6 @@ function orderBrowseRows(
   categoryOrder: string[] | undefined,
   monthlyRow: BrowseRow | null,
 ): BrowseRow[] {
-  if (!monthlyRow) return rows
 
   const rowById = new Map(rows.map((row) => [row.id, row]))
   const order =
@@ -92,7 +91,7 @@ function orderBrowseRows(
   const seen = new Set<string>()
 
   for (const id of order) {
-    if (id === STUDENT_MONTHLY_WINNERS_ROW_ID) {
+    if (id === STUDENT_MONTHLY_WINNERS_ROW_ID && monthlyRow) {
       if (!seen.has(monthlyRow.id)) {
         ordered.push(monthlyRow)
         seen.add(monthlyRow.id)
@@ -130,6 +129,8 @@ function categoryFilterOptions(category: ContentCategory, options: BrowseFilterO
 }
 
 function itemAllowedInCategory(category: ContentCategory, item: ContentItem, options: BrowseFilterOptions) {
+  if (options.kidsSafe && !isContentAllowedForKids(item.rating)) return false
+  if (!options.type && !options.genre && !options.verticalOnly && !options.studentOnly && !options.classicsOnly && !options.cekimNotlariOnly) return true
   if (category.id === BRAND_STUDENT_CINEMA.id) {
     return item.program === 'student_cinema' && (item.contentFormat ?? 'main') === 'main'
   }
@@ -140,6 +141,7 @@ export const BROWSE_ITEMS_PER_ROW = 20
 
 export function filterCatalog(catalog: ContentItem[], options: BrowseFilterOptions) {
   return catalog.filter((item) => {
+    if (options.kidsSafe && !isContentAllowedForKids(item.rating)) return false
     if (options.studentOnly) {
       return item.program === 'student_cinema' && (item.contentFormat ?? 'main') === 'main'
     }
@@ -185,7 +187,7 @@ export function pickCategoryRow(
 }
 
 function buildMonthlyWinnersBrowseRow(extras?: BrowseRowExtras): BrowseRow | null {
-  const winners = extras?.studentCinemaMonthlyWinners?.slice(0, BROWSE_ITEMS_PER_ROW) ?? []
+  const winners = extras?.studentCinemaMonthlyWinners ?? []
   if (winners.length === 0) return null
 
   return {
@@ -217,8 +219,8 @@ export function buildCategoryBrowseRows(
       )
 
 
-    if (category.id === BRAND_STUDENT_CINEMA.id && items.length === 0 && extras?.studentCinemaPicks?.length) {
-      items = extras.studentCinemaPicks.slice(0, BROWSE_ITEMS_PER_ROW)
+    if (category.id === BRAND_STUDENT_CINEMA.id && category.itemIds.length === 0 && items.length === 0 && extras?.studentCinemaPicks?.length) {
+      items = extras.studentCinemaPicks.filter(item => !options.kidsSafe || isContentAllowedForKids(item.rating))
     }
 
     if (items.length === 0) continue
@@ -369,11 +371,11 @@ export function buildBrowseRows(
       !options.genre &&
       !options.type &&
       !options.verticalOnly
-    const monthlyRow = isMainHome ? buildMonthlyWinnersBrowseRow(extras) : null
+    const monthlyRow = isMainHome && !categories.some(category => category.id === STUDENT_MONTHLY_WINNERS_ROW_ID && category.hidden) ? buildMonthlyWinnersBrowseRow({...extras, studentCinemaMonthlyWinners: extras?.studentCinemaMonthlyWinners?.filter(item => !options.kidsSafe || isContentAllowedForKids(item.rating))}) : null
     if (monthlyRow) {
       return orderBrowseRows(rows, extras?.categoryOrder, monthlyRow)
     }
-    return rows
+    return orderBrowseRows(rows, extras?.categoryOrder, null)
   }
 
   return buildGenreBrowseRows(catalog, options)

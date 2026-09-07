@@ -1,3 +1,7 @@
+import { useSearchParams } from 'react-router-dom'
+import { ContentRow } from '../components/ContentRow'
+import { useContent } from '../context/ContentContext'
+import { buildBrowseRows } from '../utils/browse'
 import { localizeDynamic } from '../utils/dynamicTranslations'
 import { useTranslation } from 'react-i18next'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -40,6 +44,11 @@ function resolveFeaturedFallback(catalog: ContentItem[], featuredContentId?: str
 
 export function LandingPage() {
   const { i18n } = useTranslation()
+  const [searchParams] = useSearchParams()
+  const selectedCategory = searchParams.get('kategori')
+  const content = useContent()
+  const categoryRows = buildBrowseRows(content.visibleCatalog, {}, content.categories, content.getContentById, {studentCinemaPicks:content.studentCinemaPicks,studentCinemaMonthlyWinners:content.studentCinemaMonthlyWinners,categoryOrder:content.categoryOrder})
+  const selectedRows = selectedCategory === 'student-picks' ? [{id:'student-picks',title:i18n.language.startsWith('en') ? 'Student Cinema Selection' : 'Genç Sinema Seçkisi',items:content.studentCinemaPicks}] : categoryRows.filter(row => row.id === selectedCategory)
   const [catalog, setCatalog] = useState<ContentItem[]>([])
   const [featuredItem, setFeaturedItem] = useState<ContentItem | null>(null)
   const [heroConfig, setHeroConfig] = useState<LandingHeroConfig>(DEFAULT_LANDING_HERO)
@@ -166,6 +175,7 @@ export function LandingPage() {
     <GuestSiteShell footer={<SiteFooter />}>
       <div className="min-h-dvh bg-plooy-bg text-white">
         <PageMeta path="/" />
+        {selectedCategory ? <div className="pt-28 pb-12">{selectedRows.length ? selectedRows.map(row => <ContentRow key={row.id} title={row.title} items={row.items} guestMode variant="grid" onSelect={() => undefined} />) : <p className="px-6">{i18n.language.startsWith('en') ? 'No content found.' : 'İçerik bulunamadı.'}</p>}</div> : <>
         <LandingPageBlocks
           ctx={{
             heroConfig,
@@ -185,6 +195,7 @@ export function LandingPage() {
             cekimSections,
           }}
         />
+        </>}
       </div>
     </GuestSiteShell>
   )
