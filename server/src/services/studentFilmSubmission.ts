@@ -35,7 +35,7 @@ export function createStudentFilmSubmission(input: {
   now: string
   reviewStatus?: 'pending' | 'payment_pending'
 }) {
-  const creator = dbGet<{ registration_paid_at: string | null }>('SELECT registration_paid_at FROM creators WHERE id = ?', [input.creatorId])
+  const creator = dbGet<{ registration_paid_at: string | null; student_application_type: string }>('SELECT registration_paid_at, student_application_type FROM creators WHERE id = ?', [input.creatorId])
   if (!creator?.registration_paid_at) throw new Error('CREATOR_PAYMENT_REQUIRED')
   const reviewStatus = 'pending'
   const existing = findStudentMainStub(input.creatorId)
@@ -95,7 +95,7 @@ export function createStudentFilmSubmission(input: {
       'main',
       null,
       input.schoolId,
-      'pending',
+      creator.student_application_type === 'individual' ? 'none' : 'pending',
     ],
   )
 

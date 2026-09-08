@@ -82,7 +82,7 @@
     "footnote": "Your school selects · Plooy gives final approval · Film + BTS published together"
   },
   "creator": {
-    "eyebrow": "For independent producers",
+    "eyebrow": "For independent directors and producers",
     "title": "Upload your film, earn through fair revenue sharing",
     "subtitle": "Plooy isn't just for viewers — it's built for independent filmmakers too. Upload your work, join the curated catalog, and find revenue-sharing terms clearly stated in the creator agreement.",
     "perks": [
@@ -104,7 +104,7 @@
       }
     ],
     "ctaPrimary": "Submit a Film",
-    "ctaSecondary": "Creator Sign In",
+    "ctaSecondary": "Director / Producer Login",
     "footnote": "Where independent cinema meets — discover as a viewer, publish as a creator."
   },
   "faq": {
@@ -188,11 +188,11 @@
     }
   },
   "creatorBar": {
-    "eyebrow": "For independent producers",
+    "eyebrow": "For independent directors and producers",
     "title": "Upload your film, earn through fair revenue sharing",
     "subtitle": "Plooy isn't just for viewers — it's built for independent filmmakers too.",
     "ctaPrimary": "Submit a Film",
-    "ctaSecondary": "Creator Sign In"
+    "ctaSecondary": "Director / Producer Login"
   },
   "hubs": {
     "title": "Start exploring",

@@ -480,6 +480,9 @@ function runMigrations() {
 
   ensureColumn('creators', 'program', "TEXT NOT NULL DEFAULT 'standard'")
   ensureColumn('creators', 'school_id', 'TEXT')
+  ensureColumn('creators', 'student_application_type', "TEXT NOT NULL DEFAULT 'school'")
+  ensureColumn('creators', 'student_department', "TEXT NOT NULL DEFAULT ''")
+  ensureColumn('creators', 'student_university', "TEXT NOT NULL DEFAULT ''")
   ensureColumn('creators', 'project_crew', "TEXT NOT NULL DEFAULT ''")
   ensureColumn('creators', 'registration_paid_at', 'TEXT')
   ensureColumn('creators', 'pending_film_link', 'TEXT')

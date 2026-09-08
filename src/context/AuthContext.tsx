@@ -67,6 +67,9 @@ interface AuthContextValue {
     acceptLegal: boolean
     program?: 'standard' | 'student_cinema'
     schoolId?: string
+    studentApplicationType?: 'individual' | 'school'
+    studentDepartment?: string
+    studentUniversity?: string
     phone?: string
     projectCrew?: string
     filmLink?: string
@@ -281,6 +284,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       acceptLegal: boolean
       program?: 'standard' | 'student_cinema'
       schoolId?: string
+    studentApplicationType?: 'individual' | 'school'
+    studentDepartment?: string
+    studentUniversity?: string
       phone?: string
       projectCrew?: string
       filmLink?: string

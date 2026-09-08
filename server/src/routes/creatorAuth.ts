@@ -56,7 +56,7 @@ function mapCreatorUser(user: UserRow) {
 }
 
 router.post('/signup', creatorAuthLimiter, (req, res) => {
-  const { name, email, password, studioName, bio, acceptLegal, program, schoolId, phone, projectCrew, filmLink, studentIdFileUrl } = req.body as {
+  const { name, email, password, studioName, bio, acceptLegal, program, schoolId, studentApplicationType, studentDepartment, studentUniversity, phone, projectCrew, filmLink, studentIdFileUrl } = req.body as {
     name?: string
     email?: string
     password?: string
@@ -65,6 +65,9 @@ router.post('/signup', creatorAuthLimiter, (req, res) => {
     acceptLegal?: boolean
     program?: string
     schoolId?: string
+    studentApplicationType?: string
+    studentDepartment?: string
+    studentUniversity?: string
     phone?: string
     projectCrew?: string
     filmLink?: string
@@ -90,6 +93,12 @@ router.post('/signup', creatorAuthLimiter, (req, res) => {
   let resolvedSchoolId: string | null = null
 
   if (creatorProgram === 'student_cinema') {
+    if (!['individual','school'].includes(studentApplicationType ?? '') || !studentDepartment?.trim() || studentDepartment.length>200 || (studentUniversity?.length ?? 0)>250) {
+      res.status(400).json({error:'Başvuru türü ve bölüm gerekli. / Application type and department are required.'}); return
+    }
+    if (schoolId === 'diger' && !studentUniversity?.trim()) {
+      res.status(400).json({error:'Üniversitenizin adını yazın. / Enter your university name.'}); return
+    }
     const normalizedPhone = String(phone ?? '').replace(/\s+/g, '').trim()
     if (!/^(\+90|0)?5\d{9}$/.test(normalizedPhone.replace(/^\+90/, '0'))) {
       res.status(400).json({ error: 'Geçerli bir cep telefonu numarası girin.' })
@@ -176,6 +185,9 @@ router.post('/signup', creatorAuthLimiter, (req, res) => {
     ],
   )
 
+  if (creatorProgram === 'student_cinema') {
+    dbRun('UPDATE creators SET student_application_type=?, student_department=?, student_university=? WHERE id=?',[studentApplicationType!,studentDepartment!.trim(),studentUniversity?.trim() ?? '',creatorId])
+  }
   if (creatorProgram === 'student_cinema' && studentIdFileUrl?.trim()) {
     dbRun(
       'INSERT INTO creator_documents (id, creator_id, doc_type, file_url, uploaded_at) VALUES (?, ?, ?, ?, ?)',

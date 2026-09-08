@@ -33,7 +33,7 @@
     "switchProfile": "Profil Değiştir",
     "subscription": "Abonelik",
     "logout": "Çıkış Yap",
-    "creatorPanel": "Yapımcı Paneli",
+    "creatorPanel": "Yönetmen / Yapımcı Paneli",
     "mainSite": "Ana Site",
     "creator": "Yapımcı"
   },
@@ -55,7 +55,7 @@
   "footer": {
     "journal": "Dergi",
     "contact": "İletişim",
-    "creatorLogin": "Yapımcı Girişi",
+    "creatorLogin": "Yönetmen / Yapımcı Girişi",
     "creatorApply": "Film Başvurusu Yap",
     "installApp": "Uygulamayı indir",
     "terms": "Kullanım Koşulları",
@@ -89,7 +89,7 @@
     "studentApply": "Genç Sinema Başvurusu",
     "studentApplyDesc": "Sinema okulu filmini başvur; seçki ve inceleme sürecine gir.",
     "viewerClosed": "İzleyici üyeliği açılışa kadar kapalıdır. Yapımcı başvuruları reklam kampanyamız için şimdiden toplanıyor.",
-    "creatorLogin": "Yapımcı Girişi"
+    "creatorLogin": "Yönetmen / Yapımcı Girişi"
   },
   "contact": {
     "eyebrow": "İletişim",

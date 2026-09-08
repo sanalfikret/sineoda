@@ -33,7 +33,7 @@
     "switchProfile": "Switch Profile",
     "subscription": "Subscription",
     "logout": "Sign Out",
-    "creatorPanel": "Creator Dashboard",
+    "creatorPanel": "Director / Producer Dashboard",
     "mainSite": "Main Site",
     "creator": "Creator"
   },
@@ -55,7 +55,7 @@
   "footer": {
     "journal": "Journal",
     "contact": "Contact",
-    "creatorLogin": "Creator Sign In",
+    "creatorLogin": "Director / Producer Login",
     "creatorApply": "Submit a Film",
     "installApp": "Install app",
     "terms": "Terms of Use",
@@ -89,7 +89,7 @@
     "studentApply": "Student Cinema Submission",
     "studentApplyDesc": "Submit your film school project for selection and review.",
     "viewerClosed": "Viewer membership is closed until launch. Creator submissions are open for our launch campaign.",
-    "creatorLogin": "Creator Sign In"
+    "creatorLogin": "Director / Producer Login"
   },
   "contact": {
     "eyebrow": "Contact",

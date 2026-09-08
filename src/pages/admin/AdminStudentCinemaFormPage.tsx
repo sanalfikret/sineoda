@@ -290,7 +290,7 @@ export function AdminStudentCinemaFormPage() {
               {REVIEW_LABELS[item.reviewStatus] ?? item.reviewStatus}
             </span>
             <span className="rounded-full bg-white/10 px-2.5 py-1 text-white/80">
-              {SCHOOL_REVIEW_LABELS[item.schoolReviewStatus] ?? item.schoolReviewStatus}
+              {item.requiresSchoolReview === false ? 'Bireysel başvuru — okul onayı gerekmez' : SCHOOL_REVIEW_LABELS[item.schoolReviewStatus] ?? item.schoolReviewStatus}
             </span>
           </div>
 
@@ -370,7 +370,7 @@ export function AdminStudentCinemaFormPage() {
           <section className="rounded-xl border border-white/10 bg-[#11141c] p-4">
             <h2 className="font-medium text-white">Yayın Kontrolü</h2>
             <div className="mt-3 flex flex-wrap gap-2">
-              {item.schoolReviewStatus !== 'approved' && (
+              {(item.requiresSchoolReview !== false && item.schoolReviewStatus !== 'approved') && (
                 <button
                   type="button"
                   disabled={actionLoading}
@@ -382,7 +382,7 @@ export function AdminStudentCinemaFormPage() {
               )}
               <button
                 type="button"
-                disabled={actionLoading || item.schoolReviewStatus !== 'approved'}
+                disabled={actionLoading || (item.requiresSchoolReview !== false && item.schoolReviewStatus !== 'approved')}
                 onClick={() => void runReviewAction({ reviewStatus: 'published', publishNow: true }, 'Yayına alındı.')}
                 className="rounded-lg bg-plooy-gold px-3 py-1.5 text-xs font-semibold text-plooy-bg disabled:opacity-40"
               >

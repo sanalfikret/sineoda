@@ -1,6 +1,6 @@
 import { useLegalDocuments } from '../../hooks/useLegalDocuments'
 import { useLocalizedLegalDocuments } from '../../i18n/useLegalLocale'
-import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { fetchFilmSchools, fetchBillingPlans, uploadStudentId, type BillingPlan } from '../../api/client'
@@ -9,7 +9,6 @@ import { PlooyLogo } from '../../components/PlooyLogo'
 import { useAuth } from '../../context/AuthContext'
 import { BRAND_STUDENT_CINEMA, BRAND_NAME } from '../../constants/brand'
 import { useLocale } from '../../i18n/LocaleContext'
-import { groupSchoolsByUniversity, splitSchoolName } from '../../utils/filmSchools'
 import {
   findCreatorRegistrationPlan,
   formatPlanRegistrationNotice,
@@ -19,7 +18,7 @@ export function CreatorRegisterPage() {
   const legal = useLegalDocuments()
   const {documents} = useLocalizedLegalDocuments(legal.documents)
   const { t } = useTranslation('creator', { keyPrefix: 'register' })
-  const { localizePath } = useLocale()
+  const { locale, localizePath } = useLocale()
   const { creatorSignup, isCreator, isLoading } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -34,6 +33,10 @@ export function CreatorRegisterPage() {
   const [filmLink, setFilmLink] = useState('')
   const [bio, setBio] = useState('')
   const [schoolId, setSchoolId] = useState('')
+  const [studentApplicationType,setStudentApplicationType]=useState<'individual'|'school'|''>('')
+  const [studentDepartment,setStudentDepartment]=useState('')
+  const [studentUniversity,setStudentUniversity]=useState('')
+  const [schoolSearch,setSchoolSearch]=useState('')
   const [schools, setSchools] = useState<Array<{ id: string; name: string }>>([])
   const [studentIdFile, setStudentIdFile] = useState<File | null>(null)
   const [studentIdPreview, setStudentIdPreview] = useState('')
@@ -58,7 +61,8 @@ export function CreatorRegisterPage() {
       .catch(() => setSchools([]))
   }, [isStudentProgram])
 
-  const groupedSchools = useMemo(() => groupSchoolsByUniversity(schools), [schools])
+  const selectableSchools = schools.filter(s=>s.id.startsWith('yok-') || s.id==='diger' || !schools.some(v=>v.id.startsWith('yok-')))
+  const filteredSchools = selectableSchools.filter(s=>s.id===schoolId || s.name.toLocaleLowerCase('tr').includes(schoolSearch.toLocaleLowerCase('tr')))
   const registrationPrice =
     registrationPlan?.price ?? (isStudentProgram ? 49 : 69)
   const feeNoticeText = formatPlanRegistrationNotice(
@@ -123,6 +127,9 @@ export function CreatorRegisterPage() {
         acceptLegal,
         program: isStudentProgram ? 'student_cinema' : 'standard',
         schoolId: isStudentProgram ? schoolId : undefined,
+        studentApplicationType: isStudentProgram && studentApplicationType ? studentApplicationType : undefined,
+        studentDepartment: isStudentProgram ? studentDepartment : undefined,
+        studentUniversity: isStudentProgram ? studentUniversity : undefined,
         phone: isStudentProgram ? phone : undefined,
         projectCrew: isStudentProgram ? projectCrew : undefined,
         filmLink: isStudentProgram ? filmLink : undefined,
@@ -172,31 +179,17 @@ export function CreatorRegisterPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-white/10 bg-[#11141c] p-6 sm:p-8">
-          {isStudentProgram && (
-            <label className="block">
-              <span className="mb-1.5 block text-sm text-white/90">{t('schoolLabel')}</span>
-              <select
-                required
-                value={schoolId}
-                onChange={(event) => setSchoolId(event.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-4 py-3 text-white outline-none focus:border-emerald-400"
-              >
-                <option value="">{t('schoolPlaceholder')}</option>
-                {groupedSchools.map((group) => (
-                  <optgroup key={group.university} label={group.university}>
-                    {group.schools.map((school) => {
-                      const { department } = splitSchoolName(school.name)
-                      return (
-                        <option key={school.id} value={school.id}>
-                          {department}
-                        </option>
-                      )
-                    })}
-                  </optgroup>
-                ))}
-              </select>
-            </label>
-          )}
+          {isStudentProgram && <div className="space-y-4">
+            <fieldset className="space-y-3"><legend>{locale==='en'?'Application type':'Başvuru türü'}</legend>
+              {(['individual','school'] as const).map(value=><label key={value} className="flex gap-3 rounded-lg border border-white/20 p-3"><input required type="radio" name="studentApplicationType" value={value} checked={studentApplicationType===value} onChange={()=>setStudentApplicationType(value)}/>{value==='individual'?(locale==='en'?'Individual Student Application':'Bireysel Öğrenci Başvurusu'):(locale==='en'?'School Application':'Okul Üzerinden Başvuru')}</label>)}
+            </fieldset>
+            <p className="text-sm text-plooy-muted">{studentApplicationType==='individual'?(locale==='en'?'Your submission is reviewed directly by Plooy. School approval is not required.':'Başvurunu doğrudan Plooy inceler. Okul onayı gerekmez.'):(locale==='en'?'School applications require school approval before Plooy publication review.':'Okul üzerinden başvurularda yayın incelemesinden önce okul onayı gerekir.')}</p>
+            <label className="block">{locale==='en'?'Search university':'Üniversite ara'}<input className="w-full rounded bg-[#0d0f14] p-3" value={schoolSearch} onChange={e=>setSchoolSearch(e.target.value)}/></label>
+            <select aria-label={locale==='en'?'University':'Üniversite'} required className="w-full rounded bg-[#0d0f14] p-3" value={schoolId} onChange={e=>setSchoolId(e.target.value)}><option value="">{locale==='en'?'Choose university':'Üniversite seçin'}</option>{filteredSchools.map(s=><option key={s.id} value={s.id}>{s.id==='diger'?(locale==='en'?'My university is not listed':'Üniversitem listede yok'):s.name}</option>)}</select>
+            {schoolId==='diger'&&<input required aria-label="University name" maxLength={250} className="w-full rounded bg-[#0d0f14] p-3" placeholder={locale==='en'?'University name':'Üniversite adı'} value={studentUniversity} onChange={e=>setStudentUniversity(e.target.value)}/>}
+            <label className="block">{locale==='en'?'Department':'Bölüm'}<input required list="student-departments" maxLength={200} className="w-full rounded bg-[#0d0f14] p-3" value={studentDepartment} onChange={e=>setStudentDepartment(e.target.value)} placeholder={locale==='en'?'Select or type your department':'Bölüm seçin veya yazın'}/></label>
+            <datalist id="student-departments">{(locale==='en'?['Radio, Television and Cinema','New Media','Visual Communication Design','Animation','Cinema and Television']:['Radyo, Televizyon ve Sinema','Yeni Medya','Görsel İletişim Tasarımı','Animasyon','Sinema ve Televizyon']).map(v=><option key={v} value={v}/>)}</datalist>
+          </div>}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">

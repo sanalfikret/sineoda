@@ -1,3 +1,4 @@
+import {needsSchoolReview} from './studentApplicationType.js'
 import { assertCreatorPlayback } from './creatorPlayback.js'
 import { dbGet, dbRun } from '../db.js'
 import { normalizeContentType } from '../constants/contentTypes.js'
@@ -15,7 +16,7 @@ export function applyCreatorReviewStatus(
   if (['approved', 'published'].includes(reviewStatus) && existing.creator_id) {
     const creator = dbGet<CreatorRow>('SELECT * FROM creators WHERE id = ?', [existing.creator_id])
     if (!creator?.registration_paid_at || creator.status !== 'approved') throw new Error('Ödeme ve hesap onayı tamamlanmalıdır.')
-    if (existing.program === 'student_cinema' && existing.school_review_status !== 'approved') throw new Error('Okul onayı tamamlanmalıdır.')
+    if (needsSchoolReview(existing) && existing.school_review_status !== 'approved') throw new Error('Okul onayı tamamlanmalıdır.')
   }
   assertCreatorPlayback(existing, reviewStatus)
   let publishedAt: string | null

@@ -860,7 +860,7 @@ export function AdminStudentCinemaPage() {
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs">
                       <span className="rounded-full bg-white/10 px-2.5 py-1 text-white/70">
-                        {SCHOOL_REVIEW_LABELS[item.schoolReviewStatus] ?? item.schoolReviewStatus}
+                        {item.requiresSchoolReview === false ? 'Bireysel başvuru — okul onayı gerekmez' : SCHOOL_REVIEW_LABELS[item.schoolReviewStatus] ?? item.schoolReviewStatus}
                       </span>
                       <span className="rounded-full bg-white/10 px-2.5 py-1 text-white/70">
                         {REVIEW_LABELS[item.reviewStatus] ?? item.reviewStatus}
@@ -876,7 +876,7 @@ export function AdminStudentCinemaPage() {
                     >
                       Detay & Künye
                     </button>
-                    {item.schoolReviewStatus !== 'approved' && (
+                    {(item.requiresSchoolReview !== false && item.schoolReviewStatus !== 'approved') && (
                       <button
                         type="button"
                         onClick={() => void handleSchoolReview(item.id, 'approved')}
@@ -885,7 +885,7 @@ export function AdminStudentCinemaPage() {
                         Okul Onayı Ver
                       </button>
                     )}
-                    {item.schoolReviewStatus === 'pending' && (
+                    {(item.requiresSchoolReview !== false && item.schoolReviewStatus === 'pending') && (
                       <button
                         type="button"
                         onClick={() => void handleSchoolReview(item.id, 'rejected')}
@@ -896,7 +896,7 @@ export function AdminStudentCinemaPage() {
                     )}
                     <button
                       type="button"
-                      disabled={item.schoolReviewStatus !== 'approved'}
+                      disabled={(item.requiresSchoolReview !== false && item.schoolReviewStatus !== 'approved')}
                       onClick={() => void handlePlatformReview(item.id, 'published')}
                       className="rounded-lg bg-plooy-gold px-3 py-1.5 text-xs font-semibold text-plooy-bg disabled:cursor-not-allowed disabled:opacity-40"
                     >

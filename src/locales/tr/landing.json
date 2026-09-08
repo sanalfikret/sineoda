@@ -82,7 +82,7 @@
     "footnote": "Okulunuz seçer · Plooy son onayı verir · Film + kamera arkası birlikte yayınlanır"
   },
   "creator": {
-    "eyebrow": "Bağımsız yapımcılar için",
+    "eyebrow": "Bağımsız yönetmenler ve yapımcılar için",
     "title": "Filmini yükle, adil paylaşımdan kazanç elde et",
     "subtitle": "Plooy yalnızca izleyiciler için değil — bağımsız sinemacılar için de tasarlandı. Yapımını yükle, küratörlü katalogda yerini al, gelir paylaşımı koşulları yapımcı anlaşmasında açıkça belirtilir.",
     "perks": [
@@ -104,7 +104,7 @@
       }
     ],
     "ctaPrimary": "Film Başvurusu Yap",
-    "ctaSecondary": "Yapımcı Girişi",
+    "ctaSecondary": "Yönetmen / Yapımcı Girişi",
     "footnote": "Bağımsız sinemanın buluşma noktası — izleyici tarafında keşfet, yapımcı tarafında yayınla."
   },
   "faq": {
@@ -188,11 +188,11 @@
     }
   },
   "creatorBar": {
-    "eyebrow": "Bağımsız yapımcılar için",
+    "eyebrow": "Bağımsız yönetmenler ve yapımcılar için",
     "title": "Filmini yükle, adil paylaşımdan kazanç elde et",
     "subtitle": "Plooy yalnızca izleyiciler için değil — bağımsız sinemacılar için de tasarlandı.",
     "ctaPrimary": "Film Başvurusu Yap",
-    "ctaSecondary": "Yapımcı Girişi"
+    "ctaSecondary": "Yönetmen / Yapımcı Girişi"
   },
   "hubs": {
     "title": "Keşfetmeye başla",

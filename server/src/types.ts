@@ -78,6 +78,9 @@ export interface ContentRow {
 }
 
 export interface CreatorRow {
+  student_application_type?: 'individual' | 'school'
+  student_department?: string
+  student_university?: string
   id: string
   user_id: string
   studio_name: string

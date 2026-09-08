@@ -48,7 +48,7 @@ export function AdminStudentCinemaFilmActions({
 
   const handlePublishNow = () =>
     void run('publish', async () => {
-      if (item.schoolReviewStatus !== 'approved') {
+      if ((item.requiresSchoolReview !== false && item.schoolReviewStatus !== 'approved')) {
         throw new Error('Yayınlamadan önce okul onayı gerekli. Detay panelinden onaylayın.')
       }
       await reviewAdminStudentCinemaContent(item.id, 'published', { publishNow: true })
@@ -100,7 +100,7 @@ export function AdminStudentCinemaFilmActions({
         if (scheduledAt <= new Date()) {
           throw new Error('Planlama için gelecekte bir tarih seçin. Hemen yayınlamak için Yayınla düğmesini kullanın.')
         }
-        if (item.schoolReviewStatus !== 'approved') {
+        if ((item.requiresSchoolReview !== false && item.schoolReviewStatus !== 'approved')) {
           throw new Error('Planlamadan önce okul onayı gerekli.')
         }
         await reviewAdminStudentCinemaContent(item.id, 'published', {
@@ -137,7 +137,7 @@ export function AdminStudentCinemaFilmActions({
         ) : (
           <button
             type="button"
-            disabled={loading !== null || item.schoolReviewStatus !== 'approved'}
+            disabled={loading !== null || (item.requiresSchoolReview !== false && item.schoolReviewStatus !== 'approved')}
             onClick={handlePublishNow}
             className="rounded-lg bg-emerald-500 px-2 py-1.5 text-xs font-semibold text-white hover:bg-emerald-400 disabled:opacity-40"
           >
@@ -165,7 +165,7 @@ export function AdminStudentCinemaFilmActions({
         </button>
       </div>
 
-      {item.schoolReviewStatus !== 'approved' && (
+      {(item.requiresSchoolReview !== false && item.schoolReviewStatus !== 'approved') && (
         <button
           type="button"
           disabled={loading !== null}
@@ -176,7 +176,7 @@ export function AdminStudentCinemaFilmActions({
         </button>
       )}
 
-      {item.schoolReviewStatus !== 'approved' && (
+      {(item.requiresSchoolReview !== false && item.schoolReviewStatus !== 'approved') && (
         <p className="text-[11px] leading-snug text-amber-200/80">
           Yayınlamak veya planlamak için önce okul onayı gerekli.
         </p>

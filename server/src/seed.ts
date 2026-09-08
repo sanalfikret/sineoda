@@ -1,3 +1,4 @@
+import { TURKEY_UNIVERSITIES } from './turkeyUniversities.js'
 import { EDITORIAL_CATEGORY_ROWS } from './editorialCategories.js'
 import bcrypt from 'bcryptjs'
 import { v4 as uuid } from 'uuid'
@@ -517,7 +518,7 @@ export function ensureFilmSchools() {
     }
   }
 
-  for (const school of TURKEY_FILM_SCHOOLS) {
+  for (const school of [...TURKEY_FILM_SCHOOLS, ...TURKEY_UNIVERSITIES]) {
     const existing = dbGet<{ id: string }>('SELECT id FROM film_schools WHERE id = ? OR slug = ?', [
       school.id,
       school.slug,

@@ -326,7 +326,7 @@ router.post('/content', requireActiveCreator, (req: CreatorAuthRequest, res) => 
 
   const program = isStudentProgram ? 'student_cinema' : 'standard'
   const schoolId = isStudentProgram ? creator.school_id : null
-  const schoolReviewStatus = isStudentProgram ? 'pending' : 'none'
+  const schoolReviewStatus = isStudentProgram && creator.student_application_type !== 'individual' ? 'pending' : 'none'
   const reviewStatus = registrationPaid ? 'pending' : 'payment_pending'
   const durationFields = resolveDurationFields(body)
   const festivalsJson = serializeFestivals(parseFestivalsBody(body) ?? [])
@@ -433,7 +433,7 @@ router.post('/content', requireActiveCreator, (req: CreatorAuthRequest, res) => 
     schoolReviewStatus,
     paymentRequired: !registrationPaid,
     message: registrationPaid
-      ? isStudentProgram
+      ? isStudentProgram && creator.student_application_type !== 'individual'
         ? `Film başvurunuz okul onayına gönderildi. Okul onayından sonra ${BRAND_NAME} incelemesine alınır.`
         : 'Film başvurunuz incelemeye gönderildi. Onaylandıktan sonra yayınlanacaktır.'
       : 'Film başvurunuz kaydedildi. İncelemeye alınması için başvuru ücretini ödemeniz gerekir.',

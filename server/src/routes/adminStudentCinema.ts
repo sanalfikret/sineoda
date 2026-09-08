@@ -1,3 +1,4 @@
+import {needsSchoolReview} from '../services/studentApplicationType.js'
 import { assertCreatorPlayback } from '../services/creatorPlayback.js'
 import { Router } from 'express'
 import { v4 as uuid } from 'uuid'
@@ -67,7 +68,8 @@ function mapQueueItem(row: StudentListRow, stats?: ContentEngagementStats) {
     contentFormat: row.content_format ?? 'main',
     parentContentId: row.parent_content_id ?? null,
     schoolId: row.school_id ?? null,
-    schoolName: row.school_name,
+    schoolName: (()=>{const c=row.creator_id?dbGet<CreatorRow>('SELECT * FROM creators WHERE id=?',[row.creator_id]):undefined;return [c?.student_application_type==='individual'?'Bireysel Öğrenci':'Okul Üzerinden',c?.student_university || row.school_name,c?.student_department].filter(Boolean).join(' · ')})(),
+    requiresSchoolReview: needsSchoolReview(row),
     schoolReviewStatus: row.school_review_status ?? 'none',
     studioName: row.studio_name,
     creatorId: row.creator_id ?? null,
@@ -136,7 +138,7 @@ function applyReviewStatus(
   reviewStatus: string,
   options?: { publishedAt?: string | null },
 ) {
-  if (['approved', 'published'].includes(reviewStatus) && existing.school_review_status !== 'approved') {
+  if (['approved', 'published'].includes(reviewStatus) && needsSchoolReview(existing) && existing.school_review_status !== 'approved') {
     throw new Error('Yayınlamadan önce okul onayı verilmelidir.')
   }
   assertStudentPublishAllowed(existing, reviewStatus)

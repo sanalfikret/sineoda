@@ -1746,6 +1746,9 @@ export async function creatorSignupRequest(data: {
   acceptLegal: boolean
   program?: 'standard' | 'student_cinema'
   schoolId?: string
+    studentApplicationType?: 'individual' | 'school'
+    studentDepartment?: string
+    studentUniversity?: string
   phone?: string
   projectCrew?: string
   filmLink?: string
@@ -2044,6 +2047,7 @@ export interface AdminStudentCinemaItem extends Omit<ContentItem, 'publishedAt'>
   parentContentId: string | null
   schoolId: string | null
   schoolName: string | null
+  requiresSchoolReview?: boolean
   schoolReviewStatus: string
   studioName: string | null
   creatorId: string | null
