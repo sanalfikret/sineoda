@@ -433,7 +433,7 @@ export function Header() {
       {menuOpen && (
         <nav className="safe-bottom max-h-[calc(100dvh-3.5rem)] overflow-y-auto border-t border-white/10 px-3 py-3 md:hidden">
           <ul className="space-y-1">
-            {navItems.map((item) => (
+            {navItems.filter(item => item.id !== 'listem').map((item) => (
               <li key={item.to}>
                 <Link
                   to={item.to}

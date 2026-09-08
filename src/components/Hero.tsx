@@ -67,10 +67,11 @@ export function Hero({ item, onPlay, onDetails, eyebrow }: HeroProps) {
             <button
               type="button"
               onClick={() => onPlay(item)}
+              aria-label={item.videoFormat === 'vertical' ? t('hero.playVertical') : t('hero.play')}
               className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-plooy-gold px-4 text-sm font-semibold text-plooy-bg shadow-lg shadow-plooy-gold/20 transition hover:brightness-110 sm:h-auto sm:min-h-11 sm:gap-2 sm:px-6 sm:py-3.5"
             >
               <PlayIcon />
-              {item.videoFormat === 'vertical' ? t('hero.playVertical') : t('hero.play')}
+              Plooy
             </button>
             {item.trailerUrl && (
               <button
