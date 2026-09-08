@@ -1,3 +1,4 @@
+import { matchesRequestSession } from '../utils/sessionIdentity'
 import {
   createContext,
   useCallback,
@@ -127,9 +128,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const syncAuthSession = useCallback(async () => {
     const epoch = getAuthSessionEpoch()
-    if (!getToken()) return null
+    const requestedToken = getToken()
+    if (!requestedToken) return null
     const { user: me, token: refreshedToken } = await fetchMe()
-    if (!isAuthSessionCurrent(epoch) || !getToken()) return null
+    if (!isAuthSessionCurrent(epoch) || !matchesRequestSession(getToken(), requestedToken)) return null
     if (refreshedToken) setToken(refreshedToken)
     applyUser(me)
     return me

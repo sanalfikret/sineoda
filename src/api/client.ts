@@ -1,3 +1,4 @@
+import { matchesRequestSession, sessionIdentity } from '../utils/sessionIdentity'
 import { localizeDynamic } from '../utils/dynamicTranslations'
 import i18n from '../i18n'
 import type { LegalDocument, LegalSlug } from '../constants/legal'
@@ -91,6 +92,7 @@ export function getToken() {
 }
 
 export function setToken(token: string | null) {
+  if (sessionIdentity(getToken()) !== sessionIdentity(token)) invalidateAuthSession()
   writeStorageItem(TOKEN_KEY, LEGACY_TOKEN_KEY, token)
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(AUTH_TOKEN_CHANGED_EVENT, { detail: token }))
@@ -104,8 +106,8 @@ export async function ensureWritableSession(): Promise<boolean> {
   return Boolean(refreshed && getToken())
 }
 
-function applyAuthToken(token: string | null, epoch: number) {
-  if (!isAuthSessionCurrent(epoch)) return
+function applyAuthToken(token: string | null, epoch: number, requested: string | null) {
+  if (!isAuthSessionCurrent(epoch) || !matchesRequestSession(getToken(), requested)) return
   setToken(token)
 }
 
@@ -183,13 +185,13 @@ async function refreshSessionTokenInner() {
 
     const headerToken = readAuthTokenHeader(response)
     if (headerToken) {
-      applyAuthToken(headerToken, epoch)
+      applyAuthToken(headerToken, epoch, token)
       return isAuthSessionCurrent(epoch)
     }
 
     const body = (await response.json()) as { token?: string }
     if (body.token) {
-      applyAuthToken(body.token, epoch)
+      applyAuthToken(body.token, epoch, token)
       return isAuthSessionCurrent(epoch)
     }
   } catch {
@@ -292,13 +294,13 @@ export async function api<T>(path: string, options: RequestInit = {}, retried = 
 
   if (response.status === 204) {
     const refreshed = readAuthTokenHeader(response)
-    if (refreshed) applyAuthToken(refreshed, authEpoch)
+    if (refreshed) applyAuthToken(refreshed, authEpoch, token)
     return undefined as T
   }
 
   const data = (await response.json()) as T & { token?: string }
   const refreshed = readAuthTokenHeader(response) ?? data.token
-  if (refreshed) applyAuthToken(refreshed, authEpoch)
+  if (refreshed) applyAuthToken(refreshed, authEpoch, token)
   return (typeof window !== 'undefined' && !window.location.pathname.startsWith('/admin') ? localizeDynamic(data, i18n.language) : data) as T
 }
 
