@@ -1,3 +1,4 @@
+import {AdminBanners} from '../../components/admin/AdminBanners'
 import { useEffect, useMemo, useState } from 'react'
 import {
   createAdminAdCampaign,
@@ -139,7 +140,9 @@ export function AdminAdsPage() {
         await createAdminAdCampaign(payload as AdCampaignFormInput)
         setSuccess('Kampanya oluşturuldu.')
       }
-      resetForm()
+      setEditingId(null)
+      setForm(emptyForm())
+      setFilmSearch('')
       await load()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kaydedilemedi.')
@@ -170,6 +173,7 @@ export function AdminAdsPage() {
 
   return (
     <div className="space-y-8">
+      <AdminBanners />
       <div>
         <h1 className="text-2xl font-bold text-white">Reklam Kampanyaları</h1>
         <p className="mt-1 max-w-3xl text-sm text-plooy-muted">

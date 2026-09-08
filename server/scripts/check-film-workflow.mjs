@@ -30,7 +30,8 @@ for (const id of ['standard','student_cinema','admin']) {
  dbRun('INSERT INTO users (id,name,email,password_hash,role,created_at) VALUES (?,?,?,?,?,?)',[id,id,id+'@example.test','unused',id==='admin'?'admin':'creator',now])
  if(id!=='admin') dbRun('INSERT INTO creators (id,user_id,studio_name,bio,status,created_at,program,school_id) VALUES (?,?,?,?,?,?,?,?)',[id,id,id,'','pending',now,id,'school'])
 }
-const app = express(); app.use(express.json()); app.use('/presentation-test',presentationRoutes); app.use('/notes-test',notesRoutes); app.use('/journal-test',journalRoutes); app.use('/mode-test',modeRoutes); app.use('/public-mode',publicModeRoutes); app.use('/queues',queueRoutes); app.use('/creator',creatorRoutes); app.use('/billing',billingRoutes); app.use('/categories',categoryRoutes); app.use('/catalog',contentRoutes); app.use('/admin',adminRoutes); app.use('/upload',uploadRoutes)
+const {default:bannerRoutes}=await import('../src/routes/banners.ts')
+const app = express(); app.use(express.json()); app.use('/banners',bannerRoutes); app.use('/presentation-test',presentationRoutes); app.use('/notes-test',notesRoutes); app.use('/journal-test',journalRoutes); app.use('/mode-test',modeRoutes); app.use('/public-mode',publicModeRoutes); app.use('/queues',queueRoutes); app.use('/creator',creatorRoutes); app.use('/billing',billingRoutes); app.use('/categories',categoryRoutes); app.use('/catalog',contentRoutes); app.use('/admin',adminRoutes); app.use('/upload',uploadRoutes)
 const server = app.listen(0,'127.0.0.1'); await new Promise(resolve => server.once('listening',resolve))
 const base = 'http://127.0.0.1:'+server.address().port
 async function call(url,id,method,body) { return fetch(base+url,{ method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+signToken({userId:id,role:id==='admin'?'admin':'creator'})},body:JSON.stringify(body) }) }
@@ -200,5 +201,21 @@ try {
  assert.deepEqual(await (await fetch(base+'/presentation-test')).json(),settings)
  }
  assert.equal((await call('/presentation-test','admin','PUT',{bad:{count:5,width:'wide',align:'left'}})).status,400)
+ const banner={name:'Test',titleTr:'Tanıtım',titleEn:'Promotion',bodyTr:'Açıklama',bodyEn:'Description',imageUrl:'/uploads/banner.jpg',link:'/planlar',audience:'guest',placement:'bottom',size:'medium',startsAt:'',endsAt:'',active:false}
+ assert.equal((await call('/banners/manage','standard','POST',banner)).status,403)
+ assert.equal((await call('/banners/manage','admin','POST',{...banner,link:'javascript:alert(1)'})).status,400)
+ assert.equal((await call('/banners/manage','admin','POST',{...banner,startsAt:'2030-02-02',endsAt:'2030-01-01'})).status,400)
+ const createdBanner=await call('/banners/manage','admin','POST',banner);assert.equal(createdBanner.status,201);const {id:bannerId}=await createdBanner.json()
+ assert.deepEqual(await (await fetch(base+'/banners')).json(),[])
+ assert.equal((await call('/banners/manage/'+bannerId,'admin','PUT',{...banner,active:true})).status,200)
+ const publicBanners=await (await fetch(base+'/banners')).json();assert.equal(publicBanners.length,1);assert.equal(publicBanners[0].titleEn,'Promotion');assert.equal(publicBanners[0].views,undefined)
+ assert.equal((await (await call('/banners','admin','GET')).json()).length,0)
+ const event={sessionId:'11111111-1111-4111-8111-111111111111',kind:'view'}
+ for(let i=0;i<2;i++)assert.equal((await fetch(base+'/banners/'+bannerId+'/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(event)})).status,204)
+ assert.equal((await (await call('/banners/manage','admin','GET')).json())[0].views,1)
+ await call('/banners/manage/'+bannerId,'admin','PUT',{...banner,active:true,endsAt:'2000-01-01'});assert.equal((await (await fetch(base+'/banners')).json()).length,0)
+ await call('/banners/manage/'+bannerId,'admin','PUT',{...banner,active:true,audience:'member'});assert.equal((await (await fetch(base+'/banners')).json()).length,0);assert.equal((await (await call('/banners','admin','GET')).json()).length,1)
+ assert.equal((await call('/banners/manage/'+bannerId,'admin','DELETE')).status,200);assert.equal((await (await call('/banners/manage','admin','GET')).json()).length,0)
+ console.log('PASS: banner CRUD, audience, schedules, translation persistence and deduplicated metrics')
  console.log('PASS: unpaid creator/student, service guard, account separation, review/publication transitions, TR/EN persistence and upload guard')
 } finally { await new Promise(resolve=>server.close(resolve)); fs.rmSync(temp,{recursive:true,force:true}) }

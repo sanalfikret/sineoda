@@ -1,3 +1,4 @@
+import {PageBanners} from './PageBanners'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { SearchProvider } from '../context/SearchContext'
@@ -25,8 +26,10 @@ export function GuestSiteShell({ children, footer, offsetHeader = false }: Guest
   return (
     <SearchProvider>
       <Header />
+      <PageBanners placement="top" />
       <div className={offsetHeader ? 'header-offset' : undefined}>{children}</div>
       <SearchModal onSelect={openContentFromSearch} />
+      <PageBanners placement="bottom" />
       {footer}
     </SearchProvider>
   )

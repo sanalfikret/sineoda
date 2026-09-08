@@ -1,3 +1,4 @@
+import {PageBanners} from './PageBanners'
 import {
   createContext,
   useCallback,
@@ -172,7 +173,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     <ContentUIContext.Provider value={value}>
       <div className="min-h-dvh bg-plooy-bg">
         <Header />
+        <PageBanners placement="top" />
         {children}
+        <PageBanners placement="bottom" />
         <PageFooter />
         {adSession && (
           <AdPlayer

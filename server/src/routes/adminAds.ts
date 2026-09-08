@@ -31,6 +31,11 @@ function parseCampaignBody(body: Record<string, unknown>) {
     throw new Error('Reklam videosu gerekli.')
   }
 
+  const startsAt = body.startsAt ? String(body.startsAt) : null
+  const endsAt = body.endsAt ? String(body.endsAt) : null
+  const skipAfterSeconds = Number(body.skipAfterSeconds ?? 5)
+  if ([startsAt, endsAt].some(value => value && !Number.isFinite(Date.parse(value))) || (startsAt && endsAt && Date.parse(startsAt) >= Date.parse(endsAt))) throw new Error('Bitiş tarihi başlangıçtan sonra olmalı.')
+  if (!Number.isFinite(skipAfterSeconds) || skipAfterSeconds < 0 || skipAfterSeconds > 300) throw new Error('Atlama süresi 0–300 saniye olmalı.')
   const targetAll = body.targetAll === true || body.targetAll === 'true' || body.targetAll === 1
   const contentIds = Array.isArray(body.contentIds)
     ? body.contentIds.map((id) => String(id)).filter(Boolean)
