@@ -108,11 +108,13 @@
     "mute": "Mute",
     "captionsOn": "Turn on captions",
     "captionsOff": "Turn off captions",
-    "nextEpisode": "Next Episode",
+    "nextEpisode": "Next episode",
     "nextEpisodeCountdown": "Starting in {{count}} seconds",
     "nextEpisodePlay": "Play now",
     "nextEpisodeCancel": "Cancel",
-    "jingleAria": "Plooy intro"
+    "jingleAria": "Plooy intro",
+    "nextCountdown": "Starts in {{count}} seconds",
+    "continueEpisode": "Continue"
   },
   "rating": {
     "general": "General",

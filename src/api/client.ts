@@ -1207,6 +1207,7 @@ export async function bulkCreateEpisodes(
     duration?: string
     startEpisode?: number
     titles?: string[]
+    titlesEn?: string[]
     videoUrls?: string[]
   },
 ) {

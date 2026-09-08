@@ -1,3 +1,4 @@
+import {useTranslation} from 'react-i18next'
 import { useCallback, useEffect, useMemo, useRef, useState, type TouchEvent } from 'react'
 import { fetchEpisodes, getProfileId, getToken, resolveMediaUrl, saveWatchProgress } from '../api/client'
 import { isSeriesContent } from '../constants/contentTypes'
@@ -37,6 +38,10 @@ async function loadHls() {
 }
 
 export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
+  const {i18n}=useTranslation()
+  const english=i18n.language.startsWith('en')
+  const [nextIndex,setNextIndex]=useState<number|null>(null)
+  useEffect(()=>setNextIndex(null),[target])
   const videoRef = useRef<HTMLVideoElement>(null)
   const hlsRef = useRef<{ destroy: () => void } | null>(null)
   const lastSavedRef = useRef(0)
@@ -61,7 +66,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
   const isTv = useTvMode()
 
   const sortedEpisodes = useMemo(
-    () => [...episodes].sort((a, b) => a.season - b.season || a.episode - b.episode),
+    () => episodes.filter(ep=>ep.videoUrl?.trim()).sort((a, b) => a.season - b.season || a.episode - b.episode),
     [episodes],
   )
 
@@ -80,7 +85,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
       ? getYoutubeEmbedUrl(mediaUrl, { autoplay: true, controls: true })
       : null
   const displayTitle = currentEpisode
-    ? `${target?.item.title} · B${currentEpisode.episode} ${currentEpisode.title}`
+    ? `${target?.item.title} · S${currentEpisode.season} ${english?'E':'B'}${currentEpisode.episode} ${currentEpisode.title}`
     : target?.title ?? ''
   const ratingPlaybackKey = target
     ? `${target.item.id}:${currentEpisode?.id ?? 'main'}`
@@ -118,7 +123,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
 
     fetchEpisodes(target.item.id)
       .then((data) => {
-        const sorted = [...data.episodes].sort(
+        const sorted = data.episodes.filter(ep=>ep.videoUrl?.trim()).sort(
           (a, b) => a.season - b.season || a.episode - b.episode,
         )
         setEpisodes(sorted)
@@ -292,6 +297,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
     if (video && canTrack) {
       persistProgress(video.currentTime, video.duration || duration)
     }
+    setNextIndex(null)
     setEpisodeIndex(index)
     setShowEpisodeList(false)
     setSwipeHint(false)
@@ -304,7 +310,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
     setPlaying(false)
     persistProgress(0, duration)
     if (hasEpisodes && episodeIndex < sortedEpisodes.length - 1) {
-      goNext()
+      setNextIndex(episodeIndex+1)
     }
   }
 
@@ -348,6 +354,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
+      {nextIndex!==null&&sortedEpisodes[nextIndex]&&<div className="absolute bottom-24 left-4 right-4 z-50 rounded-xl bg-black/90 p-5 text-white"><p>{english?'Next episode':'Sonraki bölüm'}</p><h3>S{sortedEpisodes[nextIndex].season} · {english?'E':'B'}{sortedEpisodes[nextIndex].episode} — {sortedEpisodes[nextIndex].title}</h3><button className="mt-3 rounded bg-plooy-gold p-3 text-black" onClick={()=>goToEpisode(nextIndex)}>{english?'Play next episode':'Sonraki bölümü oynat'}</button><button className="ml-4" onClick={()=>setNextIndex(null)}>{english?'Cancel':'İptal'}</button></div>}
       {guardState !== 'playing' && (
         <PlaybackGuardOverlay
           mode={guardState}
@@ -434,7 +441,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
               onClick={() => setShowEpisodeList((open) => !open)}
               className="pointer-events-auto rounded-full bg-black/50 px-3 py-2 text-xs font-semibold text-white backdrop-blur-sm"
             >
-              Bölümler
+              {english?'Episodes':'Bölümler'}
             </button>
           ) : (
             <div className="w-[72px]" />
@@ -451,8 +458,8 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
 
       {swipeHint && hasEpisodes && sortedEpisodes.length > 1 && (
         <div className="pointer-events-none absolute bottom-28 left-1/2 -translate-x-1/2 animate-pulse text-center text-xs text-white/70">
-          <p>↑ Sonraki bölüm</p>
-          <p className="mt-1">↓ Önceki bölüm</p>
+          <p>{english?'↑ Next episode':'↑ Sonraki bölüm'}</p>
+          <p className="mt-1">{english?'↓ Previous episode':'↓ Önceki bölüm'}</p>
         </div>
       )}
 
@@ -488,7 +495,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
                       : 'bg-white/15 text-white/80 hover:bg-white/25'
                   }`}
                 >
-                  {episode.episode}
+                  S{episode.season} · {english?'E':'B'}{episode.episode}
                 </button>
               ))}
             </div>
@@ -535,7 +542,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
             </div>
             {hasEpisodes && (
               <span className="text-xs text-white/60">
-                Bölüm {episodeIndex + 1}/{sortedEpisodes.length}
+                {english?'Episode':'Bölüm'} {episodeIndex + 1}/{sortedEpisodes.length}
               </span>
             )}
           </div>
@@ -546,7 +553,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
         <div className="absolute inset-0 z-20 flex items-end bg-black/70 backdrop-blur-sm">
           <div className="max-h-[70dvh] w-full overflow-y-auto rounded-t-3xl bg-plooy-surface p-5">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-white">Bölümler</h3>
+              <h3 className="text-lg font-bold text-white">{english?'Episodes':'Bölümler'}</h3>
               <button
                 type="button"
                 onClick={() => setShowEpisodeList(false)}

@@ -1,3 +1,5 @@
+import {BilingualField} from './BilingualField'
+import {VideoUpload} from './VideoUpload'
 import { useEffect, useMemo, useState } from 'react'
 import {
   bulkCreateEpisodes,
@@ -18,6 +20,7 @@ const EMPTY = {
   season: 1,
   episode: 1,
   title: '',
+  titleEn:'',descriptionEn:'',
   description: '',
   duration: '',
   videoUrl: '',
@@ -45,10 +48,11 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
   const [bulkPrefix, setBulkPrefix] = useState('Bölüm')
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkTitles, setBulkTitles] = useState('')
+  const [bulkTitlesEn,setBulkTitlesEn]=useState('')
   const [bulkUrls, setBulkUrls] = useState('')
   const [message, setMessage] = useState('')
   const [savingId, setSavingId] = useState<string | null>(null)
-  const [drafts, setDrafts] = useState<Record<string, { title: string; duration: string; videoUrl: string }>>(
+  const [drafts, setDrafts] = useState<Record<string, { title: string; titleEn:string; description:string; descriptionEn:string; duration: string; videoUrl: string }>>(
     {},
   )
 
@@ -60,7 +64,7 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
       Object.fromEntries(
         sorted.map((episode) => [
           episode.id,
-          { title: episode.title, duration: episode.duration, videoUrl: episode.videoUrl },
+          { title: episode.title, titleEn:episode.titleEn??'',description:episode.description,descriptionEn:episode.descriptionEn??'', duration: episode.duration, videoUrl: episode.videoUrl },
         ]),
       ),
     )
@@ -91,7 +95,7 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
   }
 
   useEffect(() => {
-    void load()
+    void load().catch(()=>{setLoading(false);setMessage('Bölümler yüklenemedi.')})
   }, [contentId])
 
   useEffect(() => {
@@ -104,7 +108,7 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
     setMessage('')
     try {
       await createEpisode(contentId, form)
-      setForm(EMPTY)
+      setForm({...EMPTY,season:form.season,episode:form.episode+1})
       await load()
       setMessage('Bölüm eklendi.')
     } catch (err) {
@@ -129,11 +133,13 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
         titlePrefix: bulkPrefix.trim() || 'Bölüm',
         duration: bulkDuration.trim() || (isVertical ? '4 dk' : '45 dk'),
         titles,
+        titlesEn:bulkTitlesEn.trim()?parseBulkLines(bulkTitlesEn,bulkCount):undefined,
         videoUrls,
       })
 
       await load()
       setBulkTitles('')
+      setBulkTitlesEn('')
       setBulkUrls('')
 
       const skippedCount = result.skippedCount ?? 0
@@ -160,22 +166,22 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
     try {
       await updateEpisode(episode.id, {
         title: draft.title.trim() || episode.title,
+        titleEn:draft.titleEn,description:draft.description,descriptionEn:draft.descriptionEn,
         duration: draft.duration.trim(),
         videoUrl: draft.videoUrl.trim(),
       })
       await load()
-    } finally {
+    } catch(err){setMessage(err instanceof Error?err.message:'Bölüm kaydedilemedi.')} finally {
       setSavingId(null)
     }
   }
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Bölüm silinsin mi?')) return
-    await deleteEpisode(id)
-    await load()
+    try{await deleteEpisode(id);await load()}catch(err){setMessage(err instanceof Error?err.message:'Silinemedi.')}
   }
 
-  const updateDraft = (id: string, field: 'title' | 'duration' | 'videoUrl', value: string) => {
+  const updateDraft = (id: string, field: 'title' | 'titleEn' | 'description' | 'descriptionEn' | 'duration' | 'videoUrl', value: string) => {
     setDrafts((current) => ({
       ...current,
       [id]: { ...current[id], [field]: value },
@@ -184,11 +190,12 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
 
   const renderEpisodeRow = (episode: Episode) => {
     const draft = drafts[episode.id] ?? {
-      title: episode.title,
+      title: episode.title, titleEn:episode.titleEn??'',description:episode.description,descriptionEn:episode.descriptionEn??'',
       duration: episode.duration,
       videoUrl: episode.videoUrl,
     }
     const dirty =
+      draft.titleEn !== (episode.titleEn??'') || draft.description !== episode.description || draft.descriptionEn !== (episode.descriptionEn??'') ||
       draft.title !== episode.title ||
       draft.duration !== episode.duration ||
       draft.videoUrl !== episode.videoUrl
@@ -210,13 +217,10 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
             Sil
           </button>
         </div>
+        <BilingualField label="Bölüm başlığı" tr={draft.title} en={draft.titleEn} onTr={v=>updateDraft(episode.id,'title',v)} onEn={v=>updateDraft(episode.id,'titleEn',v)}/>
+        <BilingualField label="Bölüm açıklaması" tr={draft.description} en={draft.descriptionEn} onTr={v=>updateDraft(episode.id,'description',v)} onEn={v=>updateDraft(episode.id,'descriptionEn',v)} multiline/>
+        <VideoUpload label="Bölüm videosu" value={draft.videoUrl} onChange={v=>updateDraft(episode.id,'videoUrl',v)}/>
         <div className="grid gap-2 sm:grid-cols-[1fr_7rem]">
-          <input
-            value={draft.title}
-            onChange={(e) => updateDraft(episode.id, 'title', e.target.value)}
-            placeholder="Bölüm adı"
-            className={inputClass}
-          />
           <input
             value={draft.duration}
             onChange={(e) => updateDraft(episode.id, 'duration', e.target.value)}
@@ -352,14 +356,8 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
             />
           </label>
         </div>
+        <BilingualField label="Toplu bölüm adları (her satır bir bölüm)" tr={bulkTitles} en={bulkTitlesEn} onTr={setBulkTitles} onEn={setBulkTitlesEn} multiline/>
         <div className="mt-3 grid gap-3 lg:grid-cols-2">
-          <textarea
-            value={bulkTitles}
-            onChange={(e) => setBulkTitles(e.target.value)}
-            rows={6}
-            placeholder={'İsteğe bağlı başlıklar (her satır bir bölüm)\nPilot\nKampüs\nSır'}
-            className={`${inputClass} resize-y`}
-          />
           <textarea
             value={bulkUrls}
             onChange={(e) => setBulkUrls(e.target.value)}
@@ -390,6 +388,9 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
         </p>
       )}
 
+      <BilingualField label="Yeni bölüm başlığı" tr={form.title} en={form.titleEn} onTr={title=>setForm(f=>({...f,title}))} onEn={titleEn=>setForm(f=>({...f,titleEn}))}/>
+      <BilingualField label="Yeni bölüm açıklaması" tr={form.description} en={form.descriptionEn} onTr={description=>setForm(f=>({...f,description}))} onEn={descriptionEn=>setForm(f=>({...f,descriptionEn}))} multiline/>
+      <VideoUpload label="Yeni bölüm videosu" value={form.videoUrl} onChange={videoUrl=>setForm(f=>({...f,videoUrl}))}/>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block space-y-1.5">
           <span className="text-xs font-medium text-plooy-muted">Sezon (tek bölüm, 1–99)</span>
@@ -412,12 +413,6 @@ export function AdminEpisodesPanel({ contentId, isVertical = false }: AdminEpiso
             className={inputClass}
           />
         </label>
-        <input
-          value={form.title}
-          onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-          placeholder="Bölüm adı"
-          className={`${inputClass} sm:col-span-2`}
-        />
         <input
           value={form.duration}
           onChange={(e) => setForm((f) => ({ ...f, duration: e.target.value }))}

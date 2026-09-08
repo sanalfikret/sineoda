@@ -254,7 +254,8 @@ export function AdminContentFormPage() {
       if (isEdit && id) {
         await updateContent(id, payload)
       } else {
-        await addContent(payload)
+        const created = await addContent(payload)
+        if(isSeriesContent(form.type)||form.videoFormat==='vertical'){navigate('/admin/icerikler/'+created.id);return}
       }
       navigate('/admin/icerikler')
     } catch (err) {

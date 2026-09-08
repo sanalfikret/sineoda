@@ -108,11 +108,13 @@
     "mute": "Sessize al",
     "captionsOn": "Altyazıyı aç",
     "captionsOff": "Altyazıyı kapat",
-    "nextEpisode": "Sonraki Bölüm",
+    "nextEpisode": "Sonraki bölüm",
     "nextEpisodeCountdown": "{{count}} saniye içinde başlıyor",
     "nextEpisodePlay": "Şimdi oynat",
     "nextEpisodeCancel": "İptal",
-    "jingleAria": "Plooy açılış"
+    "jingleAria": "Plooy açılış",
+    "nextCountdown": "{{count}} saniye içinde başlıyor",
+    "continueEpisode": "Devam et"
   },
   "rating": {
     "general": "Genel",

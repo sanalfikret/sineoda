@@ -6,6 +6,10 @@ import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import type { EpisodeRow } from '../types.js'
 
 const router = Router()
+function saveEnglish(id:string,body:Record<string,unknown>){if(body.titleEn===undefined&&body.descriptionEn===undefined)return;const old=JSON.parse(dbGet<{value:string}>('SELECT value FROM site_settings WHERE key=?',['episode_en:'+id])?.value??'{}');dbRun('INSERT OR REPLACE INTO site_settings (key,value) VALUES (?,?)',['episode_en:'+id,JSON.stringify({title:body.titleEn??old.title??'',description:body.descriptionEn??old.description??''})])}
+router.use((req,res,next)=>{if(['POST','PATCH'].includes(req.method)){for(const key of ['titleEn','descriptionEn'])if(req.body?.[key]!==undefined&&(typeof req.body[key]!=='string'||req.body[key].length>20000)){res.status(400).json({error:'İngilizce alanları kontrol edin.'});return}}next()})
+function validNumber(n:number,max=10000){return Number.isInteger(n)&&n>=1&&n<=max}
+
 
 function episodeKey(episodeId?: string | null) {
   return episodeId ?? ''
@@ -29,8 +33,9 @@ router.post('/content/:contentId/bulk', requireAdmin, (req: AuthRequest, res) =>
     return
   }
 
-  const season = Math.max(Number(req.body.season ?? 1), 1)
-  const count = Math.min(Math.max(Number(req.body.count ?? 8), 1), 100)
+  const season = Number(req.body.season ?? 1)
+  const count = Number(req.body.count ?? 8)
+  if(!validNumber(season,99)||!validNumber(count,100)){res.status(400).json({error:'Sezon 1–99, bölüm sayısı 1–100 olmalı.'});return}
   const titlePrefix = String(req.body.titlePrefix ?? 'Bölüm')
   const duration = String(req.body.duration ?? '')
   const customTitles = Array.isArray(req.body.titles)
@@ -49,7 +54,8 @@ router.post('/content/:contentId/bulk', requireAdmin, (req: AuthRequest, res) =>
     startEpisode = (maxRow?.max ?? 0) + 1
   }
 
-  const fallbackVideoUrl = parentContent.video_url?.trim() ?? ''
+  if(!validNumber(startEpisode)||startEpisode+count-1>10000){res.status(400).json({error:'Bölüm numarası geçersiz.'});return}
+  const fallbackVideoUrl = ''
   const created: ReturnType<typeof mapEpisode>[] = []
   let skippedCount = 0
 
@@ -73,6 +79,7 @@ router.post('/content/:contentId/bulk', requireAdmin, (req: AuthRequest, res) =>
       [id, contentId, season, episodeNum, title, duration, videoUrl, episodeNum - 1],
     )
     const row = dbGet<EpisodeRow>('SELECT * FROM episodes WHERE id = ?', [id])!
+    saveEnglish(id,{titleEn:Array.isArray(req.body.titlesEn)?String(req.body.titlesEn[i]??''):'Episode '+episodeNum})
     created.push(mapEpisode(row))
   }
 
@@ -97,6 +104,11 @@ router.post('/content/:contentId/bulk', requireAdmin, (req: AuthRequest, res) =>
 
 router.post('/content/:contentId', requireAdmin, (req: AuthRequest, res) => {
   const body = req.body as Record<string, unknown>
+  const parent=dbGet('SELECT id FROM content WHERE id=?',[req.params.contentId])
+  if(!parent){res.status(404).json({error:'Dizi bulunamadı.'});return}
+  const season=Number(body.season??1),episode=Number(body.episode??body.episodeNumber??1)
+  if(!validNumber(season,99)||!validNumber(episode)){res.status(400).json({error:'Sezon veya bölüm numarası geçersiz.'});return}
+  if(dbGet('SELECT id FROM episodes WHERE content_id=? AND season=? AND episode_number=?',[req.params.contentId,season,episode])){res.status(409).json({error:'Bu sezon ve bölüm numarası zaten var.'});return}
   const subtitlesJson = serializeSubtitles(body.subtitles)
   const id = uuid()
   dbRun(
@@ -117,6 +129,7 @@ router.post('/content/:contentId', requireAdmin, (req: AuthRequest, res) => {
     ],
   )
   const row = dbGet<EpisodeRow>('SELECT * FROM episodes WHERE id = ?', [id])!
+  saveEnglish(id,body)
   res.status(201).json({ episode: mapEpisode(row) })
 })
 
@@ -127,6 +140,9 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
     return
   }
   const body = req.body as Record<string, unknown>
+  const season=Number(body.season??existing.season),episode=Number(body.episode??body.episodeNumber??existing.episode_number)
+  if(!validNumber(season,99)||!validNumber(episode)){res.status(400).json({error:'Sezon veya bölüm numarası geçersiz.'});return}
+  if(dbGet('SELECT id FROM episodes WHERE content_id=? AND season=? AND episode_number=? AND id<>?',[existing.content_id,season,episode,existing.id])){res.status(409).json({error:'Bu sezon ve bölüm numarası zaten var.'});return}
   const subtitlesJson =
     body.subtitles !== undefined ? serializeSubtitles(body.subtitles) : existing.subtitles_json ?? '[]'
   dbRun(
@@ -147,11 +163,13 @@ router.patch('/:id', requireAdmin, (req: AuthRequest, res) => {
     ],
   )
   const row = dbGet<EpisodeRow>('SELECT * FROM episodes WHERE id = ?', [existing.id])!
+  saveEnglish(existing.id,body)
   res.json({ episode: mapEpisode(row) })
 })
 
 router.delete('/:id', requireAdmin, (req: AuthRequest, res) => {
   dbRun('DELETE FROM episodes WHERE id = ?', [req.params.id])
+  dbRun('DELETE FROM site_settings WHERE key=?',['episode_en:'+req.params.id])
   res.status(204).send()
 })
 

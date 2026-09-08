@@ -38,7 +38,7 @@ async function loadHls() {
 }
 
 export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps) {
-  const { t } = useTranslation('content')
+  const { t, i18n } = useTranslation('content')
   const videoRef = useRef<HTMLVideoElement>(null)
   const hlsRef = useRef<{ destroy: () => void } | null>(null)
   const lastSavedRef = useRef(0)
@@ -58,7 +58,7 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
   const fullscreenSupported = isFullscreenSupported()
 
   const sortedEpisodes = useMemo(
-    () => [...episodes].sort((a, b) => a.season - b.season || a.episode - b.episode),
+    () => episodes.filter(ep=>ep.videoUrl?.trim()).sort((a, b) => a.season - b.season || a.episode - b.episode),
     [episodes],
   )
 
@@ -472,25 +472,25 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
 
       {nextEpisode && (
         <div className="pointer-events-auto absolute bottom-24 right-4 z-20 w-[min(100%,20rem)] rounded-2xl border border-white/15 bg-black/85 p-4 shadow-2xl backdrop-blur-md sm:bottom-28 sm:right-6">
-          <p className="text-xs font-semibold uppercase tracking-wide text-plooy-gold">Sonraki Bölüm</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-plooy-gold">{t('player.nextEpisode', {defaultValue:'Sonraki Bölüm'})}</p>
           <p className="mt-2 text-sm font-semibold text-white">
-            S{nextEpisode.season} B{nextEpisode.episode} · {nextEpisode.title}
+            S{nextEpisode.season} {i18n.language.startsWith('en')?'E':'B'}{nextEpisode.episode} · {nextEpisode.title}
           </p>
-          <p className="mt-1 text-xs text-plooy-muted">{countdown} saniye içinde başlıyor</p>
+          <p className="mt-1 text-xs text-plooy-muted">{t('player.nextCountdown',{count:countdown,defaultValue:countdown+' saniye içinde başlıyor'})}</p>
           <div className="mt-4 flex gap-2">
             <button
               type="button"
               onClick={playNextEpisode}
               className="flex-1 rounded-lg bg-plooy-gold px-4 py-2.5 text-sm font-semibold text-plooy-bg transition hover:brightness-110"
             >
-              Devam Et
+              {t('player.continueEpisode',{defaultValue:'Devam Et'})}
             </button>
             <button
               type="button"
               onClick={dismissNextEpisode}
               className="rounded-lg border border-white/15 px-4 py-2.5 text-sm text-white/80 transition hover:bg-white/10"
             >
-              Kapat
+              {i18n.language.startsWith('en')?'Close':'Kapat'}
             </button>
           </div>
         </div>

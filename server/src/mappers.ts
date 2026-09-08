@@ -1,3 +1,4 @@
+import {dbGet} from './db.js'
 import { readJournalTranslations } from './services/journalTranslations.js'
 import { readTranslations } from './services/dynamicTranslations.js'
 import { mapMonthlyAwardRow } from './services/studentCinemaAwards.js'
@@ -133,7 +134,10 @@ export function mapContent(row: ContentRow & { school_name?: string | null; crea
 }
 
 export function mapEpisode(row: EpisodeRow) {
+  const en=JSON.parse(dbGet<{value:string}>('SELECT value FROM site_settings WHERE key=?',['episode_en:'+row.id])?.value??'{}')
   return {
+    titleEn:en.title??'',descriptionEn:en.description??'',
+    translations:{tr:{title:row.title,description:row.description},en:{title:en.title??'',description:en.description??row.description}},
     id: row.id,
     contentId: row.content_id,
     season: row.season,

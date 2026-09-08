@@ -31,7 +31,8 @@ for (const id of ['standard','student_cinema','admin']) {
  if(id!=='admin') dbRun('INSERT INTO creators (id,user_id,studio_name,bio,status,created_at,program,school_id) VALUES (?,?,?,?,?,?,?,?)',[id,id,id,'','pending',now,id,'school'])
 }
 const {default:bannerRoutes}=await import('../src/routes/banners.ts')
-const app = express(); app.use(express.json()); app.use('/banners',bannerRoutes); app.use('/presentation-test',presentationRoutes); app.use('/notes-test',notesRoutes); app.use('/journal-test',journalRoutes); app.use('/mode-test',modeRoutes); app.use('/public-mode',publicModeRoutes); app.use('/queues',queueRoutes); app.use('/creator',creatorRoutes); app.use('/billing',billingRoutes); app.use('/categories',categoryRoutes); app.use('/catalog',contentRoutes); app.use('/admin',adminRoutes); app.use('/upload',uploadRoutes)
+const {default:episodeRoutes}=await import('../src/routes/episodes.ts')
+const app = express(); app.use(express.json()); app.use('/episodes',episodeRoutes); app.use('/banners',bannerRoutes); app.use('/presentation-test',presentationRoutes); app.use('/notes-test',notesRoutes); app.use('/journal-test',journalRoutes); app.use('/mode-test',modeRoutes); app.use('/public-mode',publicModeRoutes); app.use('/queues',queueRoutes); app.use('/creator',creatorRoutes); app.use('/billing',billingRoutes); app.use('/categories',categoryRoutes); app.use('/catalog',contentRoutes); app.use('/admin',adminRoutes); app.use('/upload',uploadRoutes)
 const server = app.listen(0,'127.0.0.1'); await new Promise(resolve => server.once('listening',resolve))
 const base = 'http://127.0.0.1:'+server.address().port
 async function call(url,id,method,body) { return fetch(base+url,{ method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+signToken({userId:id,role:id==='admin'?'admin':'creator'})},body:JSON.stringify(body) }) }
@@ -216,6 +217,17 @@ try {
  await call('/banners/manage/'+bannerId,'admin','PUT',{...banner,active:true,endsAt:'2000-01-01'});assert.equal((await (await fetch(base+'/banners')).json()).length,0)
  await call('/banners/manage/'+bannerId,'admin','PUT',{...banner,active:true,audience:'member'});assert.equal((await (await fetch(base+'/banners')).json()).length,0);assert.equal((await (await call('/banners','admin','GET')).json()).length,1)
  assert.equal((await call('/banners/manage/'+bannerId,'admin','DELETE')).status,200);assert.equal((await (await call('/banners/manage','admin','GET')).json()).length,0)
+ const epInput={season:1,episode:1,title:'Başlangıç',titleEn:'Beginning',description:'Özet',descriptionEn:'Summary',videoUrl:'/uploads/ep1.mp4'}
+ assert.equal((await call('/episodes/content/'+standardId,'standard','POST',epInput)).status,403)
+ const epResponse=await call('/episodes/content/'+standardId,'admin','POST',epInput);assert.equal(epResponse.status,201);const {episode:ep}=await epResponse.json();assert.equal(ep.contentId,standardId);assert.equal(ep.translations.en.title,'Beginning')
+ assert.equal((await call('/episodes/content/'+standardId,'admin','POST',epInput)).status,409)
+ const season2=await call('/episodes/content/'+standardId+'/bulk','admin','POST',{season:2,count:2,titles:['İlk','İkinci'],titlesEn:['First','Second']});assert.equal(season2.status,201);const bulkEpisodes=(await season2.json()).episodes;assert.equal(bulkEpisodes.length,2);assert.equal(bulkEpisodes[0].videoUrl,'');assert.equal(bulkEpisodes[1].translations.en.title,'Second')
+ assert.equal((await call('/episodes/'+ep.id,'admin','PATCH',{season:2,episode:1})).status,409)
+ assert.equal((await call('/episodes/content/'+standardId+'/bulk','admin','POST',{season:0,count:2})).status,400)
+ await call('/episodes/'+ep.id,'admin','PATCH',{titleEn:'Updated beginning',descriptionEn:'Updated summary'})
+ const seriesEpisodes=(await (await fetch(base+'/episodes/content/'+standardId)).json()).episodes;assert.deepEqual(seriesEpisodes.map(e=>[e.season,e.episode]),[[1,1],[2,1],[2,2]]);assert.equal(localizeDynamic(seriesEpisodes,'en')[0].title,'Updated beginning')
+ await call('/episodes/'+ep.id,'admin','DELETE');assert.equal(dbGet('SELECT value FROM site_settings WHERE key=?',['episode_en:'+ep.id]),undefined)
+ console.log('PASS: episode parent, seasons, duplicate prevention, TR/EN persistence, blank drafts and delete')
  console.log('PASS: banner CRUD, audience, schedules, translation persistence and deduplicated metrics')
  console.log('PASS: unpaid creator/student, service guard, account separation, review/publication transitions, TR/EN persistence and upload guard')
 } finally { await new Promise(resolve=>server.close(resolve)); fs.rmSync(temp,{recursive:true,force:true}) }

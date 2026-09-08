@@ -60,6 +60,9 @@ export interface ContentItem {
 }
 
 export interface Episode {
+  titleEn?: string
+  descriptionEn?: string
+  translations?: {tr?: {title:string;description:string}; en?: {title:string;description:string}}
   id: string
   contentId: string
   season: number
