@@ -1,3 +1,4 @@
+import creatorChatRoutes from './routes/creatorChat.js'
 import bannerRoutes from './routes/banners.js'
 import landingPresentationRoutes from './routes/landingPresentation.js'
 import adminQueuesRoutes from './routes/adminQueues.js'
@@ -357,6 +358,7 @@ app.use('/api/admin/users', userRoutes)
 app.use('/api/admin/messages', adminMessagesRoutes)
 app.use('/api/messages', messagesRoutes)
 app.use('/api/banners', bannerRoutes)
+app.use('/api/creator-chat',creatorChatRoutes)
 app.use('/api/ads', adsRoutes)
 app.use('/api/admin/ads', adminAdsRoutes)
 app.use('/api/admin/site-nav', adminSiteNavRoutes)

@@ -1,3 +1,4 @@
+import {CreatorMessages} from '../../components/CreatorMessages'
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
   fetchAdminCreatorDetail,
@@ -380,6 +381,7 @@ export function AdminCreatorsPage() {
 
   return (
     <div className="space-y-6">
+      <CreatorMessages />
       <div>
         <h1 className="text-2xl font-bold text-white">Yapımcılar</h1>
         <p className="mt-1 text-sm text-plooy-muted">

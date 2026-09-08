@@ -73,8 +73,8 @@ export function activateCreatorRegistration(userId: string, planId?: string) {
 
 
   dbRun('UPDATE creators SET pending_film_link = NULL WHERE user_id = ?', [userId])
-  const plan = planId ? getPlan(planId) : undefined
-  if (plan && plan.interval !== 'once') {
+  const plan = getPlan(planId ?? getCreatorRegistrationPlanId(creator?.program ?? 'standard'))
+  if (plan) {
     const expiresAt = planExpiryFor(plan)
     dbRun(
       `UPDATE users
