@@ -1,8 +1,11 @@
+import { getLegalVersion } from '../services/legalDocuments.js'
+import { recordLegalConsent } from '../services/legalConsent.js'
+import { getClientIp, getUserAgent } from '../utils/clientIp.js'
 import { externalMediaLink } from '../services/creatorMedia.js'
 import { Router } from 'express'
 import { v4 as uuid } from 'uuid'
 import { BRAND_NAME } from '../constants/brand.js'
-import { dbAll, dbGet, dbRun } from '../db.js'
+import { dbAll, dbGet, dbRun, dbTransaction } from '../db.js'
 import {
   getCreatorForUser,
   requireAuth,
@@ -224,6 +227,9 @@ router.post('/content', requireActiveCreator, (req: CreatorAuthRequest, res) => 
     })
     return
   }
+  if (body.submissionTermsAccepted !== true || body.submissionTermsVersion !== getLegalVersion() || !['tr','en'].includes(String(body.submissionTermsLocale))) {
+    res.status(409).json({error:'Güncel film gönderim şartnamesini okuyup kabul edin. / Please read and accept the current submission terms.',code:'SUBMISSION_TERMS_REQUIRED'}); return
+  }
   let application: ReturnType<typeof validateFilmApplication> | null = null
 
   if (isMainApplication) {
@@ -353,6 +359,7 @@ router.post('/content', requireActiveCreator, (req: CreatorAuthRequest, res) => 
     schoolReviewStatus,
   ] as const
 
+  dbTransaction(() => {
   if (studentStub) {
     dbRun(
       `UPDATE content SET
@@ -409,13 +416,15 @@ router.post('/content', requireActiveCreator, (req: CreatorAuthRequest, res) => 
     )
   }
 
-  const row = dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [id])!
-
   if (application) {
     linkApplicationDocuments(id, creator.id, application.documentIds)
     saveApplicationDeclaration(id, application.declaration)
   }
 
+  const signer = dbGet<UserRow>('SELECT * FROM users WHERE id = ?', [req.auth!.userId])!
+  recordLegalConsent({userId: signer.id, userName: signer.name, userEmail: signer.email, type:'creator_terms', locale:body.submissionTermsLocale as 'tr'|'en', contentId:id, ipAddress:getClientIp(req),userAgent:getUserAgent(req)})
+  })
+  const row = dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [id])!
   res.status(201).json({
     item: mapContent(row),
     reviewStatus,

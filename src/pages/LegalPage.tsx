@@ -1,3 +1,4 @@
+import { useLocalizedLegalDocuments } from '../i18n/useLegalLocale'
 import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -45,6 +46,9 @@ export function LegalPage() {
       .finally(() => setLoading(false))
   }, [key])
 
+  const localized = useLocalizedLegalDocuments({ ...LEGAL_DOCUMENTS, ...(doc ? {[doc.slug]: doc} : {}) })
+  const displayed = doc ? localized.documents[doc.slug] : null
+
   if (!key || !doc) {
     return (
       <div className="min-h-dvh bg-plooy-bg px-4 py-24 text-center text-white sm:px-6">
@@ -89,14 +93,14 @@ export function LegalPage() {
 
       <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-plooy-gold">{t('legalEyebrow')}</p>
-        <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">{doc.title}</h1>
-        <p className="mt-2 text-sm text-plooy-muted">{t('updatedAt')} {doc.updatedAt}</p>
+        <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">{displayed?.title}</h1>
+        <p className="mt-2 text-sm text-plooy-muted">{t('updatedAt')} {displayed?.updatedAt}</p>
 
         {loading ? (
           <p className="mt-10 text-sm text-plooy-muted">{t('loading')}</p>
         ) : (
           <div className="mt-10 space-y-8">
-            {doc.sections.map((section) => (
+            {displayed?.sections.map((section) => (
               <section key={section.heading}>
                 <h2 className="text-lg font-semibold text-white">{section.heading}</h2>
                 <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-white/80">{section.body}</p>

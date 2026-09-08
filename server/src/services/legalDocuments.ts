@@ -1,3 +1,4 @@
+import { LEGAL_ENGLISH } from '../constants/legalEnglish.js'
 import { dbGet, dbRun } from '../db.js'
 import {
   DEFAULT_LEGAL_DOCUMENTS,
@@ -40,6 +41,7 @@ export function parseLegalDocument(slug: LegalSlug, input: Partial<LegalDocument
 
   return {
     slug,
+    en: input?.en ?? LEGAL_ENGLISH[slug],
     title: trimOrEmpty(input?.title) || fallback.title,
     updatedAt: trimOrEmpty(input?.updatedAt) || fallback.updatedAt,
     sections: sections.length > 0 ? sections : fallback.sections,
@@ -100,7 +102,7 @@ export function saveLegalDocument(slug: LegalSlug, input: Partial<LegalDocument>
   })
 
   stored.documents[slug] = document
-  stored.version = now.toISOString().slice(0, 10)
+  stored.version = now.toISOString()
   writeStored(stored)
 
   return document
@@ -108,9 +110,10 @@ export function saveLegalDocument(slug: LegalSlug, input: Partial<LegalDocument>
 
 export function resetLegalDocument(slug: LegalSlug) {
   const stored = readStored()
+  stored.version = new Date().toISOString()
   delete stored.documents[slug]
   writeStored(stored)
-  return DEFAULT_LEGAL_DOCUMENTS[slug]
+  return getLegalDocument(slug)
 }
 
 export function validateLegalSlug(slug: string): slug is LegalSlug {

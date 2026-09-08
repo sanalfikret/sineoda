@@ -1,3 +1,5 @@
+import { SubmissionConsents } from '../../components/admin/SubmissionConsents'
+import { AccessHistory } from '../../components/admin/AccessHistory'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -25,6 +27,7 @@ export function AdminLegalPage() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
+  const [english, setEnglish] = useState({title:'',sections:[] as SectionDraft[]})
   const doc = documents?.[activeSlug]
 
   const loadDocuments = async () => {
@@ -47,12 +50,14 @@ export function AdminLegalPage() {
 
   useEffect(() => {
     if (!doc || editing) return
+    setEnglish(doc.en ?? {title:'',sections:[]})
     setDraftTitle(doc.title)
     setDraftSections(cloneSections(doc.sections))
   }, [doc, editing])
 
   const startEdit = () => {
     if (!doc) return
+    setEnglish(doc.en ?? {title:'',sections:[]})
     setDraftTitle(doc.title)
     setDraftSections(cloneSections(doc.sections))
     setEditing(true)
@@ -62,6 +67,7 @@ export function AdminLegalPage() {
 
   const cancelEdit = () => {
     if (!doc) return
+    setEnglish(doc.en ?? {title:'',sections:[]})
     setDraftTitle(doc.title)
     setDraftSections(cloneSections(doc.sections))
     setEditing(false)
@@ -102,6 +108,7 @@ export function AdminLegalPage() {
       const { document, version: nextVersion } = await updateAdminLegalDocument(activeSlug, {
         title: draftTitle.trim() || doc.title,
         sections: cleaned,
+        en: english,
       })
 
       setDocuments((current) => (current ? { ...current, [activeSlug]: document } : current))
@@ -147,6 +154,8 @@ export function AdminLegalPage() {
 
   return (
     <div className="max-w-4xl space-y-6">
+      <AccessHistory/>
+      <SubmissionConsents/>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-white">Yasal Metinler</h1>
@@ -271,7 +280,7 @@ export function AdminLegalPage() {
           <div className="mt-6 space-y-6">
             {editing
               ? draftSections.map((section, index) => (
-                  <section key={`${index}-${section.heading}`} className="rounded-xl border border-white/10 bg-[#0d0f14] p-4">
+                  <section key={index} className="rounded-xl border border-white/10 bg-[#0d0f14] p-4">
                     <div className="mb-3 flex items-center justify-between gap-3">
                       <span className="text-xs font-semibold uppercase tracking-wide text-plooy-muted">
                         Bölüm {index + 1}
@@ -309,6 +318,18 @@ export function AdminLegalPage() {
                 ))}
           </div>
 
+          <section className="mt-6 border-t border-white/10 pt-5 space-y-3">
+            <h3 className="text-lg font-bold">English</h3>
+            {editing ? <>
+              <input aria-label="English title" className="w-full bg-[#0d0f14] border border-white/20 rounded p-3" value={english.title} onChange={e=>setEnglish({...english,title:e.target.value})}/>
+              {english.sections.map((section,index)=><div key={index} className="space-y-2 border border-white/10 p-3">
+                <input aria-label="English section heading" className="w-full bg-[#0d0f14] p-2" value={section.heading} onChange={e=>setEnglish({...english,sections:english.sections.map((v,i)=>i===index?{...v,heading:e.target.value}:v)})}/>
+                <textarea aria-label="English section text" rows={6} className="w-full bg-[#0d0f14] p-2" value={section.body} onChange={e=>setEnglish({...english,sections:english.sections.map((v,i)=>i===index?{...v,body:e.target.value}:v)})}/>
+                <button type="button" onClick={()=>setEnglish({...english,sections:english.sections.filter((_,i)=>i!==index)})}>Sil / Remove</button>
+              </div>)}
+              <button type="button" onClick={()=>setEnglish({...english,sections:[...english.sections,{heading:'',body:''}]})}>+ English bölüm ekle</button>
+            </> : <><h4>{doc?.en?.title}</h4>{doc?.en?.sections.map((section,index)=><div key={index}><h5>{section.heading}</h5><p className="whitespace-pre-wrap text-sm text-white/80">{section.body}</p></div>)}</>}
+          </section>
           {editing && (
             <div className="mt-6 border-t border-white/10 pt-4">
               <button

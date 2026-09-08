@@ -1,0 +1,8 @@
+import {useEffect,useState} from 'react'
+import {api} from '../../api/client'
+type Entry={id:string; name:string; email:string; ip:string; created_at:string; user_agent:string}
+export function AccessHistory() {
+ const [open,setOpen]=useState(false),[query,setQuery]=useState(''),[offset,setOffset]=useState(0),[items,setItems]=useState<Entry[]>([]),[error,setError]=useState('')
+ useEffect(()=>{if(!open)return; let active=true; const timer=setTimeout(()=>{api<{items:Entry[]}>('/api/admin/legal/access-history?q='+encodeURIComponent(query)+'&offset='+offset).then(d=>{if(active){setItems(d.items);setError('')}}).catch(e=>{if(active)setError(e.message)})},250);return()=>{active=false;clearTimeout(timer)}},[open,query,offset])
+ return <details onToggle={e=>setOpen(e.currentTarget.open)} className="rounded-xl border border-white/20 p-4"><summary>Giriş / IP geçmişi</summary><p className="my-3 text-sm">Başarılı girişler 90 gün saklanır. IP adresi tek başına kişiyi tanımlamaz; ortak ağlarda aynı olabilir. Kayıtlar bu güncellemeden sonra başlar.</p><input aria-label="Kullanıcı ara" placeholder="Ad veya e-posta" className="bg-black p-3 w-full" value={query} onChange={e=>{setQuery(e.target.value);setOffset(0)}}/>{error&&<p role="alert">{error}</p>}<div className="space-y-3 my-3">{items.map(v=><div key={v.id} className="border-b border-white/10 p-2"><strong>{v.name}</strong> · {v.email}<p>{v.ip} · {new Date(v.created_at).toLocaleString('tr-TR')}</p><small>{v.user_agent}</small></div>)}</div><button disabled={!offset} onClick={()=>setOffset(Math.max(0,offset-50))}>Önceki 50</button><button className="ml-5" disabled={items.length<50} onClick={()=>setOffset(offset+50)}>Sonraki 50</button></details>
+}

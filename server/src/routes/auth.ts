@@ -1,3 +1,4 @@
+import { recordAccess } from '../services/accessLog.js'
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
@@ -295,6 +296,7 @@ router.post('/login', authLoginLimiter, (req, res) => {
     return
   }
 
+  recordAccess(user.id, getClientIp(req), getUserAgent(req))
   const publicUser = getUserWithProfiles(user.id)!
   const token = signToken({ userId: user.id, role: user.role })
   res.setHeader('X-Plooy-Token', token)

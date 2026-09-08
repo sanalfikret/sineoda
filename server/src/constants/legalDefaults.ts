@@ -7,9 +7,11 @@ export type LegalSlug =
   | 'kvkk-aydinlatma'
   | 'acik-riza-metni'
   | 'cerez-politikasi'
+  | 'yapimci-sozlesmesi'
 
 export interface LegalDocument {
   slug: LegalSlug
+  en?: { title: string; sections: Array<{ heading: string; body: string }> }
   title: string
   updatedAt: string
   sections: Array<{ heading: string; body: string }>
@@ -18,6 +20,7 @@ export interface LegalDocument {
 export const DEFAULT_LEGAL_VERSION = '2026-08-30'
 
 export const DEFAULT_LEGAL_DOCUMENTS: Record<LegalSlug, LegalDocument> = {
+  'yapimci-sozlesmesi': {"slug":"yapimci-sozlesmesi","title":"Yapımcı sözleşmesi ve film gönderim şartnamesi","updatedAt":"2026-09-09","sections":[{"heading":"Şartname","body":"YAPIMCI / CREATOR SÖZLEŞMESİ VE SORUMLULUK BEYANI\n\n1. Mülkiyet ve Telif Hakkı\nYüklediğiniz her içeriğin telif hakkı veya yayın hakkının size ait olduğunu veya size devredildiğini beyan edersiniz. Plooy'ya yüklediğiniz belgeler (sözleşme, lisans, yapımcı belgesi vb.) bu iddiayı desteklemelidir.\n\n2. Yasal Sorumluluk\nİçeriğinizden doğabilecek tüm yasal talepler, telif ihlali iddiaları, kişilik hakları ihlalleri ve üçüncü taraf haklarına ilişkin sorumluluk tamamen size aittir. Plooy, içeriğinizin yasal uygunluğunu garanti etmez; yalnızca platform sağlayıcısıdır.\n\n3. Gelir Paylaşımı\nGelir paylaşımı, yapımcı anlaşmasında belirtilen koşullara göre hesaplanır. İzlenme süreleri,\npaylaşım oranları ve ödeme takvimi bu anlaşmada ayrıntılı olarak yer alır. Platform, anlaşma\nhükümlerine uygun şekilde adil bir paylaşım modeli uygular.\n\n4. İçerik İncelemesi\nGönderdiğiniz içerikler Plooy editöryal incelemesinden geçer. Onaylanmadan yayınlanmaz. Plooy, platform standartlarına uymayan içerikleri reddetme hakkını saklı tutar.\n\n5. Platform Kuralları\nYasadışı, nefret söylemi, şiddet glorifikasyonu veya telif ihlali içeren materyaller yasaktır. İhlal halinde hesabınız askıya alınabilir.\n\n6. Veri Doğruluğu\nStüdyo adı, iletişim bilgileri ve yüklediğiniz belgelerin doğruluğundan siz sorumlusunuz.\n\nBu şartları kabul ederek Plooy yapımcı programına katılırsınız."}]},
   'kullanim-kosullari': {
     slug: 'kullanim-kosullari',
     title: 'Kullanım Koşulları',

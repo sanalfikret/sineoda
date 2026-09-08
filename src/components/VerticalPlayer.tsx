@@ -354,7 +354,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {nextIndex!==null&&sortedEpisodes[nextIndex]&&<div className="absolute bottom-24 left-4 right-4 z-50 rounded-xl bg-black/90 p-5 text-white"><p>{english?'Next episode':'Sonraki bölüm'}</p><h3>S{sortedEpisodes[nextIndex].season} · {english?'E':'B'}{sortedEpisodes[nextIndex].episode} — {sortedEpisodes[nextIndex].title}</h3><button className="mt-3 rounded bg-plooy-gold p-3 text-black" onClick={()=>goToEpisode(nextIndex)}>{english?'Play next episode':'Sonraki bölümü oynat'}</button><button className="ml-4" onClick={()=>setNextIndex(null)}>{english?'Cancel':'İptal'}</button></div>}
+      {nextIndex!==null&&sortedEpisodes[nextIndex]&&<div className="absolute bottom-24 left-4 right-4 z-50 rounded-xl bg-black/90 p-5 text-white"><p>{english?'Next episode':'Sonraki bölüm'}</p><h3>S{sortedEpisodes[nextIndex].season} · {english?'E':'B'}{sortedEpisodes[nextIndex].episode} — {sortedEpisodes[nextIndex].title}</h3><button className="mt-3 rounded bg-plooy-gold p-3 text-black" onClick={()=>goToEpisode(nextIndex)}>Plooy</button><button className="ml-4" onClick={()=>setNextIndex(null)}>{english?'Cancel':'İptal'}</button></div>}
       {guardState !== 'playing' && (
         <PlaybackGuardOverlay
           mode={guardState}
@@ -466,7 +466,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
       {!youtubeEmbedUrl && !playing && (
         <button
           type="button"
-          aria-label="Oynat"
+          aria-label="Plooy"
           onClick={togglePlay}
           className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-plooy-gold/90 text-plooy-bg shadow-xl"
         >

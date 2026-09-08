@@ -4,7 +4,7 @@ import {
   CONSENT_DOCUMENTS,
   type ConsentType,
 } from '../constants/legal.js'
-import { getLegalVersion } from '../services/legalDocuments.js'
+import { getLegalVersion, getLegalDocument, validateLegalSlug } from '../services/legalDocuments.js'
 import { dbAll, dbGet, dbRun } from '../db.js'
 
 export interface LegalConsentRow {
@@ -67,6 +67,8 @@ export function recordLegalConsent(input: {
   ipAddress: string
   userAgent?: string | null
   acceptedAt?: string
+  locale?: 'tr' | 'en'
+  contentId?: string
   cookieChoice?: 'accepted' | 'essential-only'
 }) {
   const acceptedAt = input.acceptedAt ?? new Date().toISOString()
@@ -85,6 +87,11 @@ export function recordLegalConsent(input: {
     consentText += '\n\nTercih: Tüm çerezler (analitik dahil) kabul edildi.'
   }
 
+  if (validateLegalSlug(meta.slug)) {
+    const doc = getLegalDocument(meta.slug)
+    const text = input.locale === 'en' && doc.en ? doc.en : doc
+    consentText += '\n\nLanguage: '+(input.locale ?? 'tr')+'\nContent: '+(input.contentId ?? '')+'\n\n'+text.title+'\n\n'+text.sections.map(s=>s.heading+'\n'+s.body).join('\n\n')
+  }
   const id = uuid()
   dbRun(
     `INSERT INTO legal_consents (

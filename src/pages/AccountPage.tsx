@@ -22,6 +22,7 @@ const FOOTER_LEGAL_KEYS: Record<LegalSlug, string> = {
   'kvkk-aydinlatma': 'footer.kvkk',
   'acik-riza-metni': 'footer.consent',
   'cerez-politikasi': 'footer.cookies',
+  'yapimci-sozlesmesi': 'footer.submissionTerms',
 }
 
 function formatDate(value: string | null | undefined, locale: Locale) {

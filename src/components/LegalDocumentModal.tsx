@@ -1,3 +1,4 @@
+import { useLocalizedLegalDocuments } from '../i18n/useLegalLocale'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { fetchLegalDocuments } from '../api/client'
@@ -43,6 +44,8 @@ export function LegalDocumentModal({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [open, onClose])
 
+  const localized = useLocalizedLegalDocuments({...LEGAL_DOCUMENTS, [slug]: doc})
+  const displayed = localized.documents[slug]
   if (!open) return null
 
   return (
@@ -62,7 +65,7 @@ export function LegalDocumentModal({
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-plooy-gold">{t('legalModal.eyebrow')}</p>
             <h2 id="legal-modal-title" className="mt-1 text-xl font-bold text-white sm:text-2xl">
-              {doc.title}
+              {displayed?.title}
             </h2>
             <p className="mt-1 text-xs text-plooy-muted">{t('legalModal.updatedAt', { date: doc.updatedAt })}</p>
           </div>
@@ -77,7 +80,7 @@ export function LegalDocumentModal({
 
         <div className="overflow-y-auto px-5 py-6 sm:px-6">
           <div className="space-y-6">
-            {doc.sections.map((section) => (
+            {displayed?.sections.map((section) => (
               <section key={section.heading}>
                 <h3 className="text-base font-semibold text-white">{section.heading}</h3>
                 <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-white/80">{section.body}</p>

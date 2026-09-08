@@ -7,12 +7,13 @@ import { useLocale } from './LocaleContext'
 type EnLegalDoc = (typeof enLegalDocs)[LegalSlug]
 
 function mergeEnDocument(slug: LegalSlug, trDoc: LegalDocument): LegalDocument {
-  const en = enLegalDocs[slug] as EnLegalDoc | undefined
+  const en = trDoc.en ?? enLegalDocs[slug] as EnLegalDoc | undefined
   if (!en) return trDoc
   return {
+    ...trDoc,
     slug,
     title: en.title,
-    updatedAt: en.updatedAt,
+    updatedAt: trDoc.updatedAt,
     sections: en.sections,
   }
 }
@@ -35,7 +36,7 @@ export function useLocalizedLegalDocuments(baseDocuments: Record<LegalSlug, Lega
 
     const links = LEGAL_LINKS.map((link) => ({
       ...link,
-      label: t(`footer.${link.slug === 'kullanim-kosullari' ? 'terms' : link.slug === 'gizlilik-politikasi' ? 'privacy' : link.slug === 'kvkk-aydinlatma' ? 'kvkk' : link.slug === 'acik-riza-metni' ? 'consent' : 'cookies'}`),
+      label: link.slug === 'yapimci-sozlesmesi' ? (locale === 'en' ? 'Submission terms' : 'Film Gönderim Şartnamesi') : t(`footer.${link.slug === 'kullanim-kosullari' ? 'terms' : link.slug === 'gizlilik-politikasi' ? 'privacy' : link.slug === 'kvkk-aydinlatma' ? 'kvkk' : link.slug === 'acik-riza-metni' ? 'consent' : 'cookies'}`),
     }))
 
     return { documents: docs, links }

@@ -614,7 +614,9 @@ function ensureColumn(table: string, column: string, definition: string) {
   }
 }
 
+let transactionActive = false
 function persist() {
+  if (transactionActive) return
   const data = db.export()
   fs.writeFileSync(dbPath, Buffer.from(data))
 }
@@ -634,7 +636,9 @@ function runStatement(sql: string, params: unknown[] = []) {
 
 /** DELETE+INSERT gibi cok adimli yazimlar — tek persist, yarim kalmis DB onlenir. */
 export function dbTransaction(run: () => void) {
+  if (transactionActive) throw new Error('Nested transaction is not supported')
   db.run('BEGIN IMMEDIATE')
+  transactionActive = true
   try {
     run()
     db.run('COMMIT')
@@ -645,6 +649,8 @@ export function dbTransaction(run: () => void) {
       /* rollback hatasi yutulur */
     }
     throw err
+  } finally {
+    transactionActive = false
   }
   persist()
 }

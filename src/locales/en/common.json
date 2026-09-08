@@ -62,7 +62,8 @@
     "privacy": "Privacy Policy",
     "kvkk": "KVKK",
     "consent": "Consent",
-    "cookies": "Cookies"
+    "cookies": "Cookies",
+    "submissionTerms": "Submission terms"
   },
   "cookie": {
     "title": "Cookie notice",
@@ -139,7 +140,7 @@
     "edit": "Edit",
     "delete": "Delete",
     "back": "Back",
-    "play": "Play",
+    "play": "Plooy",
     "close": "Close",
     "yes": "Yes",
     "no": "No",

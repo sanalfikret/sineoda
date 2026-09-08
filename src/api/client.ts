@@ -878,7 +878,7 @@ export async function fetchAdminLegalDocuments() {
 
 export async function updateAdminLegalDocument(
   slug: LegalSlug,
-  data: { title: string; sections: Array<{ heading: string; body: string }> },
+  data: { title: string; sections: Array<{ heading: string; body: string }>; en?: LegalDocument["en"] },
 ) {
   return api<{ document: LegalDocument; version: string }>(`/api/admin/legal/${slug}`, {
     method: 'PUT',

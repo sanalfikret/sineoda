@@ -1,3 +1,5 @@
+import { useLegalDocuments } from '../../hooks/useLegalDocuments'
+import { useLocalizedLegalDocuments } from '../../i18n/useLegalLocale'
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -6,7 +8,6 @@ import { CreatorAuthLayout } from '../../components/creator/CreatorAuthLayout'
 import { PlooyLogo } from '../../components/PlooyLogo'
 import { useAuth } from '../../context/AuthContext'
 import { BRAND_STUDENT_CINEMA, BRAND_NAME } from '../../constants/brand'
-import { CREATOR_LEGAL_TERMS } from '../../constants/creatorLegal'
 import { useLocale } from '../../i18n/LocaleContext'
 import { groupSchoolsByUniversity, splitSchoolName } from '../../utils/filmSchools'
 import {
@@ -15,6 +16,8 @@ import {
 } from '../../utils/planRegistrationNotice'
 
 export function CreatorRegisterPage() {
+  const legal = useLegalDocuments()
+  const {documents} = useLocalizedLegalDocuments(legal.documents)
   const { t } = useTranslation('creator', { keyPrefix: 'register' })
   const { localizePath } = useLocale()
   const { creatorSignup, isCreator, isLoading } = useAuth()
@@ -321,7 +324,7 @@ export function CreatorRegisterPage() {
           <div className="rounded-xl border border-white/10 bg-[#0d0f14] p-4">
             <p className="text-sm font-medium text-white">{t('legalHeading')}</p>
             <pre className="mt-3 max-h-48 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-plooy-muted">
-              {CREATOR_LEGAL_TERMS}
+              {documents['yapimci-sozlesmesi'].title + '\n\n' + documents['yapimci-sozlesmesi'].sections.map(s=>s.heading+'\n'+s.body).join('\n\n')}
             </pre>
             <label className="mt-4 flex cursor-pointer items-start gap-3">
               <input

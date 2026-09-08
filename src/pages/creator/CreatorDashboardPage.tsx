@@ -1,3 +1,5 @@
+import { useLegalDocuments } from '../../hooks/useLegalDocuments'
+import { useLocalizedLegalDocuments } from '../../i18n/useLegalLocale'
 import {CreatorMessages} from '../../components/CreatorMessages'
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -123,9 +125,15 @@ function formatMonthLabel(month: string, locale: string) {
 }
 
 export function CreatorDashboardPage() {
+  const legal = useLegalDocuments()
+  const {documents: legalDocuments} = useLocalizedLegalDocuments(legal.documents)
+  const [termsAccepted, setTermsAccepted] = useState(false)
+  const submissionTerms = legalDocuments['yapimci-sozlesmesi']
+
   const { t } = useTranslation('creator', { keyPrefix: 'dashboard' })
   const uploadRequirements = t('applications.uploadRequirements', { returnObjects: true }) as string[]
   const { locale, localizePath } = useLocale()
+  useEffect(()=>setTermsAccepted(false),[legal.version,locale])
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const [documents, setDocuments] = useState<CreatorDocument[]>([])
@@ -289,6 +297,7 @@ export function CreatorDashboardPage() {
   }
 
   const resetApplicationForm = () => {
+    setTermsAccepted(false)
     setEditingContentId(null)
     setRightsDeclaration({})
     setApplicationDocs([])
@@ -422,6 +431,9 @@ export function CreatorDashboardPage() {
         .map((g) => g.trim())
         .filter(Boolean)
       const payload = {
+        submissionTermsAccepted: termsAccepted,
+        submissionTermsVersion: legal.version,
+        submissionTermsLocale: locale,
         title: form.title,
         description: form.description,
         year: form.year,
@@ -1109,6 +1121,10 @@ export function CreatorDashboardPage() {
                 />
               )}
 
+              {!editingContentId && <div className="space-y-3 border border-white/20 p-4 rounded-xl">
+                <details><summary>{submissionTerms.title}</summary>{submissionTerms.sections.map((s,i)=><section key={i}><h4 className="mt-3 font-bold">{s.heading}</h4><p className="whitespace-pre-wrap">{s.body}</p></section>)}</details>
+                <label className="flex gap-3"><input type="checkbox" required checked={termsAccepted} disabled={legal.loading} onChange={e=>setTermsAccepted(e.target.checked)}/>{locale==='en'?'I have read and accept the submission terms. My acceptance is recorded with the document version, date and IP address.':'Film gönderim şartnamesini okudum ve kabul ediyorum. Onayım metin sürümü, tarih ve IP adresiyle kaydedilir.'}</label>
+              </div>}
               <button
                 type="submit"
                 disabled={

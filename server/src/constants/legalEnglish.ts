@@ -1,4 +1,4 @@
-{
+export const LEGAL_ENGLISH = {
   "kullanim-kosullari": {
     "title": "Terms of Use",
     "updatedAt": "30 August 2026",

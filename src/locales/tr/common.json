@@ -62,7 +62,8 @@
     "privacy": "Gizlilik Politikası",
     "kvkk": "KVKK",
     "consent": "Açık Rıza",
-    "cookies": "Çerezler"
+    "cookies": "Çerezler",
+    "submissionTerms": "Film Gönderim Şartnamesi"
   },
   "cookie": {
     "title": "Çerez kullanımı",
@@ -139,7 +140,7 @@
     "edit": "Düzenle",
     "delete": "Sil",
     "back": "Geri",
-    "play": "Oynat",
+    "play": "Plooy",
     "close": "Kapat",
     "yes": "Evet",
     "no": "Hayır",
