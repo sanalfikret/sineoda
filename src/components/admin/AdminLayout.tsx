@@ -48,7 +48,7 @@ export function AdminLayout() {
   }, [])
 
   return (
-    <div className="min-h-dvh bg-[#0d0f14] text-white">
+    <div className="admin-panel min-h-dvh bg-[#0d0f14] text-white">
       {sidebarOpen && (
         <button
           type="button"

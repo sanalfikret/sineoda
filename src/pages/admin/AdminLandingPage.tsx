@@ -65,7 +65,7 @@ import {
 } from '../../utils/adminPickerCatalog'
 import { resolveContentRowItemIds } from '../../utils/landingContentRow'
 import { fuzzySearchMatch } from '../../utils/search'
-import { ensureAdminWriteSession, forceAdminReLogin } from '../../utils/adminSession'
+import { ensureAdminWriteSession } from '../../utils/adminSession'
 
 interface ShowcaseDraft {
   id: string
@@ -740,8 +740,7 @@ export function AdminLandingPage() {
       }
 
       if (!(await ensureAdminWriteSession())) {
-        setMessage('Oturum sona erdi. Giriş sayfasına yönlendiriliyorsunuz…')
-        forceAdminReLogin('Oturum sona erdi. Lütfen tekrar giriş yapın.')
+        setMessage('Kayıt için oturum doğrulanamadı. Değişiklikleriniz bu ekranda duruyor; tekrar deneyin veya ayrı sekmede admin girişi yapın.')
         return
       }
 
@@ -892,8 +891,7 @@ export function AdminLandingPage() {
             /* aşağıdaki oturum mesajına düş */
           }
         }
-        setMessage('Oturum sona erdi. Giriş sayfasına yönlendiriliyorsunuz…')
-        forceAdminReLogin('Oturum yenilenemedi. Lütfen tekrar giriş yapın.')
+        setMessage('Kayıt için oturum doğrulanamadı. Değişiklikleriniz bu ekranda duruyor; tekrar deneyin veya ayrı sekmede admin girişi yapın.')
       } else if (status === 403) {
         setMessage(err instanceof Error ? err.message : 'Admin yetkisi gerekli.')
       } else {

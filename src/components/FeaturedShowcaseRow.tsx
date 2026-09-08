@@ -93,7 +93,7 @@ export function FeaturedShowcaseRow({
     <section className={`overflow-hidden px-4 py-4 sm:px-6 lg:px-8 ${className}`}>
       <div className="mx-auto max-w-5xl">
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="whitespace-pre-line text-lg font-semibold text-white sm:text-xl">
+          <h2 className="whitespace-pre-line text-[calc(1.125rem+2pt)] font-semibold text-white sm:text-[calc(1.25rem+2pt)]">
             {translateCategory(title)}
           </h2>
           {showHeaderLink && (

@@ -136,3 +136,20 @@
     z-index: 20;
   }
 }
+
+/* Native dropdown menus must retain readable colors on Windows. */
+.admin-panel { color-scheme: dark; }
+.admin-panel select {
+  color: #f4f4f5;
+  background-color: #181b24;
+  border: 1px solid #444957;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  margin: 0.25rem;
+}
+.admin-panel select option, .admin-panel select optgroup {
+  color: #f4f4f5;
+  background-color: #181b24;
+}
+.admin-panel select:focus-visible { outline: 2px solid #c9a962; outline-offset: 2px; }
+.admin-panel select:disabled { color: #a1a1aa; opacity: 0.7; }
