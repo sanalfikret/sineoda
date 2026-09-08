@@ -8,7 +8,8 @@
     "start": "node --import tsx src/index.ts",
     "build": "tsc",
     "bootstrap:admin": "node scripts/bootstrap-admin.js",
-    "test:workflow": "node --import tsx scripts/check-film-workflow.mjs"
+    "test:workflow": "node --import tsx scripts/check-film-workflow.mjs",
+    "test:accounting": "node --import tsx scripts/check-accounting.mjs"
   },
   "engines": {
     "node": ">=18"

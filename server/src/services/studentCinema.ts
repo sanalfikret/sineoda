@@ -1,3 +1,4 @@
+import { initAccounting } from './accountingLedger.js'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { PUBLISHED_CONTENT_SQL } from './publish.js'
 import type { ContentRow } from '../types.js'
@@ -66,6 +67,7 @@ export interface ContentEngagementStats {
 export function getContentEngagementStats(contentIds: string[]) {
   if (contentIds.length === 0) return new Map<string, ContentEngagementStats>()
 
+  initAccounting()
   const placeholders = contentIds.map(() => '?').join(',')
   const rows = dbAll<{
     content_id: string
@@ -77,16 +79,16 @@ export function getContentEngagementStats(contentIds: string[]) {
   }>(
     `SELECT
       c.id AS content_id,
-      COALESCE(SUM(cqa.seconds_watched), 0) AS qualified_seconds,
+      COALESCE((SELECT SUM(seconds) FROM accounting_views v WHERE v.content_id=c.id AND v.qualified=1),0) AS qualified_seconds,
       COALESCE((
-        SELECT SUM(wp.total_watched_seconds)
-        FROM watch_progress wp
+        SELECT SUM(wp.seconds)
+        FROM accounting_views wp
         WHERE wp.content_id = c.id
       ), 0) AS watch_seconds,
       COALESCE((
         SELECT COUNT(*)
-        FROM watch_progress wp
-        WHERE wp.content_id = c.id AND wp.total_watched_seconds > 0
+        FROM accounting_views wp
+        WHERE wp.content_id = c.id
       ), 0) AS watch_count,
       COALESCE((
         SELECT COUNT(*)
@@ -94,12 +96,11 @@ export function getContentEngagementStats(contentIds: string[]) {
         WHERE cr.content_id = c.id AND cr.reaction = 'like'
       ), 0) AS likes,
       COALESCE((
-        SELECT COUNT(DISTINCT wp.profile_id)
-        FROM watch_progress wp
-        WHERE wp.content_id = c.id AND wp.total_watched_seconds > 0
+        SELECT COUNT(DISTINCT wp.user_id)
+        FROM accounting_views wp
+        WHERE wp.content_id = c.id
       ), 0) AS viewers
     FROM content c
-    LEFT JOIN creator_qualified_activity cqa ON cqa.content_id = c.id
     WHERE c.id IN (${placeholders})
     GROUP BY c.id`,
     contentIds,

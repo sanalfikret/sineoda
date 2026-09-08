@@ -25,6 +25,7 @@ import watchlistRoutes from './routes/watchlist.js'
 import watchProgressRoutes from './routes/watchProgress.js'
 import playbackRoutes from './routes/playback.js'
 import analyticsRoutes from './routes/analytics.js'
+import accountingLedgerRoutes from './routes/accountingLedger.js'
 import adminContentRoutes from './routes/adminContent.js'
 import analyticsPublicRoutes from './routes/analyticsPublic.js'
 import landingRoutes, { getLandingConfig } from './routes/landing.js'
@@ -339,6 +340,7 @@ app.use('/api/categories', categoryRoutes)
 app.use('/api/watch-progress', watchProgressRoutes)
 app.use('/api/playback', playbackRoutes)
 app.use('/api/admin/analytics', analyticsRoutes)
+app.use('/api/admin/accounting', accountingLedgerRoutes)
 app.use('/api/admin/content', adminContentRoutes)
 app.use('/api/admin/journal', adminJournalRoutes)
 app.use('/api/watchlist', watchlistRoutes)

@@ -308,7 +308,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
 
   const handleEnded = () => {
     setPlaying(false)
-    persistProgress(0, duration)
+    persistProgress(duration, duration)
     if (hasEpisodes && episodeIndex < sortedEpisodes.length - 1) {
       setNextIndex(episodeIndex+1)
     }
@@ -386,7 +386,7 @@ export function VerticalPlayer({ target, onClose }: VerticalPlayerProps) {
         }}
         onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
         onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
-        onPlay={() => setPlaying(true)}
+        onPlay={(event) => { setPlaying(true); persistProgress(event.currentTarget.currentTime,event.currentTarget.duration) }}
         onPause={() => setPlaying(false)}
         onEnded={handleEnded}
       >

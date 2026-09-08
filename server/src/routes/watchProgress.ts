@@ -2,8 +2,9 @@ import { Router } from 'express'
 import { v4 as uuid } from 'uuid'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { getProfileId, requireAuth, type AuthRequest } from '../middleware/auth.js'
-import { normalizeContentType } from '../constants/contentTypes.js'
-import { isQualifiedWatch } from '../services/watchQualification.js'
+import { recordAccountingProgress, accountingClientIp } from '../services/accountingLedger.js'
+import { canUserPlay, getUserSubscription } from '../services/subscription.js'
+import { PUBLISHED_CONTENT_SQL } from '../services/publish.js'
 
 const router = Router()
 
@@ -187,15 +188,19 @@ router.post('/', requireAuth, (req: AuthRequest, res) => {
     [profileId, contentId, episodeId],
   )
 
-  const delta = existing ? Math.max(0, position - existing.position_seconds) : position
-  const totalWatched = (existing?.total_watched_seconds ?? 0) + delta
-
-  const contentType = content ? normalizeContentType(content.type) : 'film'
-  const wasQualified = existing?.qualified === 1
-  const nowQualified =
-    wasQualified || isQualifiedWatch(contentType, position, duration, content?.program)
-  const qualifiedDelta = nowQualified && delta > 0 ? delta : 0
-  const qualifiedSeconds = (existing?.qualified_seconds ?? 0) + qualifiedDelta
+  if (!content || !resolveOwnedProfileId(req, profileId) || !Number.isFinite(duration) || duration <= 0 || position < 0 || position > duration + 2) {
+    res.status(400).json({error:'Geçersiz içerik, profil veya süre.'}); return
+  }
+  let measured = { counted:false, qualified:false, creditedSeconds:0 }
+  if (req.auth!.role !== 'admin' && req.auth!.role !== 'manager' && canUserPlay(getUserSubscription(req.auth!.userId)) && dbGet('SELECT id FROM content WHERE id=? AND '+PUBLISHED_CONTENT_SQL,[contentId])) {
+    try { measured=recordAccountingProgress({userId:req.auth!.userId,contentId,episodeId,ip:accountingClientIp(req),position,duration}) }
+    catch(error) { res.status(400).json({error:error instanceof Error?error.message:'İzleme kaydedilemedi.'}); return }
+  }
+  const delta=measured.creditedSeconds
+  const totalWatched=(existing?.total_watched_seconds??0)+delta
+  const nowQualified=existing?.qualified===1 || measured.qualified
+  const qualifiedDelta=measured.qualified?delta:0
+  const qualifiedSeconds=(existing?.qualified_seconds??0)+qualifiedDelta
 
   if (delta > 0) {
     dbRun(

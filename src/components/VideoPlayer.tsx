@@ -374,11 +374,11 @@ export function VideoPlayer({ target, onClose, onPlayEpisode }: VideoPlayerProps
         }}
         onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
         onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
-        onPlay={() => setPlaying(true)}
+        onPlay={(event) => { setPlaying(true); persistProgress(event.currentTarget.currentTime,event.currentTarget.duration) }}
         onPause={() => setPlaying(false)}
         onEnded={() => {
           setPlaying(false)
-          persistProgress(0, duration)
+          persistProgress(duration, duration)
 
           if (!target || !onPlayEpisode || sortedEpisodes.length === 0) return
 

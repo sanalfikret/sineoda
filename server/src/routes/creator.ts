@@ -24,6 +24,7 @@ import {
   validateFilmApplication,
 } from '../services/filmApplication.js'
 import { getContentEngagementStats } from '../services/studentCinema.js'
+import { getAccountingReport, listNewAccountingMonths } from '../services/accountingLedger.js'
 import { getMonthlyReport, monthKey } from '../services/watchAccounting.js'
 import { isCreatorRegistrationPaid, getCreatorRegistrationStatus } from '../services/creatorRegistration.js'
 import { findStudentMainStub } from '../services/studentFilmSubmission.js'
@@ -529,6 +530,7 @@ router.get('/accounting/months', requireCreator, (req: AuthRequest, res) => {
   )
   const current = monthKey()
   const months = new Set(archived.map((row) => row.month))
+  for(const row of listNewAccountingMonths()) months.add(row.month)
   months.add(current)
   res.json({
     months: [...months].sort((a, b) => b.localeCompare(a)).map((month) => ({
@@ -547,6 +549,10 @@ router.get('/accounting', requireCreator, (req: AuthRequest, res) => {
 
   try {
     const month = String(req.query.month ?? monthKey()).trim()
+    if(listNewAccountingMonths().some(row=>row.month===month)) {
+      const report=getAccountingReport(month); const items=report.items.filter(i=>i.creatorId===creator.id)
+      res.json({month,status:report.closedAt?'closed':'open',totalQualifiedMinutes:Math.round(items.reduce((s,i)=>s+i.qualifiedSeconds,0)/60),totalWatchMinutes:Math.round(items.reduce((s,i)=>s+i.watchSeconds,0)/60),items:items.map(i=>({contentId:i.contentId,title:i.title,type:i.type,program:i.program,qualifiedMinutes:Math.round(i.qualifiedSeconds/60),watchMinutes:Math.round(i.watchSeconds/60),viewerCount:i.views}))});return
+    }
     const report = getMonthlyReport(month, { creatorId: creator.id })
     res.json({
       month: report.month,

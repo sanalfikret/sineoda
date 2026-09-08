@@ -1,5 +1,7 @@
 import { ensureMonthlyRollover, monthKey } from './watchAccounting.js'
 
+import { rolloverAccounting } from './accountingLedger.js'
+
 const ISTANBUL_TZ = 'Europe/Istanbul'
 const CHECK_INTERVAL_MS = 15 * 60 * 1000
 
@@ -38,6 +40,7 @@ function msUntilNextIstanbulRollover(date = new Date()) {
 
 function runRollover(reason: string) {
   try {
+    rolloverAccounting()
     const result = ensureMonthlyRollover()
     if (result.finalizedMonths.length > 0) {
       console.log(
