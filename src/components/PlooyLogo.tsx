@@ -1,3 +1,4 @@
+import { scrollPageTop } from './RouteScrollReset'
 import { Link } from 'react-router-dom'
 
 /** Tek logo — beyaz/siyah wordmark PNG */
@@ -35,6 +36,9 @@ export function PlooyLogo({
   return (
     <Link
       to={linkTo}
+      onClick={event => {
+        if (event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) scrollPageTop()
+      }}
       className="inline-flex shrink-0 transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-plooy-gold"
       aria-label="Plooy"
     >

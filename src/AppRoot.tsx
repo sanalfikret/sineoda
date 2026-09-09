@@ -1,3 +1,4 @@
+import { RouteScrollReset } from './components/RouteScrollReset'
 import { StrictMode } from 'react'
 import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
@@ -16,6 +17,7 @@ export default function AppRoot() {
   return (
     <StrictMode>
       <BrowserRouter>
+        <RouteScrollReset />
         <LocaleProvider>
           <LocaleSync />
           <AuthProvider>

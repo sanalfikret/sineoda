@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { fetchUnreadMessageCount, prefetchCekimNotlariSections } from '../api/client'
@@ -37,6 +37,9 @@ export function Header() {
   const navigate = useNavigate()
   const location = useLocation()
   const trPath = toTrPathname(location.pathname)
+  const headerRef = useRef<HTMLElement>(null)
+  const userMenuRef = useRef<HTMLDivElement>(null)
+  const exploreRef = useRef<HTMLDivElement>(null)
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
@@ -59,7 +62,33 @@ export function Header() {
   useEffect(() => {
     setExploreOpen(false)
     setUserMenuOpen(false)
-  }, [location.pathname])
+    setMenuOpen(false)
+  }, [location.key])
+
+  useEffect(() => {
+    if (!menuOpen && !userMenuOpen && !exploreOpen) return
+    const dismissOutside = (event: Event) => {
+      const target = event.target
+      if (!(target instanceof Node)) return
+      if (!userMenuRef.current?.contains(target)) setUserMenuOpen(false)
+      if (!exploreRef.current?.contains(target)) setExploreOpen(false)
+      if (!headerRef.current?.contains(target)) setMenuOpen(false)
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      setMenuOpen(false)
+      setUserMenuOpen(false)
+      setExploreOpen(false)
+    }
+    document.addEventListener('pointerdown',dismissOutside,true)
+    document.addEventListener('focusin',dismissOutside)
+    document.addEventListener('keydown',onKey)
+    return () => {
+      document.removeEventListener('pointerdown',dismissOutside,true)
+      document.removeEventListener('focusin',dismissOutside)
+      document.removeEventListener('keydown',onKey)
+    }
+  }, [menuOpen,userMenuOpen,exploreOpen])
 
   useEffect(() => {
     if (!menuOpen) return
@@ -145,6 +174,7 @@ export function Header() {
 
   return (
     <header
+      ref={headerRef}
       className={`safe-top fixed inset-x-0 top-0 z-40 border-b border-plooy-red transition-colors duration-300 ${
         scrolled || menuOpen
           ? 'bg-plooy-bg/95 backdrop-blur-md'
@@ -168,13 +198,13 @@ export function Header() {
             ))}
 
             {exploreNavItems.length > 0 && (
-              <div className="relative">
+              <div ref={exploreRef} className="relative">
                 <button
                   type="button"
-                  onClick={() => setExploreOpen((open) => !open)}
+                  aria-expanded={exploreOpen}
+                  onClick={() => { setExploreOpen((open) => !open); setUserMenuOpen(false) }}
                   onMouseEnter={() => prefetchCekimNotlariSections()}
                   onFocus={() => prefetchCekimNotlariSections()}
-                  onBlur={() => window.setTimeout(() => setExploreOpen(false), 150)}
                   className={`whitespace-nowrap rounded-lg px-2.5 py-2 text-[13px] font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold lg:px-3 lg:text-sm xl:text-[15px] ${
                     exploreActive || exploreOpen
                       ? 'bg-white/10 text-white'
@@ -281,10 +311,11 @@ export function Header() {
           )}
 
           {user && (activeProfile || isCreator) ? (
-            <div className="relative">
+            <div ref={userMenuRef} className="relative">
               <button
                 type="button"
-                onClick={() => setUserMenuOpen((open) => !open)}
+                aria-expanded={userMenuOpen}
+                onClick={() => { setUserMenuOpen((open) => !open); setExploreOpen(false); setMenuOpen(false) }}
                 className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm text-white transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold tv:px-4 tv:py-2.5 tv:text-base"
               >
                 {isCreator ? (
