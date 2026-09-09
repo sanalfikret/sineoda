@@ -21,6 +21,22 @@ function setup(id,plan='standard',provider='paytr') {
 }
 const callback=(id,status='success',valid=true)=>post('/callback/paytr',{merchant_oid:id,status,total_amount:'6900',hash:valid?crypto.createHmac('sha256','test-key').update(id+'test-salt'+status+'6900').digest('base64'):'invalid'})
 try {
+ const {planExpiryFor}=await import('../src/services/billingPlanDefaults.ts')
+ for(const [date,interval,expected] of [
+  ['2026-01-31T14:00:00.000Z','month','2026-02-28T14:00:00.000Z'],
+  ['2028-01-31T14:00:00.000Z','month','2028-02-29T14:00:00.000Z'],
+  ['2028-02-29T14:00:00.000Z','year','2029-02-28T14:00:00.000Z'],
+  ['2026-12-15T14:00:00.000Z','month','2027-01-15T14:00:00.000Z'],
+ ]) assert.equal(planExpiryFor({interval},new Date(date)),expected)
+ for(const status of ['active','cancelled']) {
+  const id='early-'+status;setup(id)
+  dbRun('UPDATE users SET subscription_status=?, subscription_expires_at=? WHERE id=?',[status,'2090-01-31T14:00:00.000Z',id])
+  await callback(id);assert.equal(user(id).subscription_expires_at,'2090-02-28T14:00:00.000Z')
+  await callback(id);assert.equal(user(id).subscription_expires_at,'2090-02-28T14:00:00.000Z')
+ }
+ setup('expired');dbRun("UPDATE users SET subscription_status='active',subscription_expires_at='2020-01-01T00:00:00.000Z' WHERE id='expired'")
+ await callback('expired');assert.ok(Date.parse(user('expired').subscription_expires_at)>Date.now())
+ console.log('PASS: month-end, leap year, year rollover, early renewal, cancelled renewal, expired renewal, duplicate callback')
  for(const [id,plan] of [['viewer','standard'],['creator','creator_application'],['student','student_cinema_application']]) {
   setup(id,plan);await callback(id,'success',false);assert.equal(order(id).status,'pending');assert.notEqual(user(id).subscription_status,'active')
   await callback(id,'failed');assert.equal(order(id).status,'failed');assert.notEqual(user(id).subscription_status,'active')

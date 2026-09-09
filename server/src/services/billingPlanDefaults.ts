@@ -101,10 +101,14 @@ export function getCreatorRegistrationPlanId(program: 'standard' | 'student_cine
   return program === 'student_cinema' ? 'student_cinema_application' : 'creator_application'
 }
 
-export function planExpiryFor(plan: BillingPlanDefinition | undefined) {
+export function planExpiryFor(plan: BillingPlanDefinition | undefined, base = new Date()) {
   if (plan?.interval === 'once') return null
-  const expires = new Date()
-  if (plan?.interval === 'year') expires.setFullYear(expires.getFullYear() + 1)
-  else expires.setMonth(expires.getMonth() + 1)
+  const expires = new Date(base)
+  const day = expires.getUTCDate()
+  // Clamp month-end dates instead of overflowing into the following month.
+  expires.setUTCDate(1)
+  expires.setUTCMonth(expires.getUTCMonth() + (plan?.interval === 'year' ? 12 : 1))
+  const lastDay = new Date(Date.UTC(expires.getUTCFullYear(), expires.getUTCMonth() + 1, 0)).getUTCDate()
+  expires.setUTCDate(Math.min(day, lastDay))
   return expires.toISOString()
 }

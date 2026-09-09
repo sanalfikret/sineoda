@@ -42,8 +42,8 @@ export function planRequiresStudentId(planId: string) {
   return Boolean(getPlan(planId)?.requiresStudentId)
 }
 
-export function planExpiry(planId: string) {
-  return planExpiryFor(getPlan(planId))
+export function planExpiry(planId: string, base = new Date()) {
+  return planExpiryFor(getPlan(planId), base)
 }
 
 export function isCreatorApplicationPlan(planId: string) {
