@@ -3,7 +3,7 @@ import multer from 'multer'
 import path from 'node:path'
 import { v4 as uuid } from 'uuid'
 import { config, publicAssetUrl } from '../config.js'
-import { dbGet, dbRun, dbAll, uploadsDir } from '../db.js'
+import { dbGet, dbRun, dbAll, dbTransaction, uploadsDir } from '../db.js'
 import { createIyzicoCheckout, retrieveIyzicoCheckout } from '../services/iyzico.js'
 import { createPaytrToken, verifyPaytrCallback } from '../services/paytr.js'
 import { getBillingPlans } from '../services/billingPlansConfig.js'
@@ -436,22 +436,20 @@ router.post('/callback/paytr', (req, res) => {
     return
   }
 
-  if (payload.status === 'success') {
-    dbRun("UPDATE payment_orders SET status = 'paid', completed_at = ? WHERE id = ?", [
-      new Date().toISOString(),
-      order.id,
-    ])
-    if (isCreatorApplicationPlan(order.plan_id)) {
-      activateCreatorRegistration(order.user_id, order.plan_id)
+  dbTransaction(() => {
+    if (payload.status === 'success') {
+      if (isCreatorApplicationPlan(order.plan_id)) {
+        activateCreatorRegistration(order.user_id, order.plan_id)
+      } else {
+        activateUserSubscription(order.user_id, order.plan_id)
+      }
+      dbRun("UPDATE payment_orders SET status = 'paid', completed_at = ? WHERE id = ?",
+        [new Date().toISOString(), order.id])
     } else {
-      activateUserSubscription(order.user_id, order.plan_id)
+      dbRun("UPDATE payment_orders SET status = 'failed', completed_at = ? WHERE id = ?",
+        [new Date().toISOString(), order.id])
     }
-  } else {
-    dbRun("UPDATE payment_orders SET status = 'failed', completed_at = ? WHERE id = ?", [
-      new Date().toISOString(),
-      order.id,
-    ])
-  }
+  })
 
   res.send('OK')
 })
@@ -469,25 +467,28 @@ router.post('/callback/iyzico', async (req, res) => {
     [result.basketId ?? ''],
   )
 
-  if (order && result.paymentStatus === 'SUCCESS' && order.status !== 'paid') {
-    dbRun("UPDATE payment_orders SET status = 'paid', completed_at = ? WHERE id = ?", [
-      new Date().toISOString(),
-      order.id,
-    ])
-    if (isCreatorApplicationPlan(order.plan_id)) {
-      activateCreatorRegistration(order.user_id, order.plan_id)
-    } else {
-      activateUserSubscription(order.user_id, order.plan_id)
-    }
+  if (order?.status === 'paid') {
     res.redirect(`${config.frontendUrl}/odeme/basarili`)
     return
   }
 
-  if (order) {
-    dbRun("UPDATE payment_orders SET status = 'failed', completed_at = ? WHERE id = ?", [
-      new Date().toISOString(),
-      order.id,
-    ])
+  if (order && result.status === 'success' && result.paymentStatus === 'SUCCESS') {
+    dbTransaction(() => {
+      if (isCreatorApplicationPlan(order.plan_id)) {
+        activateCreatorRegistration(order.user_id, order.plan_id)
+      } else {
+        activateUserSubscription(order.user_id, order.plan_id)
+      }
+      dbRun("UPDATE payment_orders SET status = 'paid', completed_at = ? WHERE id = ?",
+        [new Date().toISOString(), order.id])
+    })
+    res.redirect(`${config.frontendUrl}/odeme/basarili`)
+    return
+  }
+
+  if (order && result.status === 'success' && result.paymentStatus === 'FAILURE') {
+    dbRun("UPDATE payment_orders SET status = 'failed', completed_at = ? WHERE id = ?",
+      [new Date().toISOString(), order.id])
   }
 
   res.redirect(`${config.frontendUrl}/odeme/basarisiz`)
