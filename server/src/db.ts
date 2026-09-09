@@ -105,6 +105,7 @@ export async function initDatabase() {
 }
 
 function runMigrations() {
+  ensureColumn('content', 'withdrawn_at', 'TEXT')
   db.run(`CREATE TABLE IF NOT EXISTS admin_message_requests (
     admin_id TEXT NOT NULL, request_id TEXT NOT NULL, payload TEXT NOT NULL,
     result TEXT NOT NULL, created_at TEXT NOT NULL,

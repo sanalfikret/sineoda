@@ -1,3 +1,5 @@
+import { dbGet } from '../db.js'
+import { PUBLISHED_CONTENT_SQL } from '../services/publish.js'
 import { Router } from 'express'
 import {
   addDailyWatchSeconds,
@@ -53,6 +55,9 @@ router.post('/start', requireAuth, (req: AuthRequest, res) => {
     return
   }
 
+  if (!isLimitExempt(req) && !dbGet('SELECT id FROM content WHERE id = ? AND '+PUBLISHED_CONTENT_SQL,[contentId])) {
+    res.status(404).json({error:'İçerik yayında değil.'}); return
+  }
   cleanupStalePlaybackSessions()
 
   const claim = tryClaimPlaybackSession({

@@ -62,5 +62,5 @@ export function mergeAdminCatalog(
   if (adminItems.length === 0) return items.map(toAdminContentItem)
 
   const adminById = new Map(adminItems.map((item) => [item.id, item]))
-  return items.map((item) => adminById.get(item.id) ?? toAdminContentItem(item))
+  return [...adminItems, ...items.filter((item) => !adminById.has(item.id)).map(toAdminContentItem)]
 }

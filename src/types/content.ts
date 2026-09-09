@@ -101,6 +101,7 @@ export interface AdminContentMeta {
   licenseExpiringSoon: boolean
   licenseDaysRemaining: number | null
   publishedAt: string | null
+  isWithdrawn?: boolean
   isPublished: boolean
   isScheduled: boolean
 }

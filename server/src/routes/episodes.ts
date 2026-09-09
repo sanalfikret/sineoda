@@ -1,8 +1,9 @@
+import { PUBLISHED_CONTENT_SQL } from '../services/publish.js'
 import { Router } from 'express'
 import { v4 as uuid } from 'uuid'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { mapEpisode, serializeSubtitles } from '../mappers.js'
-import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
+import { optionalAuth, requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import type { EpisodeRow } from '../types.js'
 
 const router = Router()
@@ -15,7 +16,10 @@ function episodeKey(episodeId?: string | null) {
   return episodeId ?? ''
 }
 
-router.get('/content/:contentId', (req, res) => {
+router.get('/content/:contentId', optionalAuth, (req: AuthRequest, res) => {
+  if (!['admin','manager'].includes(req.auth?.role ?? '') && !dbGet('SELECT id FROM content WHERE id = ? AND '+PUBLISHED_CONTENT_SQL,[req.params.contentId])) {
+    res.status(404).json({error:'İçerik yayında değil.'}); return
+  }
   const rows = dbAll<EpisodeRow>(
     'SELECT * FROM episodes WHERE content_id = ? ORDER BY season, episode_number, sort_order',
     [req.params.contentId],

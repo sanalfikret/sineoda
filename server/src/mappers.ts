@@ -86,7 +86,8 @@ export function mapContentLicense(row: ContentRow) {
     licenseExpiringSoon: isLicenseExpiringSoon(licenseExpiresAt),
     licenseDaysRemaining: licenseExpiresAt ? getLicenseDaysRemaining(licenseExpiresAt) : null,
     publishedAt,
-    isPublished: isContentPublished(publishedAt),
+    isWithdrawn: Boolean(row.withdrawn_at && !publishedAt),
+    isPublished: (!row.creator_id || row.review_status === 'published') && isContentPublished(publishedAt),
     isScheduled: isContentScheduled(publishedAt),
   }
 }

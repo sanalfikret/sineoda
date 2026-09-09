@@ -2252,3 +2252,7 @@ export async function deleteAdminAdCampaign(id: string) {
     method: 'DELETE',
   })
 }
+
+export function setAdminContentPublication(id: string, publish: boolean) {
+  return api<{item: AdminContentItem}>(`/api/admin/content/${encodeURIComponent(id)}/publication`, {method:'PATCH',body:JSON.stringify({publish})})
+}

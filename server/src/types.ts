@@ -60,6 +60,7 @@ export interface ContentRow {
   festivals_json?: string
   content_added_at?: string | null
   license_expires_at?: string | null
+  withdrawn_at?: string | null
   published_at?: string | null
   source_video_url?: string | null
   creator_id?: string | null

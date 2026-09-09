@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { fetchAdminCatalog, resolveMediaUrl } from '../../api/client'
+import { fetchAdminCatalog, resolveMediaUrl, setAdminContentPublication } from '../../api/client'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { ADMIN_NEW_VERTICAL_HREF } from '../../components/admin/AdminContentActions'
 import { useContent } from '../../context/ContentContext'
@@ -12,9 +12,10 @@ import { formatPublishDate } from '../../utils/publish'
 import { isVerticalContent } from '../../utils/vertical'
 import { fuzzySearchMatch } from '../../utils/search'
 
-type TypeFilter = 'all' | ContentType | 'dikey' | 'expiring'
+type TypeFilter = 'all' | ContentType | 'dikey' | 'expiring' | 'withdrawn'
 
 function PublishStatusBadge({ item }: { item: AdminContentItem }) {
+  if (item.isWithdrawn) return <span className="rounded-full bg-red-500/15 px-2 py-1 text-xs text-red-300">Yayından alındı</span>
   if (item.isScheduled) {
     return (
       <span className="rounded-full bg-sky-500/15 px-2 py-1 text-xs font-medium text-sky-300">
@@ -83,11 +84,13 @@ function sortAdminItems(items: AdminContentItem[]) {
 }
 
 export function AdminContentListPage() {
-  const { catalog, deleteContent, setFeatured, isLoading: catalogLoading } = useContent()
-  const { watchStatsById } = useAdminAnalytics(0)
+  const { catalog, deleteContent, setFeatured, refresh, isLoading: catalogLoading } = useContent()
+  const { watchStatsById, watchStatsError } = useAdminAnalytics(0)
   const [adminCatalog, setAdminCatalog] = useState<AdminContentItem[]>([])
   const [loading, setLoading] = useState(true)
   const [usingFallback, setUsingFallback] = useState(false)
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const [error, setError] = useState('')
   const [query, setQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
 
@@ -95,7 +98,7 @@ export function AdminContentListPage() {
     setLoading(true)
     try {
       const { catalog: adminItems } = await fetchAdminCatalog()
-      setAdminCatalog(mergeAdminCatalog(sourceCatalog, adminItems))
+      setAdminCatalog(adminItems)
       setUsingFallback(false)
     } catch {
       setAdminCatalog(mergeAdminCatalog(sourceCatalog, []))
@@ -110,14 +113,16 @@ export function AdminContentListPage() {
     void loadCatalog(catalog)
   }, [catalog, catalogLoading])
 
-  const verticalCount = useMemo(() => adminCatalog.filter(isVerticalContent).length, [adminCatalog])
+  const verticalCount = useMemo(() => adminCatalog.filter(item => !item.isWithdrawn && isVerticalContent(item)).length, [adminCatalog])
   const expiringCount = useMemo(
-    () => adminCatalog.filter((item) => item.licenseExpiringSoon).length,
+    () => adminCatalog.filter((item) => !item.isWithdrawn && (item.licenseExpiringSoon || item.licenseExpired)).length,
     [adminCatalog],
   )
 
   const filteredItems = useMemo(() => {
     const searched = adminCatalog.filter((item) => {
+      if (typeFilter === 'withdrawn') return Boolean(item.isWithdrawn) && fuzzySearchMatch(query, item.title, item.id)
+      if (item.isWithdrawn) return false
       if (typeFilter === 'expiring') {
         if (!item.licenseExpiringSoon && !item.licenseExpired) return false
       } else if (typeFilter === 'dikey') {
@@ -141,8 +146,18 @@ export function AdminContentListPage() {
   }
 
   const handleFeatured = async (id: string) => {
-    await setFeatured(id)
-    await loadCatalog()
+    setError(''); setBusyId(id)
+    try { await setFeatured(id); await loadCatalog() }
+    catch (err) { setError(err instanceof Error ? err.message : 'Öne çıkarma başarısız.') }
+    finally { setBusyId(null) }
+  }
+  const handlePublication = async (item: AdminContentItem) => {
+    setError(''); setBusyId(item.id)
+    try {
+      await setAdminContentPublication(item.id, !(item.isPublished || item.isScheduled))
+      await refresh(); await loadCatalog()
+    } catch (err) { setError(err instanceof Error ? err.message : 'Yayın güncellenemedi.') }
+    finally { setBusyId(null) }
   }
 
   return (
@@ -176,6 +191,7 @@ export function AdminContentListPage() {
         </div>
       )}
 
+      {error && <p role="alert" className="text-red-300">{error}</p>}
       <AdminSearchBar
         value={query}
         onChange={setQuery}
@@ -185,6 +201,9 @@ export function AdminContentListPage() {
       />
 
       <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={() => setTypeFilter('withdrawn')} className={`rounded-full px-4 py-1.5 text-sm font-medium ${typeFilter === 'withdrawn' ? 'bg-red-500 text-white' : 'bg-red-500/15 text-red-300'}`}>
+          Yayından alınanlar ({adminCatalog.filter(item => item.isWithdrawn).length})
+        </button>
         <button
           type="button"
           onClick={() => setTypeFilter('all')}
@@ -194,7 +213,7 @@ export function AdminContentListPage() {
               : 'bg-white/10 text-white/85 hover:bg-white/15'
           }`}
         >
-          Tümü
+          Tümü ({adminCatalog.filter(item => !item.isWithdrawn).length})
         </button>
         <button
           type="button"
@@ -221,7 +240,7 @@ export function AdminContentListPage() {
                 : 'bg-white/10 text-white/85 hover:bg-white/15'
             }`}
           >
-            {entry.label}
+            {entry.label} ({adminCatalog.filter(item => !item.isWithdrawn && item.type === entry.value).length})
           </button>
         ))}
         <button
@@ -327,7 +346,7 @@ export function AdminContentListPage() {
                       <LicenseStatusBadge item={item} />
                     </td>
                     <td className="px-4 py-3 text-xs text-white/80">
-                      {watchedMinutes ? `${watchedMinutes} dk` : '—'}
+                      {watchStatsError ? 'Yüklenemedi' : `${watchedMinutes ?? 0} dk`}
                     </td>
                     <td className="px-4 py-3">
                       {item.featured ? (
@@ -337,6 +356,7 @@ export function AdminContentListPage() {
                       ) : (
                         <button
                           type="button"
+                          disabled={busyId !== null || !item.isPublished || usingFallback}
                           onClick={() => void handleFeatured(item.id)}
                           className="text-xs text-plooy-muted hover:text-white"
                         >
@@ -346,6 +366,9 @@ export function AdminContentListPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
+                        <button type="button" disabled={busyId !== null || usingFallback} onClick={() => void handlePublication(item)} className="rounded-lg bg-amber-500/15 px-3 py-1.5 text-xs text-amber-200 disabled:opacity-50">
+                          {busyId === item.id ? 'Bekleyin…' : item.isPublished || item.isScheduled ? 'Yayını durdur' : 'Yayına al'}
+                        </button>
                         <Link
                           to={`/admin/icerikler/${item.id}`}
                           className="rounded-lg bg-white/5 px-3 py-1.5 text-xs text-white hover:bg-white/10"

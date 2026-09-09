@@ -39,7 +39,8 @@ const {default:episodeRoutes}=await import('../src/routes/episodes.ts')
 const {default:creatorChatRoutes}=await import('../src/routes/creatorChat.ts')
 const {default:legalAdminRoutes}=await import('../src/routes/adminLegal.ts')
 const {default:creatorAuthRoutes}=await import('../src/routes/creatorAuth.ts')
-const app = express(); app.use('/creator-auth',express.json(),creatorAuthRoutes); app.use('/legal-admin',express.json(),legalAdminRoutes); app.use(express.json()); app.use('/chat',creatorChatRoutes); app.use('/episodes',episodeRoutes); app.use('/banners',bannerRoutes); app.use('/presentation-test',presentationRoutes); app.use('/notes-test',notesRoutes); app.use('/journal-test',journalRoutes); app.use('/mode-test',modeRoutes); app.use('/public-mode',publicModeRoutes); app.use('/queues',queueRoutes); app.use('/creator',creatorRoutes); app.use('/billing',billingRoutes); app.use('/categories',categoryRoutes); app.use('/catalog',contentRoutes); app.use('/admin',adminRoutes); app.use('/upload',uploadRoutes)
+const {default: publicationRoutes}=await import('../src/routes/adminContent.ts')
+const app = express(); app.use('/publication',express.json(),publicationRoutes); app.use('/creator-auth',express.json(),creatorAuthRoutes); app.use('/legal-admin',express.json(),legalAdminRoutes); app.use(express.json()); app.use('/chat',creatorChatRoutes); app.use('/episodes',episodeRoutes); app.use('/banners',bannerRoutes); app.use('/presentation-test',presentationRoutes); app.use('/notes-test',notesRoutes); app.use('/journal-test',journalRoutes); app.use('/mode-test',modeRoutes); app.use('/public-mode',publicModeRoutes); app.use('/queues',queueRoutes); app.use('/creator',creatorRoutes); app.use('/billing',billingRoutes); app.use('/categories',categoryRoutes); app.use('/catalog',contentRoutes); app.use('/admin',adminRoutes); app.use('/upload',uploadRoutes)
 const server = app.listen(0,'127.0.0.1'); await new Promise(resolve => server.once('listening',resolve))
 const base = 'http://127.0.0.1:'+server.address().port
 async function call(url,id,method,body) { return fetch(base+url,{ method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+signToken({userId:id,role:id==='admin'?'admin':'creator'})},body:JSON.stringify(body) }) }
@@ -299,6 +300,22 @@ try {
  assert.equal(registered.student_department,'Yeni Medya')
  assert.equal(registered.registration_paid_at,null)
  }
+
+ dbRun('UPDATE content SET license_expires_at = NULL WHERE id = ?',[standardId])
+ assert.equal((await call('/publication/'+standardId+'/publication','standard','PATCH',{publish:false})).status,403)
+ assert.equal((await call('/publication/'+standardId+'/publication','admin','PATCH',{publish:false})).status,200)
+ assert.equal((await fetch(base+'/catalog/'+standardId)).status,404)
+ assert.equal((await fetch(base+'/episodes/content/'+standardId)).status,404)
+ const withdrawn=(await (await call('/publication','admin','GET')).json()).catalog.find(x=>x.id===standardId)
+ assert.equal(withdrawn.isWithdrawn,true);assert.equal(withdrawn.isPublished,false)
+ const originalType=dbGet('SELECT type FROM content WHERE id=?',[standardId]).type
+ assert.equal((await call('/publication/'+standardId+'/publication','admin','PATCH',{publish:true})).status,200)
+ assert.equal((await fetch(base+'/catalog/'+standardId)).status,200)
+ assert.equal(dbGet('SELECT type FROM content WHERE id=?',[standardId]).type,originalType)
+ dbRun('UPDATE content SET license_expires_at = ? WHERE id = ?',['2000-01-01',standardId])
+ await call('/publication/'+standardId+'/publication','admin','PATCH',{publish:false})
+ assert.equal((await call('/publication/'+standardId+'/publication','admin','PATCH',{publish:true})).status,400)
+ console.log('PASS: admin-only withdrawal, catalog and episode exclusion, admin archive, category preserved on republish, expired license blocked')
  console.log('PASS: required student application choice, both registration paths, department persistence and payment required')
  console.log('PASS: paid membership, creator message isolation, direct/group messages, idempotency and read access')
  console.log('PASS: episode parent, seasons, duplicate prevention, TR/EN persistence, blank drafts and delete')

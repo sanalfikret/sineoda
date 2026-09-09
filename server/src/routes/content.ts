@@ -8,7 +8,7 @@ import { serializeCredits } from '../services/credits.js'
 import { parseFestivalsBody, serializeFestivals } from '../services/festivals.js'
 import { resolveDurationFields } from '../services/duration.js'
 import { parseContentAddedAt, parseLicenseDate } from '../services/license.js'
-import { parsePublishedAt } from '../services/publish.js'
+import { PUBLISHED_CONTENT_SQL, parsePublishedAt } from '../services/publish.js'
 import { normalizeContentType } from '../constants/contentTypes.js'
 import { syncFeaturedContentSelection } from '../services/landingFeatured.js'
 import type { ContentRow } from '../types.js'
@@ -97,14 +97,14 @@ function contentFields(body: Record<string, unknown>, existing?: ContentRow) {
 
 router.get('/', (_req, res) => {
   const catalog = dbAll<ContentRow>(
-    `SELECT * FROM content WHERE (creator_id IS NULL OR review_status = 'published') AND published_at IS NOT NULL AND published_at <= datetime('now') ORDER BY title`,
+    `SELECT * FROM content WHERE ${PUBLISHED_CONTENT_SQL} ORDER BY title`,
   ).map(mapContent)
   res.json({ catalog })
 })
 
 router.get('/:id', (req, res) => {
   const row = dbGet<ContentRow>(
-    `SELECT * FROM content WHERE id = ? AND published_at IS NOT NULL AND published_at <= datetime('now')`,
+    `SELECT * FROM content WHERE id = ? AND ${PUBLISHED_CONTENT_SQL}`,
     [req.params.id],
   )
   if (!row) {
