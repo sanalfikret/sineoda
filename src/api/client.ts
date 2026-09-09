@@ -1,3 +1,5 @@
+import { createRandomId } from '../utils/id'
+import { withRequestDeadline } from '../utils/requestDeadline'
 import { matchesRequestSession, sessionIdentity } from '../utils/sessionIdentity'
 import { localizeDynamic } from '../utils/dynamicTranslations'
 import i18n from '../i18n'
@@ -936,11 +938,24 @@ export async function markUserMessageRead(id: string) {
   })
 }
 
+const pendingAdminMessages = new Map<string, { id: string; promise?: Promise<unknown> }>()
+function sendReliableAdminMessage<T>(url: string, data: object): Promise<T> {
+  const key = JSON.stringify([sessionIdentity(getToken()), url, data])
+  let pending = pendingAdminMessages.get(key)
+  if (pending?.promise) return pending.promise as Promise<T>
+  if (!pending) { pending = { id: createRandomId() }; pendingAdminMessages.set(key, pending) }
+  const entry = pending
+  const promise = withRequestDeadline(
+    signal => api<T>(url, { method: 'POST', signal, body: JSON.stringify({ ...data, requestId: entry.id }) }),
+    'Yanıt alınamadı. Tekrar Gönder diyebilirsiniz; aynı mesaj çoğaltılmaz.',
+  ).then(result => { pendingAdminMessages.delete(key); return result })
+    .finally(() => { entry.promise = undefined })
+  entry.promise = promise
+  return promise
+}
+
 export async function sendAdminUserMessage(userId: string, data: { subject: string; body: string }) {
-  return api<{ message: UserMessage }>(`/api/admin/messages/users/${encodeURIComponent(userId)}`, {
-    method: 'POST',
-    body: JSON.stringify(data),
-  })
+  return sendReliableAdminMessage<{ message: UserMessage }>(`/api/admin/messages/users/${encodeURIComponent(userId)}`, data)
 }
 
 export async function broadcastAdminMessage(data: {
@@ -948,10 +963,7 @@ export async function broadcastAdminMessage(data: {
   body: string
   audience?: 'all' | 'active_subscribers'
 }) {
-  return api<{ sent: number; audience: string }>('/api/admin/messages/broadcast', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  })
+  return sendReliableAdminMessage<{ sent: number; audience: string }>('/api/admin/messages/broadcast', data)
 }
 
 export interface BillingPlan {
