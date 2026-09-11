@@ -8,6 +8,9 @@ export interface SiteModeConfig {
   headline: string
   subheadline: string
   allowViewerSignup: boolean
+  /** Davetli üyelik: izleyici kaydı yalnızca davet koduyla. */
+  inviteOnly: boolean
+  inviteMessage: string
 }
 
 const DEFAULTS: SiteModeConfig = {
@@ -16,6 +19,8 @@ const DEFAULTS: SiteModeConfig = {
   headline: 'Yakında açılıyoruz',
   subheadline: 'Bağımsız sinemanın yeni adresi geliyor. Film başvuruları şimdiden açık.',
   allowViewerSignup: false,
+  inviteOnly: false,
+  inviteMessage: 'Plooy şu an davetli üyelik döneminde. Kayıt olmak için davet kodunuzu girin.',
 }
 
 function normalizeSiteMode(raw: unknown): SiteModeConfig {
@@ -35,7 +40,16 @@ function normalizeSiteMode(raw: unknown): SiteModeConfig {
         ? input.subheadline.trim()
         : DEFAULTS.subheadline,
     allowViewerSignup: input.allowViewerSignup === true,
+    inviteOnly: input.inviteOnly === true,
+    inviteMessage:
+      typeof input.inviteMessage === 'string' && input.inviteMessage.trim()
+        ? input.inviteMessage.trim().slice(0, 300)
+        : DEFAULTS.inviteMessage,
   }
+}
+
+export function isInviteOnlyActive() {
+  return getSiteMode().inviteOnly
 }
 
 export function getSiteMode(): SiteModeConfig {

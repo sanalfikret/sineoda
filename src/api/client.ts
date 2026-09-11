@@ -461,8 +461,15 @@ export async function signupRequest(
     acceptTerms?: boolean
     acceptPrivacy?: boolean
     acceptKvkk?: boolean
+    inviteCode?: string
   },
-): Promise<{ message: string; email: string; planId?: string; devVerifyUrl?: string }> {
+): Promise<{
+  message: string
+  email: string
+  planId?: string
+  devVerifyUrl?: string
+  inviteGrant?: { grantedMonths: number; expiresAt: string | null } | null
+}> {
   return api('/api/auth/signup', {
     method: 'POST',
     body: JSON.stringify({
@@ -476,8 +483,88 @@ export async function signupRequest(
       acceptTerms: options?.acceptTerms,
       acceptPrivacy: options?.acceptPrivacy,
       acceptKvkk: options?.acceptKvkk,
+      inviteCode: options?.inviteCode,
     }),
   })
+}
+
+export async function checkInviteCode(code: string) {
+  return api<{ ok: true; inviteOnly: boolean; grantMonths: number; planId: string }>('/api/auth/invite/check', {
+    method: 'POST',
+    body: JSON.stringify({ code }),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Admin — davet kodları (lansman / davetli üyelik)
+// ---------------------------------------------------------------------------
+
+export interface InviteStats {
+  total: number
+  used: number
+  active: number
+  revoked: number
+}
+
+export interface InviteBatchSummary {
+  batchId: string
+  label: string
+  prefix: string
+  planId: string
+  grantMonths: number
+  total: number
+  used: number
+  active: number
+  revoked: number
+  expiresAt: string | null
+  createdAt: string
+}
+
+export interface InviteCodeEntry {
+  id: string
+  code: string
+  status: 'active' | 'used' | 'revoked'
+  usedAt: string | null
+  usedByName: string | null
+  usedByEmail: string | null
+  expiresAt: string | null
+}
+
+export async function fetchAdminInvites() {
+  return api<{ inviteOnly: boolean; stats: InviteStats; batches: InviteBatchSummary[] }>('/api/admin/invites')
+}
+
+export async function createAdminInviteBatch(payload: {
+  count: number
+  label?: string
+  prefix?: string
+  planId?: string
+  grantMonths?: number
+  expiresAt?: string | null
+}) {
+  return api<{
+    batch: { batchId: string; label: string; prefix: string; planId: string; grantMonths: number; expiresAt: string | null; createdAt: string; codes: string[] }
+    stats: InviteStats
+    batches: InviteBatchSummary[]
+  }>('/api/admin/invites/batch', { method: 'POST', body: JSON.stringify(payload) })
+}
+
+export async function fetchAdminInviteBatchCodes(batchId: string, status: 'all' | 'active' | 'used' | 'revoked' = 'all') {
+  return api<{ codes: InviteCodeEntry[] }>(`/api/admin/invites/batch/${encodeURIComponent(batchId)}/codes?status=${status}`)
+}
+
+export async function revokeAdminInviteBatch(batchId: string) {
+  return api<{ batch: InviteBatchSummary | null; stats: InviteStats; batches: InviteBatchSummary[] }>(
+    `/api/admin/invites/batch/${encodeURIComponent(batchId)}/revoke`,
+    { method: 'POST' },
+  )
+}
+
+export async function deleteAdminInviteBatch(batchId: string) {
+  return api<{ ok: boolean; stats: InviteStats; batches: InviteBatchSummary[] }>(
+    `/api/admin/invites/batch/${encodeURIComponent(batchId)}`,
+    { method: 'DELETE' },
+  )
 }
 
 export async function verifyEmailRequest(token: string): Promise<{ message: string }> {
@@ -1145,6 +1232,8 @@ export interface SiteModeConfig {
   headline: string
   subheadline: string
   allowViewerSignup: boolean
+  inviteOnly: boolean
+  inviteMessage: string
 }
 
 export async function fetchSiteMode() {

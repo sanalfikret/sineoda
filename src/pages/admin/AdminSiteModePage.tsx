@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchAdminSiteMode, updateAdminSiteMode, type SiteModeConfig } from '../../api/client'
 import { useSiteMode } from '../../context/SiteModeContext'
+import { AdminInviteCodesPanel } from '../../components/admin/AdminInviteCodesPanel'
 import { datetimeLocalToIso, formatLaunchDateTr, toDatetimeLocalValue } from '../../utils/countdown'
 
 export function AdminSiteModePage() {
@@ -20,6 +21,28 @@ export function AdminSiteModePage() {
       })
       .finally(() => setLoading(false))
   }, [])
+
+  const handleInviteToggle = async (next: boolean) => {
+    const { siteMode } = await updateAdminSiteMode({ inviteOnly: next })
+    setForm(siteMode)
+    setLaunchLocal(toDatetimeLocalValue(siteMode.launchAt))
+    await refreshSiteMode()
+  }
+
+  const handleInviteMessageSave = async () => {
+    if (!form) return
+    setSaving(true)
+    try {
+      const { siteMode } = await updateAdminSiteMode({ inviteMessage: form.inviteMessage })
+      setForm(siteMode)
+      await refreshSiteMode()
+      setMessage('Davet mesajı kaydedildi.')
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Kaydedilemedi.')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const handleSave = async () => {
     if (!form) return
@@ -51,18 +74,34 @@ export function AdminSiteModePage() {
   }
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-4xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Yakında Modu</h1>
+        <h1 className="text-2xl font-bold text-white">Açılış Modları</h1>
         <p className="mt-2 text-sm text-plooy-muted">
-          Reklam kampanyası için coming soon sayfası. Yapımcı başvuruları açık kalır; izleyici üyeliği ve
-          katalog kapalıdır. Admin olarak siz siteyi normal test edebilirsiniz.
+          İki bağımsız anahtar: <strong className="text-white/80">Davetli üyelik</strong> (site açık, kayıt yalnızca davet koduyla) ve{' '}
+          <strong className="text-white/80">Yakında modu</strong> (site kapalı, geri sayım). Admin olarak siz siteyi her durumda test edebilirsiniz.
         </p>
       </div>
 
       {message && (
         <p className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white">{message}</p>
       )}
+
+      <AdminInviteCodesPanel
+        inviteOnly={form.inviteOnly}
+        onToggleInviteOnly={handleInviteToggle}
+        inviteMessage={form.inviteMessage}
+        onInviteMessageChange={(value) => setForm((current) => current && { ...current, inviteMessage: value })}
+        onSaveMessage={handleInviteMessageSave}
+        saving={saving}
+      />
+
+      <div>
+        <h2 className="text-xl font-bold text-white">Yakında Modu</h2>
+        <p className="mt-1 text-sm text-plooy-muted">
+          Reklam kampanyası için coming soon sayfası. Yapımcı başvuruları açık kalır; izleyici üyeliği ve katalog kapalıdır.
+        </p>
+      </div>
 
       <section className="rounded-2xl border border-white/10 bg-[#11141c] p-5 space-y-5">
         <label className="flex items-start gap-3">

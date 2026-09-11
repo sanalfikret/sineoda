@@ -1,4 +1,5 @@
 import creatorChatRoutes from './routes/creatorChat.js'
+import adminInvitesRoutes from './routes/adminInvites.js'
 import bannerRoutes from './routes/banners.js'
 import landingPresentationRoutes from './routes/landingPresentation.js'
 import adminQueuesRoutes from './routes/adminQueues.js'
@@ -369,6 +370,7 @@ app.use('/api/site-mode', siteModeRoutes)
 app.use('/api/landing-presentation',landingPresentationRoutes)
 app.use('/api/admin/billing-plans', adminBillingPlansRoutes)
 app.use('/api/admin/gift-codes', adminGiftCodesRoutes)
+app.use('/api/admin/invites', adminInvitesRoutes)
 app.use('/api/internal/cron', internalCronRoutes)
 app.use('/api/admin/upload', uploadRoutes)
 app.use(seoRoutes)

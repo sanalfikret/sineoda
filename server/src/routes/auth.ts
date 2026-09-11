@@ -15,6 +15,7 @@ import { getPlan, normalizePlanId, planRequiresStudentId } from '../services/pla
 import { isValidTurkishMobile, normalizePhone, sendVerificationSms } from '../services/sms.js'
 import { recordSignupConsents } from '../services/legalConsent.js'
 import { getSiteMode } from '../services/siteMode.js'
+import { consumeInviteCode, requireUsableInviteCode, type InviteCodeRow } from '../services/inviteCodes.js'
 import { getClientIp, getUserAgent } from '../utils/clientIp.js'
 import { allowDevSecretLeaks } from '../security/devSecrets.js'
 import {
@@ -118,6 +119,17 @@ router.post('/sms/send', authSmsLimiter, async (req, res) => {
   }
 })
 
+/** Davet kodunu kayıt öncesi doğrular (tüketmez). */
+router.post('/invite/check', authLoginLimiter, (req, res) => {
+  const siteMode = getSiteMode()
+  try {
+    const row = requireUsableInviteCode(req.body?.code)
+    res.json({ ok: true, inviteOnly: siteMode.inviteOnly, grantMonths: row.grant_months, planId: row.plan_id })
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'Davet kodu doğrulanamadı.' })
+  }
+})
+
 router.post('/signup', authSignupLimiter, async (req, res) => {
   const siteMode = getSiteMode()
   if (siteMode.enabled && !siteMode.allowViewerSignup) {
@@ -126,6 +138,16 @@ router.post('/signup', authSignupLimiter, async (req, res) => {
       code: 'SITE_COMING_SOON',
     })
     return
+  }
+
+  let invite: InviteCodeRow | null = null
+  if (siteMode.inviteOnly) {
+    try {
+      invite = requireUsableInviteCode(req.body?.inviteCode)
+    } catch (err) {
+      res.status(403).json({ error: err instanceof Error ? err.message : 'Davet kodu gerekli.', code: 'INVITE_REQUIRED' })
+      return
+    }
   }
 
   const { name, email, password, phone, smsCode, planId, studentIdUrl, acceptTerms, acceptPrivacy, acceptKvkk } = req.body as {
@@ -253,10 +275,28 @@ router.post('/signup', authSignupLimiter, async (req, res) => {
     return
   }
 
+  let inviteGrant: { grantedMonths: number; expiresAt: string | null } | null = null
+  if (invite) {
+    try {
+      inviteGrant = consumeInviteCode(invite, userId)
+    } catch (inviteError) {
+      dbRun('DELETE FROM profiles WHERE user_id = ?', [userId])
+      dbRun('DELETE FROM users WHERE id = ?', [userId])
+      res.status(409).json({ error: inviteError instanceof Error ? inviteError.message : 'Davet kodu kullanılamadı.' })
+      return
+    }
+  }
+
   const emailResult = await createEmailVerificationToken(userId, normalizedEmail)
 
   res.status(201).json({
+    inviteGrant,
     message:
+      inviteGrant && inviteGrant.grantedMonths > 0
+        ? `Kayıt alındı. Davet kodunla ${inviteGrant.grantedMonths} ay ücretsiz üyelik tanımlandı. E-postanı doğrula, ardından giriş yap.`
+        : invite
+          ? 'Kayıt alındı. Davet kodun kullanıldı. E-postanı doğrula, ardından giriş yap.'
+          :
       'Kayıt alındı. E-postanı doğrula, ardından giriş yap — seçtiğin plan için ödeme adımına yönlendirileceksin.',
     email: normalizedEmail,
     planId: selectedPlanId,

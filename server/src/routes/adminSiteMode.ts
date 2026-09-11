@@ -19,6 +19,8 @@ router.patch('/', requireAdmin, (req: AuthRequest, res) => {
   if (typeof body.headline === 'string') patch.headline = body.headline
   if (typeof body.subheadline === 'string') patch.subheadline = body.subheadline
   if (typeof body.allowViewerSignup === 'boolean') patch.allowViewerSignup = body.allowViewerSignup
+  if (typeof body.inviteOnly === 'boolean') patch.inviteOnly = body.inviteOnly
+  if (typeof body.inviteMessage === 'string') patch.inviteMessage = body.inviteMessage
 
   res.json({ siteMode: saveSiteMode(patch) })
 })

@@ -480,6 +480,24 @@ function runMigrations() {
   `)
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS invite_codes (
+      id TEXT PRIMARY KEY,
+      code TEXT UNIQUE NOT NULL,
+      batch_id TEXT NOT NULL,
+      batch_label TEXT NOT NULL DEFAULT '',
+      prefix TEXT NOT NULL DEFAULT 'PLOOY',
+      plan_id TEXT NOT NULL DEFAULT 'standard',
+      grant_months INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'active',
+      used_by_user_id TEXT,
+      used_at TEXT,
+      expires_at TEXT,
+      created_at TEXT NOT NULL
+    );
+  `)
+  db.run('CREATE INDEX IF NOT EXISTS invite_codes_batch ON invite_codes(batch_id, status)')
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS gift_code_redemptions (
       id TEXT PRIMARY KEY,
       gift_code_id TEXT NOT NULL,

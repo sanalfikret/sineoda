@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext'
 import { useLegalDocuments } from '../hooks/useLegalDocuments'
 import { useLocale } from '../i18n/LocaleContext'
 import { useLocalizedLegalDocuments } from '../i18n/useLegalLocale'
+import { useSiteMode } from '../context/SiteModeContext'
 import { postLoginPath } from '../utils/billing'
 
 function LegalReadButton({
@@ -41,6 +42,9 @@ export function SignupPage() {
   const { documents: baseDocuments } = useLegalDocuments()
   const { documents, links: legalLinks } = useLocalizedLegalDocuments(baseDocuments)
   const [searchParams] = useSearchParams()
+  const { siteMode } = useSiteMode()
+  const inviteOnly = Boolean(siteMode?.inviteOnly)
+  const [inviteCode, setInviteCode] = useState(() => (searchParams.get('davet') ?? searchParams.get('invite') ?? '').toUpperCase())
   const initialPlan = searchParams.get('plan') === 'student' ? 'student' : 'standard'
   const [selectedPlan, setSelectedPlan] = useState<SignupPlanId>(initialPlan)
   const [name, setName] = useState('')
@@ -159,6 +163,11 @@ export function SignupPage() {
       return
     }
 
+    if (inviteOnly && !inviteCode.trim()) {
+      setError(t('inviteRequired'))
+      return
+    }
+
     setLoading(true)
     try {
       let studentIdUrl: string | undefined
@@ -172,6 +181,7 @@ export function SignupPage() {
         acceptTerms,
         acceptPrivacy,
         acceptKvkk,
+        inviteCode: inviteCode.trim() || undefined,
       })
       setPendingEmail(result.email)
       setPendingPlan((result.planId as SignupPlanId) ?? selectedPlan)
@@ -294,6 +304,25 @@ export function SignupPage() {
               />
               <p className="mt-1 text-xs text-plooy-muted">{t('studentIdFileHint')}</p>
             </label>
+          )}
+
+          {inviteOnly && (
+            <div className="rounded-xl border border-plooy-gold/40 bg-plooy-gold/10 p-4">
+              <p className="text-sm font-semibold text-plooy-gold">{t('inviteOnlyTitle')}</p>
+              <p className="mt-1 text-xs text-white/80">{siteMode?.inviteMessage || t('inviteOnlyNotice')}</p>
+              <label className="mt-3 block">
+                <span className="mb-1.5 block text-sm font-medium text-white/90">{t('inviteCode')}</span>
+                <input
+                  type="text"
+                  required
+                  value={inviteCode}
+                  onChange={(event) => setInviteCode(event.target.value.toUpperCase())}
+                  className="w-full rounded-lg border border-plooy-gold/40 bg-plooy-bg px-4 py-3 font-mono uppercase tracking-wider text-white outline-none transition focus:border-plooy-gold"
+                  placeholder={t('inviteCodePlaceholder')}
+                  autoComplete="off"
+                />
+              </label>
+            </div>
           )}
 
           <label className="block">

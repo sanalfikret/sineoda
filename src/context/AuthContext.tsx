@@ -55,8 +55,15 @@ interface AuthContextValue {
       acceptTerms?: boolean
       acceptPrivacy?: boolean
       acceptKvkk?: boolean
+      inviteCode?: string
     },
-  ) => Promise<{ message: string; email: string; planId?: string; devVerifyUrl?: string }>
+  ) => Promise<{
+    message: string
+    email: string
+    planId?: string
+    devVerifyUrl?: string
+    inviteGrant?: { grantedMonths: number; expiresAt: string | null } | null
+  }>
   creatorLogin: (email: string, password: string) => Promise<User>
   creatorSignup: (data: {
     name: string
@@ -254,6 +261,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         acceptTerms?: boolean
         acceptPrivacy?: boolean
         acceptKvkk?: boolean
+        inviteCode?: string
       },
     ) => {
       return signupRequest(name, email, password, phone, smsCode, options)
