@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   createAdminGiftCode,
+  deleteAdminGiftCode,
   fetchAdminBillingPlans,
+  fetchAdminGiftCodeRedemptions,
   fetchAdminGiftCodes,
   saveAdminBillingPlans,
   setAdminGiftCodeEnabled,
   type AdminBillingPlan,
   type BillingPlan,
   type GiftCode,
+  type GiftCodeKind,
+  type GiftCodeRedemption,
 } from '../../api/client'
 
 type PlanDraft = {
@@ -29,11 +33,23 @@ type CustomPlanDraft = PlanDraft & { id: string }
 type GiftDraft = {
   code: string
   label: string
+  kind: GiftCodeKind
   planId: string
   durationMonths: number
   durationYears: number
+  discountPercent: number
+  discountAmount: number
   maxUses: number
   expiresAt: string
+}
+
+function giftCodeSummary(code: GiftCode, planName: (id: string) => string) {
+  if (code.kind === 'discount') {
+    const amount = code.discountPercent > 0 ? `%${code.discountPercent} indirim` : `₺${code.discountAmount} indirim`
+    return `${amount} · ${code.planId ? planName(code.planId) : 'tüm izleyici planları'}`
+  }
+  const duration = code.durationYears > 0 ? `${code.durationYears} yıl` : `${code.durationMonths} ay`
+  return `${duration} ücretsiz · ${planName(code.planId)}`
 }
 
 function toDraft(plan: BillingPlan): PlanDraft {
@@ -77,16 +93,26 @@ function emptyCustomPlan(): CustomPlanDraft {
   }
 }
 
-function emptyGiftDraft(planId: string): GiftDraft {
+function emptyGiftDraft(planId: string, kind: GiftCodeKind = 'gift'): GiftDraft {
   return {
     code: '',
     label: '',
-    planId,
+    kind,
+    planId: kind === 'gift' ? planId : '',
     durationMonths: 1,
     durationYears: 0,
+    discountPercent: 20,
+    discountAmount: 0,
     maxUses: 1,
     expiresAt: '',
   }
+}
+
+function randomCode(prefix: string) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  let out = ''
+  for (let i = 0; i < 6; i += 1) out += chars[Math.floor(Math.random() * chars.length)]
+  return `${prefix}-${out}`
 }
 
 export function AdminBillingPlansPage() {
@@ -99,6 +125,10 @@ export function AdminBillingPlansPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [giftSaving, setGiftSaving] = useState(false)
+  const [giftFilter, setGiftFilter] = useState<'all' | GiftCodeKind>('all')
+  const [redemptionsFor, setRedemptionsFor] = useState<string | null>(null)
+  const [redemptions, setRedemptions] = useState<GiftCodeRedemption[]>([])
+  const [redemptionsLoading, setRedemptionsLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
@@ -214,14 +244,18 @@ export function AdminBillingPlansPage() {
       const result = await createAdminGiftCode({
         code: giftDraft.code,
         label: giftDraft.label,
+        kind: giftDraft.kind,
         planId: giftDraft.planId,
         durationMonths: giftDraft.durationYears > 0 ? 0 : giftDraft.durationMonths,
         durationYears: giftDraft.durationYears,
+        discountPercent: giftDraft.kind === 'discount' ? giftDraft.discountPercent : 0,
+        discountAmount: giftDraft.kind === 'discount' ? giftDraft.discountAmount : 0,
         maxUses: giftDraft.maxUses,
         expiresAt: giftDraft.expiresAt || null,
       })
       setGiftCodes((current) => [result.code, ...current])
-      setGiftDraft(emptyGiftDraft(giftDraft.planId))
+      setMessage(`${result.code.kind === 'discount' ? 'İndirim' : 'Hediye'} kodu oluşturuldu: ${result.code.code}`)
+      setGiftDraft(emptyGiftDraft(viewerPlanOptions[0]?.id ?? 'standard', giftDraft.kind))
       setMessage(`Hediye kodu oluşturuldu: ${result.code.code}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kupon oluşturulamadı.')
@@ -229,6 +263,39 @@ export function AdminBillingPlansPage() {
       setGiftSaving(false)
     }
   }
+
+  const handleDeleteGiftCode = async (code: GiftCode) => {
+    if (!window.confirm(`"${code.code}" kodu silinsin mi?`)) return
+    setError('')
+    try {
+      await deleteAdminGiftCode(code.id)
+      setGiftCodes((current) => current.filter((entry) => entry.id !== code.id))
+      if (redemptionsFor === code.id) setRedemptionsFor(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Kupon silinemedi.')
+    }
+  }
+
+  const toggleRedemptions = async (code: GiftCode) => {
+    if (redemptionsFor === code.id) {
+      setRedemptionsFor(null)
+      return
+    }
+    setRedemptionsFor(code.id)
+    setRedemptionsLoading(true)
+    try {
+      const result = await fetchAdminGiftCodeRedemptions(code.id)
+      setRedemptions(result.redemptions)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Kullanım listesi yüklenemedi.')
+      setRedemptions([])
+    } finally {
+      setRedemptionsLoading(false)
+    }
+  }
+
+  const planNameOf = (id: string) => plans.find((plan) => plan.id === id)?.name ?? id
+  const visibleGiftCodes = giftCodes.filter((code) => giftFilter === 'all' || code.kind === giftFilter)
 
   const toggleGiftCode = async (code: GiftCode) => {
     setError('')
@@ -401,7 +468,7 @@ export function AdminBillingPlansPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Abonelik & Başvuru Planları</h1>
           <p className="mt-2 max-w-2xl text-sm text-plooy-muted">
-            Periyot (aylık/yıllık/tek sefer), kampanya planları ve hediye kupon kodlarını buradan yönetin.
+            Periyot (aylık/yıllık/tek sefer), kampanya planları, hediye ve indirim kodlarını buradan yönetin.
           </p>
         </div>
         {tab === 'plans' && (
@@ -433,7 +500,7 @@ export function AdminBillingPlansPage() {
             tab === 'gifts' ? 'bg-plooy-gold text-plooy-bg' : 'border border-white/10 text-white/80'
           }`}
         >
-          Hediye Kodları
+          Hediye & İndirim Kodları
         </button>
       </div>
 
@@ -551,20 +618,60 @@ export function AdminBillingPlansPage() {
       ) : (
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
           <section className="rounded-2xl border border-white/10 bg-[#11141c] p-6">
-            <h2 className="text-lg font-semibold text-white">Yeni hediye kodu</h2>
+            <h2 className="text-lg font-semibold text-white">Yeni kod</h2>
             <p className="mt-1 text-sm text-plooy-muted">
-              Dağıtılan kartlardaki kod — üye kodu girer, ödeme yapmadan abonelik başlar; süre bitince erişim kapanır.
+              <strong className="text-white/80">Hediye:</strong> üye kodu girer, ödeme yapmadan seçtiğiniz kadar ay/yıl üyelik açılır.{' '}
+              <strong className="text-white/80">İndirim:</strong> ödeme adımında fiyattan düşülür (%100 indirimde ödeme adımı atlanır).
             </p>
 
             <div className="mt-5 space-y-4">
+              <div className="grid grid-cols-2 gap-2">
+                {(
+                  [
+                    ['gift', 'Hediye üyelik'],
+                    ['discount', 'İndirim kodu'],
+                  ] as const
+                ).map(([kind, label]) => (
+                  <button
+                    key={kind}
+                    type="button"
+                    onClick={() =>
+                      setGiftDraft((current) => ({
+                        ...emptyGiftDraft(viewerPlanOptions[0]?.id ?? 'standard', kind),
+                        code: current.code,
+                        label: current.label,
+                        maxUses: current.maxUses,
+                        expiresAt: current.expiresAt,
+                      }))
+                    }
+                    className={`rounded-lg px-3 py-2 text-sm font-medium ${
+                      giftDraft.kind === kind ? 'bg-plooy-gold text-plooy-bg' : 'border border-white/10 text-white/80 hover:bg-white/5'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
               <label className="block">
                 <span className="mb-1.5 block text-sm text-plooy-muted">Kupon kodu</span>
-                <input
-                  value={giftDraft.code}
-                  onChange={(event) => setGiftDraft((current) => ({ ...current, code: event.target.value }))}
-                  placeholder="PLOOY-HEDIYE-2026"
-                  className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 uppercase text-white outline-none focus:border-plooy-gold"
-                />
+                <div className="flex gap-2">
+                  <input
+                    value={giftDraft.code}
+                    onChange={(event) => setGiftDraft((current) => ({ ...current, code: event.target.value }))}
+                    placeholder={giftDraft.kind === 'discount' ? 'FIRMA-INDIRIM-20' : 'PLOOY-HEDIYE-2026'}
+                    className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 uppercase text-white outline-none focus:border-plooy-gold"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setGiftDraft((current) => ({ ...current, code: randomCode(current.kind === 'discount' ? 'INDIRIM' : 'HEDIYE') }))
+                    }
+                    className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs text-white/80 hover:bg-white/5"
+                  >
+                    Rastgele
+                  </button>
+                </div>
               </label>
 
               <label className="block">
@@ -578,12 +685,15 @@ export function AdminBillingPlansPage() {
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-sm text-plooy-muted">Verilecek plan</span>
+                <span className="mb-1.5 block text-sm text-plooy-muted">
+                  {giftDraft.kind === 'discount' ? 'Geçerli plan' : 'Verilecek plan'}
+                </span>
                 <select
                   value={giftDraft.planId}
                   onChange={(event) => setGiftDraft((current) => ({ ...current, planId: event.target.value }))}
                   className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-plooy-gold"
                 >
+                  {giftDraft.kind === 'discount' && <option value="">Tüm izleyici planları</option>}
                   {viewerPlanOptions.map((plan) => (
                     <option key={plan.id} value={plan.id}>
                       {plan.name}
@@ -592,7 +702,48 @@ export function AdminBillingPlansPage() {
                 </select>
               </label>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              {giftDraft.kind === 'discount' && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm text-plooy-muted">İndirim yüzdesi (%)</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={giftDraft.discountPercent}
+                      onChange={(event) =>
+                        setGiftDraft((current) => ({
+                          ...current,
+                          discountPercent: Math.max(0, Math.min(100, Number(event.target.value) || 0)),
+                          discountAmount: 0,
+                        }))
+                      }
+                      className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-plooy-gold"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm text-plooy-muted">Sabit indirim (₺)</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={giftDraft.discountAmount}
+                      onChange={(event) =>
+                        setGiftDraft((current) => ({
+                          ...current,
+                          discountAmount: Math.max(0, Number(event.target.value) || 0),
+                          discountPercent: 0,
+                        }))
+                      }
+                      className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-plooy-gold"
+                    />
+                  </label>
+                  <p className="text-xs text-plooy-muted sm:col-span-2">
+                    Yüzde veya sabit tutardan yalnızca birini girin. Örn: %20 → ₺69 plan ₺55,20 olur. %100 → ücretsiz.
+                  </p>
+                </div>
+              )}
+
+              <div className={`grid gap-4 sm:grid-cols-2 ${giftDraft.kind === 'discount' ? 'hidden' : ''}`}>
                 <label className="block">
                   <span className="mb-1.5 block text-sm text-plooy-muted">Süre (ay)</span>
                   <input
@@ -661,50 +812,138 @@ export function AdminBillingPlansPage() {
                 onClick={() => void handleCreateGiftCode()}
                 className="w-full rounded-lg bg-plooy-gold px-5 py-2.5 text-sm font-semibold text-plooy-bg disabled:opacity-60"
               >
-                {giftSaving ? 'Oluşturuluyor...' : 'Hediye kodu oluştur'}
+                {giftSaving ? 'Oluşturuluyor...' : giftDraft.kind === 'discount' ? 'İndirim kodu oluştur' : 'Hediye kodu oluştur'}
               </button>
             </div>
           </section>
 
           <section className="rounded-2xl border border-white/10 bg-[#11141c] p-6">
-            <h2 className="text-lg font-semibold text-white">Mevcut kodlar</h2>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold text-white">Mevcut kodlar ({visibleGiftCodes.length})</h2>
+              <div className="flex gap-2">
+                {(
+                  [
+                    ['all', 'Tümü'],
+                    ['gift', 'Hediye'],
+                    ['discount', 'İndirim'],
+                  ] as const
+                ).map(([id, label]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setGiftFilter(id)}
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${
+                      giftFilter === id ? 'bg-plooy-gold/15 text-plooy-gold' : 'bg-white/5 text-white/70 hover:bg-white/10'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="mt-4 space-y-3">
-              {giftCodes.length === 0 && (
-                <p className="text-sm text-plooy-muted">Henüz hediye kodu yok.</p>
+              {visibleGiftCodes.length === 0 && (
+                <p className="text-sm text-plooy-muted">Henüz kod yok.</p>
               )}
-              {giftCodes.map((code) => (
+              {visibleGiftCodes.map((code) => {
+                const exhausted = code.usedCount >= code.maxUses
+                const expired = Boolean(code.expiresAt && new Date(code.expiresAt) < new Date())
+                return (
                 <div
                   key={code.id}
                   className="rounded-xl border border-white/10 bg-[#0d0f14] px-4 py-3"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div>
-                      <p className="font-mono text-sm font-semibold text-white">{code.code}</p>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-mono text-sm font-semibold text-white">{code.code}</p>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                            code.kind === 'discount' ? 'bg-sky-500/15 text-sky-200' : 'bg-emerald-500/15 text-emerald-200'
+                          }`}
+                        >
+                          {code.kind === 'discount' ? 'İndirim' : 'Hediye'}
+                        </span>
+                        {(exhausted || expired) && (
+                          <span className="rounded-full bg-white/10 px-2 py-0.5 text-[11px] text-white/60">
+                            {expired ? 'Süresi doldu' : 'Limit doldu'}
+                          </span>
+                        )}
+                      </div>
                       {code.label && <p className="mt-1 text-xs text-plooy-muted">{code.label}</p>}
                       <p className="mt-2 text-xs text-white/70">
-                        {code.durationYears > 0
-                          ? `${code.durationYears} yıl`
-                          : `${code.durationMonths} ay`}{' '}
-                        · {code.usedCount}/{code.maxUses} kullanım
+                        {giftCodeSummary(code, planNameOf)} · {code.usedCount}/{code.maxUses} kullanım
                         {code.expiresAt
                           ? ` · kod bitiş: ${new Date(code.expiresAt).toLocaleDateString('tr-TR')}`
                           : ''}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => void toggleGiftCode(code)}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
-                        code.enabled
-                          ? 'border border-emerald-500/30 text-emerald-200'
-                          : 'border border-white/15 text-white/50'
-                      }`}
-                    >
-                      {code.enabled ? 'Aktif' : 'Kapalı'}
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void navigator.clipboard.writeText(code.code)}
+                        className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/70 hover:text-white"
+                      >
+                        Kopyala
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void toggleRedemptions(code)}
+                        className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/70 hover:text-white"
+                      >
+                        {redemptionsFor === code.id ? 'Kullananları gizle' : `Kullananlar (${code.usedCount})`}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void toggleGiftCode(code)}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+                          code.enabled
+                            ? 'border border-emerald-500/30 text-emerald-200'
+                            : 'border border-white/15 text-white/50'
+                        }`}
+                      >
+                        {code.enabled ? 'Aktif' : 'Kapalı'}
+                      </button>
+                      {code.usedCount === 0 && (
+                        <button
+                          type="button"
+                          onClick={() => void handleDeleteGiftCode(code)}
+                          className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs text-red-300 hover:bg-red-500/10"
+                        >
+                          Sil
+                        </button>
+                      )}
+                    </div>
                   </div>
+                  {redemptionsFor === code.id && (
+                    <div className="mt-3 border-t border-white/10 pt-3">
+                      {redemptionsLoading ? (
+                        <p className="text-xs text-plooy-muted">Yükleniyor...</p>
+                      ) : redemptions.length === 0 ? (
+                        <p className="text-xs text-plooy-muted">Bu kodu henüz kimse kullanmadı.</p>
+                      ) : (
+                        <ul className="space-y-1.5 text-xs">
+                          {redemptions.map((entry) => (
+                            <li key={entry.id} className="flex flex-wrap justify-between gap-2 text-white/80">
+                              <span>
+                                {entry.userName}
+                                {entry.userEmail ? ` · ${entry.userEmail}` : ''}
+                              </span>
+                              <span className="text-plooy-muted">
+                                {new Date(entry.redeemedAt).toLocaleString('tr-TR')}
+                                {entry.subscriptionExpiresAt
+                                  ? ` · üyelik bitiş ${new Date(entry.subscriptionExpiresAt).toLocaleDateString('tr-TR')}`
+                                  : ''}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
                 </div>
-              ))}
+                )
+              })}
             </div>
           </section>
         </div>

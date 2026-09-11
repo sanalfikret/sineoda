@@ -13,7 +13,7 @@ import { activateCreatorRegistration } from '../services/creatorRegistration.js'
 import { canUserPlay, getUserSubscription, isSubscriptionRequired } from '../services/subscription.js'
 import { activateUserSubscription } from '../services/subscriptionActivation.js'
 import { cancelUserSubscription } from '../services/subscriptionCancellation.js'
-import { redeemGiftCode } from '../services/giftCodes.js'
+import { checkGiftCode, recordGiftCodeUse, redeemGiftCode, resolveDiscountForPlan } from '../services/giftCodes.js'
 import { getCreatorForUser, requireAuth, type AuthRequest } from '../middleware/auth.js'
 import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
 import type { UserRow } from '../types.js'
@@ -240,8 +240,53 @@ router.post('/redeem-gift-code', requireAuth, (req: AuthRequest, res) => {
   }
 })
 
+/** Kod türünü ve sağladığını döner (tüketmez). İndirim kodunda planId verilirse indirimli fiyatı da hesaplar. */
+router.post('/coupon/check', requireAuth, (req: AuthRequest, res) => {
+  try {
+    const info = checkGiftCode(req.auth!.userId, String(req.body.code ?? ''))
+    const planId = String(req.body.planId ?? '').trim()
+    let pricing: { listPrice: number; discount: number; finalPrice: number } | null = null
+    if (info.kind === 'discount' && planId) {
+      const plan = getPlan(planId)
+      if (plan) {
+        const resolved = resolveDiscountForPlan(req.auth!.userId, info.code, normalizePlanId(planId) ?? planId, plan.price)
+        pricing = {
+          listPrice: resolved.listKurus / 100,
+          discount: resolved.discountKurus / 100,
+          finalPrice: resolved.finalKurus / 100,
+        }
+      }
+    }
+    res.json({ ...info, pricing })
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'Kupon doğrulanamadı.' })
+  }
+})
+
+type PaidOrderRow = { id: string; user_id: string; plan_id: string; status: string; discount_code_id?: string | null }
+
+/** Ödeme başarılı: üyeliği aç, indirim kodu kullanıldıysa kaydet, siparişi kapat. */
+function finalizePaidOrder(order: PaidOrderRow) {
+  let expiresAt: string | null = null
+  if (isCreatorApplicationPlan(order.plan_id)) {
+    activateCreatorRegistration(order.user_id, order.plan_id)
+  } else {
+    expiresAt = activateUserSubscription(order.user_id, order.plan_id).expiresAt
+  }
+  if (order.discount_code_id) {
+    recordGiftCodeUse({
+      giftCodeId: order.discount_code_id,
+      userId: order.user_id,
+      subscriptionExpiresAt: expiresAt,
+      orderId: order.id,
+    })
+  }
+  dbRun("UPDATE payment_orders SET status = 'paid', completed_at = ? WHERE id = ?", [new Date().toISOString(), order.id])
+}
+
 router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
   const planId = String(req.body.planId ?? '')
+  const couponCode = String(req.body.couponCode ?? '').trim()
   const provider = String(req.body.provider ?? config.paymentProvider) as 'paytr' | 'iyzico'
   const normalizedPlanId = normalizePlanId(planId)
   const plan = getPlan(planId)
@@ -301,7 +346,45 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
     return
   }
 
+  // İndirim kodu (yalnızca izleyici planları)
+  let discount: ReturnType<typeof resolveDiscountForPlan> | null = null
+  if (couponCode) {
+    if (isCreatorApplicationPlan(normalizedPlanId)) {
+      res.status(400).json({ error: 'İndirim kodu yapımcı başvuru ücretinde kullanılamaz.' })
+      return
+    }
+    try {
+      discount = resolveDiscountForPlan(user.id, couponCode, normalizedPlanId, plan.price)
+    } catch (err) {
+      res.status(400).json({ error: err instanceof Error ? err.message : 'İndirim kodu uygulanamadı.' })
+      return
+    }
+  }
+
   dbRun('UPDATE users SET pending_plan_id = ? WHERE id = ?', [normalizedPlanId, user.id])
+
+  // %100 indirim: ödeme adımı yok, üyelik hemen açılır
+  if (discount && discount.finalKurus === 0) {
+    const orderId = uuid()
+    const now = new Date().toISOString()
+    let expiresAt: string | null = null
+    dbTransaction(() => {
+      dbRun(
+        `INSERT INTO payment_orders (id, user_id, plan_id, provider, amount, list_amount, discount_amount, discount_code_id, status, merchant_oid, created_at, completed_at)
+         VALUES (?, ?, ?, 'coupon', 0, ?, ?, ?, 'paid', ?, ?, ?)`,
+        [orderId, user.id, normalizedPlanId, discount!.listKurus, discount!.discountKurus, discount!.gift.id, `sineoda-${orderId}`, now, now],
+      )
+      expiresAt = activateUserSubscription(user.id, normalizedPlanId).expiresAt
+      recordGiftCodeUse({ giftCodeId: discount!.gift.id, userId: user.id, subscriptionExpiresAt: expiresAt, orderId })
+    })
+    res.json({
+      message: 'İndirim kodu ile üyelik ücretsiz açıldı.',
+      demoMode: true,
+      couponApplied: true,
+      expiresAt,
+    })
+    return
+  }
 
   if (!config.isPaymentConfigured()) {
     if (isCreatorApplicationPlan(normalizedPlanId)) {
@@ -319,8 +402,13 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
         return
       }
       const { startedAt, expiresAt } = activateUserSubscription(user.id, normalizedPlanId)
+      if (discount) {
+        recordGiftCodeUse({ giftCodeId: discount.gift.id, userId: user.id, subscriptionExpiresAt: expiresAt })
+      }
       res.json({
-        message: 'Demo modu: ödeme sağlayıcısı yapılandırılmadı, abonelik otomatik aktif edildi.',
+        message: discount
+          ? `Demo modu: indirimli tutar ₺${(discount.finalKurus / 100).toFixed(2)} — abonelik otomatik aktif edildi.`
+          : 'Demo modu: ödeme sağlayıcısı yapılandırılmadı, abonelik otomatik aktif edildi.',
         demoMode: true,
         startedAt,
         expiresAt,
@@ -336,12 +424,25 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
 
   const orderId = uuid()
   const merchantOid = `sineoda-${orderId}`
-  const amountKurus = plan.price * 100
+  const listKurus = Math.round(plan.price * 100)
+  const amountKurus = discount ? discount.finalKurus : listKurus
+  const amountTl = amountKurus / 100
 
   dbRun(
-    `INSERT INTO payment_orders (id, user_id, plan_id, provider, amount, status, merchant_oid, created_at)
-     VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)`,
-    [orderId, user.id, normalizedPlanId, provider, amountKurus, merchantOid, new Date().toISOString()],
+    `INSERT INTO payment_orders (id, user_id, plan_id, provider, amount, list_amount, discount_amount, discount_code_id, status, merchant_oid, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
+    [
+      orderId,
+      user.id,
+      normalizedPlanId,
+      provider,
+      amountKurus,
+      listKurus,
+      discount?.discountKurus ?? 0,
+      discount?.gift.id ?? null,
+      merchantOid,
+      new Date().toISOString(),
+    ],
   )
 
   if (provider === 'paytr') {
@@ -357,7 +458,7 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
       userAddress: 'Turkiye',
       merchantOid,
       amountKurus,
-      basket: [[`${BRAND_NAME} ${plan.name}`, plan.price.toFixed(2), 1]],
+      basket: [[`${BRAND_NAME} ${plan.name}${discount ? ` (${discount.gift.code} indirimli)` : ''}`, amountTl.toFixed(2), 1]],
       userIp: getClientIp(req),
     })
 
@@ -383,7 +484,7 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
   const iyzicoResult = await createIyzicoCheckout({
     userId: user.id,
     planName: plan.name,
-    price: plan.price.toFixed(2),
+    price: amountTl.toFixed(2),
     buyerName: firstName || BRAND_NAME,
     buyerSurname: rest.join(' ') || 'Uye',
     email: user.email,
@@ -426,8 +527,8 @@ router.post('/callback/paytr', (req, res) => {
     return
   }
 
-  const order = dbGet<{ id: string; user_id: string; plan_id: string; status: string }>(
-    'SELECT id, user_id, plan_id, status FROM payment_orders WHERE merchant_oid = ?',
+  const order = dbGet<PaidOrderRow>(
+    'SELECT id, user_id, plan_id, status, discount_code_id FROM payment_orders WHERE merchant_oid = ?',
     [payload.merchant_oid],
   )
 
@@ -438,13 +539,7 @@ router.post('/callback/paytr', (req, res) => {
 
   dbTransaction(() => {
     if (payload.status === 'success') {
-      if (isCreatorApplicationPlan(order.plan_id)) {
-        activateCreatorRegistration(order.user_id, order.plan_id)
-      } else {
-        activateUserSubscription(order.user_id, order.plan_id)
-      }
-      dbRun("UPDATE payment_orders SET status = 'paid', completed_at = ? WHERE id = ?",
-        [new Date().toISOString(), order.id])
+      finalizePaidOrder(order)
     } else {
       dbRun("UPDATE payment_orders SET status = 'failed', completed_at = ? WHERE id = ?",
         [new Date().toISOString(), order.id])
@@ -462,8 +557,8 @@ router.post('/callback/iyzico', async (req, res) => {
   }
 
   const result = await retrieveIyzicoCheckout(token)
-  const order = dbGet<{ id: string; user_id: string; plan_id: string; status: string }>(
-    'SELECT id, user_id, plan_id, status FROM payment_orders WHERE merchant_oid = ?',
+  const order = dbGet<PaidOrderRow>(
+    'SELECT id, user_id, plan_id, status, discount_code_id FROM payment_orders WHERE merchant_oid = ?',
     [result.basketId ?? ''],
   )
 
@@ -474,13 +569,7 @@ router.post('/callback/iyzico', async (req, res) => {
 
   if (order && result.status === 'success' && result.paymentStatus === 'SUCCESS') {
     dbTransaction(() => {
-      if (isCreatorApplicationPlan(order.plan_id)) {
-        activateCreatorRegistration(order.user_id, order.plan_id)
-      } else {
-        activateUserSubscription(order.user_id, order.plan_id)
-      }
-      dbRun("UPDATE payment_orders SET status = 'paid', completed_at = ? WHERE id = ?",
-        [new Date().toISOString(), order.id])
+      finalizePaidOrder(order)
     })
     res.redirect(`${config.frontendUrl}/odeme/basarili`)
     return

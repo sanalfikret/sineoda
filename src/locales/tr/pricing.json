@@ -30,11 +30,15 @@
   "currentPlanLabel": "Aktif plan",
   "cancelledSubscription": "Abonelik iptal edildi",
   "planChangeNote": "Plan değişikliği veya yenileme yeni ödeme adımıyla başlar. Mevcut dönem bitene kadar izlemeye devam edersin.",
-  "giftTitle": "Hediye kodun var mı?",
-  "giftSubtitle": "Plooy TV hediye kartı veya kurumsal kupon kodunu gir — ödeme yapmadan abonelik başlar.",
+  "giftTitle": "Hediye veya indirim kodun var mı?",
+  "giftSubtitle": "Plooy hediye kartı kodu ödeme yapmadan üyelik başlatır; kurumsal indirim kodu ise seçtiğin planın fiyatından düşülür.",
   "giftPlaceholder": "PLOOY-HEDIYE-XXXX",
   "giftRedeem": "Kodu kullan",
   "giftRedeeming": "Uygulanıyor...",
   "giftLoginHint": "Kodu kullanmak için giriş yapın veya kayıt olun.",
-  "giftRedeemFailed": "Hediye kodu kullanılamadı."
+  "giftRedeemFailed": "Hediye kodu kullanılamadı.",
+  "discountApplied": "{{code}} kodu uygulandı: {{amount}} indirim. Aşağıdan plan seçip ödemeye geçebilirsin.",
+  "discountBadge": "{{code}} indirimi uygulandı",
+  "discountActive": "İndirim kodu aktif: {{code}} — ödeme adımında düşülür.",
+  "discountRemove": "Kodu kaldır"
 }

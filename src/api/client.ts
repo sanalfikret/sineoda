@@ -1033,18 +1033,34 @@ export async function saveAdminBillingPlans(payload: {
   )
 }
 
+export type GiftCodeKind = 'gift' | 'discount'
+
 export interface GiftCode {
   id: string
   code: string
   label: string
+  kind: GiftCodeKind
+  /** Hediye: verilecek plan. İndirim: '' = tüm izleyici planları. */
   planId: string
   durationMonths: number
   durationYears: number
+  discountPercent: number
+  discountAmount: number
   maxUses: number
   usedCount: number
   expiresAt: string | null
   enabled: boolean
   createdAt: string
+}
+
+export interface GiftCodeRedemption {
+  id: string
+  userId: string
+  userName: string
+  userEmail: string
+  redeemedAt: string
+  subscriptionExpiresAt: string
+  orderId: string | null
 }
 
 export async function fetchAdminGiftCodes() {
@@ -1054,9 +1070,12 @@ export async function fetchAdminGiftCodes() {
 export async function createAdminGiftCode(payload: {
   code: string
   label?: string
+  kind?: GiftCodeKind
   planId?: string
   durationMonths?: number
   durationYears?: number
+  discountPercent?: number
+  discountAmount?: number
   maxUses?: number
   expiresAt?: string | null
 }) {
@@ -1070,6 +1089,35 @@ export async function setAdminGiftCodeEnabled(id: string, enabled: boolean) {
   return api<{ code: GiftCode }>(`/api/admin/gift-codes/${encodeURIComponent(id)}`, {
     method: 'PATCH',
     body: JSON.stringify({ enabled }),
+  })
+}
+
+export async function deleteAdminGiftCode(id: string) {
+  return api<void>(`/api/admin/gift-codes/${encodeURIComponent(id)}`, { method: 'DELETE' })
+}
+
+export async function fetchAdminGiftCodeRedemptions(id: string) {
+  return api<{ code: GiftCode; redemptions: GiftCodeRedemption[] }>(
+    `/api/admin/gift-codes/${encodeURIComponent(id)}/redemptions`,
+  )
+}
+
+export interface CouponCheckResult {
+  kind: GiftCodeKind
+  code: string
+  label: string
+  planId: string
+  durationMonths: number
+  durationYears: number
+  discountPercent: number
+  discountAmount: number
+  pricing: { listPrice: number; discount: number; finalPrice: number } | null
+}
+
+export async function checkCouponCode(code: string, planId?: string) {
+  return api<CouponCheckResult>('/api/billing/coupon/check', {
+    method: 'POST',
+    body: JSON.stringify({ code, ...(planId ? { planId } : {}) }),
   })
 }
 
@@ -1124,15 +1172,16 @@ export async function fetchBillingPlans(): Promise<{
 export type CheckoutResult =
   | { provider: 'paytr'; token: string; iframeUrl: string }
   | { provider: 'iyzico'; paymentPageUrl: string; token?: string }
-  | { demoMode: true; message: string; expiresAt?: string; paidAt?: string }
+  | { demoMode: true; message: string; expiresAt?: string; paidAt?: string; couponApplied?: boolean }
 
 export async function startCheckout(
   planId: string,
   provider: 'paytr' | 'iyzico',
+  couponCode?: string,
 ): Promise<CheckoutResult & { message?: string }> {
   return api('/api/billing/checkout', {
     method: 'POST',
-    body: JSON.stringify({ planId, provider }),
+    body: JSON.stringify({ planId, provider, ...(couponCode ? { couponCode } : {}) }),
   })
 }
 

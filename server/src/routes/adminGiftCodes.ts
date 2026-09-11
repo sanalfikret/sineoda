@@ -1,6 +1,13 @@
 import { Router } from 'express'
 import { requireAdmin } from '../middleware/auth.js'
-import { createGiftCode, listGiftCodes, setGiftCodeEnabled } from '../services/giftCodes.js'
+import {
+  createGiftCode,
+  deleteGiftCode,
+  getGiftCodeById,
+  listGiftCodeRedemptions,
+  listGiftCodes,
+  setGiftCodeEnabled,
+} from '../services/giftCodes.js'
 
 const router = Router()
 
@@ -13,9 +20,12 @@ router.post('/', requireAdmin, (req, res) => {
     const code = createGiftCode({
       code: String(req.body.code ?? ''),
       label: String(req.body.label ?? ''),
-      planId: String(req.body.planId ?? 'standard'),
+      kind: String(req.body.kind ?? 'gift'),
+      planId: String(req.body.planId ?? ''),
       durationMonths: Number(req.body.durationMonths ?? 0),
       durationYears: Number(req.body.durationYears ?? 0),
+      discountPercent: Number(req.body.discountPercent ?? 0),
+      discountAmount: Number(req.body.discountAmount ?? 0),
       maxUses: Number(req.body.maxUses ?? 1),
       expiresAt: req.body.expiresAt ? String(req.body.expiresAt) : null,
     })
@@ -23,6 +33,15 @@ router.post('/', requireAdmin, (req, res) => {
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : 'Kupon oluşturulamadı.' })
   }
+})
+
+router.get('/:id/redemptions', requireAdmin, (req, res) => {
+  const code = getGiftCodeById(String(req.params.id))
+  if (!code) {
+    res.status(404).json({ error: 'Kupon bulunamadı.' })
+    return
+  }
+  res.json({ code, redemptions: listGiftCodeRedemptions(code.id) })
 })
 
 router.patch('/:id', requireAdmin, (req, res) => {
@@ -36,6 +55,15 @@ router.patch('/:id', requireAdmin, (req, res) => {
     res.json({ code })
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : 'Güncellenemedi.' })
+  }
+})
+
+router.delete('/:id', requireAdmin, (req, res) => {
+  try {
+    deleteGiftCode(String(req.params.id))
+    res.status(204).send()
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'Silinemedi.' })
   }
 })
 

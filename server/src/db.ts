@@ -489,6 +489,13 @@ function runMigrations() {
     );
   `)
 
+  ensureColumn('gift_codes', 'kind', "TEXT NOT NULL DEFAULT 'gift'")
+  ensureColumn('gift_codes', 'discount_percent', 'INTEGER NOT NULL DEFAULT 0')
+  ensureColumn('gift_codes', 'discount_amount', 'INTEGER NOT NULL DEFAULT 0')
+  ensureColumn('gift_code_redemptions', 'order_id', 'TEXT')
+  ensureColumn('payment_orders', 'list_amount', 'INTEGER')
+  ensureColumn('payment_orders', 'discount_amount', 'INTEGER NOT NULL DEFAULT 0')
+  ensureColumn('payment_orders', 'discount_code_id', 'TEXT')
   ensureColumn('creators', 'program', "TEXT NOT NULL DEFAULT 'standard'")
   ensureColumn('creators', 'school_id', 'TEXT')
   ensureColumn('creators', 'student_application_type', "TEXT NOT NULL DEFAULT 'school'")

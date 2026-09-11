@@ -1,4 +1,5 @@
 import { dbGet, dbRun } from '../db.js'
+import { addCalendarMonths } from './calendar.js'
 import type { UserRow } from '../types.js'
 
 export function giftSubscriptionMonths(userId: string, months: number) {
@@ -21,8 +22,7 @@ export function giftSubscriptionMonths(userId: string, months: number) {
     if (expires > now) base = expires
   }
 
-  const newExpiry = new Date(base)
-  newExpiry.setMonth(newExpiry.getMonth() + months)
+  const newExpiry = addCalendarMonths(base, months)
 
   const startedAt = user.subscription_started_at ?? now.toISOString()
   dbRun(

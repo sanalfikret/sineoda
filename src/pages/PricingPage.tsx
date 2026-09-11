@@ -2,11 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
+  checkCouponCode,
   fetchBillingPlans,
   fetchSubscription,
   redeemGiftCode,
   startCheckout,
   uploadBillingStudentId,
+  type CouponCheckResult,
 } from '../api/client'
 import { PageFooter } from '../components/PageFooter'
 import { GuestSiteShell } from '../components/GuestSiteShell'
@@ -65,6 +67,7 @@ export function PricingPage() {
   const [message, setMessage] = useState('')
   const [giftCode, setGiftCode] = useState('')
   const [redeemingGift, setRedeemingGift] = useState(false)
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponCheckResult | null>(null)
   const [studentIdFile, setStudentIdFile] = useState<File | null>(null)
   const [studentIdReady, setStudentIdReady] = useState(Boolean(user?.studentIdUrl))
   const autoCheckoutStarted = useRef(false)
@@ -76,6 +79,20 @@ export function PricingPage() {
   const currentPlanName = useMemo(
     () => plans.find((plan) => plan.id === subscription?.plan)?.name ?? subscription?.plan,
     [plans, subscription?.plan],
+  )
+
+  const discountedPrice = useCallback(
+    (plan: Plan) => {
+      if (!appliedCoupon || appliedCoupon.kind !== 'discount') return null
+      if (appliedCoupon.planId && appliedCoupon.planId !== plan.id) return null
+      const list = plan.price
+      const discount =
+        appliedCoupon.discountPercent > 0
+          ? Math.round(list * appliedCoupon.discountPercent) / 100
+          : appliedCoupon.discountAmount
+      return Math.max(0, Math.round((list - discount) * 100) / 100)
+    },
+    [appliedCoupon],
   )
 
   const planPriceSuffix = (interval: Plan['interval']) => {
@@ -137,10 +154,12 @@ export function PricingPage() {
       setCheckoutPlan(planId)
       setMessage('')
       try {
-        const result = await startCheckout(planId, provider)
+        const coupon = appliedCoupon?.kind === 'discount' ? appliedCoupon.code : undefined
+        const result = await startCheckout(planId, provider, coupon)
 
         if ('demoMode' in result && result.demoMode) {
           setMessage(result.message)
+          if (result.couponApplied) setAppliedCoupon(null)
           await refreshUser()
           const sub = await fetchSubscription()
           setSubscription({
@@ -167,7 +186,7 @@ export function PricingPage() {
         setCheckoutPlan(null)
       }
     },
-    [user, plans, studentIdReady, studentIdFile, provider, navigate, setSearchParams, refreshUser, localizePath, t],
+    [user, plans, studentIdReady, studentIdFile, provider, appliedCoupon, navigate, setSearchParams, refreshUser, localizePath, t],
   )
 
   useEffect(() => {
@@ -185,8 +204,17 @@ export function PricingPage() {
     setRedeemingGift(true)
     setMessage('')
     try {
+      const info = await checkCouponCode(giftCode)
+      if (info.kind === 'discount') {
+        setAppliedCoupon(info)
+        setGiftCode('')
+        const amount = info.discountPercent > 0 ? `%${info.discountPercent}` : `₺${info.discountAmount}`
+        setMessage(t('discountApplied', { code: info.code, amount }))
+        return
+      }
       const result = await redeemGiftCode(giftCode)
       setGiftCode('')
+      setAppliedCoupon(null)
       setMessage(
         locale === 'en'
           ? `Gift code applied. Access until ${new Date(result.expiresAt).toLocaleDateString('en-US')}.`
@@ -294,13 +322,36 @@ export function PricingPage() {
                   </span>
                 )}
                 <h2 className="text-lg font-semibold text-white">{plan.name}</h2>
-                <p className="mt-2 text-4xl font-bold text-white">
-                  ₺{plan.price}
-                  <span className="text-sm font-normal text-plooy-muted">
-                    {plan.interval === 'once' ? '' : ' '}
-                    {planPriceSuffix(plan.interval)}
-                  </span>
-                </p>
+                {(() => {
+                  const discounted = discountedPrice(plan)
+                  if (discounted === null) {
+                    return (
+                      <p className="mt-2 text-4xl font-bold text-white">
+                        ₺{plan.price}
+                        <span className="text-sm font-normal text-plooy-muted">
+                          {plan.interval === 'once' ? '' : ' '}
+                          {planPriceSuffix(plan.interval)}
+                        </span>
+                      </p>
+                    )
+                  }
+                  return (
+                    <div className="mt-2">
+                      <p className="text-sm text-plooy-muted line-through">₺{plan.price}</p>
+                      <p className="text-4xl font-bold text-emerald-300">
+                        ₺{discounted.toLocaleString(locale === 'en' ? 'en-US' : 'tr-TR', {
+                          minimumFractionDigits: Number.isInteger(discounted) ? 0 : 2,
+                          maximumFractionDigits: 2,
+                        })}
+                        <span className="text-sm font-normal text-plooy-muted">
+                          {plan.interval === 'once' ? '' : ' '}
+                          {planPriceSuffix(plan.interval)}
+                        </span>
+                      </p>
+                      <p className="mt-1 text-xs text-emerald-200">{t('discountBadge', { code: appliedCoupon?.code ?? '' })}</p>
+                    </div>
+                  )
+                })()}
                 <ul className="mt-6 space-y-2 text-sm text-white/80">
                   {plan.features.map((feature) => (
                     <li key={feature}>• {feature}</li>
@@ -358,6 +409,14 @@ export function PricingPage() {
           </div>
           {!user && (
             <p className="mt-3 text-xs text-plooy-muted">{t('giftLoginHint')}</p>
+          )}
+          {appliedCoupon?.kind === 'discount' && (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-100">
+              <span>{t('discountActive', { code: appliedCoupon.code })}</span>
+              <button type="button" onClick={() => setAppliedCoupon(null)} className="underline">
+                {t('discountRemove')}
+              </button>
+            </div>
           )}
         </section>
 
