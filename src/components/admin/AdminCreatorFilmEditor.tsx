@@ -165,11 +165,16 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
     try {
       let reviewStatus = form.reviewStatus
       let publishedAt: string | null = null
+      const wasLive = Boolean(item && item.reviewStatus === 'published' && item.isPublished)
+      const originalLocal = toDateTimeLocalValue(item?.publishedAt)
+      const dateUntouched = Boolean(item?.publishedAt) && form.publishedAt === originalLocal
 
       if (form.publishMode === 'scheduled' || form.publishMode === 'live') {
         reviewStatus = 'published'
-        publishedAt = new Date(form.publishedAt).toISOString()
+        // Zaten yayındaki filmi yeniden kaydederken ilk yayın tarihi korunur (dakika yuvarlaması dahil).
+        publishedAt = dateUntouched ? item!.publishedAt! : new Date(form.publishedAt).toISOString()
       }
+      const publishNow = form.publishMode === 'live' && !wasLive && new Date(form.publishedAt) <= new Date()
 
       await updateAdminCreatorContent(contentId, {
         title: form.title.trim(),
@@ -192,9 +197,7 @@ export function AdminCreatorFilmEditor({ contentId, onClose, onSaved }: AdminCre
         licenseExpiresAt: form.licenseUnlimited ? null : form.licenseExpiresAt || null,
         ...(['pending', 'under_review', 'on_hold', 'approved', 'rejected', 'published'].includes(reviewStatus) ? { reviewStatus } : {}),
         publishedAt,
-        ...(form.publishMode === 'live' && new Date(form.publishedAt) <= new Date()
-          ? { publishNow: true }
-          : {}),
+        ...(publishNow ? { publishNow: true } : {}),
       })
       onSaved()
       onClose()

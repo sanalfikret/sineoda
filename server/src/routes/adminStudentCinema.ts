@@ -10,7 +10,7 @@ import { parseCredits, serializeCredits } from '../services/credits.js'
 import { parseFestivalsBody, serializeFestivals } from '../services/festivals.js'
 import { resolveDurationFields } from '../services/duration.js'
 import { parseContentAddedAt, parseLicenseDate } from '../services/license.js'
-import { parsePublishedAt } from '../services/publish.js'
+import { resolvePublishedAtOverride } from '../services/publish.js'
 import {
   addToGencSinemaCategory,
   getContentEngagementStats,
@@ -422,13 +422,7 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
   if (!['none', 'pending', 'approved', 'rejected'].includes(schoolReviewStatus)) { res.status(400).json({ error: 'Geçersiz okul durumu.' }); return }
   if (body.reviewStatus !== undefined) {
     try {
-      const publishedAtOverride =
-        body.publishedAt !== undefined || body.publishNow === true
-          ? parsePublishedAt(body.publishNow ? null : body.publishedAt ?? body.published_at, {
-              publishNow: body.publishNow === true,
-              existing: existing.published_at ?? null,
-            })
-          : undefined
+      const publishedAtOverride = resolvePublishedAtOverride(body, existing.published_at)
       applyReviewStatus(
         { ...existing, video_url: String(body.videoUrl ?? body.video_url ?? existing.video_url), school_review_status: schoolReviewStatus as ContentRow['school_review_status'] },
         reviewStatus,
@@ -440,10 +434,7 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
     }
   } else if (body.publishedAt !== undefined || body.publishNow === true) {
     try {
-      const publishedAt = parsePublishedAt(body.publishNow ? null : body.publishedAt ?? body.published_at, {
-        publishNow: body.publishNow === true,
-        existing: existing.published_at ?? null,
-      })
+      const publishedAt = resolvePublishedAtOverride(body, existing.published_at)
       applyReviewStatus(existing, existing.review_status ?? 'pending', { publishedAt })
     } catch (err) {
       res.status(400).json({ error: err instanceof Error ? err.message : 'Yayın tarihi güncellenemedi.' })
@@ -617,13 +608,7 @@ router.patch('/content/:id/review', requireAdmin, (req: AuthRequest, res) => {
   }
 
   try {
-    const publishedAtOverride =
-      req.body.publishedAt !== undefined || req.body.publishNow === true
-        ? parsePublishedAt(req.body.publishNow ? null : req.body.publishedAt ?? req.body.published_at, {
-            publishNow: req.body.publishNow === true,
-            existing: existing.published_at ?? null,
-          })
-        : undefined
+    const publishedAtOverride = resolvePublishedAtOverride(req.body as Record<string, unknown>, existing.published_at)
     applyReviewStatus(
       existing,
       reviewStatus,

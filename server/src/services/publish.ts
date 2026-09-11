@@ -33,6 +33,18 @@ export function parsePublishedAt(
   return options?.existing ?? null
 }
 
+/**
+ * Yapımcı / Genç Sinema inceleme gövdesinden yayın tarihi:
+ * publishNow → şimdi; publishedAt verildi → o tarih (ileri tarih = planlı); hiçbiri yok → undefined (dokunma).
+ */
+export function resolvePublishedAtOverride(body: Record<string, unknown>, existing: string | null | undefined) {
+  if (body.publishNow === true || body.publish_now === true) return parsePublishedAt(null, { publishNow: true })
+  if (body.publishedAt !== undefined || body.published_at !== undefined) {
+    return parsePublishedAt(body.publishedAt ?? body.published_at, { existing: existing ?? null })
+  }
+  return undefined
+}
+
 /** POST/PATCH gövdesinden yayın durumu: true = yayınla, false = taslağa al, undefined = dokunma */
 export function parsePublishNowFlag(body: Record<string, unknown>): boolean | undefined {
   if (body.publishNow === true || body.publish_now === true) return true

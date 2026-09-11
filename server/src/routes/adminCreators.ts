@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import fs from 'node:fs'
 import path from 'node:path'
-import { dbAll, dbGet, dbRun, uploadsDir } from '../db.js'
+import { dbAll, dbGet, dbRun, dbTransaction, uploadsDir } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import { mapContent, mapContentAdmin } from '../mappers.js'
 import { addToGencSinemaCategory, isStudentMainRow } from '../services/studentCinema.js'
@@ -57,8 +57,14 @@ function publishPendingStandardFilms(creatorId: string, adminUserId: string) {
   )
   const now = new Date().toISOString()
   const publishedIds: string[] = []
+  const skipped: Array<{ id: string; title: string; reason: string }> = []
   for (const row of rows) {
-    applyCreatorReviewStatus(row, 'published', { publishedAt: now })
+    try {
+      applyCreatorReviewStatus(row, 'published', { publishedAt: now })
+    } catch (err) {
+      skipped.push({ id: row.id, title: row.title, reason: err instanceof Error ? err.message : 'Yayınlanamadı.' })
+      continue
+    }
     notifyCreatorFilmReview({
       content: row,
       reviewStatus: 'published',
@@ -67,7 +73,7 @@ function publishPendingStandardFilms(creatorId: string, adminUserId: string) {
     })
     publishedIds.push(row.id)
   }
-  return publishedIds
+  return { publishedIds, skipped }
 }
 
 const PROGRAMS = ['all', 'standard', 'student_cinema'] as const
@@ -300,8 +306,8 @@ router.post('/creators/:id/publish-pending', requireAdmin, (req: AuthRequest, re
     return
   }
 
-  const publishedFilmIds = publishPendingStandardFilms(creator.id, req.auth!.userId)
-  res.json({ ok: true, publishedFilmIds, publishedCount: publishedFilmIds.length })
+  const { publishedIds, skipped } = publishPendingStandardFilms(creator.id, req.auth!.userId)
+  res.json({ ok: true, publishedFilmIds: publishedIds, publishedCount: publishedIds.length, skipped })
 })
 
 router.get('/content/pending', requireAdmin, (_req: AuthRequest, res) => {
@@ -368,7 +374,7 @@ router.get('/content/:id', requireAdmin, (req: AuthRequest, res) => {
      FROM content c
      LEFT JOIN creators cr ON cr.id = c.creator_id
      LEFT JOIN users u ON u.id = cr.user_id
-     WHERE c.id = ? AND c.creator_id IS NOT NULL AND c.program = 'standard'`,
+     WHERE c.id = ? AND c.creator_id IS NOT NULL AND COALESCE(NULLIF(c.program, ''), 'standard') = 'standard'`,
     [req.params.id],
   )
 
@@ -428,8 +434,11 @@ router.patch('/content/:id', requireAdmin, (req: AuthRequest, res) => {
   }
 
   try {
-    updateCreatorContentFields(existing, body)
-    resolveCreatorPublishUpdate(dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [existing.id])!, body, reviewStatus)
+    // Alan güncellemesi + yayın doğrulaması tek işlemde: Bunny/ödeme/okul kontrolü başarısızsa hiçbir şey yazılmaz.
+    dbTransaction(() => {
+      updateCreatorContentFields(existing, body)
+      resolveCreatorPublishUpdate(dbGet<ContentRow>('SELECT * FROM content WHERE id = ?', [existing.id])!, body, reviewStatus)
+    })
     if (body.reviewStatus !== undefined || body.review_status !== undefined) {
       notifyCreatorFilmReview({
         content: existing,

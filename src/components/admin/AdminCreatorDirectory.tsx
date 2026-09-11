@@ -435,7 +435,14 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
     setError('')
     try {
       const result = await publishAdminCreatorPendingFilms(creatorId)
-      setNotice(result.publishedCount > 0 ? `${result.publishedCount} film yayına alındı.` : 'Bekleyen film yok.')
+      const skipped = result.skipped ?? []
+      setNotice(result.publishedCount > 0 ? `${result.publishedCount} film yayına alındı.` : 'Yayına alınan film yok.')
+      if (skipped.length > 0) {
+        setError(
+          `${skipped.length} film atlandı: ` +
+            skipped.map((entry) => `${entry.title} (${entry.reason})`).join(' · '),
+        )
+      }
       await loadCreators()
       await loadDetail(creatorId)
     } catch (err) {

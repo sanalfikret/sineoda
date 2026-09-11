@@ -383,7 +383,12 @@ export function AdminStudentCinemaFormPage() {
               <button
                 type="button"
                 disabled={actionLoading || (item.requiresSchoolReview !== false && item.schoolReviewStatus !== 'approved')}
-                onClick={() => void runReviewAction({ reviewStatus: 'published', publishNow: true }, 'Yayına alındı.')}
+                onClick={() =>
+                  void runReviewAction(
+                    { reviewStatus: 'published', publishNow: true, ...(form?.videoUrl?.trim() ? { videoUrl: form.videoUrl.trim() } : {}) },
+                    'Yayına alındı.',
+                  )
+                }
                 className="rounded-lg bg-plooy-gold px-3 py-1.5 text-xs font-semibold text-plooy-bg disabled:opacity-40"
               >
                 Yayınla

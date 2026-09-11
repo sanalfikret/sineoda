@@ -4,7 +4,8 @@ import { dbGet, dbRun } from '../db.js'
 import { normalizeContentType } from '../constants/contentTypes.js'
 import { serializeCredits } from './credits.js'
 import { parseContentAddedAt, parseLicenseDate } from './license.js'
-import { parsePublishedAt } from './publish.js'
+import { resolvePublishedAtOverride } from './publish.js'
+import { resolveStreamProvider } from './streamProvider.js'
 import type { ContentRow, CreatorRow } from '../types.js'
 
 export function applyCreatorReviewStatus(
@@ -61,7 +62,15 @@ export function updateCreatorContentFields(existing: ContentRow, body: Record<st
       : existing.source_video_url ?? existing.video_url
 
   const nextVideoUrl = String(body.videoUrl ?? body.video_url ?? existing.video_url).trim()
-  assertCreatorPlayback({ ...existing, video_url: nextVideoUrl }, String(body.reviewStatus ?? body.review_status ?? existing.review_status))
+  assertCreatorPlayback(
+    { ...existing, video_url: nextVideoUrl, source_video_url: sourceVideoUrl },
+    String(body.reviewStatus ?? body.review_status ?? existing.review_status),
+  )
+  const videoChanged = nextVideoUrl !== (existing.video_url ?? '')
+  const streamProvider =
+    videoChanged || body.streamProvider !== undefined || body.stream_provider !== undefined
+      ? resolveStreamProvider(body, nextVideoUrl)
+      : existing.stream_provider ?? 'custom'
   dbRun(
     `UPDATE content SET
       title = ?,
@@ -75,6 +84,7 @@ export function updateCreatorContentFields(existing: ContentRow, body: Record<st
       backdrop = ?,
       video_url = ?,
       source_video_url = ?,
+      stream_provider = ?,
       trailer_url = ?,
       credits_json = ?,
       license_expires_at = ?,
@@ -90,12 +100,9 @@ export function updateCreatorContentFields(existing: ContentRow, body: Record<st
       body.genres !== undefined ? JSON.stringify(body.genres) : existing.genres,
       body.poster !== undefined ? String(body.poster).trim() : existing.poster,
       body.backdrop !== undefined ? String(body.backdrop).trim() : existing.backdrop,
-      body.videoUrl !== undefined
-        ? String(body.videoUrl).trim()
-        : body.video_url !== undefined
-          ? String(body.video_url).trim()
-          : existing.video_url,
+      nextVideoUrl,
       sourceVideoUrl,
+      streamProvider,
       body.trailerUrl !== undefined
         ? String(body.trailerUrl).trim()
         : body.trailer_url !== undefined
@@ -123,14 +130,9 @@ export function resolveCreatorPublishUpdate(
       ? String(body.reviewNote ?? body.review_note ?? '').trim() || null
       : undefined
 
+  const publishedAtOverride = resolvePublishedAtOverride(body, existing.published_at)
+
   if (body.reviewStatus !== undefined || body.review_status !== undefined) {
-    const publishedAtOverride =
-      body.publishedAt !== undefined || body.publishNow === true
-        ? parsePublishedAt(body.publishNow ? null : body.publishedAt ?? body.published_at, {
-            publishNow: body.publishNow === true,
-            existing: existing.published_at ?? null,
-          })
-        : undefined
     applyCreatorReviewStatus(existing, reviewStatus, {
       publishedAt: publishedAtOverride,
       reviewNote,
@@ -138,11 +140,7 @@ export function resolveCreatorPublishUpdate(
     return
   }
 
-  if (body.publishedAt !== undefined || body.publishNow === true) {
-    const publishedAt = parsePublishedAt(body.publishNow ? null : body.publishedAt ?? body.published_at, {
-      publishNow: body.publishNow === true,
-      existing: existing.published_at ?? null,
-    })
-    applyCreatorReviewStatus(existing, reviewStatus, { publishedAt, reviewNote })
+  if (publishedAtOverride !== undefined) {
+    applyCreatorReviewStatus(existing, reviewStatus, { publishedAt: publishedAtOverride, reviewNote })
   }
 }
