@@ -20,6 +20,9 @@ export interface CreatorProfile {
   schoolId?: string | null
   registrationPaidAt?: string | null
   registrationPaid?: boolean
+  firstName?: string
+  lastName?: string
+  photoUrl?: string
 }
 
 export interface Subscription {

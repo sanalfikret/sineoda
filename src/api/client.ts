@@ -1772,32 +1772,46 @@ export async function creatorSignupRequest(data: {
   })
 }
 
+export interface CreatorProfileSummary {
+  id: string
+  studioName: string
+  bio: string
+  status: string
+  legalAcceptedAt: string | null
+  createdAt: string
+  program?: string
+  schoolId?: string | null
+  registrationPaidAt?: string | null
+  registrationPaid?: boolean
+  firstName: string
+  lastName: string
+  photoUrl: string
+}
+
 export async function creatorFetchMe() {
   return api<{
-    creator: {
-      id: string
-      studioName: string
-      bio: string
-      status: string
-      legalAcceptedAt: string | null
-      createdAt: string
-    }
+    user: { id: string; name: string; email: string; role: string }
+    creator: CreatorProfileSummary
     documents: Array<{ id: string; docType: string; fileUrl: string; uploadedAt: string }>
   }>('/api/creator/me')
 }
 
+export async function creatorUpdateProfile(data: {
+  firstName: string
+  lastName: string
+  studioName: string
+  bio?: string
+  photoUrl?: string
+}) {
+  return api<{ creator: CreatorProfileSummary; user: { id: string; name: string; email: string } }>(
+    '/api/creator/profile',
+    { method: 'PATCH', body: JSON.stringify(data) },
+  )
+}
+
 export async function creatorFetchDashboard() {
   return api<{
-    creator: {
-      id: string
-      studioName: string
-      status: string
-      documentCount: number
-      program?: string
-      schoolId?: string | null
-      registrationPaidAt?: string | null
-      registrationPaid?: boolean
-    }
+    creator: CreatorProfileSummary & { documentCount: number }
     payoutRules: { note: string }
     content: Array<ContentItem & { sourceVideoUrl?: string; reviewStatus: string; qualifiedMinutes: number; likes: number }>
     totals: { qualifiedMinutes: number; watchMinutes: number; likes: number; viewers: number; publishedCount: number; pendingCount: number }

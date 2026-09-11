@@ -29,7 +29,8 @@ import {
 import { getContentEngagementStats } from '../services/studentCinema.js'
 import { getAccountingReport, listNewAccountingMonths } from '../services/accountingLedger.js'
 import { getMonthlyReport, monthKey } from '../services/watchAccounting.js'
-import { isCreatorRegistrationPaid, getCreatorRegistrationStatus } from '../services/creatorRegistration.js'
+import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
+import { mapCreatorSummary, updateCreatorProfile } from '../services/creatorProfile.js'
 import { findStudentMainStub } from '../services/studentFilmSubmission.js'
 import { resolveStreamProvider } from '../services/streamProvider.js'
 import {
@@ -46,7 +47,7 @@ interface CreatorAuthRequest extends AuthRequest {
 }
 
 function getCreatorProfile(userId: string) {
-  const user = dbGet('SELECT id, name, email, role FROM users WHERE id = ?', [userId])
+  const user = dbGet<Pick<UserRow, 'id' | 'name' | 'email' | 'role'>>('SELECT id, name, email, role FROM users WHERE id = ?', [userId])
   const creator = getCreatorForUser(userId)
   if (!user || !creator) return null
 
@@ -61,18 +62,7 @@ function getCreatorProfile(userId: string) {
 
   return {
     user,
-    creator: {
-      id: creator.id,
-      studioName: creator.studio_name,
-      bio: creator.bio,
-      status: creator.status,
-      legalAcceptedAt: creator.legal_accepted_at,
-      createdAt: creator.created_at,
-      program: creator.program ?? 'standard',
-      schoolId: creator.school_id ?? null,
-      registrationPaidAt: creator.registration_paid_at ?? null,
-      registrationPaid: getCreatorRegistrationStatus(creator.user_id).paid,
-    },
+    creator: mapCreatorSummary(creator, user),
     documents: documents.map((doc) => ({
       id: doc.id,
       docType: doc.doc_type,
@@ -91,6 +81,22 @@ router.get('/me', requireCreator, (req: AuthRequest, res) => {
   res.json(profile)
 })
 
+router.patch('/profile', requireCreator, (req: AuthRequest, res) => {
+  const body = (req.body ?? {}) as Record<string, unknown>
+  try {
+    const { creator, user } = updateCreatorProfile(req.auth!.userId, {
+      firstName: body.firstName,
+      lastName: body.lastName,
+      studioName: body.studioName,
+      bio: body.bio,
+      photoUrl: body.photoUrl,
+    })
+    res.json({ creator: mapCreatorSummary(creator, user), user: { id: user.id, name: user.name, email: user.email } })
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'Profil güncellenemedi.' })
+  }
+})
+
 router.get('/dashboard', requireCreator, (req: AuthRequest, res) => {
   const creator = getCreatorForUser(req.auth!.userId)
   if (!creator) {
@@ -106,16 +112,11 @@ router.get('/dashboard', requireCreator, (req: AuthRequest, res) => {
   const engagementStats = getContentEngagementStats(contentRows.map((row) => row.id))
   const documents = dbAll<{ id: string }>('SELECT id FROM creator_documents WHERE creator_id = ?', [creator.id])
 
+  const owner = dbGet<Pick<UserRow, 'name'>>('SELECT name FROM users WHERE id = ?', [creator.user_id])
   res.json({
     creator: {
-      id: creator.id,
-      studioName: creator.studio_name,
-      status: creator.status,
+      ...mapCreatorSummary(creator, owner),
       documentCount: documents.length,
-      program: creator.program ?? 'standard',
-      schoolId: creator.school_id ?? null,
-      registrationPaidAt: creator.registration_paid_at ?? null,
-      registrationPaid: getCreatorRegistrationStatus(creator.user_id).paid,
     },
     payoutRules: {
       note: 'Kazançlar yapımcı anlaşmasında belirtilen adil paylaşım modeline göre hesaplanır.',

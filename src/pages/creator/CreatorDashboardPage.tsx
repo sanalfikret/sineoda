@@ -22,6 +22,7 @@ import {
 } from '../../api/client'
 import { ShareButton } from '../../components/ShareButton'
 import { PlooyLogo } from '../../components/PlooyLogo'
+import { CreatorProfileCard } from '../../components/creator/CreatorProfileCard'
 import { useAuth } from '../../context/AuthContext'
 import { BRAND_NAME } from '../../constants/brand'
 import { CREATOR_DOC_TYPES } from '../../constants/creatorLegal'
@@ -475,7 +476,6 @@ export function CreatorDashboardPage() {
     }
   }
 
-  const studioName = user?.creator?.studioName ?? t('defaultStudio')
   const mainFilms = content.filter((item) => item.contentFormat === 'main' || !item.contentFormat)
 
   const renderContentTable = (items: DashboardContent[]) => (
@@ -553,7 +553,7 @@ export function CreatorDashboardPage() {
           <div className="flex items-center gap-3">
             <PlooyLogo tone="on-dark" className="h-8" />
             <div>
-              <p className="text-lg font-bold">{studioName}</p>
+              <p className="text-lg font-bold">{t('creatorLabel', { brand: BRAND_NAME })}</p>
               <p className="text-xs text-plooy-muted">
                 {registrationPaid
                   ? t('headerSubtitleActive', { brand: BRAND_NAME })
@@ -577,6 +577,7 @@ export function CreatorDashboardPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        <CreatorProfileCard registrationPaid={registrationPaid} onSaved={load} />
         <CreatorMessages />
         {error && (
           <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">

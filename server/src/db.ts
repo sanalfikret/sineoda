@@ -493,6 +493,9 @@ function runMigrations() {
   ensureColumn('creators', 'project_crew', "TEXT NOT NULL DEFAULT ''")
   ensureColumn('creators', 'registration_paid_at', 'TEXT')
   ensureColumn('creators', 'pending_film_link', 'TEXT')
+  ensureColumn('creators', 'first_name', "TEXT NOT NULL DEFAULT ''")
+  ensureColumn('creators', 'last_name', "TEXT NOT NULL DEFAULT ''")
+  ensureColumn('creators', 'photo_url', "TEXT NOT NULL DEFAULT ''")
 
   db.run(`
     UPDATE creators

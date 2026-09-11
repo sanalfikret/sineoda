@@ -94,6 +94,9 @@ export interface CreatorRow {
   project_crew?: string
   registration_paid_at?: string | null
   pending_film_link?: string | null
+  first_name?: string
+  last_name?: string
+  photo_url?: string
 }
 
 export interface FilmSchoolRow {

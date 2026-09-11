@@ -9,7 +9,7 @@ import { config, publicAssetUrl } from '../config.js'
 import { dbAll, dbGet, dbRun, uploadsDir } from '../db.js'
 import { getProfileId, readAuthPayload, requireAuth, signToken, verifyToken, type AuthRequest } from '../middleware/auth.js'
 import { mapProfile, mapUser } from '../mappers.js'
-import { getCreatorRegistrationStatus } from '../services/creatorRegistration.js'
+import { mapCreatorSummary } from '../services/creatorProfile.js'
 import { sendPasswordResetEmail, sendEmailVerificationEmail, sendEmailChangeConfirmationEmail } from '../services/email.js'
 import { getPlan, normalizePlanId, planRequiresStudentId } from '../services/plans.js'
 import { isValidTurkishMobile, normalizePhone, sendVerificationSms } from '../services/sms.js'
@@ -25,7 +25,7 @@ import {
   authSignupLimiter,
   authSmsLimiter,
 } from '../security/rateLimit.js'
-import type { JwtPayload, ProfileRow, UserRow } from '../types.js'
+import type { CreatorRow, JwtPayload, ProfileRow, UserRow } from '../types.js'
 
 const router = Router()
 
@@ -312,38 +312,12 @@ router.get('/me', requireAuth, (req: AuthRequest, res) => {
   }
 
   if (user.role === 'creator') {
-    const creator = dbGet<{
-      id: string
-      studio_name: string
-      bio: string
-      status: string
-      legal_accepted_at: string | null
-      created_at: string
-      program?: 'standard' | 'student_cinema'
-      school_id?: string | null
-      registration_paid_at?: string | null
-    }>(
-      'SELECT id, studio_name, bio, status, legal_accepted_at, created_at, program, school_id, registration_paid_at FROM creators WHERE user_id = ?',
-      [req.auth!.userId],
-    )
+    const creator = dbGet<CreatorRow>('SELECT * FROM creators WHERE user_id = ?', [req.auth!.userId])
     const token = signToken({ userId: user.id, role: user.role })
     res.json({
       user: {
         ...user,
-        creator: creator
-          ? {
-              id: creator.id,
-              studioName: creator.studio_name,
-              bio: creator.bio,
-              status: creator.status,
-              legalAcceptedAt: creator.legal_accepted_at,
-              createdAt: creator.created_at,
-              program: creator.program ?? 'standard',
-              schoolId: creator.school_id ?? null,
-              registrationPaidAt: creator.registration_paid_at ?? null,
-              registrationPaid: getCreatorRegistrationStatus(user.id).paid,
-            }
-          : null,
+        creator: creator ? mapCreatorSummary(creator, user) : null,
       },
       token,
     })

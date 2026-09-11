@@ -261,9 +261,32 @@
       "directorsRequired": "Director information is required.",
       "producersRequired": "Producer information is required.",
       "castRequired": "Cast information is required.",
-      "submitFailed": "Could not submit film application."
+      "submitFailed": "Could not submit film application.",
+      "profileSaveFailed": "Could not save profile.",
+      "photoUploadFailed": "Could not upload photo."
     },
-    "defaultStudio": "Creator"
+    "defaultStudio": "Creator",
+    "profile": {
+      "title": "Profile details",
+      "subtitle": "Update your first name, last name, profile photo and company name here.",
+      "edit": "Edit profile",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Profile updated.",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "studioName": "Company / production name",
+      "bio": "Short bio (optional)",
+      "photo": "Profile photo",
+      "photoHint": "JPG, PNG or WebP, up to 2 MB",
+      "photoUpload": "Upload photo",
+      "photoChange": "Change photo",
+      "photoRemove": "Remove photo",
+      "photoUploading": "Uploading…",
+      "noName": "Name not set",
+      "emailLabel": "Email"
+    }
   },
   "rights": {
     "title": "Copyright & distribution rights",

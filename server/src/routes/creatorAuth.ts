@@ -1,4 +1,4 @@
-import { getCreatorRegistrationStatus } from '../services/creatorRegistration.js'
+import { mapCreatorSummary } from '../services/creatorProfile.js'
 import { externalMediaLink } from '../services/creatorMedia.js'
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
@@ -10,7 +10,7 @@ import { LEGAL_VERSION } from '../constants/legal.js'
 import { recordLegalConsent } from '../services/legalConsent.js'
 import { getClientIp, getUserAgent } from '../utils/clientIp.js'
 import { creatorAuthLimiter } from '../security/rateLimit.js'
-import type { UserRow } from '../types.js'
+import type { CreatorRow, UserRow } from '../types.js'
 
 const router = Router()
 
@@ -24,34 +24,10 @@ function isValidHttpUrl(value: string) {
 }
 
 function mapCreatorUser(user: UserRow) {
-  const creator = dbGet<{
-    id: string
-    studio_name: string
-    bio: string
-    status: string
-    legal_accepted_at: string | null
-    created_at: string
-    program?: string
-    school_id?: string | null
-    registration_paid_at?: string | null
-  }>('SELECT id, studio_name, bio, status, legal_accepted_at, created_at, program, school_id, registration_paid_at FROM creators WHERE user_id = ?', [user.id])
-
+  const creator = dbGet<CreatorRow>('SELECT * FROM creators WHERE user_id = ?', [user.id])
   return {
     ...mapUser(user, []),
-    creator: creator
-      ? {
-          id: creator.id,
-          studioName: creator.studio_name,
-          bio: creator.bio,
-          status: creator.status,
-          legalAcceptedAt: creator.legal_accepted_at,
-          createdAt: creator.created_at,
-          program: creator.program ?? 'standard',
-          schoolId: creator.school_id ?? null,
-          registrationPaidAt: creator.registration_paid_at ?? null,
-          registrationPaid: getCreatorRegistrationStatus(user.id).paid,
-        }
-      : null,
+    creator: creator ? mapCreatorSummary(creator, user) : null,
   }
 }
 

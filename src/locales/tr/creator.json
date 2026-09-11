@@ -261,9 +261,32 @@
       "directorsRequired": "Yönetmen bilgisi zorunludur.",
       "producersRequired": "Yapımcı bilgisi zorunludur.",
       "castRequired": "Oyuncu kadrosu zorunludur.",
-      "submitFailed": "Film başvurusu gönderilemedi."
+      "submitFailed": "Film başvurusu gönderilemedi.",
+      "profileSaveFailed": "Profil kaydedilemedi.",
+      "photoUploadFailed": "Fotoğraf yüklenemedi."
     },
-    "defaultStudio": "Yapımcı"
+    "defaultStudio": "Yapımcı",
+    "profile": {
+      "title": "Profil bilgileri",
+      "subtitle": "Ad, soyad, profil fotoğrafı ve şirket adınızı buradan güncelleyin.",
+      "edit": "Profili düzenle",
+      "cancel": "Vazgeç",
+      "save": "Kaydet",
+      "saving": "Kaydediliyor…",
+      "saved": "Profil güncellendi.",
+      "firstName": "Ad",
+      "lastName": "Soyad",
+      "studioName": "Şirket / yapım adı",
+      "bio": "Kısa tanıtım (isteğe bağlı)",
+      "photo": "Profil fotoğrafı",
+      "photoHint": "JPG, PNG veya WebP, en fazla 2 MB",
+      "photoUpload": "Fotoğraf yükle",
+      "photoChange": "Fotoğrafı değiştir",
+      "photoRemove": "Fotoğrafı kaldır",
+      "photoUploading": "Yükleniyor…",
+      "noName": "Ad soyad girilmemiş",
+      "emailLabel": "E-posta"
+    }
   },
   "rights": {
     "title": "Telif ve yayın hakları",
