@@ -1894,20 +1894,34 @@ export async function creatorUpdateContent(contentId: string, data: Record<strin
   })
 }
 
+export type AdminCreatorProgramFilter = 'all' | 'standard' | 'student_cinema'
+
 export interface AdminCreator {
   id: string
   userId: string
   name: string
+  firstName?: string
+  lastName?: string
   email: string
+  phone?: string
+  photoUrl?: string
   studioName: string
   bio: string
   status: 'pending' | 'approved' | 'rejected' | 'suspended'
   program?: 'standard' | 'student_cinema'
+  schoolId?: string | null
+  schoolName?: string
+  studentApplicationType?: 'individual' | 'school' | null
+  studentDepartment?: string
+  studentUniversity?: string
+  projectCrew?: string
   legalAcceptedAt: string | null
   createdAt: string
+  userCreatedAt?: string
   documentCount: number
   contentCount: number
   paymentPendingCount?: number
+  unreadMessages?: number
   registrationPaidAt?: string | null
   registrationPaid?: boolean
 }
@@ -1921,6 +1935,11 @@ export interface AdminCreatorDocument {
 
 export interface AdminCreatorContent extends Omit<ContentItem, 'publishedAt'>, AdminContentMeta {
   reviewStatus: string
+  reviewNote?: string | null
+  parentContentId?: string | null
+  parentTitle?: string | null
+  schoolName?: string | null
+  schoolReviewStatus?: string
   sourceVideoUrl?: string
   qualifiedMinutes: number
   watchMinutes: number
@@ -1947,9 +1966,15 @@ export interface AdminCreatorDetail {
   content: AdminCreatorContent[]
 }
 
-export async function fetchAdminCreators(payment: 'all' | 'paid' | 'unpaid' = 'all') {
-  const query = payment === 'all' ? '' : `?payment=${payment}`
-  return api<{ creators: AdminCreator[] }>(`/api/admin/creators/creators${query}`)
+export async function fetchAdminCreators(
+  payment: 'all' | 'paid' | 'unpaid' = 'all',
+  program: AdminCreatorProgramFilter = 'all',
+) {
+  const params = new URLSearchParams()
+  if (payment !== 'all') params.set('payment', payment)
+  if (program !== 'all') params.set('program', program)
+  const query = params.toString()
+  return api<{ creators: AdminCreator[] }>(`/api/admin/creators/creators${query ? `?${query}` : ''}`)
 }
 
 export interface AdminCreatorOverviewStats {
@@ -1965,8 +1990,106 @@ export interface AdminCreatorOverviewStats {
   paymentPendingCount: number
 }
 
-export async function fetchAdminCreatorStats() {
-  return api<{ stats: AdminCreatorOverviewStats }>('/api/admin/creators/creators/stats')
+export async function fetchAdminCreatorStats(program: AdminCreatorProgramFilter = 'all') {
+  const query = program === 'all' ? '' : `?program=${program}`
+  return api<{ stats: AdminCreatorOverviewStats }>(`/api/admin/creators/creators/stats${query}`)
+}
+
+// ---------------------------------------------------------------------------
+// Admin ↔ yapımcı mesajlaşma (creator_chat)
+// ---------------------------------------------------------------------------
+
+export interface AdminChatSummary {
+  total: number
+  unread: number
+  read: number
+  threads: number
+  unreadThreads: number
+}
+
+export interface AdminChatThread {
+  userId: string
+  name: string
+  email: string
+  phone: string
+  program: 'standard' | 'student_cinema'
+  studioName: string
+  photoUrl: string
+  status: string
+  unread: number
+  total: number
+  lastAt: string | null
+  lastSubject: string | null
+  lastFromAdmin: boolean | null
+}
+
+export interface AdminChatMessage {
+  id: string
+  user_id: string
+  sender_id: string
+  from_admin: number
+  subject: string
+  body: string
+  created_at: string
+  read_at: string | null
+}
+
+export interface AdminChatRecentMessage {
+  id: string
+  userId: string
+  subject: string
+  body: string
+  createdAt: string
+  readAt: string | null
+  isRead: boolean
+  name: string
+  email: string
+  program: 'standard' | 'student_cinema'
+  studioName: string
+  photoUrl: string
+}
+
+export async function fetchAdminChatSummary() {
+  return api<AdminChatSummary>('/api/creator-chat/summary')
+}
+
+export async function fetchAdminChatRecent(limit = 5) {
+  return api<{ messages: AdminChatRecentMessage[] }>(`/api/creator-chat/recent?limit=${limit}`)
+}
+
+export async function fetchAdminChatThreads(options: {
+  q?: string
+  program?: AdminCreatorProgramFilter
+  unreadOnly?: boolean
+  offset?: number
+} = {}) {
+  const params = new URLSearchParams()
+  if (options.q) params.set('q', options.q)
+  if (options.program && options.program !== 'all') params.set('program', options.program)
+  if (options.unreadOnly) params.set('unread', '1')
+  if (options.offset) params.set('offset', String(options.offset))
+  const query = params.toString()
+  return api<{ threads: AdminChatThread[] }>(`/api/creator-chat/threads${query ? `?${query}` : ''}`)
+}
+
+export async function fetchAdminChatThread(userId: string, before?: string) {
+  const params = new URLSearchParams({ userId })
+  if (before) params.set('before', before)
+  return api<AdminChatMessage[]>(`/api/creator-chat?${params.toString()}`)
+}
+
+export async function markAdminChatThreadRead(userId: string) {
+  return api<{ ok: boolean }>(`/api/creator-chat/thread/${encodeURIComponent(userId)}/read`, { method: 'PATCH' })
+}
+
+export async function sendAdminChatMessage(data: {
+  subject: string
+  body: string
+  requestId: string
+  audience: 'direct' | 'all' | 'standard' | 'student_cinema'
+  userId?: string
+}) {
+  return api<{ sent: number }>('/api/creator-chat', { method: 'POST', body: JSON.stringify(data) })
 }
 
 export async function fetchAdminCreatorDetail(id: string) {

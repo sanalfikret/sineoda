@@ -14,7 +14,9 @@ import {
 import { attachStats, getContentEngagementStats } from '../services/studentCinema.js'
 import { notifyCreatorFilmReview } from '../services/creatorNotifications.js'
 import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
-import type { ContentRow, CreatorRow, UserRow } from '../types.js'
+import { splitCreatorName } from '../services/creatorProfile.js'
+import { ensureCreatorChatTable } from '../services/creatorChat.js'
+import type { ContentRow, CreatorRow } from '../types.js'
 
 const router = Router()
 
@@ -68,65 +70,107 @@ function publishPendingStandardFilms(creatorId: string, adminUserId: string) {
   return publishedIds
 }
 
+const PROGRAMS = ['all', 'standard', 'student_cinema'] as const
+
+function resolveProgramFilter(value: unknown) {
+  const raw = String(value ?? 'all').trim()
+  return (PROGRAMS as readonly string[]).includes(raw) ? raw : 'all'
+}
+
+type CreatorListRow = CreatorRow & {
+  subscription_expires_at: string | null
+  user_name: string
+  user_email: string
+  user_phone: string | null
+  user_created_at: string
+  school_name: string | null
+  document_count: number
+  content_count: number
+  payment_pending_count: number
+  unread_messages: number
+}
+
+const CREATOR_LIST_SELECT = `
+  SELECT c.*, u.name AS user_name, u.email AS user_email, u.phone AS user_phone,
+    u.created_at AS user_created_at, u.subscription_expires_at, fs.name AS school_name,
+    (SELECT COUNT(*) FROM creator_documents cd WHERE cd.creator_id = c.id) AS document_count,
+    (SELECT COUNT(*) FROM content co WHERE co.creator_id = c.id AND COALESCE(NULLIF(co.content_format, ''), 'main') = 'main') AS content_count,
+    (SELECT COUNT(*) FROM content co WHERE co.creator_id = c.id AND co.review_status = 'payment_pending') AS payment_pending_count,
+    (SELECT COUNT(*) FROM creator_chat m WHERE m.user_id = c.user_id AND m.from_admin = 0 AND m.read_at IS NULL) AS unread_messages
+  FROM creators c
+  JOIN users u ON u.id = c.user_id
+  LEFT JOIN film_schools fs ON fs.id = c.school_id
+`
+
+function mapCreatorListRow(row: CreatorListRow) {
+  const names = splitCreatorName(row, row.user_name)
+  return {
+    id: row.id,
+    userId: row.user_id,
+    name: row.user_name,
+    firstName: names.firstName,
+    lastName: names.lastName,
+    email: row.user_email,
+    phone: row.user_phone ?? '',
+    photoUrl: row.photo_url ?? '',
+    studioName: row.studio_name,
+    bio: row.bio,
+    status: row.status,
+    program: row.program ?? 'standard',
+    schoolId: row.school_id ?? null,
+    schoolName: row.school_name ?? '',
+    studentApplicationType: row.student_application_type ?? null,
+    studentDepartment: row.student_department ?? '',
+    studentUniversity: row.student_university ?? '',
+    projectCrew: row.project_crew ?? '',
+    legalAcceptedAt: row.legal_accepted_at,
+    createdAt: row.created_at,
+    userCreatedAt: row.user_created_at,
+    documentCount: row.document_count,
+    contentCount: row.content_count,
+    paymentPendingCount: row.payment_pending_count,
+    unreadMessages: row.unread_messages,
+    registrationPaidAt: row.registration_paid_at ?? null,
+    registrationPaid: isCreatorRegistrationPaid(row, {
+      subscription_expires_at: row.subscription_expires_at ?? null,
+    }),
+  }
+}
+
 router.get('/creators', requireAdmin, (req: AuthRequest, res) => {
+  ensureCreatorChatTable()
   const paymentFilter = String(req.query.payment ?? 'all').trim()
-  const rows = dbAll<
-    CreatorRow & { subscription_expires_at: string | null; user_name: string; user_email: string; document_count: number; content_count: number; payment_pending_count: number }
-  >(
-    `SELECT c.*, u.name AS user_name, u.email AS user_email,
-      u.subscription_expires_at,
-      (SELECT COUNT(*) FROM creator_documents cd WHERE cd.creator_id = c.id) AS document_count,
-      (SELECT COUNT(*) FROM content co WHERE co.creator_id = c.id AND COALESCE(co.program, 'standard') = 'standard') AS content_count,
-      (SELECT COUNT(*) FROM content co WHERE co.creator_id = c.id AND co.review_status = 'payment_pending') AS payment_pending_count
-    FROM creators c
-    JOIN users u ON u.id = c.user_id
-    WHERE COALESCE(c.program, 'standard') = 'standard'
-    ORDER BY c.created_at DESC`,
+  const program = resolveProgramFilter(req.query.program)
+  const rows = dbAll<CreatorListRow>(
+    `${CREATOR_LIST_SELECT}
+     ${program === 'all' ? '' : "WHERE COALESCE(c.program, 'standard') = ?"}
+     ORDER BY u.name COLLATE NOCASE, c.created_at DESC`,
+    program === 'all' ? [] : [program],
   )
 
-  const creators = rows
-    .map((row) => {
-      const registrationPaid = isCreatorRegistrationPaid(row, {
-        subscription_expires_at: row.subscription_expires_at ?? null,
-      })
-      return {
-        id: row.id,
-        userId: row.user_id,
-        name: row.user_name,
-        email: row.user_email,
-        studioName: row.studio_name,
-        bio: row.bio,
-        status: row.status,
-        program: row.program ?? 'standard',
-        legalAcceptedAt: row.legal_accepted_at,
-        createdAt: row.created_at,
-        documentCount: row.document_count,
-        contentCount: row.content_count,
-        paymentPendingCount: row.payment_pending_count,
-        registrationPaidAt: row.registration_paid_at ?? null,
-        registrationPaid,
-      }
-    })
-    .filter((creator) => {
-      if (paymentFilter === 'unpaid') return !creator.registrationPaid
-      if (paymentFilter === 'paid') return creator.registrationPaid
-      return true
-    })
+  const creators = rows.map(mapCreatorListRow).filter((creator) => {
+    if (paymentFilter === 'unpaid') return !creator.registrationPaid
+    if (paymentFilter === 'paid') return creator.registrationPaid
+    return true
+  })
 
   res.json({ creators })
 })
 
-router.get('/creators/stats', requireAdmin, (_req: AuthRequest, res) => {
+router.get('/creators/stats', requireAdmin, (req: AuthRequest, res) => {
+  const program = resolveProgramFilter(req.query.program)
   const contentRows = dbAll<ContentRow>(
     `SELECT c.*
      FROM content c
      JOIN creators cr ON cr.id = c.creator_id
-     WHERE COALESCE(cr.program, 'standard') = 'standard'
-       AND COALESCE(c.program, 'standard') = 'standard'`,
+     WHERE COALESCE(NULLIF(c.content_format, ''), 'main') = 'main'
+       ${program === 'all' ? '' : "AND COALESCE(cr.program, 'standard') = ?"}`,
+    program === 'all' ? [] : [program],
   )
   const creatorCount =
     dbGet<{ count: number }>(
-      `SELECT COUNT(*) AS count FROM creators WHERE COALESCE(program, 'standard') = 'standard'`,
+      `SELECT COUNT(*) AS count FROM creators ${program === 'all' ? '' : "WHERE COALESCE(program, 'standard') = ?"}`,
+      program === 'all' ? [] : [program],
     )?.count ?? 0
 
   const statsMap = getContentEngagementStats(contentRows.map((row) => row.id))
@@ -168,15 +212,8 @@ router.get('/creators/stats', requireAdmin, (_req: AuthRequest, res) => {
 })
 
 router.get('/creators/:id', requireAdmin, (req: AuthRequest, res) => {
-  const row = dbGet<
-    CreatorRow & { user_name: string; user_email: string; user_created_at: string }
-  >(
-    `SELECT c.*, u.name AS user_name, u.email AS user_email, u.created_at AS user_created_at
-     FROM creators c
-     JOIN users u ON u.id = c.user_id
-     WHERE c.id = ? AND COALESCE(c.program, 'standard') = 'standard'`,
-    [req.params.id],
-  )
+  ensureCreatorChatTable()
+  const row = dbGet<CreatorListRow>(`${CREATOR_LIST_SELECT} WHERE c.id = ?`, [req.params.id])
 
   if (!row) {
     res.status(404).json({ error: 'Yapımcı bulunamadı.' })
@@ -192,33 +229,24 @@ router.get('/creators/:id', requireAdmin, (req: AuthRequest, res) => {
     row.id,
   ])
 
-  const contentRows = dbAll<ContentRow>(
-    `SELECT * FROM content
-     WHERE creator_id = ?
-       AND COALESCE(program, 'standard') = 'standard'
-     ORDER BY content_added_at DESC`,
+  const contentRows = dbAll<ContentRow & { school_name?: string | null; parent_title?: string | null }>(
+    `SELECT c.*, fs.name AS school_name, parent.title AS parent_title
+     FROM content c
+     LEFT JOIN film_schools fs ON fs.id = c.school_id
+     LEFT JOIN content parent ON parent.id = c.parent_content_id
+     WHERE c.creator_id = ?
+     ORDER BY c.content_added_at DESC`,
     [row.id],
   )
 
   const stats = getContentEngagementStats(contentRows.map((item) => item.id))
+  const creator = mapCreatorListRow(row)
 
   res.json({
     creator: {
-      id: row.id,
-      userId: row.user_id,
-      name: row.user_name,
-      email: row.user_email,
-      studioName: row.studio_name,
-      bio: row.bio,
-      status: row.status,
-      program: row.program ?? 'standard',
-      legalAcceptedAt: row.legal_accepted_at,
-      createdAt: row.created_at,
-      userCreatedAt: row.user_created_at,
+      ...creator,
       documentCount: documents.length,
-      contentCount: contentRows.length,
-      registrationPaidAt: row.registration_paid_at ?? null,
-      registrationPaid: isCreatorRegistrationPaid(row),
+      contentCount: contentRows.filter((item) => (item.content_format ?? 'main') === 'main').length,
       paymentPendingCount: contentRows.filter((item) => item.review_status === 'payment_pending').length,
     },
     documents: documents.map((doc) => ({
@@ -231,6 +259,13 @@ router.get('/creators/:id', requireAdmin, (req: AuthRequest, res) => {
       contentRows.map((item) => ({
         ...mapContentAdmin(item),
         reviewStatus: item.review_status ?? 'pending',
+        reviewNote: item.review_note ?? null,
+        program: item.program ?? 'standard',
+        contentFormat: item.content_format ?? 'main',
+        parentContentId: item.parent_content_id ?? null,
+        parentTitle: item.parent_title ?? null,
+        schoolName: item.school_name ?? null,
+        schoolReviewStatus: item.school_review_status ?? 'none',
         sourceVideoUrl: item.source_video_url?.trim() || item.video_url,
       })),
       stats,

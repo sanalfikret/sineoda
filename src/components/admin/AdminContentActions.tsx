@@ -7,7 +7,7 @@ export const ADMIN_NEW_STANDUP_HREF = '/admin/icerikler/yeni?standup=1'
 /** Admin üst çubuğu — içerik ekleme kısayolları (tek kaynak). */
 export function AdminContentActions() {
   return (
-    <div className="ml-auto flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2">
       <Link
         to="/admin/genc-sinema"
         className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/20"

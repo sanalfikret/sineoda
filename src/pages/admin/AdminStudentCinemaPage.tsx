@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   bulkReviewAdminStudentCinemaContent,
   bulkDeleteAdminStudentCinemaContent,
@@ -14,6 +14,7 @@ import {
   type AdminFilmSchool,
   type AdminStudentCinemaItem,
 } from '../../api/client'
+import { AdminCreatorDirectory } from '../../components/admin/AdminCreatorDirectory'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { AdminStudentCinemaFilmActions } from '../../components/admin/AdminStudentCinemaFilmActions'
 import { getStudentDisplayName } from '../../utils/studentDisplayName'
@@ -101,7 +102,11 @@ function paymentBadgeClass(item: AdminStudentCinemaItem) {
 
 export function AdminStudentCinemaPage() {
   const navigate = useNavigate()
-  const [tab, setTab] = useState<'schools' | 'queue' | 'films'>('films')
+  const [searchParams] = useSearchParams()
+  const [tab, setTab] = useState<'schools' | 'queue' | 'films' | 'students'>(() =>
+    searchParams.get('tab') === 'students' || searchParams.get('user') ? 'students' : 'films',
+  )
+  const [studentCount, setStudentCount] = useState<number | null>(null)
   const [schools, setSchools] = useState<AdminFilmSchool[]>([])
   const [queue, setQueue] = useState<AdminStudentCinemaItem[]>([])
   const [films, setFilms] = useState<AdminStudentCinemaItem[]>([])
@@ -525,6 +530,17 @@ export function AdminStudentCinemaPage() {
         </button>
         <button
           type="button"
+          onClick={() => setTab('students')}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+            tab === 'students'
+              ? 'bg-emerald-500/15 text-emerald-300'
+              : 'bg-white/5 text-white/70 hover:bg-white/10'
+          }`}
+        >
+          Öğrenciler{studentCount !== null ? ` (${studentCount})` : ''}
+        </button>
+        <button
+          type="button"
           onClick={() => setTab('schools')}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
             tab === 'schools'
@@ -570,7 +586,15 @@ export function AdminStudentCinemaPage() {
         </form>
       )}
 
-      {loading ? (
+      {tab === 'students' && (
+        <AdminCreatorDirectory
+          program="student_cinema"
+          description="Genç Sinema öğrenci hesapları — kişisel bilgiler, okul, belgeler ve filmler (yapımcılarla aynı görünüm)"
+          onCountChange={setStudentCount}
+        />
+      )}
+
+      {tab === 'students' ? null : loading ? (
         <p className="text-sm text-plooy-muted">Yükleniyor...</p>
       ) : tab === 'films' ? (
         <>

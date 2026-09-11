@@ -15,6 +15,7 @@ import { AdminJournalListPage } from '../pages/admin/AdminJournalListPage'
 import { AdminLandingPage } from '../pages/admin/AdminLandingPage'
 import { AdminLegalPage } from '../pages/admin/AdminLegalPage'
 import { AdminLoginPage } from '../pages/admin/AdminLoginPage'
+import { AdminMessagesPage } from '../pages/admin/AdminMessagesPage'
 import { AdminSiteModePage } from '../pages/admin/AdminSiteModePage'
 import { AdminStudentCinemaFormPage } from '../pages/admin/AdminStudentCinemaFormPage'
 import { AdminStudentCinemaPage } from '../pages/admin/AdminStudentCinemaPage'
@@ -46,6 +47,7 @@ export function adminRoutes() {
         <Route path="dergi/yeni" element={<AdminJournalFormPage />} />
         <Route path="dergi/:id" element={<AdminJournalFormPage />} />
         <Route path="kullanicilar" element={<AdminUsersPage />} />
+        <Route path="mesajlar" element={<AdminMessagesPage />} />
         <Route path="yapimcilar" element={<AdminCreatorsPage />} />
         <Route path="planlar" element={<AdminBillingPlansPage />} />
         <Route path="muhasebe" element={<AdminWatchAccountingPage />} />

@@ -111,6 +111,10 @@ function runMigrations() {
     result TEXT NOT NULL, created_at TEXT NOT NULL,
     PRIMARY KEY (admin_id, request_id)
   )`)
+  db.run(
+    'CREATE TABLE IF NOT EXISTS creator_chat (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, sender_id TEXT NOT NULL, from_admin INTEGER NOT NULL, subject TEXT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL, read_at TEXT, request_id TEXT NOT NULL, UNIQUE(user_id, sender_id, request_id))',
+  )
+  db.run('CREATE INDEX IF NOT EXISTS creator_chat_user ON creator_chat(user_id, created_at)')
 
   ensureColumn('content', 'stream_provider', "TEXT DEFAULT 'custom'")
   ensureColumn('content', 'trailer_url', "TEXT DEFAULT ''")
