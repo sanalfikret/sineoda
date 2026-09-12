@@ -12,7 +12,10 @@
     "eyebrow": "Abonelik gerekli",
     "title": "İzlemeye devam et",
     "body": "Bu içeriği izlemek için aktif bir Plooy aboneliğine ihtiyacın var. Öğrenci (₺49/ay) veya standart (₺69/ay) plan seçip ödeme yapmalısın.",
-    "viewPlans": "Planları Gör"
+    "viewPlans": "Planları Gör",
+    "creatorTitle": "Yapımcı üyeliğiniz aktif değil",
+    "creatorBody": "Film izlemek ve film göndermek için aylık yapımcı üyeliğinizin aktif olması gerekir. Üyeliğinizi yenileyin, kaldığınız yerden devam edin.",
+    "renewCreator": "Üyeliği yenile"
   },
   "search": {
     "ariaLabel": "İçerik ara",

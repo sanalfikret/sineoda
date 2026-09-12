@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useLocale } from '../i18n/LocaleContext'
+import { useAuth } from '../context/AuthContext'
 
 interface PaywallModalProps {
   open: boolean
@@ -11,6 +12,8 @@ export function PaywallModal({ open, onClose }: PaywallModalProps) {
   const { t } = useTranslation('content')
   const { t: tc } = useTranslation()
   const { localizePath } = useLocale()
+  const { user } = useAuth()
+  const isCreator = user?.role === 'creator'
 
   if (!open) return null
 
@@ -27,15 +30,15 @@ export function PaywallModal({ open, onClose }: PaywallModalProps) {
         aria-modal="true"
       >
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-plooy-gold">{t('paywall.eyebrow')}</p>
-        <h2 className="mt-2 text-2xl font-bold text-white">{t('paywall.title')}</h2>
-        <p className="mt-3 text-sm leading-relaxed text-plooy-muted">{t('paywall.body')}</p>
+        <h2 className="mt-2 text-2xl font-bold text-white">{isCreator ? t('paywall.creatorTitle') : t('paywall.title')}</h2>
+        <p className="mt-3 text-sm leading-relaxed text-plooy-muted">{isCreator ? t('paywall.creatorBody') : t('paywall.body')}</p>
         <div className="mt-6 flex flex-col gap-2">
           <Link
-            to={localizePath('/planlar')}
+            to={localizePath(isCreator ? '/creator/odeme?checkout=1' : '/planlar')}
             onClick={onClose}
             className="rounded-lg bg-plooy-gold py-3 text-center text-sm font-semibold text-plooy-bg"
           >
-            {t('paywall.viewPlans')}
+            {isCreator ? t('paywall.renewCreator') : t('paywall.viewPlans')}
           </Link>
           <button
             type="button"

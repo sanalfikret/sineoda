@@ -11,6 +11,7 @@ import {
 import { AdminKvkkConsentModal } from '../../components/admin/AdminKvkkConsentModal'
 import { AdminSearchBar } from '../../components/admin/AdminSearchBar'
 import { AdminUserDetailPanel } from '../../components/admin/AdminUserDetailPanel'
+import { BulkMembershipGiftBar } from '../../components/admin/AdminMembershipGift'
 import { fuzzySearchMatch, sortByTurkishTitle } from '../../utils/search'
 import { planDisplayName } from '../../utils/billing'
 
@@ -63,6 +64,9 @@ export function AdminUsersPage() {
     audience: 'all' as 'all' | 'active_subscribers',
   })
   const [kvkkModalUser, setKvkkModalUser] = useState<AdminUser | null>(null)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const toggleSelected = (id: string) =>
+    setSelectedIds((current) => (current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id]))
 
   const loadUsers = async () => {
     setLoading(true)
@@ -344,6 +348,19 @@ export function AdminUsersPage() {
         </div>
       )}
 
+      {tab === 'members' && (
+        <BulkMembershipGiftBar
+          audiences={[
+            { id: 'viewers_all', label: 'Tüm izleyiciler' },
+            { id: 'viewers_active', label: 'Sadece aktif aboneliği olanlar' },
+            { id: 'viewers_expired', label: 'Sadece süresi dolmuş / üyeliği olmayanlar' },
+          ]}
+          selectedIds={selectedIds}
+          onClearSelection={() => setSelectedIds([])}
+          onDone={loadUsers}
+        />
+      )}
+
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#11141c]">
         {loading ? (
           <p className="p-6 text-sm text-plooy-muted">Yükleniyor...</p>
@@ -352,6 +369,21 @@ export function AdminUsersPage() {
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-white/10 text-plooy-muted">
                 <tr>
+                  {tab === 'members' && (
+                    <th className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        aria-label="Tümünü seç"
+                        checked={filteredUsers.length > 0 && filteredUsers.every((user) => selectedIds.includes(user.id))}
+                        onChange={() => {
+                          const ids = filteredUsers.map((user) => user.id)
+                          const all = ids.every((id) => selectedIds.includes(id))
+                          setSelectedIds((current) => (all ? current.filter((id) => !ids.includes(id)) : [...new Set([...current, ...ids])]))
+                        }}
+                        className="accent-plooy-gold"
+                      />
+                    </th>
+                  )}
                   <th className="px-4 py-3 font-medium">Ad</th>
                   <th className="px-4 py-3 font-medium">E-posta</th>
                   {tab === 'members' && <th className="px-4 py-3 font-medium">Telefon</th>}
@@ -365,13 +397,24 @@ export function AdminUsersPage() {
               <tbody>
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={tab === 'members' ? 7 : 6} className="px-4 py-10 text-center text-plooy-muted">
+                    <td colSpan={tab === 'members' ? 8 : 6} className="px-4 py-10 text-center text-plooy-muted">
                       Kayıt bulunamadı.
                     </td>
                   </tr>
                 ) : (
                   filteredUsers.map((user) => (
-                    <tr key={user.id} className="border-b border-white/5 last:border-0">
+                    <tr key={user.id} className={`border-b border-white/5 last:border-0 ${selectedIds.includes(user.id) ? 'bg-plooy-gold/5' : ''}`}>
+                      {tab === 'members' && (
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            aria-label={`${user.name} seç`}
+                            checked={selectedIds.includes(user.id)}
+                            onChange={() => toggleSelected(user.id)}
+                            className="accent-plooy-gold"
+                          />
+                        </td>
+                      )}
                       <td className="px-4 py-3 font-medium text-white">{user.name}</td>
                       <td className="px-4 py-3 text-white/80">{user.email}</td>
                       {tab === 'members' && (
@@ -407,6 +450,11 @@ export function AdminUsersPage() {
                           <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${subscriptionClass(user)}`}>
                             {subscriptionLabel(user)}
                           </span>
+                          {user.subscription?.expiresAt && (
+                            <span className="mt-1 block text-xs text-plooy-muted">
+                              Bitiş: {new Date(user.subscription.expiresAt).toLocaleDateString('tr-TR')}
+                            </span>
+                          )}
                         </td>
                       )}
                       {tab === 'staff' && (

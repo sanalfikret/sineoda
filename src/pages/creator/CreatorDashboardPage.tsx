@@ -588,6 +588,12 @@ export function CreatorDashboardPage() {
         {program === 'student_cinema' && registrationPaid && (
           <div className="mb-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 text-sm text-emerald-100">
             {t('studentPaidBanner', { brand: BRAND_NAME })}
+            {user?.subscription?.expiresAt && (
+              <span className="mt-1 block text-xs text-emerald-200/80">
+                {t('membershipUntil', { date: new Date(user.subscription.expiresAt).toLocaleDateString(locale === 'en' ? 'en-US' : 'tr-TR') })}{' '}
+                <Link to={localizePath(creatorCheckoutPath())} className="underline">{t('renewMembership')}</Link>
+              </span>
+            )}
           </div>
         )}
 
@@ -608,6 +614,12 @@ export function CreatorDashboardPage() {
         {program === 'standard' && registrationPaid && status !== 'rejected' && status !== 'suspended' && (
           <div className="mb-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 text-sm text-emerald-100">
             {t('standardPaidBanner', { brand: BRAND_NAME })}
+            {user?.subscription?.expiresAt && (
+              <span className="mt-1 block text-xs text-emerald-200/80">
+                {t('membershipUntil', { date: new Date(user.subscription.expiresAt).toLocaleDateString(locale === 'en' ? 'en-US' : 'tr-TR') })}{' '}
+                <Link to={localizePath(creatorCheckoutPath())} className="underline">{t('renewMembership')}</Link>
+              </span>
+            )}
           </div>
         )}
 

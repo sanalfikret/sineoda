@@ -480,6 +480,18 @@ function runMigrations() {
   `)
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS subscription_gifts (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      months INTEGER NOT NULL,
+      granted_by TEXT,
+      note TEXT NOT NULL DEFAULT '',
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+  `)
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS invite_codes (
       id TEXT PRIMARY KEY,
       code TEXT UNIQUE NOT NULL,
@@ -522,6 +534,28 @@ function runMigrations() {
   ensureColumn('creators', 'project_crew', "TEXT NOT NULL DEFAULT ''")
   ensureColumn('creators', 'registration_paid_at', 'TEXT')
   ensureColumn('creators', 'pending_film_link', 'TEXT')
+  // Tek seferlik başvuru ücreti ödemiş eski yapımcılar: ödeme tarihinden itibaren 1 aylık üyelik penceresi.
+  {
+    const legacy = dbAll<{ user_id: string; registration_paid_at: string; program: string | null }>(
+      `SELECT c.user_id, c.registration_paid_at, c.program
+       FROM creators c JOIN users u ON u.id = c.user_id
+       WHERE c.registration_paid_at IS NOT NULL AND u.subscription_expires_at IS NULL`,
+    )
+    for (const row of legacy) {
+      const paidAt = new Date(row.registration_paid_at)
+      if (Number.isNaN(paidAt.getTime())) continue
+      const expires = new Date(paidAt)
+      const day = expires.getUTCDate()
+      expires.setUTCDate(1)
+      expires.setUTCMonth(expires.getUTCMonth() + 1)
+      const lastDay = new Date(Date.UTC(expires.getUTCFullYear(), expires.getUTCMonth() + 1, 0)).getUTCDate()
+      expires.setUTCDate(Math.min(day, lastDay))
+      db.run(
+        `UPDATE users SET subscription_status = 'active', subscription_plan = ?, subscription_started_at = COALESCE(subscription_started_at, ?), subscription_expires_at = ? WHERE id = ?`,
+        [row.program === 'student_cinema' ? 'student_cinema_application' : 'creator_application', row.registration_paid_at, expires.toISOString(), row.user_id],
+      )
+    }
+  }
   ensureColumn('creators', 'first_name', "TEXT NOT NULL DEFAULT ''")
   ensureColumn('creators', 'last_name', "TEXT NOT NULL DEFAULT ''")
   ensureColumn('creators', 'photo_url', "TEXT NOT NULL DEFAULT ''")

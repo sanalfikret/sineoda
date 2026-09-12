@@ -16,6 +16,7 @@ import {
 } from '../services/playbackSessions.js'
 import { getProfileId, requireAuth, type AuthRequest } from '../middleware/auth.js'
 import { assertSiteOpenForViewers } from '../services/siteMode.js'
+import { canUserPlay, getUserSubscription } from '../services/subscription.js'
 
 const router = Router()
 
@@ -57,6 +58,19 @@ router.post('/start', requireAuth, (req: AuthRequest, res) => {
 
   if (!isLimitExempt(req) && !dbGet('SELECT id FROM content WHERE id = ? AND '+PUBLISHED_CONTENT_SQL,[contentId])) {
     res.status(404).json({error:'İçerik yayında değil.'}); return
+  }
+  if (!isLimitExempt(req)) {
+    const subscriber = getUserSubscription(userId)
+    if (!canUserPlay(subscriber)) {
+      res.status(402).json({
+        error:
+          subscriber?.role === 'creator'
+            ? 'Yapımcı üyeliğiniz aktif değil. İzlemek ve film göndermek için aylık üyeliğinizi yenileyin.'
+            : 'İzlemek için aktif bir üyelik gerekir.',
+        code: subscriber?.role === 'creator' ? 'CREATOR_PAYMENT_REQUIRED' : 'SUBSCRIPTION_REQUIRED',
+      })
+      return
+    }
   }
   cleanupStalePlaybackSessions()
 

@@ -4,7 +4,7 @@ import { v4 as uuid } from 'uuid'
 import { dbAll, dbGet, dbRun } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../middleware/auth.js'
 import { mapUser } from '../mappers.js'
-import { giftSubscriptionMonths } from '../services/subscriptionGift.js'
+import { GIFT_AUDIENCES, giftSubscriptionBulk, giftSubscriptionMonths, listGiftHistory, type GiftAudience } from '../services/subscriptionGift.js'
 import { getKvkkSummariesByUserIds, listUserLegalConsents } from '../services/legalConsent.js'
 import type { ProfileRow, UserRow } from '../types.js'
 
@@ -131,12 +131,36 @@ router.post('/:id/gift-subscription', requireAdmin, (req: AuthRequest, res) => {
   }
 
   const months = Number((req.body as { months?: number }).months ?? 1)
+  const note = String((req.body as { note?: string }).note ?? '')
   try {
-    const result = giftSubscriptionMonths(req.params.id, months)
-    res.json({ user: getUsersWithProfiles().find((entry) => entry.id === req.params.id)!, gift: result })
+    const result = giftSubscriptionMonths(req.params.id, months, { grantedBy: req.auth!.userId, note })
+    const user = getUsersWithProfiles().find((entry) => entry.id === req.params.id) ?? null
+    res.json({ user, gift: result })
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : 'Hediye abonelik verilemedi.' })
   }
+})
+
+/** Toplu üyelik uzatma: audience (kitle) ve/veya userIds (elle seçim). */
+router.post('/bulk-gift-subscription', requireAdmin, (req: AuthRequest, res) => {
+  const body = req.body as { months?: number; audience?: string; userIds?: unknown; note?: string }
+  const months = Number(body.months ?? 0)
+  const audience = typeof body.audience === 'string' && (GIFT_AUDIENCES as string[]).includes(body.audience) ? (body.audience as GiftAudience) : undefined
+  const userIds = Array.isArray(body.userIds) ? body.userIds.map(String) : undefined
+  if (!audience && (!userIds || userIds.length === 0)) {
+    res.status(400).json({ error: 'Kitle seçin veya listeden üye işaretleyin.' })
+    return
+  }
+  try {
+    const result = giftSubscriptionBulk({ months, audience, userIds, grantedBy: req.auth!.userId, note: String(body.note ?? '') })
+    res.json(result)
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : 'Toplu uzatma yapılamadı.' })
+  }
+})
+
+router.get('/:id/gift-history', requireAdmin, (req: AuthRequest, res) => {
+  res.json({ history: listGiftHistory(String(req.params.id)) })
 })
 
 router.get('/:id/legal-consents', requireAdmin, (req: AuthRequest, res) => {

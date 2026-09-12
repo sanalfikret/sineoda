@@ -5,6 +5,10 @@ import { getCreatorRegistrationPlanId } from './billingPlanDefaults.js'
 import { getPlan } from './plans.js'
 import { planExpiryFor } from './billingPlanDefaults.js'
 
+/**
+ * Yapımcı üyeliği aylık abonelik gibi çalışır: en az bir ödeme yapılmış VE üyelik süresi dolmamış olmalı.
+ * Süre dolunca yapımcı ne izleyebilir ne film gönderebilir; yenileyince tekrar açılır.
+ */
 export function isCreatorRegistrationPaid(
   creator: Pick<CreatorRow, 'program' | 'registration_paid_at'>,
   user?: Pick<UserRow, 'subscription_expires_at'> | null,
@@ -12,11 +16,6 @@ export function isCreatorRegistrationPaid(
   if (!creator.registration_paid_at) {
     return false
   }
-
-  const plan = getPlan(
-    getCreatorRegistrationPlanId((creator.program ?? 'standard') as 'standard' | 'student_cinema'),
-  )
-  if (!plan || plan.interval === 'once') return true
   if (!user?.subscription_expires_at) return false
   return new Date(user.subscription_expires_at) >= new Date()
 }
@@ -75,7 +74,17 @@ export function activateCreatorRegistration(userId: string, planId?: string) {
   dbRun('UPDATE creators SET pending_film_link = NULL WHERE user_id = ?', [userId])
   const plan = getPlan(planId ?? getCreatorRegistrationPlanId(creator?.program ?? 'standard'))
   if (plan) {
-    const expiresAt = planExpiryFor(plan)
+    // Aktif üyelik varsa yeni dönem bitişin üstüne eklenir (izleyici aboneliğiyle aynı davranış).
+    const current = dbGet<Pick<UserRow, 'subscription_status' | 'subscription_expires_at'>>(
+      'SELECT subscription_status, subscription_expires_at FROM users WHERE id = ?',
+      [userId],
+    )
+    const currentExpiry = current?.subscription_expires_at ? new Date(current.subscription_expires_at) : null
+    const base =
+      current && ['active', 'cancelled'].includes(current.subscription_status ?? '') && currentExpiry && currentExpiry > new Date()
+        ? currentExpiry
+        : new Date()
+    const expiresAt = planExpiryFor({ ...plan, interval: plan.interval === 'once' ? 'month' : plan.interval }, base)
     dbRun(
       `UPDATE users
        SET subscription_status = 'active',

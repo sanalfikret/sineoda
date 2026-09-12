@@ -88,15 +88,11 @@ export function CreatorPaymentPage() {
     void handleCheckout()
   }, [loading, user, isCreator, registrationPaid, autoCheckout, handleCheckout, plan, paymentReady])
 
-  useEffect(() => {
-    if (!isLoading && registrationPaid) navigate(localizePath('/creator'), { replace: true })
-  }, [isLoading, registrationPaid, navigate, localizePath])
-
   if (!isLoading && !isCreator) {
     return null
   }
 
-  if (!isLoading && registrationPaid) return null
+  const expiresAt = user?.subscription?.expiresAt ?? null
 
   const price = plan?.price ?? (isStudentProgram ? 49 : 69)
 
@@ -112,6 +108,11 @@ export function CreatorPaymentPage() {
               ? t('subtitleStudent', { brand: BRAND_NAME })
               : t('subtitleStandard')}
           </p>
+          {registrationPaid && expiresAt && (
+            <p className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-100">
+              {t('activeUntil', { date: new Date(expiresAt).toLocaleDateString(t('dateLocale')) })}
+            </p>
+          )}
 
           <div className="mt-6 rounded-xl border border-plooy-gold/30 bg-plooy-gold/5 p-5">
             <p className="text-sm text-plooy-muted">{t('feeLabel')}</p>
@@ -144,7 +145,9 @@ export function CreatorPaymentPage() {
             {paying
               ? t('redirecting')
               : paymentReady
-                ? t('payAndContinue', { price })
+                ? registrationPaid
+                  ? t('renewNow', { price })
+                  : t('payAndContinue', { price })
                 : t('paymentSoon')}
           </button>
 

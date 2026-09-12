@@ -49,33 +49,33 @@ export const DEFAULT_BILLING_PLANS: BillingPlanDefinition[] = [
   },
   {
     id: 'creator_application',
-    name: 'Yapımcı Yönetmen Başvuru Ücreti + Üyelik',
+    name: 'Yapımcı Yönetmen Aylık Üyelik',
     price: 69,
     currency: 'TRY',
-    interval: 'once',
+    interval: 'month',
     audience: 'creator',
     sectionLabel: 'Yapımcı Yönetmen',
     enabled: true,
     registrationNotice:
-      'Kayıt sonrası ₺{{price}} yapımcı başvuru ücreti ödenir. Hesap onayı ve film incelemesi ayrı yapılır.',
+      'Yapımcı üyeliği aylık ₺{{price}}. Üyelik aktifken tüm filmleri izler ve film gönderirsiniz; filminizden izlenme payı kazanırsınız.',
     features: [
-      'Yapımcı Yönetmen paneli erişimi',
+      'Tüm filmleri izleme (izleyici üyeliğiyle aynı)',
       'Film başvurusu gönderme',
-      'Gelir paylaşımı modeli',
+      'İzlenme payı ile gelir',
     ],
   },
   {
     id: 'student_cinema_application',
-    name: 'Genç Sinema Başvuru Ücreti + Üyelik',
+    name: 'Genç Sinema Aylık Üyelik',
     price: 49,
     currency: 'TRY',
-    interval: 'once',
+    interval: 'month',
     audience: 'creator',
     sectionLabel: 'Genç Sinema',
     enabled: true,
     registrationNotice:
-      'Kayıt sonrası ₺{{price}} Genç Sinema başvuru ücreti ödenir. Hesap onayı ayrı yapılır; film başvurunuz okul ve {{brand}} incelemesine alınır.',
-    features: ['Genç Sinema paneli erişimi', 'Film başvurusu gönderme', 'Okul ve admin incelemesi'],
+      'Genç Sinema üyeliği aylık ₺{{price}}. Üyelik aktifken tüm filmleri izler ve film gönderirsiniz; film başvurunuz okul ve {{brand}} incelemesine alınır.',
+    features: ['Tüm filmleri izleme', 'Film başvurusu gönderme', 'Okul ve admin incelemesi'],
   },
 ]
 

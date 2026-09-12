@@ -137,6 +137,7 @@ function mapCreatorListRow(row: CreatorListRow) {
     paymentPendingCount: row.payment_pending_count,
     unreadMessages: row.unread_messages,
     registrationPaidAt: row.registration_paid_at ?? null,
+    subscriptionExpiresAt: row.subscription_expires_at ?? null,
     registrationPaid: isCreatorRegistrationPaid(row, {
       subscription_expires_at: row.subscription_expires_at ?? null,
     }),

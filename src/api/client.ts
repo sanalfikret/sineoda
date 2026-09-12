@@ -931,14 +931,47 @@ export async function updateAdminUser(
   })
 }
 
-export async function giftAdminUserSubscription(id: string, months: number) {
-  return api<{ user: AdminUser; gift: { months: number; expiresAt: string } }>(
+export async function giftAdminUserSubscription(id: string, months: number, note?: string) {
+  return api<{ user: AdminUser | null; gift: { months: number; expiresAt: string; plan: string; role: string } }>(
     `/api/admin/users/${id}/gift-subscription`,
     {
       method: 'POST',
-      body: JSON.stringify({ months }),
+      body: JSON.stringify({ months, note: note ?? '' }),
     },
   )
+}
+
+export type GiftAudience =
+  | 'viewers_all'
+  | 'viewers_active'
+  | 'viewers_expired'
+  | 'creators_all'
+  | 'creators_standard'
+  | 'creators_student'
+
+export async function bulkGiftAdminSubscription(payload: {
+  months: number
+  audience?: GiftAudience
+  userIds?: string[]
+  note?: string
+}) {
+  return api<{ granted: number; total: number; skipped: Array<{ userId: string; reason: string }> }>(
+    '/api/admin/users/bulk-gift-subscription',
+    { method: 'POST', body: JSON.stringify(payload) },
+  )
+}
+
+export interface GiftHistoryEntry {
+  id: string
+  months: number
+  grantedBy: string | null
+  note: string
+  expiresAt: string
+  createdAt: string
+}
+
+export async function fetchAdminGiftHistory(id: string) {
+  return api<{ history: GiftHistoryEntry[] }>(`/api/admin/users/${id}/gift-history`)
 }
 
 export async function deleteAdminUser(id: string) {
@@ -2061,6 +2094,7 @@ export interface AdminCreator {
   paymentPendingCount?: number
   unreadMessages?: number
   registrationPaidAt?: string | null
+  subscriptionExpiresAt?: string | null
   registrationPaid?: boolean
 }
 

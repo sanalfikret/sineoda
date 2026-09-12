@@ -319,20 +319,7 @@ router.post('/checkout', requireAuth, async (req: AuthRequest, res) => {
       res.status(400).json({ error: 'Bu başvuru ücreti hesap türünüz için geçerli değil.' })
       return
     }
-    const creatorPlanInterval = plan?.interval ?? 'once'
-    if (creatorPlanInterval === 'once' && creator.registration_paid_at) {
-      res.status(400).json({ error: 'Yapımcı başvuru ücreti zaten ödendi.' })
-      return
-    }
-    if (
-      creatorPlanInterval !== 'once' &&
-      creator.registration_paid_at &&
-      user.subscription_expires_at &&
-      new Date(user.subscription_expires_at) > new Date()
-    ) {
-      res.status(400).json({ error: 'Yapımcı üyeliğiniz hâlâ aktif.' })
-      return
-    }
+    // Aylık yapımcı üyeliği: dilediği zaman yeniler, süre bitişin üstüne eklenir.
   } else if (user.role === 'creator') {
     res.status(403).json({ error: 'Yapımcı hesapları izleyici abonelik planı satın alamaz.' })
     return

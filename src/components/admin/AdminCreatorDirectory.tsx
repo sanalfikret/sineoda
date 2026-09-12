@@ -17,6 +17,7 @@ import {
 } from '../../api/client'
 import { AdminCreatorFilmEditor } from './AdminCreatorFilmEditor'
 import { AdminSearchBar } from './AdminSearchBar'
+import { BulkMembershipGiftBar, MembershipGiftForm, formatExpiry } from './AdminMembershipGift'
 import { CREATOR_DOC_TYPES } from '../../constants/creatorLegal'
 import { getContentTypeLabel } from '../../constants/contentTypes'
 import { formatPublishDate } from '../../utils/publish'
@@ -274,6 +275,9 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
   const [query, setQuery] = useState('')
   const [editingContentId, setEditingContentId] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
+  const toggleSelectedUser = (userId: string) =>
+    setSelectedUserIds((current) => (current.includes(userId) ? current.filter((entry) => entry !== userId) : [...current, userId]))
   const [publishingAll, setPublishingAll] = useState(false)
   const [statusUpdating, setStatusUpdating] = useState(false)
   const [filmSections, setFilmSections] = useState({
@@ -545,6 +549,26 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
       )}
       {error && <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
 
+      <BulkMembershipGiftBar
+        audiences={
+          activeProgram === 'student_cinema'
+            ? [{ id: 'creators_student', label: 'Tüm Genç Sinema öğrencileri' }]
+            : activeProgram === 'standard'
+              ? [{ id: 'creators_standard', label: 'Tüm bağımsız yapımcılar' }]
+              : [
+                  { id: 'creators_all', label: 'Tüm yapımcılar (bağımsız + Genç Sinema)' },
+                  { id: 'creators_standard', label: 'Sadece bağımsız yapımcılar' },
+                  { id: 'creators_student', label: 'Sadece Genç Sinema öğrencileri' },
+                ]
+        }
+        selectedIds={selectedUserIds}
+        onClearSelection={() => setSelectedUserIds([])}
+        onDone={async () => {
+          await loadCreators()
+          if (selectedId) await loadDetail(selectedId)
+        }}
+      />
+
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#11141c]">
           {loading ? (
@@ -554,6 +578,19 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
               <table className="min-w-full text-left text-sm">
                 <thead className="border-b border-white/10 text-plooy-muted">
                   <tr>
+                    <th className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        aria-label="Tümünü seç"
+                        checked={filteredCreators.length > 0 && filteredCreators.every((creator) => selectedUserIds.includes(creator.userId))}
+                        onChange={() => {
+                          const ids = filteredCreators.map((creator) => creator.userId)
+                          const all = ids.every((id) => selectedUserIds.includes(id))
+                          setSelectedUserIds((current) => (all ? current.filter((id) => !ids.includes(id)) : [...new Set([...current, ...ids])]))
+                        }}
+                        className="accent-plooy-gold"
+                      />
+                    </th>
                     <th className="px-4 py-3 font-medium">Kişi</th>
                     <th className="px-4 py-3 font-medium">Şirket / Okul</th>
                     {showProgramFilter && <th className="px-4 py-3 font-medium">Program</th>}
@@ -567,7 +604,7 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
                 <tbody>
                   {filteredCreators.length === 0 ? (
                     <tr>
-                      <td colSpan={showProgramFilter ? 8 : 7} className="px-4 py-10 text-center text-plooy-muted">
+                      <td colSpan={showProgramFilter ? 9 : 8} className="px-4 py-10 text-center text-plooy-muted">
                         Aramanızla eşleşen kayıt bulunamadı.
                       </td>
                     </tr>
@@ -580,6 +617,15 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
                           selectedId === creator.id ? 'bg-plooy-gold/10' : ''
                         }`}
                       >
+                        <td className="px-4 py-3" onClick={(event) => event.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            aria-label={`${creator.name} seç`}
+                            checked={selectedUserIds.includes(creator.userId)}
+                            onChange={() => toggleSelectedUser(creator.userId)}
+                            className="accent-plooy-gold"
+                          />
+                        </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             <CreatorAvatar creator={creator} />
@@ -617,8 +663,13 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
                               creator.registrationPaid ? 'bg-emerald-500/15 text-emerald-300' : 'bg-sky-500/15 text-sky-200'
                             }`}
                           >
-                            {creator.registrationPaid ? 'Ödendi' : 'Ödeme bekliyor'}
+                            {creator.registrationPaid ? 'Üyelik aktif' : 'Üyelik yok'}
                           </span>
+                          {creator.subscriptionExpiresAt && (
+                            <span className="mt-1 block text-xs text-plooy-muted">
+                              Bitiş: {new Date(creator.subscriptionExpiresAt).toLocaleDateString('tr-TR')}
+                            </span>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-white/70">{creator.contentCount}</td>
                         <td className="px-4 py-3 text-white/70">{creator.documentCount}</td>
@@ -769,21 +820,21 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
                     </>
                   )}
                   <div>
-                    <dt className="text-plooy-muted">Başvuru ödemesi</dt>
+                    <dt className="text-plooy-muted">Aylık yapımcı üyeliği</dt>
                     <dd className="text-white/90">
                       {selectedCreator.registrationPaid ? (
                         <>
-                          Ödendi
-                          {selectedCreator.registrationPaidAt && (
-                            <span className="block text-xs text-plooy-muted">
-                              {new Date(selectedCreator.registrationPaidAt).toLocaleString('tr-TR')}
-                            </span>
-                          )}
+                          <span className="text-emerald-300">Aktif</span>
+                          <span className="block text-xs text-plooy-muted">
+                            Bitiş: {formatExpiry(selectedCreator.subscriptionExpiresAt)}
+                            {selectedCreator.registrationPaidAt && ` · ilk ödeme ${new Date(selectedCreator.registrationPaidAt).toLocaleDateString('tr-TR')}`}
+                          </span>
                         </>
                       ) : (
                         <span className="text-sky-200">
-                          Ödeme bekliyor
-                          {(selectedCreator.paymentPendingCount ?? 0) > 0 && ' · film gönderildi'}
+                          Üyelik yok / süresi dolmuş
+                          {selectedCreator.subscriptionExpiresAt && ` (${formatExpiry(selectedCreator.subscriptionExpiresAt)})`}
+                          {(selectedCreator.paymentPendingCount ?? 0) > 0 && ' · ödeme bekleyen film var'}
                         </span>
                       )}
                     </dd>
@@ -802,6 +853,16 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
                   )}
                 </dl>
               </section>
+
+              <MembershipGiftForm
+                userId={selectedCreator.userId}
+                currentExpiresAt={selectedCreator.subscriptionExpiresAt ?? null}
+                currentStatus={selectedCreator.registrationPaid ? 'active' : null}
+                onGranted={async () => {
+                  await loadCreators()
+                  await loadDetail(selectedCreator.id)
+                }}
+              />
 
               <section>
                 <h3 className="text-sm font-semibold text-white">Belgeler ({detail?.documents.length ?? selectedCreator.documentCount})</h3>

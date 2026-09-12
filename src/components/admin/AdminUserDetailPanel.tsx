@@ -1,12 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import {
   fetchAdminUserLegalConsents,
-  giftAdminUserSubscription,
   sendAdminUserMessage,
   type AdminUser,
   type LegalConsentRecord,
 } from '../../api/client'
 import { CONSENT_TYPE_LABELS } from '../../constants/legal'
+import { MembershipGiftForm } from './AdminMembershipGift'
 import { planDisplayName } from '../../utils/billing'
 
 function subscriptionLabel(user: AdminUser) {
@@ -35,7 +35,6 @@ interface AdminUserDetailPanelProps {
 export function AdminUserDetailPanel({ user, onClose, onUpdated }: AdminUserDetailPanelProps) {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [gifting, setGifting] = useState(false)
   const [sending, setSending] = useState(false)
   const [legalConsents, setLegalConsents] = useState<LegalConsentRecord[]>([])
   const [expandedConsentId, setExpandedConsentId] = useState<string | null>(null)
@@ -50,23 +49,6 @@ export function AdminUserDetailPanel({ user, onClose, onUpdated }: AdminUserDeta
       .then(({ consents }) => setLegalConsents(consents))
       .catch(() => setLegalConsents([]))
   }, [user.id, user.role])
-
-  const handleGift = async (months: number) => {
-    setError('')
-    setSuccess('')
-    setGifting(true)
-    try {
-      const { gift } = await giftAdminUserSubscription(user.id, months)
-      setSuccess(
-        `${months} ay hediye verildi. Yeni bitiş: ${new Date(gift.expiresAt).toLocaleDateString('tr-TR')}`,
-      )
-      await onUpdated()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Hediye verilemedi.')
-    } finally {
-      setGifting(false)
-    }
-  }
 
   const handleSendMessage = async (event: FormEvent) => {
     event.preventDefault()
@@ -219,25 +201,14 @@ export function AdminUserDetailPanel({ user, onClose, onUpdated }: AdminUserDeta
 
           {user.role === 'user' && (
             <>
-              <section className="space-y-3">
-                <h3 className="text-sm font-semibold text-white">Hediye abonelik</h3>
-                <p className="text-xs text-plooy-muted">
-                  Mevcut abonelik varsa süre uzatılır; yoksa yeni dönem başlatılır.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {[1, 2, 3].map((months) => (
-                    <button
-                      key={months}
-                      type="button"
-                      disabled={gifting}
-                      onClick={() => void handleGift(months)}
-                      className="rounded-lg border border-plooy-gold/40 bg-plooy-gold/10 px-4 py-2 text-sm font-medium text-plooy-gold hover:bg-plooy-gold/20 disabled:opacity-50"
-                    >
-                      +{months} ay
-                    </button>
-                  ))}
-                </div>
-              </section>
+              <MembershipGiftForm
+                userId={user.id}
+                currentExpiresAt={user.subscription?.expiresAt ?? null}
+                currentStatus={user.subscription?.status ?? null}
+                onGranted={async () => {
+                  await onUpdated()
+                }}
+              />
 
               <section className="space-y-3">
                 <h3 className="text-sm font-semibold text-white">Mesaj gönder</h3>

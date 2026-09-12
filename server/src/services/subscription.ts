@@ -7,9 +7,18 @@ type UserSubscription = Pick<
   'role' | 'subscription_status' | 'subscription_plan' | 'subscription_expires_at'
 >
 
+export function hasActiveSubscriptionWindow(user: UserSubscription | null | undefined) {
+  if (!user) return false
+  if (user.subscription_status !== 'active' && user.subscription_status !== 'cancelled') return false
+  if (user.subscription_expires_at && new Date(user.subscription_expires_at) < new Date()) return false
+  return true
+}
+
 export function canUserPlay(user: UserSubscription | null | undefined) {
   if (!user) return false
   if (user.role === 'admin' || user.role === 'manager') return true
+  // Yapımcı: REQUIRE_SUBSCRIPTION ayarından bağımsız, aylık üyeliği aktif değilse izleyemez.
+  if (user.role === 'creator') return hasActiveSubscriptionWindow(user)
   if (!config.requireSubscription) return true
   if (user.subscription_status !== 'active' && user.subscription_status !== 'cancelled') return false
   if (user.subscription_expires_at && new Date(user.subscription_expires_at) < new Date()) {

@@ -232,7 +232,10 @@ export function getBillingPlans(options?: { includeDisabled?: boolean; audience?
   const overrides = getBillingPlansConfig()
   const defaults = DEFAULT_BILLING_PLANS.map((base) => mergeBillingPlan(base, overrides[base.id]))
   const custom = getCustomBillingPlans().map((base) => mergeBillingPlan(base, overrides[base.id]))
-  let plans = [...defaults, ...custom]
+  // Yapımcı üyeliği aylık/yıllık abonelik olmak zorunda; eski "tek seferlik" ayarlar aylığa çevrilir.
+  let plans = [...defaults, ...custom].map((plan) =>
+    plan.audience === 'creator' && plan.interval === 'once' ? { ...plan, interval: 'month' as const } : plan,
+  )
   if (options?.audience) {
     plans = plans.filter((plan) => plan.audience === options.audience)
   }
