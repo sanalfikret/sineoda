@@ -203,6 +203,16 @@ function activeSubscriberCount() {
   const now=new Date().toISOString()
   return dbGet<{count:number}>("SELECT COUNT(*) AS count FROM users WHERE subscription_status IN ('active','cancelled') AND (subscription_expires_at IS NULL OR subscription_expires_at > ?)",[now])?.count??0
 }
+/** "1.250,50", "1250.50", 1250.5 → 1250.5; geçersizse NaN. */
+function parseMoney(raw:unknown) {
+  if(typeof raw==='number') return raw
+  let s=String(raw??'').trim().replace(/\s|₺|TL/gi,'')
+  if(!s) return 0
+  if(s.includes(',')&&s.includes('.')) s=s.replace(/\./g,'').replace(',','.')
+  else if(s.includes(',')) s=s.replace(',','.')
+  else if((s.match(/\./g)??[]).length>1) s=s.replace(/\./g,'')
+  return Number(s)
+}
 function parseExpenseItems(raw:string|null|undefined):ExpenseItem[] {
   try {
     const parsed=JSON.parse(raw||'[]')
@@ -232,7 +242,7 @@ export function saveAccountingFinance(month:string,input:{expenseItems?:unknown;
     items=input.expenseItems.map((raw,index)=>{
       const item=(raw??{}) as Record<string,unknown>
       const label=String(item.label??'').trim()
-      const amount=Number(String(item.amount??'0').replace(',','.'))
+      const amount=parseMoney(item.amount)
       if(!label||label.length>80) throw new Error(`${index+1}. gider kaleminin adı 1–80 karakter olmalı.`)
       if(!Number.isFinite(amount)||amount<0||amount>MAX_MONEY) throw new Error(`"${label}" için tutar 0 veya daha büyük bir sayı olmalı.`)
       return { id:typeof item.id==='string'&&/^[a-zA-Z0-9_-]{1,40}$/.test(item.id)?item.id:randomUUID(), label, amount:round2(amount) }

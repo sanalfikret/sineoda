@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { AdminErrorBoundary } from './AdminErrorBoundary'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { adminLogout, refreshSessionToken } from '../../api/client'
 import { AdminContentActions } from './AdminContentActions'
 import { PlooyLogo } from '../PlooyLogo'
@@ -97,6 +98,7 @@ export function AdminLayout() {
 }
 
 function AdminLayoutInner() {
+  const routeKey = useLocation().pathname
   const { user } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -186,7 +188,9 @@ function AdminLayoutInner() {
         </header>
 
         <main className="p-4 sm:p-6">
-          <Outlet />
+          <AdminErrorBoundary key={routeKey}>
+            <Outlet />
+          </AdminErrorBoundary>
         </main>
       </div>
     </div>

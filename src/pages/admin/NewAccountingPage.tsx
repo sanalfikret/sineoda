@@ -3,6 +3,8 @@ import { api } from '../../api/client'
 import type { AccountingRules, AccountingReport, AccountingCreatorRow, ExpenseItem } from '../../../shared/accounting'
 import { LegacyWatchAccountingPage } from './LegacyWatchAccountingPage'
 import { ArrangeableGrid } from '../../components/admin/ArrangeableGrid'
+import { createRandomId } from '../../utils/id'
+import { parseMoney } from '../../utils/money'
 
 const groups: Record<string, string> = { all: 'Tümü', platform: 'Plooy', standard: 'Bağımsız yapımcı', student_cinema: 'Genç Sinema' }
 const EXPENSE_PRESETS = ['Ofis kirası', 'CDN / Bunny', 'Sunucu (VPS)', 'Vergi', 'Çalışan maaşı', 'Sanal POS komisyonu', 'Muhasebeci', 'Reklam', 'Diğer']
@@ -16,7 +18,7 @@ const formatIban = (iban: string) => iban.replace(/\s+/g, '').replace(/(.{4})/g,
 const round2 = (n: number) => Math.round(n * 100) / 100
 
 type ExpenseDraft = { id: string; label: string; amount: string }
-const newDraft = (label = ''): ExpenseDraft => ({ id: crypto.randomUUID().replace(/-/g, '').slice(0, 20), label, amount: '' })
+const newDraft = (label = ''): ExpenseDraft => ({ id: createRandomId().replace(/-/g, '').slice(0, 20), label, amount: '' })
 
 function Step({ n, title, hint }: { n: number; title: string; hint?: string }) {
   return (
@@ -94,13 +96,13 @@ export function AdminWatchAccountingPage() {
       : next.finance.expenses > 0
         ? [{ id: 'legacy', label: next.finance.expenseNote || 'Gider', amount: next.finance.expenses }]
         : []
-    setDrafts(items.map((i) => ({ id: i.id, label: i.label, amount: String(i.amount) })))
+    setDrafts(items.map((i) => ({ id: i.id, label: i.label, amount: i.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }) })))
     setExpenseNote(next.finance.expenseItems.length ? next.finance.expenseNote : '')
     setDirty(false)
   }
 
   const finance = report?.finance
-  const draftTotal = round2(drafts.reduce((s, d) => s + (Number(d.amount.replace(',', '.')) || 0), 0))
+  const draftTotal = round2(drafts.reduce((s, d) => s + (parseMoney(d.amount) || 0), 0))
   const previewNet = finance ? Math.max(0, round2(finance.grossRevenue - draftTotal)) : 0
 
   const rows = useMemo(() => {
@@ -151,14 +153,20 @@ export function AdminWatchAccountingPage() {
       return (await api<{ report: AccountingReport }>('/api/admin/accounting/' + month)).report
     })
 
-  const saveExpenses = () =>
-    run('Giderler kaydedildi; dağıtılacak net ve hak edişler güncellendi.', async () => {
+  const saveExpenses = () => {
+    const bad = drafts.find((d) => d.amount.trim() && !Number.isFinite(parseMoney(d.amount)))
+    if (bad) {
+      setError(`"${bad.label || 'Kalem'}" için tutar sayı olmalı (ör. 1250,50).`)
+      return
+    }
+    return run('Giderler kaydedildi; dağıtılacak net ve hak edişler güncellendi.', async () => {
       const body = {
-        expenseItems: drafts.filter((d) => d.label.trim() || d.amount.trim()).map((d) => ({ id: d.id, label: d.label.trim(), amount: d.amount.replace(',', '.') || '0' })),
+        expenseItems: drafts.filter((d) => d.label.trim() || d.amount.trim()).map((d) => ({ id: d.id, label: d.label.trim(), amount: parseMoney(d.amount) })),
         expenseNote,
       }
       return (await api<{ report: AccountingReport }>('/api/admin/accounting/' + month + '/finance', { method: 'PUT', body: JSON.stringify(body) })).report
     })
+  }
 
   const paid = (c: AccountingCreatorRow) => {
     const hint = c.payout.iban ? `${formatIban(c.payout.iban)} · ${c.payout.holder}` : 'IBAN girilmemiş'
@@ -477,7 +485,7 @@ export function AdminWatchAccountingPage() {
                   <option key={c.id} value={c.id}>{c.title}</option>
                 ))}
               </select>
-              <button type="button" className={button} disabled={!category} onClick={() => { const c = categories.find((c) => c.id === category)!; setRules({ ...rules, pools: [{ id: 'custom_' + crypto.randomUUID(), categoryId: c.id, label: c.title, rate: 0 }, ...rules.pools] }); setCategory('') }}>
+              <button type="button" className={button} disabled={!category} onClick={() => { const c = categories.find((c) => c.id === category)!; setRules({ ...rules, pools: [{ id: 'custom_' + createRandomId().replace(/-/g, ''), categoryId: c.id, label: c.title, rate: 0 }, ...rules.pools] }); setCategory('') }}>
                 Kategori havuzu ekle
               </button>
             </div>
