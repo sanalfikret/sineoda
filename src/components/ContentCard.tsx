@@ -20,6 +20,8 @@ interface ContentCardProps {
   guestHref?: string
   /** Vitrin satırlarında dikey format etiketini yok say — yatay grid bozulmasın */
   forceLandscape?: boolean
+  /** Mobilde tek kart tam genişlik (ziyaretçi satırları) */
+  mobileSingle?: boolean
 }
 
 const HOVER_SCALE = 1.2
@@ -53,6 +55,7 @@ export function ContentCard({
   gridFixedWidth = false,
   guestHref,
   forceLandscape = false,
+  mobileSingle = false,
 }: ContentCardProps) {
   const { t } = useTranslation('content')
   const navigate = useNavigate()
@@ -71,11 +74,16 @@ export function ContentCard({
   const leaveTimerRef = useRef<number | null>(null)
   const slotRef = useRef<HTMLDivElement>(null)
 
+  const MOBILE_SINGLE_WIDTH = {
+    landscape: { default: 'w-[calc(100vw-2.5rem)] sm:w-[260px] lg:w-[280px]', large: 'w-[calc(100vw-2.5rem)] sm:w-[300px] lg:w-[320px]' },
+    portrait: { default: 'w-[calc((100vw-2.5rem)*0.62)] sm:w-[140px]', large: 'w-[calc((100vw-2.5rem)*0.62)] sm:w-[160px]' },
+  } as const
   const widthClass = isBrowseGrid || !isGrid
     ? isPortrait
-      ? CARD_WIDTH.portrait[size]
-      : CARD_WIDTH.landscape[size]
+      ? (mobileSingle ? MOBILE_SINGLE_WIDTH.portrait[size] : CARD_WIDTH.portrait[size])
+      : (mobileSingle ? MOBILE_SINGLE_WIDTH.landscape[size] : CARD_WIDTH.landscape[size])
     : 'w-full'
+  const snapClass = mobileSingle ? 'snap-center sm:snap-start' : 'snap-start'
 
   const aspectClass = isPortrait ? 'aspect-[9/16]' : 'aspect-video'
   const genreLine = item.genres.slice(0, 3).join(' · ')
@@ -294,7 +302,7 @@ export function ContentCard({
     <>
       <div
         ref={slotRef}
-        className={`relative shrink-0 snap-start ${widthClass} ${hovered ? 'opacity-0' : 'opacity-100'}`}
+        className={`relative shrink-0 ${snapClass} ${widthClass} ${hovered ? 'opacity-0' : 'opacity-100'}`}
       >
         <div className={`relative overflow-hidden rounded-md bg-plooy-surface ring-1 ring-white/10 ${aspectClass}`}>
           {posterImage}
@@ -320,7 +328,7 @@ export function ContentCard({
   )
 
   const standardCard = (
-    <div className={`group relative flex flex-col text-left ${widthClass} ${isGrid ? 'overflow-hidden rounded-md bg-plooy-surface hover:ring-2 hover:ring-white/20' : 'shrink-0 snap-start overflow-hidden rounded-md bg-plooy-surface hover:z-10 hover:ring-2 hover:ring-white/20'}`}>
+    <div className={`group relative flex flex-col text-left ${widthClass} ${isGrid ? 'overflow-hidden rounded-md bg-plooy-surface hover:ring-2 hover:ring-white/20' : `shrink-0 ${snapClass} overflow-hidden rounded-md bg-plooy-surface hover:z-10 hover:ring-2 hover:ring-white/20`}`}>
       <div className="relative w-full">
         <div className={`relative overflow-hidden rounded-md bg-plooy-surface ${aspectClass}`}>
           {posterImage}
