@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { api } from '../../api/client'
 import type { AccountingRules, AccountingReport, AccountingCreatorRow } from '../../../shared/accounting'
 import { LegacyWatchAccountingPage } from './LegacyWatchAccountingPage'
+import { ArrangeableGrid } from '../../components/admin/ArrangeableGrid'
 
 const groups: Record<string, string> = { all: 'Tümü', platform: 'Plooy', standard: 'Bağımsız yapımcı', student_cinema: 'Genç Sinema' }
 const field = 'rounded-lg border border-white/20 bg-[#11141c] px-3 py-2 text-white'
@@ -298,12 +299,58 @@ export function AdminWatchAccountingPage() {
             <p className="mt-1 text-xs text-plooy-muted">
               Brüt tahsilat, bu ay başarıyla ödenen abonelik siparişlerinden otomatik gelir (hediye ve davet kodları gelir sayılmaz). Gider ve kesintileri siz girersiniz; dağıtılabilir net = tahsilat − gider. Farklı bir net kullanmak isterseniz elle girin. Bu ekran para transferi yapmaz.
             </p>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded border border-white/10 p-3"><p className="text-xs text-plooy-muted">Brüt tahsilat</p><p className="text-xl font-bold">{tl(report.finance.grossRevenue)}</p><p className="text-xs text-plooy-muted">{report.finance.paidOrders} ödenen sipariş</p></div>
-              <div className="rounded border border-white/10 p-3"><p className="text-xs text-plooy-muted">Gider / kesinti</p><p className="text-xl font-bold">{tl(report.finance.expenses)}</p>{report.finance.expenseNote && <p className="truncate text-xs text-plooy-muted" title={report.finance.expenseNote}>{report.finance.expenseNote}</p>}</div>
-              <div className="rounded border border-plooy-gold/40 bg-plooy-gold/10 p-3"><p className="text-xs text-plooy-muted">Dağıtılabilir net</p><p className="text-xl font-bold text-plooy-gold">{tl(report.finance.distributable)}</p>{report.finance.netOverride !== null && <p className="text-xs text-plooy-muted">elle girildi</p>}</div>
-              <div className="rounded border border-white/10 p-3"><p className="text-xs text-plooy-muted">Yapımcılara toplam</p><p className="text-xl font-bold">{tl(creatorTotalAmount)}</p><p className="text-xs text-plooy-muted">Plooy'da kalan: {tl(Math.max(0, report.finance.distributable - creatorTotalAmount))}{paidTotal > 0 ? ` · ödenen: ${tl(paidTotal)}` : ''}</p></div>
-            </div>
+            <ArrangeableGrid
+              layoutKey="accounting-finance"
+              className="mt-3"
+              gapClass="gap-3"
+              items={[
+                {
+                  id: 'gross',
+                  node: (
+                    <div className="rounded border border-white/10 p-3">
+                      <p className="text-xs text-plooy-muted">Brüt tahsilat</p>
+                      <p className="text-xl font-bold">{tl(report.finance.grossRevenue)}</p>
+                      <p className="text-xs text-plooy-muted">{report.finance.paidOrders} ödenen sipariş</p>
+                    </div>
+                  ),
+                },
+                {
+                  id: 'expenses',
+                  node: (
+                    <div className="rounded border border-white/10 p-3">
+                      <p className="text-xs text-plooy-muted">Gider / kesinti</p>
+                      <p className="text-xl font-bold">{tl(report.finance.expenses)}</p>
+                      {report.finance.expenseNote && (
+                        <p className="truncate text-xs text-plooy-muted" title={report.finance.expenseNote}>{report.finance.expenseNote}</p>
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  id: 'net',
+                  node: (
+                    <div className="rounded border border-plooy-gold/40 bg-plooy-gold/10 p-3">
+                      <p className="text-xs text-plooy-muted">Dağıtılabilir net</p>
+                      <p className="text-xl font-bold text-plooy-gold">{tl(report.finance.distributable)}</p>
+                      {report.finance.netOverride !== null && <p className="text-xs text-plooy-muted">elle girildi</p>}
+                    </div>
+                  ),
+                },
+                {
+                  id: 'creators',
+                  node: (
+                    <div className="rounded border border-white/10 p-3">
+                      <p className="text-xs text-plooy-muted">Yapımcılara toplam</p>
+                      <p className="text-xl font-bold">{tl(creatorTotalAmount)}</p>
+                      <p className="text-xs text-plooy-muted">
+                        Plooy'da kalan: {tl(Math.max(0, report.finance.distributable - creatorTotalAmount))}
+                        {paidTotal > 0 ? ` · ödenen: ${tl(paidTotal)}` : ''}
+                      </p>
+                    </div>
+                  ),
+                },
+              ]}
+            />
             <fieldset disabled={busy || report.finance.locked} className="mt-4 flex flex-wrap items-end gap-3">
               <label className="text-sm">
                 Gider / kesinti (TL)

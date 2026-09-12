@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { ArrangeableGrid } from './ArrangeableGrid'
+import { ResizableSplit } from './ResizableSplit'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   fetchAdminCreatorDetail,
@@ -473,23 +475,27 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
       )}
 
       {overviewStats && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { label: activeProgram === 'student_cinema' ? 'Öğrenci' : 'Yapımcı', value: String(overviewStats.creatorCount) },
-            { label: 'Toplam izlenme', value: `${overviewStats.watchMinutes} dk` },
-            { label: 'İzlenme sayısı', value: String(overviewStats.watchCount) },
-            { label: 'Toplam izleyici', value: String(overviewStats.viewers) },
-            { label: 'Toplam beğeni', value: String(overviewStats.likes) },
-            { label: 'Yayında film', value: String(overviewStats.publishedCount) },
-            { label: 'İncelemede film', value: String(overviewStats.pendingCount) },
-            { label: 'Ödeme bekleyen film', value: String(overviewStats.paymentPendingCount) },
-          ].map((stat) => (
-            <div key={stat.label} className="rounded-xl border border-white/10 bg-[#11141c] p-4">
-              <p className="text-xs text-plooy-muted">{stat.label}</p>
-              <p className="mt-1 text-2xl font-bold text-emerald-300">{stat.value}</p>
-            </div>
-          ))}
-        </div>
+        <ArrangeableGrid
+          layoutKey={`${fixedProgram}-creator-stats`}
+          items={[
+            { id: 'creators', label: activeProgram === 'student_cinema' ? 'Öğrenci' : 'Yapımcı', value: String(overviewStats.creatorCount) },
+            { id: 'watch-minutes', label: 'Toplam izlenme', value: `${overviewStats.watchMinutes} dk` },
+            { id: 'watch-count', label: 'İzlenme sayısı', value: String(overviewStats.watchCount) },
+            { id: 'viewers', label: 'Toplam izleyici', value: String(overviewStats.viewers) },
+            { id: 'likes', label: 'Toplam beğeni', value: String(overviewStats.likes) },
+            { id: 'published', label: 'Yayında film', value: String(overviewStats.publishedCount) },
+            { id: 'pending', label: 'İncelemede film', value: String(overviewStats.pendingCount) },
+            { id: 'payment-pending', label: 'Ödeme bekleyen film', value: String(overviewStats.paymentPendingCount) },
+          ].map((stat) => ({
+            id: stat.id,
+            node: (
+              <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
+                <p className="text-xs text-plooy-muted">{stat.label}</p>
+                <p className="mt-1 text-2xl font-bold text-emerald-300">{stat.value}</p>
+              </div>
+            ),
+          }))}
+        />
       )}
 
       <AdminSearchBar
@@ -578,8 +584,11 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
         }}
       />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#11141c]">
+      <ResizableSplit
+        layoutKey={`${fixedProgram}-creator-split`}
+        defaultRatio={0.62}
+        left={
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#11141c]">
           {loading && creators.length === 0 ? (
             <p className="p-6 text-sm text-plooy-muted">Yükleniyor...</p>
           ) : (
@@ -697,8 +706,9 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
             </div>
           )}
         </div>
-
-        <div className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
+        }
+        right={
+          <div className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
           {!selectedCreator ? (
             <div className="flex min-h-[320px] items-center justify-center text-sm text-plooy-muted">
               Detay görmek için listeden bir kişi seçin.
@@ -959,7 +969,8 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
             </div>
           )}
         </div>
-      </div>
+        }
+      />
 
       {editingContentId && (
         <AdminCreatorFilmEditor contentId={editingContentId} onClose={() => setEditingContentId(null)} onSaved={() => void handleReviewSaved()} />

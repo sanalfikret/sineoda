@@ -1,4 +1,5 @@
 import { AdminReviewQueues } from '../../components/admin/AdminReviewQueues'
+import { ArrangeableGrid } from '../../components/admin/ArrangeableGrid'
 import { AdminMessagesOverview } from '../../components/admin/AdminMessagesOverview'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -76,14 +77,19 @@ export function AdminDashboardPage() {
       {!statsLoading && overview && (
         <section className="rounded-2xl border border-plooy-gold/20 bg-gradient-to-br from-plooy-gold/10 to-transparent p-5">
           <h2 className="font-semibold text-white">Canlı Özet</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {liveStats.map((stat) => (
-              <div key={stat.label} className="rounded-xl border border-white/10 bg-[#11141c]/80 p-4">
-                <p className="text-sm text-plooy-muted">{stat.label}</p>
-                <p className="mt-2 text-2xl font-bold text-plooy-gold">{stat.value}</p>
-              </div>
-            ))}
-          </div>
+          <ArrangeableGrid
+            layoutKey="dashboard-live"
+            className="mt-4"
+            items={liveStats.map((stat, index) => ({
+              id: `live-${index}`,
+              node: (
+                <div className="rounded-xl border border-white/10 bg-[#11141c]/80 p-4">
+                  <p className="text-sm text-plooy-muted">{stat.label}</p>
+                  <p className="mt-2 text-2xl font-bold text-plooy-gold">{stat.value}</p>
+                </div>
+              ),
+            }))}
+          />
           <p className="mt-4 text-xs text-plooy-muted">
             Toplam izlenme: {overview.totals.watchHours} saat ({overview.totals.watchMinutes} dk) ·{' '}
             {overview.totals.activeSubscriptions} aktif abonelik · {overview.totals.users} kullanıcı
@@ -149,18 +155,27 @@ export function AdminDashboardPage() {
         </section>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-2xl border border-white/10 bg-[#11141c] p-5"
-          >
-            <p className="text-sm text-plooy-muted">{stat.label}</p>
-            <p className="mt-2 text-3xl font-bold text-white">{stat.value}</p>
-          </div>
-        ))}
-      </div>
+      <ArrangeableGrid
+        layoutKey="dashboard-stats"
+        items={stats.map((stat, index) => ({
+          id: `stat-${index}`,
+          node: (
+            <div className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
+              <p className="text-sm text-plooy-muted">{stat.label}</p>
+              <p className="mt-2 text-3xl font-bold text-white">{stat.value}</p>
+            </div>
+          ),
+        }))}
+      />
 
+      <ArrangeableGrid
+        layoutKey="dashboard-sections"
+        columns={2}
+        defaultSpans={{ watch: 2 }}
+        items={[
+          {
+            id: 'watch',
+            node: (
       <section className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
         <h2 className="font-semibold text-white">İzleme İstatistikleri</h2>
         <p className="mt-1 text-sm text-plooy-muted">
@@ -202,8 +217,11 @@ export function AdminDashboardPage() {
           </div>
         )}
       </section>
-
-      <div className="grid gap-4 lg:grid-cols-2">
+            ),
+          },
+          {
+            id: 'featured',
+            node: (
         <section className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
           <h2 className="font-semibold text-white">Öne Çıkan İçerik</h2>
           {featuredContent ? (
@@ -230,7 +248,11 @@ export function AdminDashboardPage() {
             <p className="mt-4 text-sm text-plooy-muted">Henüz öne çıkan içerik yok.</p>
           )}
         </section>
-
+            ),
+          },
+          {
+            id: 'quick',
+            node: (
         <section className="rounded-2xl border border-white/10 bg-[#11141c] p-5">
           <h2 className="font-semibold text-white">Hızlı İşlemler</h2>
           <div className="mt-4 flex flex-col gap-2">
@@ -260,7 +282,10 @@ export function AdminDashboardPage() {
             </Link>
           </div>
         </section>
-      </div>
+            ),
+          },
+        ]}
+      />
     </div>
   )
 }

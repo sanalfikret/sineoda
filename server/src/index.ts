@@ -48,6 +48,7 @@ import adminAdsRoutes from './routes/adminAds.js'
 import seoRoutes from './routes/seo.js'
 import adminSiteNavRoutes from './routes/adminSiteNav.js'
 import adminSiteModeRoutes from './routes/adminSiteMode.js'
+import adminLayoutRoutes from './routes/adminLayout.js'
 import siteModeRoutes from './routes/siteMode.js'
 import { PUBLISHED_CONTENT_SQL_C } from './services/publish.js'
 import { STANDARD_PROGRAM_SQL_C, MAIN_CATALOG_SQL_C, ensureStudentCinemaCatalog } from './services/studentCinema.js'
@@ -366,6 +367,7 @@ app.use('/api/ads', adsRoutes)
 app.use('/api/admin/ads', adminAdsRoutes)
 app.use('/api/admin/site-nav', adminSiteNavRoutes)
 app.use('/api/admin/site-mode', adminSiteModeRoutes)
+app.use('/api/admin/layout', adminLayoutRoutes)
 app.use('/api/site-mode', siteModeRoutes)
 app.use('/api/landing-presentation',landingPresentationRoutes)
 app.use('/api/admin/billing-plans', adminBillingPlansRoutes)
