@@ -12,19 +12,20 @@ import { toTrPathname } from '../i18n/paths'
 const SLUGS = new Set(Object.keys(LEGAL_DOCUMENTS))
 
 type ReturnLabelKey =
-  | 'returnToSignup'
-  | 'returnToLogin'
-  | 'returnToCreatorSignup'
-  | 'returnToAccount'
-  | 'returnBack'
+  | 'returnLabels.signup'
+  | 'returnLabels.login'
+  | 'returnLabels.creatorSignup'
+  | 'returnLabels.account'
+  | 'returnLabels.default'
 
+/** legalShell.json içindeki returnLabels.* anahtarlarıyla birebir eşleşmeli. */
 function returnLabelKey(path: string): ReturnLabelKey {
   const trPath = toTrPathname(path)
-  if (trPath.startsWith('/kayit')) return 'returnToSignup'
-  if (trPath.startsWith('/giris')) return 'returnToLogin'
-  if (trPath.startsWith('/creator/kayit')) return 'returnToCreatorSignup'
-  if (trPath.startsWith('/hesap')) return 'returnToAccount'
-  return 'returnBack'
+  if (trPath.startsWith('/creator/kayit')) return 'returnLabels.creatorSignup'
+  if (trPath.startsWith('/kayit')) return 'returnLabels.signup'
+  if (trPath.startsWith('/giris')) return 'returnLabels.login'
+  if (trPath.startsWith('/hesap')) return 'returnLabels.account'
+  return 'returnLabels.default'
 }
 
 export function LegalPage() {
