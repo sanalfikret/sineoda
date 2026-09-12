@@ -22,6 +22,8 @@ interface ContentCardProps {
   forceLandscape?: boolean
   /** Mobilde tek kart tam genişlik (ziyaretçi satırları) */
   mobileSingle?: boolean
+  /** Izgara kartlarında da üzerine gelince detay kartı aç */
+  hoverPreview?: boolean
 }
 
 const HOVER_SCALE = 1.2
@@ -56,6 +58,7 @@ export function ContentCard({
   guestHref,
   forceLandscape = false,
   mobileSingle = false,
+  hoverPreview = false,
 }: ContentCardProps) {
   const { t } = useTranslation('content')
   const navigate = useNavigate()
@@ -88,7 +91,7 @@ export function ContentCard({
   const aspectClass = isPortrait ? 'aspect-[9/16]' : 'aspect-video'
   const genreLine = item.genres.slice(0, 3).join(' · ')
   const isTv = isTvDevice()
-  const enableNetflixHover = (!isGrid || isBrowseGrid) && !isTv
+  const enableNetflixHover = (!isGrid || isBrowseGrid || hoverPreview) && !isTv
 
   const clearLeaveTimer = () => {
     if (leaveTimerRef.current) {
