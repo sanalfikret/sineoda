@@ -11,7 +11,10 @@ import type {
   AccountingCreatorRow,
   OwnerGroup,
   PayoutDetails,
+  ExpenseItem,
+  RevenueByPlan,
 } from '../../../shared/accounting.js'
+import { getBillingPlan } from './billingPlansConfig.js'
 
 let initialized = false
 const defaults: AccountingRules = { threshold: 20, basis: 'views', pools: [
@@ -47,6 +50,7 @@ export function initAccounting() {
   addColumn('accounting_months', 'expense_note', "TEXT NOT NULL DEFAULT ''")
   addColumn('accounting_months', 'net_override', 'REAL')
   addColumn('accounting_months', 'finance_updated_at', 'TEXT')
+  addColumn('accounting_months', 'expense_items', "TEXT NOT NULL DEFAULT '[]'")
   addColumn('accounting_payments', 'amount', 'REAL')
   addColumn('accounting_payments', 'iban', "TEXT NOT NULL DEFAULT ''")
   addColumn('accounting_payments', 'holder', "TEXT NOT NULL DEFAULT ''")
@@ -136,7 +140,8 @@ export function poolLabel(poolId:string,rules:AccountingRules) {
   return rules.pools.find(p=>p.id===poolId)?.label ?? 'Plooy'
 }
 const emptyPayout:PayoutDetails={holder:'',iban:'',taxId:'',taxOffice:''}
-const emptyFinance:AccountingFinance={grossRevenue:0,paidOrders:0,expenses:0,expenseNote:'',netOverride:null,distributable:0,updatedAt:null,locked:false}
+const emptyFinance:AccountingFinance={grossRevenue:0,paidOrders:0,revenueByPlan:[],activeSubscribers:0,expenseItems:[],expenses:0,expenseNote:'',netOverride:null,distributable:0,updatedAt:null,locked:false}
+const MAX_EXPENSE_ITEMS=40
 function round2(value:number) { return Math.round(value*100)/100 }
 
 function buildMonth(month:string,rules:AccountingRules):AccountingReport {
@@ -177,40 +182,70 @@ export function rolloverAccounting(now=new Date()) {
 }
 export function listNewAccountingMonths() { rolloverAccounting(); return dbAll<{month:string;closed_at:string|null}>('SELECT month,closed_at FROM accounting_months ORDER BY month DESC') }
 
-/** Ayın brüt tahsilatı: başarıyla ödenen abonelik siparişleri (kuruş → TL), İstanbul takvim ayına göre. */
+/** Ayın brüt tahsilatı: başarıyla ödenen abonelik siparişleri (kuruş → TL), İstanbul takvim ayına göre; plan bazında döküm. */
 export function monthGrossRevenue(month:string) {
   const [year,mon]=month.split('-').map(Number)
   const from=new Date(Date.UTC(year,mon-1,1)-2*86_400_000).toISOString()
   const to=new Date(Date.UTC(year,mon,1)+2*86_400_000).toISOString()
-  const rows=dbAll<{amount:number;completed_at:string}>("SELECT amount, completed_at FROM payment_orders WHERE status='paid' AND completed_at IS NOT NULL AND completed_at>=? AND completed_at<?",[from,to])
+  const rows=dbAll<{amount:number;completed_at:string;plan_id:string}>("SELECT amount, completed_at, plan_id FROM payment_orders WHERE status='paid' AND completed_at IS NOT NULL AND completed_at>=? AND completed_at<?",[from,to])
     .filter((row)=>getIstanbulMonthKey(new Date(row.completed_at))===month)
-  const kurus=rows.reduce((sum,row)=>sum+(Number(row.amount)||0),0)
-  return { grossRevenue:round2(kurus/100), paidOrders:rows.length }
+  const byPlan=new Map<string,RevenueByPlan>()
+  let kurus=0
+  for(const row of rows) {
+    const amount=Number(row.amount)||0
+    kurus+=amount
+    const entry=byPlan.get(row.plan_id)??{planId:row.plan_id,planName:getBillingPlan(row.plan_id)?.name??row.plan_id,count:0,amount:0}
+    entry.count++; entry.amount=round2(entry.amount+amount/100); byPlan.set(row.plan_id,entry)
+  }
+  return { grossRevenue:round2(kurus/100), paidOrders:rows.length, revenueByPlan:[...byPlan.values()].sort((a,b)=>b.amount-a.amount) }
+}
+function activeSubscriberCount() {
+  const now=new Date().toISOString()
+  return dbGet<{count:number}>("SELECT COUNT(*) AS count FROM users WHERE subscription_status IN ('active','cancelled') AND (subscription_expires_at IS NULL OR subscription_expires_at > ?)",[now])?.count??0
+}
+function parseExpenseItems(raw:string|null|undefined):ExpenseItem[] {
+  try {
+    const parsed=JSON.parse(raw||'[]')
+    return Array.isArray(parsed)?parsed.filter((i)=>i&&typeof i.label==='string').map((i)=>({id:String(i.id),label:String(i.label),amount:round2(Number(i.amount)||0)})):[]
+  } catch { return [] }
 }
 export function getAccountingFinance(month:string):AccountingFinance {
   initAccounting()
-  const row=dbGet<{expenses:number;expense_note:string;net_override:number|null;finance_updated_at:string|null}>('SELECT expenses,expense_note,net_override,finance_updated_at FROM accounting_months WHERE month=?',[month])
+  const row=dbGet<{expenses:number;expense_note:string;net_override:number|null;finance_updated_at:string|null;expense_items:string}>('SELECT expenses,expense_note,net_override,finance_updated_at,expense_items FROM accounting_months WHERE month=?',[month])
   const gross=monthGrossRevenue(month)
-  const expenses=round2(Number(row?.expenses)||0)
+  const expenseItems=parseExpenseItems(row?.expense_items)
+  // Kalem varsa toplam kalemlerden; eski tek tutar kayıtları kalem yoksa korunur.
+  const expenses=round2(expenseItems.length?expenseItems.reduce((s,i)=>s+i.amount,0):Number(row?.expenses)||0)
   const netOverride=row?.net_override===null||row?.net_override===undefined?null:round2(Number(row.net_override))
   const locked=Boolean(dbGet('SELECT 1 FROM accounting_payments WHERE month=? LIMIT 1',[month]))
-  return { ...gross, expenses, expenseNote:row?.expense_note??'', netOverride, distributable:round2(Math.max(0,netOverride??gross.grossRevenue-expenses)), updatedAt:row?.finance_updated_at??null, locked }
+  return { ...gross, activeSubscribers:activeSubscriberCount(), expenseItems, expenses, expenseNote:row?.expense_note??'', netOverride, distributable:round2(Math.max(0,netOverride??gross.grossRevenue-expenses)), updatedAt:row?.finance_updated_at??null, locked }
 }
-export function saveAccountingFinance(month:string,input:{expenses?:unknown;expenseNote?:unknown;netOverride?:unknown}) {
+export function saveAccountingFinance(month:string,input:{expenseItems?:unknown;expenses?:unknown;expenseNote?:unknown;netOverride?:unknown}) {
   rolloverAccounting()
   if(!dbGet('SELECT month FROM accounting_months WHERE month=?',[month])) throw new Error('Bu ay için muhasebe kaydı yok.')
-  if(getAccountingFinance(month).locked) throw new Error('Bu ay için ödeme kaydı var; gider ve net değiştirmek için önce ödemeleri geri alın.')
-  const expenses=Number(input.expenses??0)
-  if(!Number.isFinite(expenses)||expenses<0||expenses>MAX_MONEY) throw new Error('Gider tutarı 0 veya daha büyük bir sayı olmalı.')
+  if(getAccountingFinance(month).locked) throw new Error('Bu ay için ödeme kaydı var; giderleri değiştirmek için önce ödemeleri geri alın.')
   const note=String(input.expenseNote??'').trim()
-  if(note.length>500) throw new Error('Gider açıklaması en fazla 500 karakter olabilir.')
-  let netOverride:number|null=null
-  if(input.netOverride!==null&&input.netOverride!==undefined&&input.netOverride!=='') {
-    netOverride=Number(input.netOverride)
-    if(!Number.isFinite(netOverride)||netOverride<0||netOverride>MAX_MONEY) throw new Error('Dağıtılabilir net 0 veya daha büyük bir sayı olmalı.')
-    netOverride=round2(netOverride)
+  if(note.length>500) throw new Error('Not en fazla 500 karakter olabilir.')
+  let items:ExpenseItem[]=[]
+  if(Array.isArray(input.expenseItems)) {
+    if(input.expenseItems.length>MAX_EXPENSE_ITEMS) throw new Error(`En fazla ${MAX_EXPENSE_ITEMS} gider kalemi girilebilir.`)
+    items=input.expenseItems.map((raw,index)=>{
+      const item=(raw??{}) as Record<string,unknown>
+      const label=String(item.label??'').trim()
+      const amount=Number(String(item.amount??'0').replace(',','.'))
+      if(!label||label.length>80) throw new Error(`${index+1}. gider kaleminin adı 1–80 karakter olmalı.`)
+      if(!Number.isFinite(amount)||amount<0||amount>MAX_MONEY) throw new Error(`"${label}" için tutar 0 veya daha büyük bir sayı olmalı.`)
+      return { id:typeof item.id==='string'&&/^[a-zA-Z0-9_-]{1,40}$/.test(item.id)?item.id:randomUUID(), label, amount:round2(amount) }
+    })
   }
-  dbRun('UPDATE accounting_months SET expenses=?,expense_note=?,net_override=?,finance_updated_at=? WHERE month=?',[round2(expenses),note,netOverride,new Date().toISOString(),month])
+  const total=round2(items.reduce((s,i)=>s+i.amount,0))
+  let expenses=total
+  if(!items.length && input.expenses!==undefined) {
+    expenses=Number(input.expenses??0)
+    if(!Number.isFinite(expenses)||expenses<0||expenses>MAX_MONEY) throw new Error('Gider tutarı 0 veya daha büyük bir sayı olmalı.')
+  }
+  // Elle net artık kullanılmıyor: dağıtılacak net = tahsilat − giderler.
+  dbRun('UPDATE accounting_months SET expenses=?,expense_note=?,net_override=NULL,expense_items=?,finance_updated_at=? WHERE month=?',[round2(expenses),note,JSON.stringify(items),new Date().toISOString(),month])
   return getAccountingReport(month)
 }
 function creatorPayout(creatorId:string):PayoutDetails {

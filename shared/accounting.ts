@@ -10,12 +10,24 @@ export interface AccountingItem {
 /** Yapımcının panelde bildirdiği banka bilgileri (ödeme platform dışında, havale ile yapılır). */
 export interface PayoutDetails { holder: string; iban: string; taxId: string; taxOffice: string }
 /** Ayın para özeti — tahsilat otomatik, gider/kesinti admin girişi, dağıtılabilir net = tahsilat − gider (veya elle girilen net). */
+/** Tek gider kalemi: ofis, CDN, vergi, çalışan, kira… */
+export interface ExpenseItem { id: string; label: string; amount: number }
+/** Plan bazında tahsilat: kaç ödeme, toplam TL. */
+export interface RevenueByPlan { planId: string; planName: string; count: number; amount: number }
 export interface AccountingFinance {
+  /** Ayın brüt tahsilatı (başarıyla ödenen abonelik siparişleri), TL */
   grossRevenue: number
   paidOrders: number
+  revenueByPlan: RevenueByPlan[]
+  /** Şu an üyeliği aktif izleyici + yapımcı sayısı (bilgi amaçlı) */
+  activeSubscribers: number
+  expenseItems: ExpenseItem[]
+  /** Kalemlerin toplamı */
   expenses: number
   expenseNote: string
+  /** Eski sürümden kalan elle net; yeni kayıtlarda null */
   netOverride: number | null
+  /** Dağıtılacak net = tahsilat − giderler (0'ın altına inmez) */
   distributable: number
   updatedAt: string | null
   /** Ay için en az bir ödeme kaydı varsa gider/net değiştirilemez. */
