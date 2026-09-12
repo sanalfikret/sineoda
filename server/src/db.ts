@@ -556,6 +556,21 @@ function runMigrations() {
       )
     }
   }
+  // Profili olmayan yapımcı hesaplarına izleme profili aç (yapımcı da izleyici gibi izler)
+  {
+    const orphans = dbAll<{ id: string }>(
+      "SELECT u.id FROM users u WHERE u.role = 'creator' AND NOT EXISTS (SELECT 1 FROM profiles p WHERE p.user_id = u.id)",
+    )
+    for (const row of orphans) {
+      db.run('INSERT INTO profiles (id, user_id, name, avatar, is_kids) VALUES (?, ?, ?, ?, ?)', [
+        `creator-profile-${row.id}`,
+        row.id,
+        'Ana Profil',
+        '🎬',
+        0,
+      ])
+    }
+  }
   ensureColumn('creators', 'first_name', "TEXT NOT NULL DEFAULT ''")
   ensureColumn('creators', 'last_name', "TEXT NOT NULL DEFAULT ''")
   ensureColumn('creators', 'photo_url', "TEXT NOT NULL DEFAULT ''")

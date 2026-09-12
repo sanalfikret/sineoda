@@ -29,10 +29,9 @@ export function HomeRoute() {
     return <ComingSoonPage />
   }
 
-  if (user && isCreator) return <Navigate to={localizePath('/creator')} replace />
-
+  // Yapımcı: üyeliği aktifse izleyici gibi ana sayfayı görür; değilse yapımcı ödeme sayfasına gider.
   if (user && needsSubscriptionPayment(user)) {
-    return <Navigate to={localizePath(postLoginPath(user))} replace />
+    return <Navigate to={localizePath(isCreator ? '/creator/odeme?checkout=1' : postLoginPath(user))} replace />
   }
 
   if (user && activeProfile) {

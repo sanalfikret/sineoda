@@ -122,18 +122,10 @@ export function Header() {
   )
 
   const navItems = useMemo(() => {
-    if (isCreator) {
-      return creatorNavItems.map((item) => ({
-        ...item,
-        id: item.to as SiteNavId,
-        shortLabel: undefined as string | undefined,
-        isStudentCinema: false,
-      }))
-    }
-    return SITE_NAV_ITEMS.filter((item) => !hiddenNavIds.includes(item.id)).map((item) => {
+    const viewerItems = SITE_NAV_ITEMS.filter((item) => !hiddenNavIds.includes(item.id)).map((item) => {
       const keys = NAV_I18N[item.id]
       return {
-        id: item.id,
+        id: item.id as string,
         label: t(keys.label),
         shortLabel: keys.shortLabel ? t(keys.shortLabel) : undefined,
         to: localizePath(item.path),
@@ -141,23 +133,29 @@ export function Header() {
         isStudentCinema: item.id === 'gencSinema',
       }
     })
+    if (!isCreator) return viewerItems
+    // Yapımcı: izleyici menüsünün tamamı + Yapımcı Paneli kısayolu
+    const panel = creatorNavItems[0]
+    return [
+      ...viewerItems,
+      { id: 'creatorPanel', label: panel.label, shortLabel: undefined as string | undefined, to: panel.to, match: panel.match, isStudentCinema: false },
+    ]
   }, [isCreator, hiddenNavIds, creatorNavItems, localizePath, t])
 
   const primaryNavItems = useMemo(() => {
-    if (isCreator) return navItems
-    let items = navItems.filter((item) => PRIMARY_NAV_IDS.includes(item.id as SiteNavId))
+    let items = navItems.filter((item) => PRIMARY_NAV_IDS.includes(item.id as SiteNavId) || item.id === 'creatorPanel')
     if (!user && trPath === '/') {
       items = items.filter((item) => item.id !== 'home')
     }
     return items
-  }, [isCreator, navItems, user, trPath])
+  }, [navItems, user, trPath])
 
   const exploreNavItems = useMemo(
-    () => (isCreator ? [] : navItems.filter((item) => EXPLORE_NAV_IDS.includes(item.id as SiteNavId))),
-    [isCreator, navItems],
+    () => navItems.filter((item) => EXPLORE_NAV_IDS.includes(item.id as SiteNavId)),
+    [navItems],
   )
 
-  const showListemLink = !isCreator && !hiddenNavIds.includes('listem')
+  const showListemLink = !hiddenNavIds.includes('listem')
   const isActive = (match: (path: string) => boolean) => match(trPath)
   const exploreActive = exploreNavItems.some((item) => isActive(item.match))
 
@@ -170,7 +168,7 @@ export function Header() {
         : 'text-white/75 hover:bg-white/5 hover:text-white'
     }`
 
-  const homePath = localizePath(isCreator ? '/creator' : '/')
+  const homePath = localizePath('/')
 
   return (
     <header
@@ -286,7 +284,7 @@ export function Header() {
             </Link>
           )}
 
-          {!isCreator && (
+          {(!isCreator || activeProfile) && (
             <button
               type="button"
               aria-label={t('nav.search')}
@@ -318,7 +316,7 @@ export function Header() {
                 onClick={() => { setUserMenuOpen((open) => !open); setExploreOpen(false); setMenuOpen(false) }}
                 className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm text-white transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plooy-gold tv:px-4 tv:py-2.5 tv:text-base"
               >
-                {isCreator ? (
+                {isCreator && !activeProfile ? (
                   <span className="hidden max-w-[140px] truncate sm:inline">
                     {user.creator?.studioName ?? t('nav.creator')}
                   </span>
@@ -347,6 +345,26 @@ export function Header() {
                       >
                         {t('nav.creatorPanel')}
                       </Link>
+                      <Link
+                        to={localizePath('/')}
+                        className="block px-4 py-2.5 text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        {t('nav.mainSite')}
+                      </Link>
+                      {user.profiles.length > 0 && (
+                        <button
+                          type="button"
+                          className="block w-full px-4 py-2.5 text-left text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"
+                          onClick={() => {
+                            clearActiveProfile()
+                            setUserMenuOpen(false)
+                            navigate(localizePath('/profiller'))
+                          }}
+                        >
+                          {t('nav.switchProfile')}
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="block w-full px-4 py-2.5 text-left text-sm text-white/90 hover:bg-white/5 tv:py-3 tv:text-base"

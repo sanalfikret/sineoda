@@ -3,14 +3,14 @@ import { externalMediaLink } from '../services/creatorMedia.js'
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import { v4 as uuid } from 'uuid'
-import { dbGet, dbRun } from '../db.js'
+import { dbAll, dbGet, dbRun } from '../db.js'
 import { signToken } from '../middleware/auth.js'
 import { mapUser } from '../mappers.js'
 import { LEGAL_VERSION } from '../constants/legal.js'
 import { recordLegalConsent } from '../services/legalConsent.js'
 import { getClientIp, getUserAgent } from '../utils/clientIp.js'
 import { creatorAuthLimiter } from '../security/rateLimit.js'
-import type { CreatorRow, UserRow } from '../types.js'
+import type { CreatorRow, ProfileRow, UserRow } from '../types.js'
 
 const router = Router()
 
@@ -25,8 +25,9 @@ function isValidHttpUrl(value: string) {
 
 function mapCreatorUser(user: UserRow) {
   const creator = dbGet<CreatorRow>('SELECT * FROM creators WHERE user_id = ?', [user.id])
+  const profiles = dbAll<ProfileRow>('SELECT * FROM profiles WHERE user_id = ? ORDER BY name', [user.id])
   return {
-    ...mapUser(user, []),
+    ...mapUser(user, profiles),
     creator: creator ? mapCreatorSummary(creator, user) : null,
   }
 }
@@ -143,6 +144,8 @@ router.post('/signup', creatorAuthLimiter, (req, res) => {
     'INSERT INTO users (id, name, email, password_hash, role, created_at, phone) VALUES (?, ?, ?, ?, ?, ?, ?)',
     [userId, name.trim(), normalizedEmail, hash, 'creator', now, normalizedPhone],
   )
+  // Yapımcı da izleyici gibi film izler: varsayılan izleme profili
+  dbRun('INSERT INTO profiles (id, user_id, name, avatar, is_kids) VALUES (?, ?, ?, ?, ?)', [uuid(), userId, 'Ana Profil', '🎬', 0])
   dbRun(
     'INSERT INTO creators (id, user_id, studio_name, bio, status, legal_accepted_at, created_at, program, school_id, project_crew, registration_paid_at, pending_film_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [
