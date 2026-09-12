@@ -2211,6 +2211,8 @@ export interface AdminChatMessage {
   body: string
   created_at: string
   read_at: string | null
+  /** chat = karşılıklı sohbet, system = otomatik bildirim (film incelemesi, üyelik, duyuru) */
+  kind?: 'chat' | 'system'
 }
 
 export interface AdminChatRecentMessage {

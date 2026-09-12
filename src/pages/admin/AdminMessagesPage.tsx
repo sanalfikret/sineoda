@@ -453,13 +453,15 @@ export function AdminMessagesPage() {
                     <article
                       key={message.id}
                       className={`max-w-[85%] rounded-xl border px-4 py-3 text-sm ${
-                        message.from_admin
-                          ? 'ml-auto border-plooy-gold/30 bg-plooy-gold/10'
-                          : 'border-white/10 bg-[#0d0f14]'
+                        message.kind === 'system'
+                          ? 'ml-auto border-sky-500/30 bg-sky-500/10'
+                          : message.from_admin
+                            ? 'ml-auto border-plooy-gold/30 bg-plooy-gold/10'
+                            : 'border-white/10 bg-[#0d0f14]'
                       }`}
                     >
                       <p className="text-[11px] text-plooy-muted">
-                        {message.from_admin ? 'Plooy Admin' : selectedThread?.name ?? 'Yapımcı'} · {formatDateTime(message.created_at)}
+                        {message.kind === 'system' ? 'Plooy Sistem (otomatik bildirim)' : message.from_admin ? 'Plooy Admin' : selectedThread?.name ?? 'Yapımcı'} · {formatDateTime(message.created_at)}
                         {!message.from_admin && (
                           <span className={`ml-2 ${message.read_at ? 'text-emerald-300' : 'text-amber-300'}`}>
                             {message.read_at ? 'okundu' : 'okunmadı'}

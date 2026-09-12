@@ -177,7 +177,32 @@ router.patch('/thread/:userId/read', (req: AuthRequest, res) => {
   res.json({ ok: true })
 })
 
-/** Sohbet mesajları (admin: userId ile; yapımcı: kendi sohbeti). */
+type ChatRow = {
+  id: string
+  user_id: string
+  sender_id: string
+  from_admin: number
+  subject: string
+  body: string
+  created_at: string
+  read_at: string | null
+}
+
+type SystemRow = {
+  id: string
+  user_id: string
+  subject: string
+  body: string
+  sent_by_admin_id: string | null
+  created_at: string
+  read_at: string | null
+}
+
+/**
+ * Sohbet mesajları (admin: userId ile; yapımcı: kendi sohbeti).
+ * Tek akış: karşılıklı sohbet (creator_chat) + sistem bildirimleri (user_messages: film incelemesi,
+ * üyelik uzatma, admin duyurusu). Sistem satırları kind='system' ile döner.
+ */
 router.get('/', (req: AuthRequest, res) => {
   const userId = isAdmin(req) ? String(req.query.userId ?? '') : req.auth!.userId
   if (!userId) {
@@ -185,28 +210,62 @@ router.get('/', (req: AuthRequest, res) => {
     return
   }
   const before = String(req.query.before ?? '')
-  const rows = dbAll(
-    'SELECT * FROM creator_chat WHERE user_id = ? ' +
-      (before ? 'AND rowid < (SELECT rowid FROM creator_chat WHERE id = ? AND user_id = ?) ' : '') +
-      'ORDER BY rowid DESC LIMIT 50',
-    before ? [userId, before, userId] : [userId],
+  let cutoff: string | null = null
+  if (before) {
+    const anchor =
+      dbGet<{ created_at: string }>('SELECT created_at FROM creator_chat WHERE id = ? AND user_id = ?', [before, userId]) ??
+      dbGet<{ created_at: string }>('SELECT created_at FROM user_messages WHERE id = ? AND user_id = ?', [before, userId])
+    cutoff = anchor?.created_at ?? null
+  }
+  const chat = dbAll<ChatRow>(
+    `SELECT id, user_id, sender_id, from_admin, subject, body, created_at, read_at FROM creator_chat
+     WHERE user_id = ? ${cutoff ? 'AND created_at < ?' : ''} ORDER BY created_at DESC LIMIT 50`,
+    cutoff ? [userId, cutoff] : [userId],
   )
-  res.json(rows.reverse())
+  const system = dbAll<SystemRow>(
+    `SELECT id, user_id, subject, body, sent_by_admin_id, created_at, read_at FROM user_messages
+     WHERE user_id = ? ${cutoff ? 'AND created_at < ?' : ''} ORDER BY created_at DESC LIMIT 50`,
+    cutoff ? [userId, cutoff] : [userId],
+  )
+  const merged = [
+    ...chat.map((row) => ({ ...row, kind: 'chat' as const })),
+    ...system.map((row) => ({
+      id: row.id,
+      user_id: row.user_id,
+      sender_id: row.sent_by_admin_id ?? 'system',
+      from_admin: 1,
+      subject: row.subject,
+      body: row.body,
+      created_at: row.created_at,
+      read_at: row.read_at,
+      kind: 'system' as const,
+    })),
+  ]
+    .sort((a, b) => (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0))
+    .slice(-50)
+  res.json(merged)
 })
 
+/** Okundu: sohbet satırı veya sistem bildirimi — aynı uç nokta. */
 router.patch('/:id/read', (req: AuthRequest, res) => {
-  const row = dbGet<{ user_id: string; from_admin: number }>(
-    'SELECT user_id, from_admin FROM creator_chat WHERE id = ?',
-    [String(req.params.id)],
-  )
-  if (!row || (!isAdmin(req) && row.user_id !== req.auth!.userId) || Boolean(row.from_admin) === isAdmin(req)) {
+  const id = String(req.params.id)
+  const now = new Date().toISOString()
+  const chatRow = dbGet<{ user_id: string; from_admin: number }>('SELECT user_id, from_admin FROM creator_chat WHERE id = ?', [id])
+  if (chatRow) {
+    if ((!isAdmin(req) && chatRow.user_id !== req.auth!.userId) || Boolean(chatRow.from_admin) === isAdmin(req)) {
+      res.sendStatus(404)
+      return
+    }
+    dbRun('UPDATE creator_chat SET read_at = COALESCE(read_at, ?) WHERE id = ?', [now, id])
+    res.json({ ok: true })
+    return
+  }
+  const systemRow = dbGet<{ user_id: string }>('SELECT user_id FROM user_messages WHERE id = ?', [id])
+  if (!systemRow || isAdmin(req) || systemRow.user_id !== req.auth!.userId) {
     res.sendStatus(404)
     return
   }
-  dbRun('UPDATE creator_chat SET read_at = COALESCE(read_at, ?) WHERE id = ?', [
-    new Date().toISOString(),
-    String(req.params.id),
-  ])
+  dbRun('UPDATE user_messages SET read_at = COALESCE(read_at, ?) WHERE id = ?', [now, id])
   res.json({ ok: true })
 })
 

@@ -10,8 +10,6 @@ import {
   creatorDeleteDocument,
   creatorFetchDashboard,
   creatorFetchMe,
-  creatorFetchMessages,
-  creatorMarkMessageRead,
   creatorSubmitContent,
   creatorUpdateContent,
   creatorUploadDocument,
@@ -149,9 +147,6 @@ export function CreatorDashboardPage() {
   })
   const [status, setStatus] = useState<CreatorStatus>('pending')
   const [registrationPaid, setRegistrationPaid] = useState(false)
-  const [messages, setMessages] = useState<
-    Array<{ id: string; subject: string; body: string; createdAt: string; isRead: boolean }>
-  >([])
   const [program, setProgram] = useState<'standard' | 'student_cinema'>('standard')
   const [registrationPrice, setRegistrationPrice] = useState(69)
   const [documentCount, setDocumentCount] = useState(0)
@@ -200,17 +195,12 @@ export function CreatorDashboardPage() {
     setLoading(true)
     setError('')
     try {
-      const [me, dashboard, inbox] = await Promise.all([
-        creatorFetchMe(),
-        creatorFetchDashboard(),
-        creatorFetchMessages().catch(() => ({ messages: [] })),
-      ])
+      const [me, dashboard] = await Promise.all([creatorFetchMe(), creatorFetchDashboard()])
       setDocuments(me.documents)
       setContent(dashboard.content as DashboardContent[])
       setTotals(dashboard.totals)
       setStatus(dashboard.creator.status as CreatorStatus)
       setRegistrationPaid(Boolean(dashboard.creator.registrationPaid))
-      setMessages(inbox.messages)
       setProgram((dashboard.creator.program as 'standard' | 'student_cinema') ?? 'standard')
       setDocumentCount(dashboard.creator.documentCount)
     } catch (err) {
@@ -637,43 +627,6 @@ export function CreatorDashboardPage() {
           </div>
         )}
 
-        {messages.length > 0 && (
-          <section className="mb-6 rounded-xl border border-white/10 bg-[#11141c] p-5">
-            <h2 className="text-lg font-semibold">{t('notifications')}</h2>
-            <ul className="mt-3 space-y-3">
-              {messages.slice(0, 5).map((message) => (
-                <li
-                  key={message.id}
-                  className={`rounded-lg border px-4 py-3 text-sm ${
-                    message.isRead
-                      ? 'border-white/5 bg-[#0d0f14] text-plooy-muted'
-                      : 'border-plooy-gold/30 bg-plooy-gold/5 text-white'
-                  }`}
-                >
-                  <p className="font-medium">{message.subject}</p>
-                  <p className="mt-1 whitespace-pre-wrap text-white/80">{message.body}</p>
-                  {!message.isRead && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        void creatorMarkMessageRead(message.id).then(() => {
-                          setMessages((current) =>
-                            current.map((entry) =>
-                              entry.id === message.id ? { ...entry, isRead: true } : entry,
-                            ),
-                          )
-                        })
-                      }}
-                      className="mt-2 text-xs text-plooy-gold hover:underline"
-                    >
-                      {t('markRead')}
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
 
         {status === 'pending' && program === 'student_cinema' && (
           <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-4 text-sm text-amber-100">
