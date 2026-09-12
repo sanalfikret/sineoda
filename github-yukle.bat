@@ -19,7 +19,7 @@ echo.
 if errorlevel 1 (
   echo.
   echo  HATA: Yukleme basarisiz.
-  echo  Cursor'u kapatip tekrar ac, sonra bu dosyayi yeniden calistir.
+  echo  Internet baglantisini ve GitHub girisini kontrol edip bu dosyayi yeniden calistir.
   pause
   exit /b 1
 )

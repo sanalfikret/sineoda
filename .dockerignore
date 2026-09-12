@@ -4,7 +4,6 @@ dist
 server/data
 server/uploads
 .git
-.cursor
 *.md
 .env
 .env.*
