@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { creatorUpdateProfile, resolveMediaUrl, uploadProfileAvatar } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
 import { BRAND_NAME } from '../../constants/brand'
+import { maskIban } from '../../utils/iban'
 
 interface CreatorProfileCardProps {
   registrationPaid: boolean
@@ -63,6 +64,10 @@ export function CreatorProfileCard({ registrationPaid, onSaved }: CreatorProfile
     studioName: creator?.studioName ?? '',
     bio: creator?.bio ?? '',
     photoUrl: creator?.photoUrl ?? '',
+    payoutHolder: creator?.payout?.holder ?? '',
+    payoutIban: creator?.payout?.iban ?? '',
+    payoutTaxId: creator?.payout?.taxId ?? '',
+    payoutTaxOffice: creator?.payout?.taxOffice ?? '',
   })
 
   useEffect(() => {
@@ -73,8 +78,23 @@ export function CreatorProfileCard({ registrationPaid, onSaved }: CreatorProfile
       studioName: creator?.studioName ?? '',
       bio: creator?.bio ?? '',
       photoUrl: creator?.photoUrl ?? '',
+      payoutHolder: creator?.payout?.holder ?? '',
+      payoutIban: creator?.payout?.iban ?? '',
+      payoutTaxId: creator?.payout?.taxId ?? '',
+      payoutTaxOffice: creator?.payout?.taxOffice ?? '',
     })
-  }, [creator?.firstName, creator?.lastName, creator?.studioName, creator?.bio, creator?.photoUrl, editing])
+  }, [
+    creator?.firstName,
+    creator?.lastName,
+    creator?.studioName,
+    creator?.bio,
+    creator?.photoUrl,
+    creator?.payout?.holder,
+    creator?.payout?.iban,
+    creator?.payout?.taxId,
+    creator?.payout?.taxOffice,
+    editing,
+  ])
 
   if (!user || !creator) return null
 
@@ -121,6 +141,10 @@ export function CreatorProfileCard({ registrationPaid, onSaved }: CreatorProfile
         studioName: form.studioName.trim(),
         bio: form.bio.trim(),
         photoUrl: form.photoUrl.trim(),
+        payoutHolder: form.payoutHolder.trim(),
+        payoutIban: form.payoutIban.replace(/\s+/g, '').toUpperCase(),
+        payoutTaxId: form.payoutTaxId.replace(/\s+/g, ''),
+        payoutTaxOffice: form.payoutTaxOffice.trim(),
       })
       await refreshUser()
       setEditing(false)
@@ -158,6 +182,17 @@ export function CreatorProfileCard({ registrationPaid, onSaved }: CreatorProfile
               {user.email}
             </p>
             {creator.bio && <p className="mt-2 max-w-2xl text-sm text-white/70">{creator.bio}</p>}
+            <p className="mt-2 text-xs text-plooy-muted">
+              {t('profile.payoutSummary')}:{' '}
+              {creator.payout?.iban ? (
+                <span className="text-white/80">
+                  {maskIban(creator.payout.iban)}
+                  {creator.payout.holder ? ` · ${creator.payout.holder}` : ''}
+                </span>
+              ) : (
+                <span className="text-amber-300">{t('profile.payoutMissing')}</span>
+              )}
+            </p>
           </div>
           <div className="flex flex-col items-end gap-2">
             <button
@@ -263,6 +298,51 @@ export function CreatorProfileCard({ registrationPaid, onSaved }: CreatorProfile
               {t('profile.emailLabel')}: {user.email}
             </p>
           </div>
+
+          <fieldset className="rounded-lg border border-white/10 p-4">
+            <legend className="px-1 text-sm font-semibold text-white">{t('profile.payoutTitle')}</legend>
+            <p className="mb-3 text-xs text-plooy-muted">{t('profile.payoutHint')}</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-sm">
+                <span className="mb-1 block text-plooy-muted">{t('profile.payoutHolder')}</span>
+                <input
+                  maxLength={120}
+                  value={form.payoutHolder}
+                  onChange={(event) => setForm((current) => ({ ...current, payoutHolder: event.target.value }))}
+                  className={inputClass}
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block text-plooy-muted">{t('profile.payoutIban')}</span>
+                <input
+                  maxLength={34}
+                  placeholder="TR00 0000 0000 0000 0000 0000 00"
+                  value={form.payoutIban}
+                  onChange={(event) => setForm((current) => ({ ...current, payoutIban: event.target.value }))}
+                  className={inputClass + ' font-mono'}
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block text-plooy-muted">{t('profile.payoutTaxId')}</span>
+                <input
+                  maxLength={11}
+                  inputMode="numeric"
+                  value={form.payoutTaxId}
+                  onChange={(event) => setForm((current) => ({ ...current, payoutTaxId: event.target.value }))}
+                  className={inputClass}
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block text-plooy-muted">{t('profile.payoutTaxOffice')}</span>
+                <input
+                  maxLength={120}
+                  value={form.payoutTaxOffice}
+                  onChange={(event) => setForm((current) => ({ ...current, payoutTaxOffice: event.target.value }))}
+                  className={inputClass}
+                />
+              </label>
+            </div>
+          </fieldset>
 
           {error && (
             <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>

@@ -97,6 +97,10 @@ export interface CreatorRow {
   first_name?: string
   last_name?: string
   photo_url?: string
+  payout_holder?: string
+  payout_iban?: string
+  payout_tax_id?: string
+  payout_tax_office?: string
 }
 
 export interface FilmSchoolRow {

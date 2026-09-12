@@ -693,6 +693,57 @@ export function CreatorDashboardPage() {
 
             {accounting ? (
               <>
+                {accounting.share && (
+                  <div className="mt-4 rounded-lg border border-plooy-gold/30 bg-[#11141c] p-4">
+                    <p className="text-xs uppercase tracking-wide text-plooy-muted">{t('accounting.shareTitle')}</p>
+                    <div className="mt-2 flex flex-wrap items-end gap-6">
+                      <div>
+                        <p className="text-xs text-plooy-muted">{t('accounting.sharePercent')}</p>
+                        <p className="text-2xl font-bold text-plooy-gold">
+                          %{accounting.share.percent.toLocaleString(locale, { maximumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-plooy-muted">{t('accounting.shareAmount')}</p>
+                        <p className="text-2xl font-bold text-white">
+                          {accounting.share.distributableKnown
+                            ? (accounting.share.paidAmount ?? accounting.share.amount).toLocaleString(locale, {
+                                style: 'currency',
+                                currency: 'TRY',
+                                maximumFractionDigits: 2,
+                              })
+                            : '—'}
+                        </p>
+                      </div>
+                      <div className="text-sm">
+                        {accounting.share.paidAt ? (
+                          <>
+                            <p className="font-semibold text-emerald-300">
+                              {t('accounting.paidOn', { date: new Date(accounting.share.paidAt).toLocaleDateString(locale) })}
+                            </p>
+                            {accounting.share.reference && (
+                              <p className="text-xs text-plooy-muted">
+                                {t('accounting.paidReference', { reference: accounting.share.reference })}
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          <p className="text-plooy-muted">{t('accounting.unpaid')}</p>
+                        )}
+                      </div>
+                    </div>
+                    <p className="mt-2 text-xs text-plooy-muted">
+                      {accounting.status === 'open'
+                        ? t('accounting.shareEstimated')
+                        : accounting.share.distributableKnown
+                          ? t('accounting.shareFinal')
+                          : t('accounting.shareNoNet')}
+                    </p>
+                    {accounting.share.payoutMissing && accounting.share.percent > 0 && (
+                      <p className="mt-2 text-xs text-amber-300">{t('profile.payoutMissing')}</p>
+                    )}
+                  </div>
+                )}
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   <div className="rounded-lg border border-white/10 bg-[#11141c] p-4">
                     <p className="text-xs text-plooy-muted">{t('accounting.qualifiedWatch')}</p>
@@ -715,6 +766,9 @@ export function CreatorDashboardPage() {
                           <th className="px-4 py-2 font-medium">{t('accounting.filmColumn')}</th>
                           <th className="px-4 py-2 font-medium">{t('accounting.qualifiedColumn')}</th>
                           <th className="px-4 py-2 font-medium">{t('accounting.viewersColumn')}</th>
+                          {accounting.share && <th className="px-4 py-2 font-medium">{t('accounting.poolColumn')}</th>}
+                          {accounting.share && <th className="px-4 py-2 font-medium">{t('accounting.poolShareColumn')}</th>}
+                          {accounting.share && <th className="px-4 py-2 font-medium">{t('accounting.profitShareColumn')}</th>}
                         </tr>
                       </thead>
                       <tbody>
@@ -725,6 +779,17 @@ export function CreatorDashboardPage() {
                               {t('stats.minutes', { count: item.qualifiedMinutes })}
                             </td>
                             <td className="px-4 py-2 text-plooy-muted">{item.viewerCount}</td>
+                            {accounting.share && <td className="px-4 py-2 text-plooy-muted">{item.pool ?? '—'}</td>}
+                            {accounting.share && (
+                              <td className="px-4 py-2 text-plooy-muted">
+                                %{(item.poolShare ?? 0).toLocaleString(locale, { maximumFractionDigits: 2 })}
+                              </td>
+                            )}
+                            {accounting.share && (
+                              <td className="px-4 py-2 text-plooy-gold">
+                                %{(item.profitShare ?? 0).toLocaleString(locale, { maximumFractionDigits: 2 })}
+                              </td>
+                            )}
                           </tr>
                         ))}
                       </tbody>
@@ -732,6 +797,20 @@ export function CreatorDashboardPage() {
                   </div>
                 ) : (
                   <p className="mt-4 text-sm text-plooy-muted">{t('accounting.noData')}</p>
+                )}
+                {accounting.rules && (
+                  <details className="mt-4 text-sm text-plooy-muted">
+                    <summary className="cursor-pointer text-white/80">{t('accounting.rulesTitle')}</summary>
+                    <ul className="mt-2 list-disc space-y-1 pl-5">
+                      <li>{t('accounting.rulesThreshold', { value: accounting.rules.threshold })}</li>
+                      <li>{accounting.rules.basis === 'views' ? t('accounting.rulesBasisViews') : t('accounting.rulesBasisMinutes')}</li>
+                      <li>
+                        {t('accounting.rulesPools')}:{' '}
+                        {accounting.rules.pools.map((pool) => `${pool.label} %${pool.rate}`).join(' · ')}
+                      </li>
+                      <li>{t('accounting.rulesPlatform', { value: accounting.rules.platformShare.toLocaleString(locale, { maximumFractionDigits: 2 }) })}</li>
+                    </ul>
+                  </details>
                 )}
               </>
             ) : (

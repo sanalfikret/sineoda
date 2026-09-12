@@ -92,7 +92,7 @@ import { getLandingCustomBlocks } from './services/landingCustomBlocks.js'
 import { isLandingAdminCustomized } from './services/landingAdminState.js'
 import type { ContentRow } from './types.js'
 import { assertProductionSecurity, warnProductionReadiness } from './security/startupValidation.js'
-import { seedDemoMonthlyIfEmpty } from './services/watchAccounting.js'
+import { purgeDemoMonthlyRows } from './services/watchAccounting.js'
 import { startWatchAccountingScheduler } from './services/watchAccountingScheduler.js'
 import helmet from 'helmet'
 import { globalApiLimiter } from './security/rateLimit.js'
@@ -453,7 +453,7 @@ app.listen(config.port, () => {
 
   try {
     startWatchAccountingScheduler()
-    seedDemoMonthlyIfEmpty()
+    purgeDemoMonthlyRows()
   } catch (error) {
     console.error('[watch-accounting] startup init failed:', error)
   }

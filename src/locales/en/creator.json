@@ -115,8 +115,8 @@
       "minutes": "{{count}} min"
     },
     "accounting": {
-      "title": "This month's watch summary",
-      "description": "Resets on the 1st of each month. You only see qualified watch minutes — views that pass the threshold.",
+      "title": "Monthly views and profit share",
+      "description": "Calculated per calendar month. The same member counts once per title every 48 hours; a view is qualified once the threshold share of the runtime has been watched.",
       "currentMonth": " (this month)",
       "qualifiedWatch": "Qualified watch time",
       "totalWatch": "Total watch time",
@@ -124,7 +124,26 @@
       "qualifiedColumn": "Qualified min",
       "viewersColumn": "Viewers",
       "noData": "No watch records for this period yet.",
-      "loadFailed": "Could not load accounting data."
+      "loadFailed": "Could not load accounting data.",
+      "shareTitle": "Your profit share this month",
+      "sharePercent": "Your share of distributable net profit",
+      "shareAmount": "Amount",
+      "shareEstimated": "Estimated until the month closes; updates as views change.",
+      "shareFinal": "Month closed; the share is final.",
+      "shareNoNet": "The month's net profit has not been entered yet; the amount appears here once it is.",
+      "paid": "Paid",
+      "paidOn": "Paid on {{date}}",
+      "paidReference": "Receipt / note: {{reference}}",
+      "unpaid": "Not paid yet",
+      "rulesTitle": "Current rules",
+      "rulesThreshold": "Qualified view threshold: {{value}}%",
+      "rulesBasisViews": "Distribution: by number of qualified views",
+      "rulesBasisMinutes": "Distribution: by qualified minutes watched",
+      "rulesPools": "Pool shares",
+      "rulesPlatform": "Plooy share: {{value}}%",
+      "poolColumn": "Pool",
+      "poolShareColumn": "Share in pool",
+      "profitShareColumn": "Profit share"
     },
     "documents": {
       "title": "Director and producer documents",
@@ -288,7 +307,15 @@
       "photoRemove": "Remove photo",
       "photoUploading": "Uploading…",
       "noName": "Name not set",
-      "emailLabel": "Email"
+      "emailLabel": "Email",
+      "payoutTitle": "Payout details",
+      "payoutHint": "Your monthly profit share is paid by bank transfer to this IBAN. Plooy does not move money inside the platform; once the admin has made the transfer it shows as 'paid' here.",
+      "payoutHolder": "Account holder (full name / company)",
+      "payoutIban": "IBAN",
+      "payoutTaxId": "Tax number / national ID (optional)",
+      "payoutTaxOffice": "Tax office (optional)",
+      "payoutMissing": "No IBAN on file. Add an IBAN to your profile so your profit share can be paid.",
+      "payoutSummary": "Payout account"
     },
     "membershipUntil": "Membership ends: {{date}}.",
     "renewMembership": "Extend now"

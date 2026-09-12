@@ -23,6 +23,8 @@ export interface CreatorProfile {
   firstName?: string
   lastName?: string
   photoUrl?: string
+  /** Havale bilgileri; platform para transferi yapmaz */
+  payout?: { holder: string; iban: string; taxId: string; taxOffice: string }
 }
 
 export interface Subscription {

@@ -1600,100 +1600,6 @@ export async function fetchAdminMonthlyReport(
   return api<{ report: MonthlyAccountingReport }>(`/api/admin/analytics/monthly-report?${query.toString()}`)
 }
 
-export interface SettlementPeriod {
-  periodId: string
-  label: string
-  status: 'open' | 'confirmed' | 'paid'
-  isCurrent: boolean
-  confirmedAt: string | null
-  paidAt: string | null
-}
-
-export interface SettlementPoolSummary {
-  pool: 'short' | 'student' | 'documentary' | 'long' | 'plooy'
-  label: string
-  ratePercent: number
-  effectiveRatePercent: number
-  qualifiedMinutes: number
-  contentCount: number
-}
-
-export interface SettlementContentItem {
-  contentId: string
-  title: string
-  type: string
-  program: 'standard' | 'student_cinema'
-  pool: 'short' | 'student' | 'documentary' | 'long'
-  poolLabel: string
-  poolRatePercent: number
-  creatorId: string | null
-  creatorName: string | null
-  studioName: string | null
-  qualifiedMinutes: number
-  watchMinutes: number
-  viewerCount: number
-  avgCompletionPercent: number
-  qualifiedViewerPercent: number
-  poolSharePercent: number
-  profitSharePercent: number
-}
-
-export interface SettlementCreatorItem {
-  creatorId: string
-  creatorName: string | null
-  studioName: string | null
-  qualifiedMinutes: number
-  profitSharePercent: number
-  contentCount: number
-}
-
-export interface SettlementReport {
-  periodId: string
-  label: string
-  months: string[]
-  status: 'open' | 'confirmed' | 'paid'
-  isEditable: boolean
-  totalQualifiedMinutes: number
-  totalWatchMinutes: number
-  poolSummaries: SettlementPoolSummary[]
-  totalCreatorSharePercent: number
-  items: SettlementContentItem[]
-  creators: SettlementCreatorItem[]
-  confirmedAt: string | null
-  paidAt: string | null
-}
-
-export async function fetchAdminSettlementPeriods() {
-  return api<{ periods: SettlementPeriod[] }>('/api/admin/analytics/settlement-periods')
-}
-
-export async function fetchAdminSettlementReport(periodId: string) {
-  return api<{ report: SettlementReport }>(
-    `/api/admin/analytics/settlement-report?period=${encodeURIComponent(periodId)}`,
-  )
-}
-
-export async function confirmAdminSettlementPeriod(periodId: string) {
-  return api<{ report: SettlementReport }>('/api/admin/analytics/settlement-report/confirm', {
-    method: 'POST',
-    body: JSON.stringify({ periodId }),
-  })
-}
-
-export async function markAdminSettlementPaid(periodId: string) {
-  return api<{ report: SettlementReport }>('/api/admin/analytics/settlement-report/mark-paid', {
-    method: 'POST',
-    body: JSON.stringify({ periodId }),
-  })
-}
-
-export async function reopenAdminSettlementPeriod(periodId: string) {
-  return api<{ report: SettlementReport }>('/api/admin/analytics/settlement-report/reopen', {
-    method: 'POST',
-    body: JSON.stringify({ periodId }),
-  })
-}
-
 export interface CreatorAccountingItem {
   contentId: string
   title: string
@@ -1702,6 +1608,21 @@ export interface CreatorAccountingItem {
   qualifiedMinutes: number
   watchMinutes: number
   viewerCount: number
+  qualifiedViews?: number
+  /** Havuz adı (yeni defter aylarında) */
+  pool?: string
+  poolShare?: number
+  profitShare?: number
+}
+
+export interface CreatorAccountingShare {
+  percent: number
+  amount: number
+  distributableKnown: boolean
+  paidAt: string | null
+  paidAmount: number | null
+  reference: string
+  payoutMissing: boolean
 }
 
 export interface CreatorAccountingReport {
@@ -1710,6 +1631,15 @@ export interface CreatorAccountingReport {
   totalQualifiedMinutes: number
   totalWatchMinutes: number
   items: CreatorAccountingItem[]
+  /** Yalnızca yeni defter aylarında dolu; eski raporlarda yok */
+  share?: CreatorAccountingShare
+  rules?: {
+    threshold: number
+    basis: 'views' | 'minutes'
+    pools: Array<{ id: string; label: string; rate: number }>
+    platformShare: number
+    ipAccountLimit: number
+  }
 }
 
 export async function fetchCreatorAccountingMonths() {
@@ -1964,6 +1894,15 @@ export interface CreatorProfileSummary {
   firstName: string
   lastName: string
   photoUrl: string
+  payout?: CreatorPayoutDetails
+}
+
+/** Yapımcının ödeme (havale) bilgileri — platform para transferi yapmaz, admin bu bilgiyle havale yapar. */
+export interface CreatorPayoutDetails {
+  holder: string
+  iban: string
+  taxId: string
+  taxOffice: string
 }
 
 export async function creatorFetchMe() {
@@ -1980,6 +1919,10 @@ export async function creatorUpdateProfile(data: {
   studioName: string
   bio?: string
   photoUrl?: string
+  payoutHolder?: string
+  payoutIban?: string
+  payoutTaxId?: string
+  payoutTaxOffice?: string
 }) {
   return api<{ creator: CreatorProfileSummary; user: { id: string; name: string; email: string } }>(
     '/api/creator/profile',
@@ -2083,6 +2026,7 @@ export interface AdminCreator {
   email: string
   phone?: string
   photoUrl?: string
+  payout?: CreatorPayoutDetails
   studioName: string
   bio: string
   status: 'pending' | 'approved' | 'rejected' | 'suspended'

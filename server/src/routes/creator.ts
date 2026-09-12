@@ -27,7 +27,7 @@ import {
   validateFilmApplication,
 } from '../services/filmApplication.js'
 import { getContentEngagementStats } from '../services/studentCinema.js'
-import { getAccountingReport, listNewAccountingMonths } from '../services/accountingLedger.js'
+import { getAccountingReport, listNewAccountingMonths, poolLabel, IP_ACCOUNT_LIMIT } from '../services/accountingLedger.js'
 import { getMonthlyReport, monthKey } from '../services/watchAccounting.js'
 import { isCreatorRegistrationPaid } from '../services/creatorRegistration.js'
 import { mapCreatorSummary, updateCreatorProfile } from '../services/creatorProfile.js'
@@ -90,6 +90,10 @@ router.patch('/profile', requireCreator, (req: AuthRequest, res) => {
       studioName: body.studioName,
       bio: body.bio,
       photoUrl: body.photoUrl,
+      payoutHolder: body.payoutHolder,
+      payoutIban: body.payoutIban,
+      payoutTaxId: body.payoutTaxId,
+      payoutTaxOffice: body.payoutTaxOffice,
     })
     res.json({ creator: mapCreatorSummary(creator, user), user: { id: user.id, name: user.name, email: user.email } })
   } catch (err) {
@@ -559,9 +563,47 @@ router.get('/accounting', requireCreator, (req: AuthRequest, res) => {
 
   try {
     const month = String(req.query.month ?? monthKey()).trim()
-    if(listNewAccountingMonths().some(row=>row.month===month)) {
-      const report=getAccountingReport(month); const items=report.items.filter(i=>i.creatorId===creator.id)
-      res.json({month,status:report.closedAt?'closed':'open',totalQualifiedMinutes:Math.round(items.reduce((s,i)=>s+i.qualifiedSeconds,0)/60),totalWatchMinutes:Math.round(items.reduce((s,i)=>s+i.watchSeconds,0)/60),items:items.map(i=>({contentId:i.contentId,title:i.title,type:i.type,program:i.program,qualifiedMinutes:Math.round(i.qualifiedSeconds/60),watchMinutes:Math.round(i.watchSeconds/60),viewerCount:i.views}))});return
+    if (listNewAccountingMonths().some((row) => row.month === month)) {
+      const report = getAccountingReport(month)
+      const items = report.items.filter((i) => i.creatorId === creator.id)
+      const me = report.creators.find((c) => c.id === creator.id)
+      res.json({
+        month,
+        status: report.closedAt ? 'closed' : 'open',
+        totalQualifiedMinutes: Math.round(items.reduce((s, i) => s + i.qualifiedSeconds, 0) / 60),
+        totalWatchMinutes: Math.round(items.reduce((s, i) => s + i.watchSeconds, 0) / 60),
+        items: items.map((i) => ({
+          contentId: i.contentId,
+          title: i.title,
+          type: i.type,
+          program: i.program,
+          qualifiedMinutes: Math.round(i.qualifiedSeconds / 60),
+          watchMinutes: Math.round(i.watchSeconds / 60),
+          viewerCount: i.views,
+          qualifiedViews: i.qualifiedViews,
+          pool: poolLabel(i.pool, report.rules),
+          poolShare: i.poolShare,
+          profitShare: i.profitShare,
+        })),
+        // Pay ve tutar: yüzde dağıtılabilir net kâr üzerinden; net henüz girilmediyse tutar 0 görünür.
+        share: {
+          percent: me?.share ?? 0,
+          amount: me?.amount ?? 0,
+          distributableKnown: report.finance.distributable > 0,
+          paidAt: me?.paidAt ?? null,
+          paidAmount: me?.paidAmount ?? null,
+          reference: me?.reference ?? '',
+          payoutMissing: !(me?.payout.iban ?? creator.payout_iban),
+        },
+        rules: {
+          threshold: report.rules.threshold,
+          basis: report.rules.basis,
+          pools: report.rules.pools.map((p) => ({ id: p.id, label: p.label, rate: p.rate })),
+          platformShare: report.platformShare,
+          ipAccountLimit: IP_ACCOUNT_LIMIT,
+        },
+      })
+      return
     }
     const report = getMonthlyReport(month, { creatorId: creator.id })
     res.json({

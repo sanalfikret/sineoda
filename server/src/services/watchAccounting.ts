@@ -47,12 +47,6 @@ export function monthKey(date = new Date()) {
   return getIstanbulMonthKey(date)
 }
 
-function previousMonthKey(month: string) {
-  const [year, mon] = month.split('-').map(Number)
-  if (mon === 1) return `${year - 1}-12`
-  return `${year}-${String(mon - 1).padStart(2, '0')}`
-}
-
 function purgeInvalidAccountingData(current = monthKey()) {
   dbRun('DELETE FROM watch_accounting_periods WHERE month > ?', [current])
   dbRun('DELETE FROM content_watch_monthly WHERE month > ?', [current])
@@ -662,47 +656,34 @@ export function getMonthlyReport(month: string, options?: { creatorId?: string; 
   }
 }
 
-export function seedDemoMonthlyIfEmpty() {
-  const count = dbGet<{ count: number }>('SELECT COUNT(*) as count FROM content_watch_monthly')
-  if ((count?.count ?? 0) > 0) return
-
-  const creators = dbAll<{ content_id: string; creator_id: string; program: string }>(
-    `SELECT id AS content_id, creator_id, program FROM content WHERE creator_id IS NOT NULL LIMIT 20`,
+/**
+ * Eski sürüm, tablo boşken geçen aya uydurma "demo" izlenmeler yazıyordu
+ * (nitelikli = n×1800 sn, toplam = nitelikli+600, izleyici = n+2). Bu parmak izine uyan
+ * satırları siler ve ilgili ay toplamlarını yeniden hesaplar. Gerçek kayıtlar bu deseni tutturmaz.
+ */
+export function purgeDemoMonthlyRows() {
+  const demoRows = dbAll<{ content_id: string; month: string }>(
+    `SELECT content_id, month FROM content_watch_monthly
+     WHERE qualified_seconds > 0
+       AND qualified_seconds = CAST(qualified_seconds / 1800 AS INTEGER) * 1800
+       AND watch_seconds = qualified_seconds + 600
+       AND viewer_count = CAST(qualified_seconds / 1800 AS INTEGER) + 2`,
   )
-  if (creators.length === 0) return
-
-  const prevMonth = previousMonthKey(monthKey())
-  let totalQ = 0
-  let totalW = 0
-
-  creators.forEach((row, index) => {
-    const qualified = (index + 1) * 1800
-    const watch = qualified + 600
-    totalQ += qualified
-    totalW += watch
-    const segment = resolveSegment(row.program, row.creator_id)
+  if (demoRows.length === 0) return 0
+  const months = new Set(demoRows.map((row) => row.month))
+  for (const row of demoRows) {
+    dbRun('DELETE FROM content_watch_monthly WHERE content_id = ? AND month = ?', [row.content_id, row.month])
+  }
+  for (const month of months) {
     dbRun(
-      `INSERT INTO content_watch_monthly (content_id, month, creator_id, program, qualified_seconds, watch_seconds, viewer_count, archived_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-       ON CONFLICT(content_id, month) DO UPDATE SET
-         creator_id = excluded.creator_id,
-         program = excluded.program,
-         qualified_seconds = excluded.qualified_seconds,
-         watch_seconds = excluded.watch_seconds,
-         viewer_count = excluded.viewer_count,
-         archived_at = excluded.archived_at`,
-      [row.content_id, prevMonth, row.creator_id, segment, qualified, watch, index + 3, new Date().toISOString()],
+      `UPDATE watch_accounting_periods SET
+         total_qualified_seconds = (SELECT COALESCE(SUM(qualified_seconds), 0) FROM content_watch_monthly m WHERE m.month = watch_accounting_periods.month),
+         total_watch_seconds = (SELECT COALESCE(SUM(watch_seconds), 0) FROM content_watch_monthly m WHERE m.month = watch_accounting_periods.month)
+       WHERE month = ?`,
+      [month],
     )
-  })
-
-  dbRun(
-    `INSERT INTO watch_accounting_periods (month, total_qualified_seconds, total_watch_seconds, status, closed_at)
-     VALUES (?, ?, ?, 'closed', ?)
-     ON CONFLICT(month) DO UPDATE SET
-       total_qualified_seconds = excluded.total_qualified_seconds,
-       total_watch_seconds = excluded.total_watch_seconds,
-       status = 'closed',
-       closed_at = excluded.closed_at`,
-    [prevMonth, totalQ, totalW, new Date().toISOString()],
-  )
+  }
+  purgeInvalidAccountingData()
+  console.log(`[watch-accounting] ${demoRows.length} demo izlenme satırı temizlendi (${[...months].join(', ')})`)
+  return demoRows.length
 }

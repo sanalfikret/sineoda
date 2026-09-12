@@ -1,6 +1,7 @@
 import { dbGet, dbRun, dbTransaction } from '../db.js'
 import type { CreatorRow, UserRow } from '../types.js'
 import { getCreatorRegistrationStatus } from './creatorRegistration.js'
+import { isValidIban, isValidTaxId, normalizeIban } from '../utils/iban.js'
 
 const NAME_MAX = 80
 const STUDIO_MAX = 120
@@ -23,6 +24,12 @@ export function mapCreatorSummary(creator: CreatorRow, user?: Pick<UserRow, 'nam
     firstName: names.firstName,
     lastName: names.lastName,
     photoUrl: creator.photo_url ?? '',
+    payout: {
+      holder: creator.payout_holder ?? '',
+      iban: creator.payout_iban ?? '',
+      taxId: creator.payout_tax_id ?? '',
+      taxOffice: creator.payout_tax_office ?? '',
+    },
   }
 }
 
@@ -53,6 +60,10 @@ export interface CreatorProfileInput {
   studioName?: unknown
   bio?: unknown
   photoUrl?: unknown
+  payoutHolder?: unknown
+  payoutIban?: unknown
+  payoutTaxId?: unknown
+  payoutTaxOffice?: unknown
 }
 
 /** Yapımcının kendi profilini günceller. Hata mesajı Türkçe döner; route 400'e çevirir. */
@@ -67,6 +78,10 @@ export function updateCreatorProfile(userId: string, input: CreatorProfileInput)
   const studioName = String(input.studioName ?? creator.studio_name).trim()
   const bio = String(input.bio ?? creator.bio ?? '').trim()
   const photoUrl = String(input.photoUrl ?? creator.photo_url ?? '').trim()
+  const payoutHolder = String(input.payoutHolder ?? creator.payout_holder ?? '').trim()
+  const payoutIban = normalizeIban(input.payoutIban ?? creator.payout_iban ?? '')
+  const payoutTaxId = String(input.payoutTaxId ?? creator.payout_tax_id ?? '').replace(/\s+/g, '')
+  const payoutTaxOffice = String(input.payoutTaxOffice ?? creator.payout_tax_office ?? '').trim()
 
   if (!firstName) throw new Error('Ad zorunludur.')
   if (!lastName) throw new Error('Soyad zorunludur.')
@@ -77,13 +92,17 @@ export function updateCreatorProfile(userId: string, input: CreatorProfileInput)
   if (studioName.length > STUDIO_MAX) throw new Error(`Şirket adı en fazla ${STUDIO_MAX} karakter olabilir.`)
   if (bio.length > BIO_MAX) throw new Error(`Tanıtım metni en fazla ${BIO_MAX} karakter olabilir.`)
   if (photoUrl.length > 500 || !isAllowedPhotoUrl(photoUrl)) throw new Error('Geçersiz profil fotoğrafı.')
+  if (payoutIban && !isValidIban(payoutIban)) throw new Error('IBAN geçersiz. TR ile başlayan 26 karakterlik IBAN girin.')
+  if (payoutIban && !payoutHolder) throw new Error('IBAN ile birlikte hesap sahibinin adı zorunludur.')
+  if (payoutHolder.length > 120 || payoutTaxOffice.length > 120) throw new Error('Ödeme bilgileri en fazla 120 karakter olabilir.')
+  if (!isValidTaxId(payoutTaxId)) throw new Error('Vergi numarası 10 hane, TC kimlik numarası 11 hane olmalıdır.')
 
   const fullName = `${firstName} ${lastName}`.trim()
   dbTransaction(() => {
     dbRun('UPDATE users SET name = ? WHERE id = ?', [fullName, userId])
     dbRun(
-      'UPDATE creators SET first_name = ?, last_name = ?, studio_name = ?, bio = ?, photo_url = ? WHERE id = ?',
-      [firstName, lastName, studioName, bio, photoUrl, creator.id],
+      'UPDATE creators SET first_name = ?, last_name = ?, studio_name = ?, bio = ?, photo_url = ?, payout_holder = ?, payout_iban = ?, payout_tax_id = ?, payout_tax_office = ? WHERE id = ?',
+      [firstName, lastName, studioName, bio, photoUrl, payoutHolder, payoutIban, payoutTaxId, payoutTaxOffice, creator.id],
     )
   })
 

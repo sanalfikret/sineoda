@@ -320,17 +320,6 @@ function runMigrations() {
   `)
 
   db.run(`
-    CREATE TABLE IF NOT EXISTS payment_settlement_periods (
-      period_id TEXT PRIMARY KEY,
-      net_revenue REAL NOT NULL DEFAULT 0,
-      status TEXT NOT NULL DEFAULT 'open',
-      confirmed_at TEXT,
-      paid_at TEXT,
-      updated_at TEXT
-    );
-  `)
-
-  db.run(`
     CREATE TABLE IF NOT EXISTS content_reactions (
       profile_id TEXT NOT NULL,
       content_id TEXT NOT NULL,
@@ -574,6 +563,13 @@ function runMigrations() {
   ensureColumn('creators', 'first_name', "TEXT NOT NULL DEFAULT ''")
   ensureColumn('creators', 'last_name', "TEXT NOT NULL DEFAULT ''")
   ensureColumn('creators', 'photo_url', "TEXT NOT NULL DEFAULT ''")
+  // Ödeme bilgileri: yapımcı panelden girer, admin muhasebede görür. Para hareketi platform dışında (havale).
+  ensureColumn('creators', 'payout_holder', "TEXT NOT NULL DEFAULT ''")
+  ensureColumn('creators', 'payout_iban', "TEXT NOT NULL DEFAULT ''")
+  ensureColumn('creators', 'payout_tax_id', "TEXT NOT NULL DEFAULT ''")
+  ensureColumn('creators', 'payout_tax_office', "TEXT NOT NULL DEFAULT ''")
+  // Kullanılmayan yarıyıl hakediş tablosu (hiç gerçek veri tutmadı)
+  db.run('DROP TABLE IF EXISTS payment_settlement_periods')
 
   db.run(`
     UPDATE creators

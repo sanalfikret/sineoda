@@ -119,6 +119,12 @@ function mapCreatorListRow(row: CreatorListRow) {
     email: row.user_email,
     phone: row.user_phone ?? '',
     photoUrl: row.photo_url ?? '',
+    payout: {
+      holder: row.payout_holder ?? '',
+      iban: row.payout_iban ?? '',
+      taxId: row.payout_tax_id ?? '',
+      taxOffice: row.payout_tax_office ?? '',
+    },
     studioName: row.studio_name,
     bio: row.bio,
     status: row.status,

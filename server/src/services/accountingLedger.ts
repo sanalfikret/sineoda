@@ -3,7 +3,15 @@ import { dbAll, dbGet, dbRun, dbRunNoPersist, dbTransaction, dbExec } from '../d
 import { isIP } from 'node:net'
 import { config } from '../config.js'
 import { getIstanbulMonthKey } from './dailyWatchLimits.js'
-import type { AccountingRules, AccountingReport, AccountingItem, OwnerGroup } from '../../../shared/accounting.js'
+import type {
+  AccountingRules,
+  AccountingReport,
+  AccountingItem,
+  AccountingFinance,
+  AccountingCreatorRow,
+  OwnerGroup,
+  PayoutDetails,
+} from '../../../shared/accounting.js'
 
 let initialized = false
 const defaults: AccountingRules = { threshold: 20, basis: 'views', pools: [
@@ -22,9 +30,26 @@ export function accountingClientIp(req: {ip?:string;socket:{remoteAddress?:strin
   return privatePeer && isIP(forwarded)?forwarded:peer||'unknown'
 }
 export const WINDOW_MS = 48 * 60 * 60 * 1000
+/** Aynı internet bağlantısından (ev, yurt, ofis) 48 saatte aynı içerik için sayılan en fazla farklı hesap. */
+export const IP_ACCOUNT_LIMIT = 3
+const MAX_MONEY = 1_000_000_000
+
+function addColumn(table: string, column: string, definition: string) {
+  const exists = dbAll<{ name: string }>(`PRAGMA table_info(${table})`).some((row) => row.name === column)
+  if (!exists) dbExec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`)
+}
+
 export function initAccounting() {
   if (initialized) return
   dbExec("CREATE TABLE IF NOT EXISTS accounting_rules (id INTEGER PRIMARY KEY, json TEXT NOT NULL, started_at TEXT NOT NULL); CREATE TABLE IF NOT EXISTS accounting_months (month TEXT PRIMARY KEY, rules TEXT NOT NULL, snapshot TEXT, closed_at TEXT); CREATE TABLE IF NOT EXISTS accounting_views (id TEXT PRIMARY KEY, content_id TEXT NOT NULL, episode_id TEXT NOT NULL, user_id TEXT NOT NULL, ip_hash TEXT NOT NULL, started_at INTEGER NOT NULL, month TEXT NOT NULL, seconds REAL NOT NULL DEFAULT 0, duration REAL NOT NULL, threshold REAL NOT NULL, qualified INTEGER NOT NULL DEFAULT 0, intervals TEXT NOT NULL DEFAULT '[]', metadata TEXT NOT NULL); CREATE INDEX IF NOT EXISTS av_user ON accounting_views(content_id, episode_id, user_id, started_at); CREATE INDEX IF NOT EXISTS av_ip ON accounting_views(content_id, episode_id, ip_hash, started_at); CREATE INDEX IF NOT EXISTS av_month ON accounting_views(month); CREATE TABLE IF NOT EXISTS accounting_cursor (user_id TEXT NOT NULL, content_id TEXT NOT NULL, episode_id TEXT NOT NULL, position REAL NOT NULL, at INTEGER NOT NULL, PRIMARY KEY(user_id,content_id,episode_id)); CREATE TABLE IF NOT EXISTS accounting_payments (month TEXT NOT NULL, creator_id TEXT NOT NULL, paid_at TEXT NOT NULL, reference TEXT NOT NULL, admin_id TEXT NOT NULL, PRIMARY KEY(month,creator_id))")
+  // Para katmanı: ay başına gider/kesinti ve elle net; ödeme satırına tutar + IBAN anlık görüntüsü.
+  addColumn('accounting_months', 'expenses', 'REAL NOT NULL DEFAULT 0')
+  addColumn('accounting_months', 'expense_note', "TEXT NOT NULL DEFAULT ''")
+  addColumn('accounting_months', 'net_override', 'REAL')
+  addColumn('accounting_months', 'finance_updated_at', 'TEXT')
+  addColumn('accounting_payments', 'amount', 'REAL')
+  addColumn('accounting_payments', 'iban', "TEXT NOT NULL DEFAULT ''")
+  addColumn('accounting_payments', 'holder', "TEXT NOT NULL DEFAULT ''")
   dbRun('INSERT OR IGNORE INTO accounting_rules(id,json,started_at) VALUES (1,?,?)', [JSON.stringify(defaults), new Date().toISOString()])
   initialized = true
 }
@@ -75,9 +100,12 @@ export function recordAccountingProgress(input: {userId:string; contentId:string
     dbRunNoPersist('INSERT INTO accounting_cursor(user_id,content_id,episode_id,position,at) VALUES(?,?,?,?,?) ON CONFLICT(user_id,content_id,episode_id) DO UPDATE SET position=excluded.position,at=excluded.at',[userId,contentId,episodeId,position,now])
     if(delta<=0) return
     const candidates=dbAll<ViewRow>('SELECT * FROM accounting_views WHERE content_id=? AND episode_id=? AND started_at>? AND (user_id=? OR ip_hash=?) ORDER BY started_at DESC',[contentId,episodeId,now-WINDOW_MS,userId,ipHash])
-    let event=candidates.find(v=>v.user_id===userId && v.ip_hash===ipHash)
-    if(candidates.some(v=>v.id!==event?.id)) return
+    // Aynı üye 48 saat içinde hangi ağdan devam ederse etsin tek olayda birleşir (ev → mobil geçişi süre kaybettirmez).
+    let event=candidates.find(v=>v.user_id===userId)
     if(!event) {
+      // Farklı hesaplar aynı bağlantıdan: ev/yurt için makul sayıya kadar sayılır, ötesi sayılmaz.
+      const accountsOnIp=new Set(candidates.filter(v=>v.ip_hash===ipHash).map(v=>v.user_id)).size
+      if(accountsOnIp>=IP_ACCOUNT_LIMIT) return
       const rules=getAccountingRules()
       const meta:Meta={contentId,title:c.title,type:c.type,program:c.program==='student_cinema'?'student_cinema':c.creator_id && c.program!=='platform'?'standard':'platform',creatorId:c.creator_id,creatorName:c.creator_name ?? 'Plooy',categoryIds:dbAll<{category_id:string}>('SELECT category_id FROM category_items WHERE content_id=?',[contentId]).map(r=>r.category_id),vertical:c.video_format==='vertical'}
       event={id:randomUUID(),user_id:userId,ip_hash:ipHash,started_at:now,seconds:0,duration:canonicalDuration,threshold:rules.threshold,qualified:0,intervals:'[]',metadata:JSON.stringify(meta)}
@@ -104,6 +132,13 @@ function poolFor(meta:Meta,rules:AccountingRules) {
   if(meta.program==='student_cinema') return 'student_cinema'
   return rules.pools.find(p=>p.categoryId && meta.categoryIds.includes(p.categoryId))?.id ?? (meta.vertical?'vertical':meta.type)
 }
+export function poolLabel(poolId:string,rules:AccountingRules) {
+  return rules.pools.find(p=>p.id===poolId)?.label ?? 'Plooy'
+}
+const emptyPayout:PayoutDetails={holder:'',iban:'',taxId:'',taxOffice:''}
+const emptyFinance:AccountingFinance={grossRevenue:0,paidOrders:0,expenses:0,expenseNote:'',netOverride:null,distributable:0,updatedAt:null,locked:false}
+function round2(value:number) { return Math.round(value*100)/100 }
+
 function buildMonth(month:string,rules:AccountingRules):AccountingReport {
   const entries=dbAll<{seconds:number;qualified:number;threshold:number;metadata:string}>('SELECT seconds,qualified,threshold,metadata FROM accounting_views WHERE month=?',[month])
   const map=new Map<string,AccountingItem>()
@@ -124,12 +159,12 @@ function buildMonth(month:string,rules:AccountingRules):AccountingReport {
       item.profitShare=(rules.pools.find(p=>p.id===item.pool)?.rate??0)*weight/total
     }
   }
-  const creators=new Map<string,AccountingReport['creators'][number]>()
+  const creators=new Map<string,AccountingCreatorRow>()
   for(const item of map.values()) if(item.creatorId && item.program!=='platform') {
-    const c=creators.get(item.creatorId)??{id:item.creatorId,name:item.creatorName,share:0,views:0,paidAt:null,reference:''}
+    const c=creators.get(item.creatorId)??{id:item.creatorId,name:item.creatorName,share:0,views:0,amount:0,paidAt:null,reference:'',paidAmount:null,paidIban:'',payout:{...emptyPayout}}
     c.share+=item.profitShare; c.views+=item.views; creators.set(c.id,c)
   }
-  return {month,closedAt:null,rules,startedAt:dbGet<{started_at:string}>('SELECT started_at FROM accounting_rules WHERE id=1')!.started_at,items:[...map.values()].sort((a,b)=>b.views-a.views || a.title.localeCompare(b.title)),creators:[...creators.values()].sort((a,b)=>b.share-a.share),platformShare:Math.max(0,100-[...creators.values()].reduce((s,c)=>s+c.share,0)),thresholds:[...new Set(entries.map(e=>e.threshold))].sort((a,b)=>a-b)}
+  return {month,closedAt:null,rules,startedAt:dbGet<{started_at:string}>('SELECT started_at FROM accounting_rules WHERE id=1')!.started_at,items:[...map.values()].sort((a,b)=>b.views-a.views || a.title.localeCompare(b.title)),creators:[...creators.values()].sort((a,b)=>b.share-a.share),platformShare:Math.max(0,100-[...creators.values()].reduce((s,c)=>s+c.share,0)),thresholds:[...new Set(entries.map(e=>e.threshold))].sort((a,b)=>a-b),finance:{...emptyFinance}}
 }
 export function rolloverAccounting(now=new Date()) {
   initAccounting()
@@ -141,21 +176,116 @@ export function rolloverAccounting(now=new Date()) {
   dbRun('INSERT OR IGNORE INTO accounting_months(month,rules) VALUES(?,?)',[current,JSON.stringify(getAccountingRules())])
 }
 export function listNewAccountingMonths() { rolloverAccounting(); return dbAll<{month:string;closed_at:string|null}>('SELECT month,closed_at FROM accounting_months ORDER BY month DESC') }
+
+/** Ayın brüt tahsilatı: başarıyla ödenen abonelik siparişleri (kuruş → TL), İstanbul takvim ayına göre. */
+export function monthGrossRevenue(month:string) {
+  const [year,mon]=month.split('-').map(Number)
+  const from=new Date(Date.UTC(year,mon-1,1)-2*86_400_000).toISOString()
+  const to=new Date(Date.UTC(year,mon,1)+2*86_400_000).toISOString()
+  const rows=dbAll<{amount:number;completed_at:string}>("SELECT amount, completed_at FROM payment_orders WHERE status='paid' AND completed_at IS NOT NULL AND completed_at>=? AND completed_at<?",[from,to])
+    .filter((row)=>getIstanbulMonthKey(new Date(row.completed_at))===month)
+  const kurus=rows.reduce((sum,row)=>sum+(Number(row.amount)||0),0)
+  return { grossRevenue:round2(kurus/100), paidOrders:rows.length }
+}
+export function getAccountingFinance(month:string):AccountingFinance {
+  initAccounting()
+  const row=dbGet<{expenses:number;expense_note:string;net_override:number|null;finance_updated_at:string|null}>('SELECT expenses,expense_note,net_override,finance_updated_at FROM accounting_months WHERE month=?',[month])
+  const gross=monthGrossRevenue(month)
+  const expenses=round2(Number(row?.expenses)||0)
+  const netOverride=row?.net_override===null||row?.net_override===undefined?null:round2(Number(row.net_override))
+  const locked=Boolean(dbGet('SELECT 1 FROM accounting_payments WHERE month=? LIMIT 1',[month]))
+  return { ...gross, expenses, expenseNote:row?.expense_note??'', netOverride, distributable:round2(Math.max(0,netOverride??gross.grossRevenue-expenses)), updatedAt:row?.finance_updated_at??null, locked }
+}
+export function saveAccountingFinance(month:string,input:{expenses?:unknown;expenseNote?:unknown;netOverride?:unknown}) {
+  rolloverAccounting()
+  if(!dbGet('SELECT month FROM accounting_months WHERE month=?',[month])) throw new Error('Bu ay için muhasebe kaydı yok.')
+  if(getAccountingFinance(month).locked) throw new Error('Bu ay için ödeme kaydı var; gider ve net değiştirmek için önce ödemeleri geri alın.')
+  const expenses=Number(input.expenses??0)
+  if(!Number.isFinite(expenses)||expenses<0||expenses>MAX_MONEY) throw new Error('Gider tutarı 0 veya daha büyük bir sayı olmalı.')
+  const note=String(input.expenseNote??'').trim()
+  if(note.length>500) throw new Error('Gider açıklaması en fazla 500 karakter olabilir.')
+  let netOverride:number|null=null
+  if(input.netOverride!==null&&input.netOverride!==undefined&&input.netOverride!=='') {
+    netOverride=Number(input.netOverride)
+    if(!Number.isFinite(netOverride)||netOverride<0||netOverride>MAX_MONEY) throw new Error('Dağıtılabilir net 0 veya daha büyük bir sayı olmalı.')
+    netOverride=round2(netOverride)
+  }
+  dbRun('UPDATE accounting_months SET expenses=?,expense_note=?,net_override=?,finance_updated_at=? WHERE month=?',[round2(expenses),note,netOverride,new Date().toISOString(),month])
+  return getAccountingReport(month)
+}
+function creatorPayout(creatorId:string):PayoutDetails {
+  const row=dbGet<{payout_holder:string|null;payout_iban:string|null;payout_tax_id:string|null;payout_tax_office:string|null}>('SELECT payout_holder,payout_iban,payout_tax_id,payout_tax_office FROM creators WHERE id=?',[creatorId])
+  return { holder:row?.payout_holder??'', iban:row?.payout_iban??'', taxId:row?.payout_tax_id??'', taxOffice:row?.payout_tax_office??'' }
+}
 export function getAccountingReport(month:string):AccountingReport {
   rolloverAccounting()
   const row=dbGet<{rules:string;snapshot:string|null}>('SELECT rules,snapshot FROM accounting_months WHERE month=?',[month])
   if(!row) throw new Error('Bu ay için yeni muhasebe kaydı yok.')
   const report:AccountingReport=row.snapshot?JSON.parse(row.snapshot):buildMonth(month,JSON.parse(row.rules))
-  const payments=dbAll<{creator_id:string;paid_at:string;reference:string}>('SELECT creator_id,paid_at,reference FROM accounting_payments WHERE month=?',[month])
-  report.creators=report.creators.map(c=>{const p=payments.find(p=>p.creator_id===c.id);return {...c,paidAt:p?.paid_at??null,reference:p?.reference??''}})
+  const finance=getAccountingFinance(month)
+  const payments=dbAll<{creator_id:string;paid_at:string;reference:string;amount:number|null;iban:string|null}>('SELECT creator_id,paid_at,reference,amount,iban FROM accounting_payments WHERE month=?',[month])
+  report.finance=finance
+  report.creators=report.creators.map((c)=>{
+    const p=payments.find(p=>p.creator_id===c.id)
+    return {
+      ...c,
+      amount:round2(finance.distributable*c.share/100),
+      paidAt:p?.paid_at??null,
+      reference:p?.reference??'',
+      paidAmount:p?.amount===null||p?.amount===undefined?null:round2(Number(p.amount)),
+      paidIban:p?.iban??'',
+      payout:creatorPayout(c.id),
+    }
+  })
   return report
 }
 export function markAccountingPaid(month:string,creatorId:string,reference:string,adminId:string) {
   const report=getAccountingReport(month)
   if(!report.closedAt) throw new Error('Ödeme kaydı yalnızca arşivlenen aya eklenebilir.')
-  if(!report.creators.some(c=>c.id===creatorId && c.share>0)) throw new Error('Ödenecek yapımcı payı bulunamadı.')
+  const creator=report.creators.find(c=>c.id===creatorId && c.share>0)
+  if(!creator) throw new Error('Ödenecek yapımcı payı bulunamadı.')
   if(typeof reference!=='string' || !reference.trim() || reference.length>300) throw new Error('Ödeme açıklaması veya dekont referansı gerekli (en fazla 300 karakter).')
-  dbRun('INSERT OR IGNORE INTO accounting_payments(month,creator_id,paid_at,reference,admin_id) VALUES(?,?,?,?,?)',[month,creatorId,new Date().toISOString(),reference.trim(),adminId])
+  dbRun('INSERT OR IGNORE INTO accounting_payments(month,creator_id,paid_at,reference,admin_id,amount,iban,holder) VALUES(?,?,?,?,?,?,?,?)',[month,creatorId,new Date().toISOString(),reference.trim(),adminId,creator.amount,creator.payout.iban,creator.payout.holder])
+  return getAccountingReport(month)
+}
+/** Yanlış işaretlenen ödemeyi geri alır; yalnızca kayıt silinir, para hareketi yoktur. */
+export function undoAccountingPaid(month:string,creatorId:string) {
+  initAccounting()
+  if(!dbGet('SELECT 1 FROM accounting_payments WHERE month=? AND creator_id=?',[month,creatorId])) throw new Error('Bu ay için ödeme kaydı bulunamadı.')
+  dbRun('DELETE FROM accounting_payments WHERE month=? AND creator_id=?',[month,creatorId])
   return getAccountingReport(month)
 }
 
+/** Yapımcı sözleşmesine eklenen, panel ayarlarından otomatik üretilen "güncel oranlar" bölümü. */
+export function describeAccountingRules(lang:'tr'|'en'='tr') {
+  const rules=getAccountingRules()
+  const creatorTotal=rules.pools.reduce((s,p)=>s+p.rate,0)
+  const pct=(n:number)=>'%'+n.toLocaleString(lang==='en'?'en-GB':'tr-TR',{maximumFractionDigits:2})
+  const pools=rules.pools.map(p=>`${p.label}: ${pct(p.rate)}`).join(', ')
+  if(lang==='en') {
+    return {
+      heading:'Current revenue share (generated from platform settings)',
+      body:[
+        `This section is generated automatically from the current settings in the Plooy admin panel and applies to the open accounting month.`,
+        `Qualified view: a view counts once at least ${pct(rules.threshold)} of the runtime has been watched as unique footage. Seeking forward and replaying the same section do not add time.`,
+        `Counting rule: the same member is counted once per title (per episode for series) in any 48-hour window regardless of network. At most ${IP_ACCOUNT_LIMIT} different accounts are counted from the same internet connection.`,
+        `Distribution basis: ${rules.basis==='views'?'number of qualified views':'qualified minutes watched'}.`,
+        `Pool shares of the distributable net profit: ${pools}. The remaining ${pct(Math.max(0,100-creatorTotal))} belongs to Plooy. A pool with no qualified views in a month stays with Plooy.`,
+        `Within each pool the share is split proportionally among that month's titles. Period: calendar month (Europe/Istanbul). When a month closes, its views and rates are locked and the creator panel shows the share and amount for that month.`,
+        `Payment: made by bank transfer to the IBAN the creator provides in the panel. Plooy does not move money inside the platform; the admin marks a transfer as paid and the receipt reference becomes visible to the creator.`,
+      ].join('\n\n'),
+    }
+  }
+  return {
+    heading:'Güncel gelir paylaşım oranları (panel ayarlarından otomatik üretilir)',
+    body:[
+      `Bu bölüm Plooy yönetim panelindeki güncel ayarlardan otomatik üretilir ve açık muhasebe ayı için geçerlidir.`,
+      `Nitelikli izlenme: içerik süresinin en az ${pct(rules.threshold)}'i benzersiz olarak izlendiğinde izlenme nitelikli sayılır. İleri sarma ve aynı bölümü tekrar izleme süre kazandırmaz.`,
+      `Sayım kuralı: aynı üye aynı içerik için (dizilerde bölüm başına) 48 saatte bir kez sayılır; hangi ağdan izlediği fark etmez. Aynı internet bağlantısından en fazla ${IP_ACCOUNT_LIMIT} farklı hesap sayılır.`,
+      `Dağıtım ölçüsü: ${rules.basis==='views'?'nitelikli izlenme sayısı':'nitelikli izlenen dakika'}.`,
+      `Dağıtılabilir net kârdan havuz payları: ${pools}. Kalan ${pct(Math.max(0,100-creatorTotal))} Plooy'a aittir. O ay nitelikli izlenmesi olmayan havuzun payı Plooy'da kalır.`,
+      `Her havuzun payı, o ayki içerikler arasında ölçüye göre orantılı paylaştırılır. Dönem takvim ayıdır (Europe/Istanbul). Ay kapanınca izlenmeler ve oranlar kilitlenir; yapımcı paneli o ayın payını ve tutarını gösterir.`,
+      `Ödeme: yapımcının panelde bildirdiği IBAN'a banka havalesi ile yapılır. Plooy platform içinde para transferi yapmaz; yönetici havaleyi "ödendi" olarak işaretler ve dekont referansı yapımcıya görünür.`,
+    ].join('\n\n'),
+  }
+}

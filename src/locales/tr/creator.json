@@ -115,8 +115,8 @@
       "minutes": "{{count}} dk"
     },
     "accounting": {
-      "title": "Bu ayın izlenme özeti",
-      "description": "Her ayın 1'inde sıfırlanır. Yalnızca nitelikli izlenme dakikalarını görürsünüz — eşiği geçen izlenmeler sayılır.",
+      "title": "Aylık izlenme ve kâr payı",
+      "description": "Takvim ayına göre hesaplanır. Aynı üye aynı içerik için 48 saatte bir sayılır; süresinin eşik yüzdesi izlenen izlenmeler nitelikli sayılır.",
       "currentMonth": " (bu ay)",
       "qualifiedWatch": "Nitelikli izlenme",
       "totalWatch": "Toplam izlenme",
@@ -124,7 +124,26 @@
       "qualifiedColumn": "Nitelikli dk",
       "viewersColumn": "İzleyici",
       "noData": "Bu dönemde henüz izlenme kaydı yok.",
-      "loadFailed": "Muhasebe verisi yüklenemedi."
+      "loadFailed": "Muhasebe verisi yüklenemedi.",
+      "shareTitle": "Bu ayki kâr payınız",
+      "sharePercent": "Dağıtılabilir net kârdan payınız",
+      "shareAmount": "Tutar",
+      "shareEstimated": "Ay kapanana kadar tahminidir; izlenmeler değiştikçe güncellenir.",
+      "shareFinal": "Ay kapandı; pay kesinleşti.",
+      "shareNoNet": "Ayın net kârı henüz girilmedi; tutar netleşince burada görünür.",
+      "paid": "Ödendi",
+      "paidOn": "{{date}} tarihinde ödendi",
+      "paidReference": "Dekont / açıklama: {{reference}}",
+      "unpaid": "Henüz ödenmedi",
+      "rulesTitle": "Geçerli kurallar",
+      "rulesThreshold": "Nitelikli izlenme eşiği: %{{value}}",
+      "rulesBasisViews": "Dağıtım: nitelikli izlenme sayısına göre",
+      "rulesBasisMinutes": "Dağıtım: nitelikli izlenen dakikaya göre",
+      "rulesPools": "Havuz payları",
+      "rulesPlatform": "Plooy payı: %{{value}}",
+      "poolColumn": "Havuz",
+      "poolShareColumn": "Havuz içi pay",
+      "profitShareColumn": "Kâr payı"
     },
     "documents": {
       "title": "Yönetmen ve yapımcı belgeleri",
@@ -288,7 +307,15 @@
       "photoRemove": "Fotoğrafı kaldır",
       "photoUploading": "Yükleniyor…",
       "noName": "Ad soyad girilmemiş",
-      "emailLabel": "E-posta"
+      "emailLabel": "E-posta",
+      "payoutTitle": "Ödeme bilgileri",
+      "payoutHint": "Aylık kâr payınız bu IBAN'a banka havalesiyle ödenir. Plooy platform içinden para transferi yapmaz; yönetici havaleyi yaptıktan sonra panelde 'ödendi' olarak görünür.",
+      "payoutHolder": "Hesap sahibi (ad soyad / şirket)",
+      "payoutIban": "IBAN",
+      "payoutTaxId": "Vergi no / TC kimlik no (isteğe bağlı)",
+      "payoutTaxOffice": "Vergi dairesi (isteğe bağlı)",
+      "payoutMissing": "Ödeme için IBAN girilmemiş. Kâr payınızın ödenebilmesi için profilinize IBAN ekleyin.",
+      "payoutSummary": "Ödeme hesabı"
     },
     "membershipUntil": "Üyelik bitiş: {{date}}.",
     "renewMembership": "Şimdi uzat"

@@ -795,6 +795,25 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
                     <dt className="text-plooy-muted">Kayıt tarihi</dt>
                     <dd className="text-white/90">{new Date(selectedCreator.createdAt).toLocaleDateString('tr-TR')}</dd>
                   </div>
+                  <div className="sm:col-span-2">
+                    <dt className="text-plooy-muted">Ödeme hesabı (IBAN)</dt>
+                    <dd className="text-white/90">
+                      {selectedCreator.payout?.iban ? (
+                        <>
+                          <span className="font-mono">{selectedCreator.payout.iban.replace(/(.{4})/g, '$1 ').trim()}</span>
+                          {selectedCreator.payout.holder && <span> · {selectedCreator.payout.holder}</span>}
+                          {selectedCreator.payout.taxId && (
+                            <span className="block text-xs text-plooy-muted">
+                              Vergi/TC no: {selectedCreator.payout.taxId}
+                              {selectedCreator.payout.taxOffice ? ` · ${selectedCreator.payout.taxOffice}` : ''}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-amber-300">Girilmemiş — yapımcı panelden ekler</span>
+                      )}
+                    </dd>
+                  </div>
                   {isStudentSelected && (
                     <>
                       <div>

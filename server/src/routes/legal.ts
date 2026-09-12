@@ -9,18 +9,35 @@ import {
   validateLegalSlug,
 } from '../services/legalDocuments.js'
 import type { UserRow } from '../types.js'
+import type { LegalDocument } from '../constants/legalDefaults.js'
+import { describeAccountingRules } from '../services/accountingLedger.js'
 import { getClientIp, getUserAgent } from '../utils/clientIp.js'
 
 const router = Router()
+
+/** Yapımcı sözleşmesine panel ayarlarından üretilen güncel oran bölümünü ekler (yalnızca herkese açık görünümde). */
+function withGeneratedSections(document: LegalDocument): LegalDocument {
+  if (document.slug !== 'yapimci-sozlesmesi') return document
+  try {
+    return {
+      ...document,
+      sections: [...document.sections, describeAccountingRules('tr')],
+      en: document.en ? { ...document.en, sections: [...document.en.sections, describeAccountingRules('en')] } : document.en,
+    }
+  } catch {
+    return document
+  }
+}
 
 router.get('/version', (_req, res) => {
   res.json({ version: getLegalVersion() })
 })
 
 router.get('/documents', (_req, res) => {
+  const documents = getLegalDocuments()
   res.json({
     version: getLegalVersion(),
-    documents: getLegalDocuments(),
+    documents: Object.fromEntries(Object.entries(documents).map(([slug, doc]) => [slug, withGeneratedSections(doc)])),
   })
 })
 
@@ -30,7 +47,7 @@ router.get('/documents/:slug', (req, res) => {
     res.status(404).json({ error: 'Yasal metin bulunamadı.' })
     return
   }
-  res.json({ document: getLegalDocument(slug) })
+  res.json({ document: withGeneratedSections(getLegalDocument(slug)) })
 })
 
 router.get('/consents', requireAuth, (req: AuthRequest, res) => {
