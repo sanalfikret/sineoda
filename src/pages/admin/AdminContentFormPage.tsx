@@ -74,7 +74,27 @@ const STANDUP_PRESET = {
 
 type ContentPreset = 'film' | 'dizi' | 'belgesel' | 'kisa-film' | 'stand-up' | 'dikey'
 
-function buildInitialForm(options: { vertical?: boolean; standup?: boolean } = {}) {
+const CONTENT_PRESETS: ContentPreset[] = ['film', 'dizi', 'belgesel', 'kisa-film', 'stand-up', 'dikey']
+const PRESET_LABELS: Record<ContentPreset, string> = {
+  film: 'Film',
+  dizi: 'Dizi',
+  belgesel: 'Belgesel',
+  'kisa-film': 'Kısa Film',
+  'stand-up': 'Stand-up',
+  dikey: 'Dikey Dizi',
+}
+
+/** Üst çubuktaki hızlı ekleme düğmeleri ?tur=<preset> gönderir; eski ?dikey=1 / ?standup=1 de desteklenir. */
+function presetFromSearch(params: URLSearchParams): ContentPreset | null {
+  const tur = params.get('tur')
+  if (tur && (CONTENT_PRESETS as string[]).includes(tur)) return tur as ContentPreset
+  if (params.get('dikey') === '1') return 'dikey'
+  if (params.get('standup') === '1') return 'stand-up'
+  return null
+}
+
+function buildInitialForm(options: { vertical?: boolean; standup?: boolean; preset?: ContentPreset | null } = {}) {
+  if (options.preset) return applyPreset(options.preset)
   if (options.vertical) return { ...EMPTY_FORM, ...VERTICAL_PRESET }
   if (options.standup) return { ...EMPTY_FORM, ...STANDUP_PRESET }
   return EMPTY_FORM
@@ -83,6 +103,9 @@ function buildInitialForm(options: { vertical?: boolean; standup?: boolean } = {
 function applyPreset(preset: ContentPreset) {
   if (preset === 'dikey') {
     return { ...EMPTY_FORM, ...VERTICAL_PRESET }
+  }
+  if (preset === 'stand-up') {
+    return { ...EMPTY_FORM, ...STANDUP_PRESET, type: 'stand-up' as const, videoFormat: 'standard' as const }
   }
   return {
     ...EMPTY_FORM,
@@ -96,10 +119,23 @@ export function AdminContentFormPage() {
   const [searchParams] = useSearchParams()
   const isVerticalNew = searchParams.get('dikey') === '1'
   const isStandUpNew = searchParams.get('standup') === '1'
+  const urlPreset = presetFromSearch(searchParams)
   const isEdit = Boolean(id)
   const navigate = useNavigate()
   const { getContentById, addContent, updateContent } = useContent()
-  const [form, setForm] = useState(() => buildInitialForm({ vertical: isVerticalNew && !id, standup: isStandUpNew && !id }))
+  const [form, setForm] = useState(() =>
+    buildInitialForm({ vertical: isVerticalNew && !id, standup: isStandUpNew && !id, preset: id ? null : urlPreset }),
+  )
+  // Üst çubuktan başka bir tür düğmesine basılınca (aynı sayfa, farklı ?tur) formu o türle yeniden başlat
+  const lastUrlPreset = useRef<ContentPreset | null>(urlPreset)
+  useEffect(() => {
+    if (id) return
+    if (urlPreset && urlPreset !== lastUrlPreset.current) {
+      setForm(applyPreset(urlPreset))
+      setError('')
+    }
+    lastUrlPreset.current = urlPreset
+  }, [id, urlPreset])
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [translating, setTranslating] = useState(false)
@@ -291,11 +327,9 @@ export function AdminContentFormPage() {
             ? form.videoFormat === 'vertical'
               ? 'Dikey Diziyi Düzenle'
               : 'İçeriği Düzenle'
-            : isVerticalNew || form.videoFormat === 'vertical'
-              ? 'Yeni Dikey Dizi'
-              : isStandUpNew || form.type === 'stand-up'
-                ? 'Yeni Stand-up'
-                : 'Yeni İçerik'}
+            : activePreset
+              ? `Yeni ${PRESET_LABELS[activePreset]}`
+              : 'Yeni İçerik'}
         </h1>
       </div>
 
