@@ -40,6 +40,16 @@ Plooy — VPS operations (canonical)
 
 Deprecated wrappers (call recover/rebuild): vps-now.sh, update-vps.sh, deploy-vps.sh
 
+## Disk cleanup (safe — never touches persistent/)
+
+  cd /opt/sineoda && bash deploy/cleanup-vps.sh            # report only
+  cd /opt/sineoda && bash deploy/cleanup-vps.sh --apply    # remove old docker images/cache, broken copies, logs
+  add --deep to also drop the newest broken copy and host node_modules
+
+  Growth sources: old docker images per rebuild, builder cache,
+  /opt/sineoda-broken-* copies from archive recovery, container json logs
+  (now capped 10 MB x 3 in docker-compose.yml), journald.
+
 ## Never
 
   docker compose down -v
