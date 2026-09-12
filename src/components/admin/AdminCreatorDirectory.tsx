@@ -500,48 +500,57 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
         totalCount={creators.length}
       />
 
-      <div className="flex flex-wrap items-center gap-2">
-        {showProgramFilter &&
-          (
+      {/* İki bağımsız filtre grubu: program ve üyelik ödemesi. Etiketli tutulur ki "Tümü" hangi gruba ait belli olsun. */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        {showProgramFilter && (
+          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Program filtresi">
+            <span className="text-xs uppercase tracking-wide text-plooy-muted">Program</span>
+            {(
+              [
+                ['all', 'Tüm programlar'],
+                ['standard', 'Bağımsız yapımcı'],
+                ['student_cinema', 'Genç Sinema'],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={programFilter === id}
+                onClick={() => {
+                  setProgramFilter(id)
+                  setSelectedId(null)
+                }}
+                className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium ${
+                  programFilter === id ? 'bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/40' : 'bg-white/5 text-white/70 hover:bg-white/10'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Üyelik ödemesi filtresi">
+          <span className="text-xs uppercase tracking-wide text-plooy-muted">Üyelik ödemesi</span>
+          {(
             [
-              ['all', 'Tüm programlar'],
-              ['standard', 'Bağımsız yapımcı'],
-              ['student_cinema', 'Genç Sinema'],
+              ['all', 'Hepsi'],
+              ['unpaid', 'Ödeme yapmayanlar'],
+              ['paid', 'Ödemesi tamam'],
             ] as const
           ).map(([id, label]) => (
             <button
               key={id}
               type="button"
-              onClick={() => {
-                setProgramFilter(id)
-                setSelectedId(null)
-              }}
-              className={`rounded-full px-4 py-2 text-sm font-medium ${
-                programFilter === id ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/5 text-white/70 hover:bg-white/10'
+              aria-pressed={paymentFilter === id}
+              onClick={() => setPaymentFilter(id)}
+              className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium ${
+                paymentFilter === id ? 'bg-plooy-gold/15 text-plooy-gold ring-1 ring-plooy-gold/40' : 'bg-white/5 text-white/70 hover:bg-white/10'
               }`}
             >
               {label}
             </button>
           ))}
-        {showProgramFilter && <span className="mx-1 hidden h-6 w-px bg-white/10 sm:block" />}
-        {(
-          [
-            ['all', 'Tümü'],
-            ['unpaid', 'Ödeme yapmayanlar'],
-            ['paid', 'Ödemesi tamam'],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setPaymentFilter(id)}
-            className={`rounded-full px-4 py-2 text-sm font-medium ${
-              paymentFilter === id ? 'bg-plooy-gold/15 text-plooy-gold' : 'bg-white/5 text-white/70 hover:bg-white/10'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+        </div>
       </div>
 
       {notice && (
@@ -569,13 +578,13 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
         }}
       />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#11141c]">
-          {loading ? (
+          {loading && creators.length === 0 ? (
             <p className="p-6 text-sm text-plooy-muted">Yükleniyor...</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
+            <div className={`overflow-x-auto transition-opacity ${loading ? 'pointer-events-none opacity-50' : ''}`}>
+              <table className="min-w-[900px] text-left text-sm xl:min-w-full">
                 <thead className="border-b border-white/10 text-plooy-muted">
                   <tr>
                     <th className="px-4 py-3">
@@ -591,14 +600,14 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
                         className="accent-plooy-gold"
                       />
                     </th>
-                    <th className="px-4 py-3 font-medium">Kişi</th>
-                    <th className="px-4 py-3 font-medium">Şirket / Okul</th>
-                    {showProgramFilter && <th className="px-4 py-3 font-medium">Program</th>}
-                    <th className="px-4 py-3 font-medium">Durum</th>
-                    <th className="px-4 py-3 font-medium">Ödeme</th>
-                    <th className="px-4 py-3 font-medium">Film</th>
-                    <th className="px-4 py-3 font-medium">Belge</th>
-                    <th className="px-4 py-3 font-medium">Mesaj</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-medium">Kişi</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-medium">Şirket / Okul</th>
+                    {showProgramFilter && <th className="whitespace-nowrap px-4 py-3 font-medium">Program</th>}
+                    <th className="whitespace-nowrap px-4 py-3 font-medium">Durum</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-medium">Üyelik</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-medium">Film</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-medium">Belge</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-medium">Mesaj</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -637,7 +646,7 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <p className="text-white/90">{creator.studioName}</p>
+                          <p className="max-w-[14rem] truncate text-white/90" title={creator.studioName}>{creator.studioName}</p>
                           {creator.program === 'student_cinema' && (
                             <p className="text-xs text-plooy-muted">
                               {creator.studentUniversity || creator.schoolName || '—'}
@@ -647,7 +656,7 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
                         </td>
                         {showProgramFilter && (
                           <td className="px-4 py-3">
-                            <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${PROGRAM_CLASS[creator.program ?? 'standard']}`}>
+                            <span className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${PROGRAM_CLASS[creator.program ?? 'standard']}`}>
                               {PROGRAM_LABELS[creator.program ?? 'standard']}
                             </span>
                           </td>
@@ -666,7 +675,7 @@ export function AdminCreatorDirectory({ program: fixedProgram, title, descriptio
                             {creator.registrationPaid ? 'Üyelik aktif' : 'Üyelik yok'}
                           </span>
                           {creator.subscriptionExpiresAt && (
-                            <span className="mt-1 block text-xs text-plooy-muted">
+                            <span className="mt-1 block whitespace-nowrap text-xs text-plooy-muted">
                               Bitiş: {new Date(creator.subscriptionExpiresAt).toLocaleDateString('tr-TR')}
                             </span>
                           )}
