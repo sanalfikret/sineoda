@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { ArrangeableGrid } from '../../components/admin/ArrangeableGrid'
+import { ResizableSplit } from '../../components/admin/ResizableSplit'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
   fetchAdminChatThread,
@@ -256,19 +258,23 @@ export function AdminMessagesPage() {
         </button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { label: 'Okunmamış mesaj', value: summary.unread, className: summary.unread > 0 ? 'text-amber-300' : 'text-white' },
-          { label: 'Okunmuş mesaj', value: summary.read, className: 'text-emerald-300' },
-          { label: 'Toplam gelen mesaj', value: summary.total, className: 'text-white' },
-          { label: 'Bekleyen sohbet', value: summary.unreadThreads, className: summary.unreadThreads > 0 ? 'text-amber-300' : 'text-white' },
-        ].map((stat) => (
-          <div key={stat.label} className="rounded-xl border border-white/10 bg-[#11141c] p-4">
-            <p className="text-xs text-plooy-muted">{stat.label}</p>
-            <p className={`mt-1 text-2xl font-bold ${stat.className}`}>{stat.value}</p>
-          </div>
-        ))}
-      </div>
+      <ArrangeableGrid
+        layoutKey="messages-stats"
+        items={[
+          { id: 'unread', label: 'Okunmamış mesaj', value: summary.unread, className: summary.unread > 0 ? 'text-amber-300' : 'text-white' },
+          { id: 'read', label: 'Okunmuş mesaj', value: summary.read, className: 'text-emerald-300' },
+          { id: 'total', label: 'Toplam gelen mesaj', value: summary.total, className: 'text-white' },
+          { id: 'threads', label: 'Bekleyen sohbet', value: summary.unreadThreads, className: summary.unreadThreads > 0 ? 'text-amber-300' : 'text-white' },
+        ].map((stat) => ({
+          id: stat.id,
+          node: (
+            <div className="rounded-xl border border-white/10 bg-[#11141c] p-4">
+              <p className="text-xs text-plooy-muted">{stat.label}</p>
+              <p className={`mt-1 text-2xl font-bold ${stat.className}`}>{stat.value}</p>
+            </div>
+          ),
+        }))}
+      />
 
       {bulkOpen && (
         <form onSubmit={handleBulk} className="space-y-3 rounded-2xl border border-plooy-gold/20 bg-plooy-gold/5 p-5">
@@ -325,11 +331,15 @@ export function AdminMessagesPage() {
       )}
       {error && <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#11141c]">
+      <ResizableSplit
+        layoutKey="messages-split"
+        defaultRatio={0.45}
+        left={
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#11141c]">
           <div className="space-y-3 border-b border-white/10 p-4">
             <AdminSearchBar value={query} onChange={setQuery} placeholder="Ad, e-posta veya şirket ara..." />
             <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[11px] uppercase tracking-wide text-plooy-muted">Program</span>
               {(
                 [
                   ['all', 'Tümü'],
@@ -340,22 +350,26 @@ export function AdminMessagesPage() {
                 <button
                   key={id}
                   type="button"
+                  aria-pressed={program === id}
                   onClick={() => setProgram(id)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                    program === id ? 'bg-plooy-gold/15 text-plooy-gold' : 'bg-white/5 text-white/70 hover:bg-white/10'
+                  className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium ${
+                    program === id ? 'bg-plooy-gold/15 text-plooy-gold ring-1 ring-plooy-gold/40' : 'bg-white/5 text-white/70 hover:bg-white/10'
                   }`}
                 >
                   {label}
                 </button>
               ))}
+              <span className="mx-1 hidden h-4 w-px bg-white/10 sm:block" />
               <button
                 type="button"
+                aria-pressed={unreadOnly}
+                title={unreadOnly ? 'Tüm sohbetleri göster' : 'Yalnızca okunmamış mesajı olan sohbetleri göster'}
                 onClick={() => setUnreadOnly((current) => !current)}
-                className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                  unreadOnly ? 'bg-amber-500/20 text-amber-200' : 'bg-white/5 text-white/70 hover:bg-white/10'
+                className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium ${
+                  unreadOnly ? 'bg-amber-500/20 text-amber-200 ring-1 ring-amber-400/40' : 'bg-white/5 text-white/70 hover:bg-white/10'
                 }`}
               >
-                Sadece okunmamış
+                {unreadOnly ? '✓ Sadece okunmamış' : 'Sadece okunmamış'}
               </button>
               <button type="button" onClick={() => void loadThreads()} className="ml-auto text-xs text-plooy-gold hover:underline">
                 Yenile
@@ -406,8 +420,9 @@ export function AdminMessagesPage() {
             </ul>
           )}
         </div>
-
-        <div className="flex min-h-[420px] flex-col rounded-2xl border border-white/10 bg-[#11141c]">
+        }
+        right={
+          <div className="flex min-h-[420px] flex-col rounded-2xl border border-white/10 bg-[#11141c]">
           {!selectedUserId ? (
             <div className="flex flex-1 items-center justify-center p-6 text-sm text-plooy-muted">
               Mesajları görmek için soldan bir yapımcı seçin.
@@ -519,7 +534,8 @@ export function AdminMessagesPage() {
             </>
           )}
         </div>
-      </div>
+        }
+      />
     </div>
   )
 }
