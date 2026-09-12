@@ -1,4 +1,5 @@
 import { dbGet, dbRun } from '../db.js'
+import { getBillingPlans } from './billingPlansConfig.js'
 import { BRAND_NAME } from '../constants/brand.js'
 
 export interface LandingTextItem {
@@ -117,7 +118,7 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
     description: 'Öğrenci veya standart plan. Aylık yenilenir, istediğin zaman iptal et.',
     price: '₺49',
     priceSuffix: "'ten başlayan /ay",
-    priceNote: 'Öğrenci planı ₺49/ay (kimlik gerekir) · Standart plan ₺69/ay',
+    priceNote: 'Güncel planlar ve fiyatlar Planlar sayfasında.',
     image: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1200&h=800&fit=crop&q=80',
     ctaPrimary: 'Ücretsiz Dene',
     ctaPrimaryLink: '/kayit',
@@ -167,7 +168,7 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
       {
         question: `${BRAND_NAME}'nın maliyeti nedir?`,
         answer:
-          'Öğrenci planı aylık ₺49 (geçerli öğrenci kimliği gerekir), standart plan aylık ₺69’dur.',
+          'Öğrenci planı aylık {{plan:student}} (geçerli öğrenci kimliği gerekir), standart plan aylık {{plan:standard}}’dur.',
       },
       {
         question: 'Nerede izleyebilirim?',
@@ -301,12 +302,67 @@ export function parseLandingSections(input: Partial<LandingSectionsConfig> | nul
   }
 }
 
+const LEGACY_PRICE_TEXTS: Array<[string, string]> = [
+  ['Öğrenci planı ₺49/ay (kimlik gerekir) · Standart plan ₺69/ay', 'Güncel planlar ve fiyatlar Planlar sayfasında.'],
+  ['Aylık ₺49 veya yıllık ₺490 planlarımız mevcuttur. Yıllık planda 2 ay bedava avantajı sunulur.', 'Aylık ve kampanya planlarımız mevcuttur. Güncel fiyatlar için Planlar sayfasına bakın; istediğiniz zaman iptal edebilirsiniz.'],
+]
+
+/** Eski metinlerdeki sabit fiyatları canlı yer tutuculara çevirir (₺49 → {{plan:student}}, ₺69 → {{plan:standard}}). */
+function legacyPriceToPlaceholder(text: string) {
+  let next = text
+  for (const [oldText, newText] of LEGACY_PRICE_TEXTS) if (next === oldText) next = newText
+  return next.replace(/₺\s?490(?!\d)/g, '').replace(/₺\s?49(?!\d)/g, '{{plan:student}}').replace(/₺\s?69(?!\d)/g, '{{plan:standard}}')
+}
+
+function stripLegacyPriceTexts(config: LandingSectionsConfig): LandingSectionsConfig {
+  const next = JSON.parse(JSON.stringify(config)) as LandingSectionsConfig
+  const campaign = next.campaign as unknown as Record<string, unknown> | undefined
+  if (campaign) {
+    for (const key of ['priceNote', 'description'] as const) {
+      if (typeof campaign[key] === 'string') campaign[key] = legacyPriceToPlaceholder(campaign[key] as string)
+    }
+  }
+  const faq = (next as unknown as { faq?: { items?: Array<{ answer?: string; question?: string }> } }).faq
+  for (const item of faq?.items ?? []) {
+    if (typeof item.answer === 'string') item.answer = legacyPriceToPlaceholder(item.answer)
+  }
+  return next
+}
+
+const PLAN_PLACEHOLDER = /\{\{\s*plan:([a-z0-9_-]+)(?::(name|price|interval))?\s*\}\}/gi
+
+/**
+ * Herkese açık landing yanıtında {{plan:<id>}} yer tutucularını canlı plan verisiyle doldurur.
+ * {{plan:student}} → ₺49 · {{plan:student:name}} → Öğrenci Plan · {{plan:student:interval}} → /ay
+ */
+export function applyPlanPlaceholders<T>(value: T): T {
+  const plans = getBillingPlans({ includeDisabled: true })
+  const byId = new Map(plans.map((plan) => [plan.id, plan]))
+  const replace = (text: string) =>
+    text.replace(PLAN_PLACEHOLDER, (match, id: string, field?: string) => {
+      const plan = byId.get(id)
+      if (!plan) return match
+      if (field === 'name') return plan.name
+      if (field === 'interval') return plan.interval === 'year' ? '/yıl' : plan.interval === 'once' ? '' : '/ay'
+      return `₺${plan.price}`
+    })
+  const walk = (node: unknown): unknown => {
+    if (typeof node === 'string') return replace(node)
+    if (Array.isArray(node)) return node.map(walk)
+    if (node && typeof node === 'object') {
+      return Object.fromEntries(Object.entries(node as Record<string, unknown>).map(([k, v]) => [k, walk(v)]))
+    }
+    return node
+  }
+  return walk(value) as T
+}
+
 export function getLandingSectionsConfig(): LandingSectionsConfig {
   const row = dbGet<{ value: string }>('SELECT value FROM site_settings WHERE key = ?', [SETTINGS_KEY])
-  if (!row?.value) return { ...DEFAULT_LANDING_SECTIONS }
+  if (!row?.value) return stripLegacyPriceTexts({ ...DEFAULT_LANDING_SECTIONS })
 
   try {
-    return parseLandingSections(JSON.parse(row.value) as Partial<LandingSectionsConfig>)
+    return stripLegacyPriceTexts(parseLandingSections(JSON.parse(row.value) as Partial<LandingSectionsConfig>))
   } catch {
     return { ...DEFAULT_LANDING_SECTIONS }
   }

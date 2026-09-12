@@ -63,8 +63,7 @@ export function CreatorRegisterPage() {
 
   const selectableSchools = schools.filter(s=>s.id.startsWith('yok-') || s.id==='diger' || !schools.some(v=>v.id.startsWith('yok-')))
   const filteredSchools = selectableSchools.filter(s=>s.id===schoolId || s.name.toLocaleLowerCase('tr').includes(schoolSearch.toLocaleLowerCase('tr')))
-  const registrationPrice =
-    registrationPlan?.price ?? (isStudentProgram ? 49 : 69)
+  const registrationPrice = registrationPlan?.price ?? 0
   const feeNoticeText = formatPlanRegistrationNotice(
     registrationPlan?.registrationNotice,
     { price: registrationPrice, brand: BRAND_NAME },

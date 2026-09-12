@@ -54,7 +54,7 @@
     "description": "Student or standard plan. Billed monthly, cancel anytime.",
     "price": "₺49",
     "priceSuffix": " from /mo",
-    "priceNote": "Student plan ₺49/mo (ID required) · Standard plan ₺69/mo",
+    "priceNote": "Current plans and prices are on the Plans page.",
     "ctaPrimary": "Sign Up",
     "ctaSecondary": "Compare plans"
   },
@@ -116,7 +116,7 @@
       },
       {
         "question": "How much does Plooy cost?",
-        "answer": "We offer monthly plans from ₺49 and an annual plan at ₺490. The annual plan includes two months free."
+        "answer": "We offer monthly and campaign plans. See the Plans page for current prices; cancel anytime."
       },
       {
         "question": "Where can I watch?",

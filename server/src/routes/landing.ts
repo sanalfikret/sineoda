@@ -19,6 +19,7 @@ import {
   type LandingLayoutConfig,
 } from '../services/landingLayout.js'
 import {
+  applyPlanPlaceholders,
   getLandingSectionsConfig,
   saveLandingSectionsConfig,
   type LandingSectionsConfig,
@@ -84,7 +85,7 @@ export function getLandingConfig() {
   }))
 
   const hero = getLandingHeroConfig()
-  const sections = getLandingSectionsConfig()
+  const sections = applyPlanPlaceholders(getLandingSectionsConfig())
   const layout = getLandingLayoutConfig(customBlockIds)
   const blockTitles = getLandingBlockTitlesConfig()
   const featuredItem = resolveLandingFeaturedItem(hero, catalog)

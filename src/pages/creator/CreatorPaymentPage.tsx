@@ -94,7 +94,7 @@ export function CreatorPaymentPage() {
 
   const expiresAt = user?.subscription?.expiresAt ?? null
 
-  const price = plan?.price ?? (isStudentProgram ? 49 : 69)
+  const price = plan?.price ?? 0
 
   return (
     <CreatorAuthLayout backTo={localizePath('/creator')}>

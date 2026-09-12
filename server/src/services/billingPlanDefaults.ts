@@ -15,6 +15,8 @@ export type BillingPlanDefinition = {
   requiresStudentId?: boolean
   enabled?: boolean
   campaignLabel?: string
+  /** "Öne çıkan" işaretliyken kart üstünde görünen rozet metni (örn. Öğrencilere özel, Bayram kampanyası) */
+  badgeLabel?: string
   /** Admin kartı / gruplama başlığı — tamamen özelleştirilebilir */
   sectionLabel?: string
   /** Yapımcı kayıt formu bilgi kutusu — {{price}} ve {{brand}} yer tutucuları */
@@ -43,6 +45,7 @@ export const DEFAULT_BILLING_PLANS: BillingPlanDefinition[] = [
     audience: 'viewer',
     sectionLabel: 'İzleyici aboneliği',
     popular: true,
+    badgeLabel: 'Öğrencilere özel',
     requiresStudentId: true,
     enabled: true,
     features: ['Tüm içerikler', '4 profil', 'HD yayın', 'Geçerli öğrenci kimliği gerekir'],

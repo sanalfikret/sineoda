@@ -125,7 +125,7 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
     description: 'Öğrenci veya standart plan. Aylık yenilenir, istediğin zaman iptal et.',
     price: '₺49',
     priceSuffix: "'ten başlayan /ay",
-    priceNote: 'Öğrenci planı ₺49/ay (kimlik gerekir) · Standart plan ₺69/ay',
+    priceNote: 'Güncel planlar ve fiyatlar Planlar sayfasında.',
     image: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1200&h=800&fit=crop&q=80',
     ctaPrimary: 'Üye Ol',
     ctaPrimaryLink: '/kayit',
@@ -164,7 +164,7 @@ export const DEFAULT_LANDING_SECTIONS: LandingSectionsConfig = {
       {
         question: `${BRAND_NAME}'nın maliyeti nedir?`,
         answer:
-          'Aylık ₺49 veya yıllık ₺490 planlarımız mevcuttur. Yıllık planda 2 ay bedava avantajı sunulur.',
+          'Aylık ve kampanya planlarımız mevcuttur. Güncel fiyatlar için Planlar sayfasına bakın; istediğiniz zaman iptal edebilirsiniz.',
       },
       {
         question: 'Nerede izleyebilirim?',

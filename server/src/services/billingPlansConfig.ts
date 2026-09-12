@@ -24,6 +24,7 @@ export type BillingPlanOverrides = Partial<
     | 'audience'
     | 'requiresStudentId'
     | 'campaignLabel'
+    | 'badgeLabel'
     | 'sectionLabel'
     | 'registrationNotice'
   >
@@ -42,6 +43,7 @@ export type CustomBillingPlanInput = {
   requiresStudentId?: boolean
   enabled?: boolean
   campaignLabel?: string
+  badgeLabel?: string
   sectionLabel?: string
   registrationNotice?: string
 }
@@ -144,6 +146,11 @@ function sanitizeOverrides(planId: string, raw: unknown): BillingPlanOverrides |
     next.campaignLabel = label ? label.slice(0, 80) : undefined
   }
 
+  if (typeof input.badgeLabel === 'string') {
+    const label = input.badgeLabel.trim()
+    next.badgeLabel = label ? label.slice(0, 60) : undefined
+  }
+
   if (typeof input.sectionLabel === 'string') {
     const label = input.sectionLabel.trim()
     next.sectionLabel = label ? label.slice(0, 80) : undefined
@@ -184,6 +191,7 @@ export function sanitizeCustomPlan(raw: unknown): BillingPlanDefinition | null {
     requiresStudentId: Boolean(input.requiresStudentId),
     enabled: input.enabled !== false,
     campaignLabel: String(input.campaignLabel ?? '').trim().slice(0, 80) || undefined,
+    badgeLabel: String(input.badgeLabel ?? '').trim().slice(0, 60) || undefined,
     sectionLabel: String(input.sectionLabel ?? '').trim().slice(0, 80) || undefined,
     registrationNotice: String(input.registrationNotice ?? '').trim().slice(0, 500) || undefined,
   }
@@ -213,6 +221,7 @@ export function mergeBillingPlan(
     requiresStudentId: overrides.requiresStudentId ?? base.requiresStudentId,
     popular: overrides.popular ?? base.popular,
     campaignLabel: overrides.campaignLabel ?? base.campaignLabel,
+    badgeLabel: overrides.badgeLabel ?? base.badgeLabel,
     sectionLabel: overrides.sectionLabel ?? base.sectionLabel,
     registrationNotice: overrides.registrationNotice ?? base.registrationNotice,
   }

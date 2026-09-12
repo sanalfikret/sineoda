@@ -1,5 +1,6 @@
 import i18n from './index'
 import type { Locale } from './paths'
+import { getCachedPlanName } from '../utils/planNameCache'
 
 export function tKey(key: string, options?: Record<string, unknown>) {
   return i18n.t(key, options)
@@ -7,6 +8,8 @@ export function tKey(key: string, options?: Record<string, unknown>) {
 
 export function planDisplayName(planId: string | null | undefined) {
   if (!planId) return i18n.t('common:actions.empty')
+  const live = getCachedPlanName(planId)
+  if (live) return live
   const key = `pricing:plans.${planId}`
   const translated = i18n.t(key)
   if (translated !== key) return translated

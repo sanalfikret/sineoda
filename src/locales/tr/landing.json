@@ -54,7 +54,7 @@
     "description": "Öğrenci veya standart plan. Aylık yenilenir, istediğin zaman iptal et.",
     "price": "₺49",
     "priceSuffix": "'ten başlayan /ay",
-    "priceNote": "Öğrenci planı ₺49/ay (kimlik gerekir) · Standart plan ₺69/ay",
+    "priceNote": "Güncel planlar ve fiyatlar Planlar sayfasında.",
     "ctaPrimary": "Üye Ol",
     "ctaSecondary": "Planları karşılaştır"
   },
@@ -116,7 +116,7 @@
       },
       {
         "question": "Plooy'nın maliyeti nedir?",
-        "answer": "Aylık ₺49 veya yıllık ₺490 planlarımız mevcuttur. Yıllık planda 2 ay bedava avantajı sunulur."
+        "answer": "Aylık ve kampanya planlarımız mevcuttur. Güncel fiyatlar için Planlar sayfasına bakın; istediğiniz zaman iptal edebilirsiniz."
       },
       {
         "question": "Nerede izleyebilirim?",

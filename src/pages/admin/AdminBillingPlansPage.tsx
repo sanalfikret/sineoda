@@ -24,6 +24,7 @@ type PlanDraft = {
   audience: NonNullable<BillingPlan['audience']>
   requiresStudentId: boolean
   campaignLabel: string
+  badgeLabel: string
   sectionLabel: string
   registrationNotice: string
 }
@@ -63,6 +64,7 @@ function toDraft(plan: BillingPlan): PlanDraft {
     audience: plan.audience ?? 'viewer',
     requiresStudentId: Boolean(plan.requiresStudentId),
     campaignLabel: plan.campaignLabel ?? '',
+    badgeLabel: plan.badgeLabel ?? '',
     sectionLabel:
       plan.sectionLabel ??
       (plan.audience === 'creator' ? 'Yapımcı Yönetmen' : 'İzleyici aboneliği'),
@@ -88,6 +90,7 @@ function emptyCustomPlan(): CustomPlanDraft {
     audience: 'viewer',
     requiresStudentId: false,
     campaignLabel: 'Kampanya',
+    badgeLabel: '',
     sectionLabel: 'Kampanya planı',
     registrationNotice: '',
   }
@@ -191,6 +194,7 @@ export function AdminBillingPlansPage() {
               interval: draft.interval,
               requiresStudentId: draft.requiresStudentId,
               campaignLabel: draft.campaignLabel.trim() || undefined,
+              badgeLabel: draft.badgeLabel.trim() || undefined,
               sectionLabel: draft.sectionLabel.trim() || undefined,
               registrationNotice: draft.registrationNotice.trim() || undefined,
             },
@@ -212,6 +216,7 @@ export function AdminBillingPlansPage() {
         requiresStudentId: plan.requiresStudentId,
         enabled: plan.enabled,
         campaignLabel: plan.campaignLabel.trim() || undefined,
+        badgeLabel: plan.badgeLabel.trim() || undefined,
         sectionLabel: plan.sectionLabel.trim() || undefined,
         registrationNotice: plan.registrationNotice.trim() || undefined,
       }))
@@ -418,15 +423,28 @@ export function AdminBillingPlansPage() {
         </label>
       )}
 
-      <label className="block">
-        <span className="mb-1.5 block text-sm text-plooy-muted">Kampanya etiketi (isteğe bağlı)</span>
-        <input
-          value={draft.campaignLabel}
-          onChange={(event) => onChange({ campaignLabel: event.target.value })}
-          placeholder="Örn. Yılbaşı kampanyası"
-          className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-plooy-gold"
-        />
-      </label>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="block">
+          <span className="mb-1.5 block text-sm text-plooy-muted">Kampanya etiketi (isteğe bağlı)</span>
+          <input
+            value={draft.campaignLabel}
+            onChange={(event) => onChange({ campaignLabel: event.target.value })}
+            placeholder="Örn. Yılbaşı kampanyası"
+            className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-plooy-gold"
+          />
+          <span className="mt-1 block text-xs text-plooy-muted">Kartta ince çerçeveli etiket olarak görünür.</span>
+        </label>
+        <label className="block">
+          <span className="mb-1.5 block text-sm text-plooy-muted">Rozet metni (öne çıkan işaretliyse)</span>
+          <input
+            value={draft.badgeLabel}
+            onChange={(event) => onChange({ badgeLabel: event.target.value })}
+            placeholder="Örn. Öğrencilere özel · Bayram kampanyası"
+            className="w-full rounded-lg border border-white/10 bg-[#0d0f14] px-3 py-2 text-white outline-none focus:border-plooy-gold"
+          />
+          <span className="mt-1 block text-xs text-plooy-muted">Boşsa rozet gösterilmez; siz ne yazarsanız o görünür.</span>
+        </label>
+      </div>
 
       <label className="block">
         <span className="mb-1.5 block text-sm text-plooy-muted">Özellikler (her satır bir madde)</span>
@@ -445,7 +463,7 @@ export function AdminBillingPlansPage() {
           onChange={(event) => onChange({ popular: event.target.checked })}
           className="rounded border-white/20"
         />
-        Öne çıkan / rozet göster
+        Öne çıkan (altın çerçeve + rozet metni)
       </label>
 
       {draft.audience === 'viewer' && (

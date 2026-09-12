@@ -1,10 +1,36 @@
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { resolveMediaUrl } from '../../api/client'
+import { fetchBillingPlans, resolveMediaUrl, type BillingPlan } from '../../api/client'
 import type { LandingCampaignSection } from '../../constants/landingDefaults'
 import { useLocale } from '../../i18n/LocaleContext'
 
+function intervalLabel(interval: BillingPlan['interval'], locale: string) {
+  if (interval === 'year') return locale === 'en' ? '/yr' : '/yıl'
+  if (interval === 'once') return ''
+  return locale === 'en' ? '/mo' : '/ay'
+}
+
 export function LandingPricing({ section }: { section: LandingCampaignSection }) {
-  const { localizePath } = useLocale()
+  const { localizePath, locale } = useLocale()
+  const [plans, setPlans] = useState<BillingPlan[]>([])
+
+  useEffect(() => {
+    void fetchBillingPlans()
+      .then(({ plans: all }) => setPlans(all.filter((plan) => plan.enabled !== false && plan.audience !== 'creator')))
+      .catch(() => setPlans([]))
+  }, [])
+
+  // Fiyat metinleri admin planlarından canlı gelir; admin fiyatı değiştirince burada da değişir.
+  const live = useMemo(() => {
+    if (plans.length === 0) return null
+    const monthly = plans.filter((plan) => plan.interval === 'month')
+    const cheapest = [...(monthly.length ? monthly : plans)].sort((a, b) => a.price - b.price)[0]
+    return {
+      price: `₺${cheapest.price}`,
+      suffix: locale === 'en' ? `from ${intervalLabel(cheapest.interval, locale)}` : `'ten başlayan ${intervalLabel(cheapest.interval, locale)}`,
+      note: plans.map((plan) => `${plan.name} ₺${plan.price}${intervalLabel(plan.interval, locale)}`).join(' · '),
+    }
+  }, [plans, locale])
 
   return (
     <section className="px-5 py-20 sm:px-8">
@@ -18,10 +44,10 @@ export function LandingPricing({ section }: { section: LandingCampaignSection })
 
               <div className="mt-8 space-y-4">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-extrabold">{section.price}</span>
-                  <span className="text-white/50">{section.priceSuffix}</span>
+                  <span className="text-5xl font-extrabold">{live?.price ?? section.price}</span>
+                  <span className="text-white/50">{live?.suffix ?? section.priceSuffix}</span>
                 </div>
-                <p className="text-sm text-white/45">{section.priceNote}</p>
+                <p className="text-sm text-white/45">{live?.note ?? section.priceNote}</p>
               </div>
 
               <Link

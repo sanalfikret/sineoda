@@ -5,6 +5,7 @@ import {
   createAdminUser,
   deleteAdminUser,
   fetchAdminUsers,
+  fetchBillingPlans,
   updateAdminUser,
   type AdminUser,
 } from '../../api/client'
@@ -71,7 +72,7 @@ export function AdminUsersPage() {
   const loadUsers = async () => {
     setLoading(true)
     try {
-      const { users: data } = await fetchAdminUsers()
+      const [{ users: data }] = await Promise.all([fetchAdminUsers(), fetchBillingPlans().catch(() => null)])
       setUsers(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kullanıcılar yüklenemedi.')

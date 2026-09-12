@@ -25,6 +25,7 @@ interface Plan {
   popular?: boolean
   requiresStudentId?: boolean
   campaignLabel?: string
+  badgeLabel?: string
 }
 
 type PlanAction = 'subscribe' | 'current' | 'switch' | 'renew'
@@ -311,9 +312,9 @@ export function PricingPage() {
                     {t('currentPlanBadge')}
                   </span>
                 )}
-                {!isCurrent && plan.popular && (
+                {!isCurrent && plan.popular && plan.badgeLabel && (
                   <span className="mb-3 inline-block rounded-full bg-plooy-gold px-3 py-1 text-xs font-semibold text-plooy-bg">
-                    {t('studentBadge')}
+                    {plan.badgeLabel}
                   </span>
                 )}
                 {plan.campaignLabel && (

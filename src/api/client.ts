@@ -1,4 +1,5 @@
 import { createRandomId } from '../utils/id'
+import { registerPlanNames } from '../utils/planNameCache'
 import { withRequestDeadline } from '../utils/requestDeadline'
 import { matchesRequestSession, sessionIdentity } from '../utils/sessionIdentity'
 import { localizeDynamic } from '../utils/dynamicTranslations'
@@ -1098,6 +1099,7 @@ export interface BillingPlan {
   requiresStudentId?: boolean
   enabled?: boolean
   campaignLabel?: string
+  badgeLabel?: string
   sectionLabel?: string
   registrationNotice?: string
 }
@@ -1125,6 +1127,7 @@ export async function saveAdminBillingPlans(payload: {
       audience?: BillingPlan['audience']
       requiresStudentId?: boolean
       campaignLabel?: string
+      badgeLabel?: string
       sectionLabel?: string
       registrationNotice?: string
     }
@@ -1140,6 +1143,8 @@ export async function saveAdminBillingPlans(payload: {
     requiresStudentId?: boolean
     enabled?: boolean
     campaignLabel?: string
+
+    badgeLabel?: string
     sectionLabel?: string
     registrationNotice?: string
   }>
@@ -1288,7 +1293,9 @@ export async function fetchBillingPlans(): Promise<{
   plans: BillingPlan[]
   providers: BillingProviders
 }> {
-  return api('/api/billing/plans')
+  const result = await api<{ plans: BillingPlan[]; providers: BillingProviders }>('/api/billing/plans')
+  registerPlanNames(result.plans)
+  return result
 }
 
 export type CheckoutResult =

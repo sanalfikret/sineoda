@@ -217,6 +217,11 @@ export function AdminLandingSectionBlock({
             value={sections.campaign.priceNote}
             onChange={(priceNote) => patch('campaign', { ...sections.campaign, priceNote })}
           />
+          <p className="text-xs text-plooy-muted sm:col-span-2">
+            Büyük fiyat ve fiyat notu otomatik olarak Planlar & Fiyatlar'daki güncel planlardan gelir. Metinlere{' '}
+            <code className="text-plooy-gold">{'{{plan:standard}}'}</code> veya <code className="text-plooy-gold">{'{{plan:student}}'}</code>{' '}
+            yazarsanız canlı fiyat basılır; sabit rakam yazmayın.
+          </p>
         </div>
         <ImageUpload
           label="Sağ taraftaki görsel"
@@ -392,6 +397,10 @@ export function AdminLandingSectionBlock({
           items={sections.faq.items}
           onChange={(items) => patch('faq', { ...sections.faq, items })}
         />
+        <p className="text-xs text-plooy-muted">
+          Cevaplarda fiyat için <code className="text-plooy-gold">{'{{plan:standard}}'}</code> /{' '}
+          <code className="text-plooy-gold">{'{{plan:student}}'}</code> kullanın; plan fiyatı değişince burası da değişir.
+        </p>
         <Field
           label="Alt metin"
           value={sections.faq.footerText}

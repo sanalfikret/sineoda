@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { fetchBillingPlans, sendSmsCode, uploadStudentId } from '../api/client'
+import { fetchBillingPlans, sendSmsCode, uploadStudentId, type BillingPlan } from '../api/client'
 import { AuthLayout } from '../components/AuthLayout'
 import { LegalDocumentModal } from '../components/LegalDocumentModal'
 import { type LegalSlug } from '../constants/legal'
@@ -32,8 +32,6 @@ function LegalReadButton({
   )
 }
 
-type SignupPlanId = 'standard' | 'student'
-
 export function SignupPage() {
   const { t } = useTranslation('auth')
   const { t: tCommon } = useTranslation('common')
@@ -45,8 +43,7 @@ export function SignupPage() {
   const { siteMode } = useSiteMode()
   const inviteOnly = Boolean(siteMode?.inviteOnly)
   const [inviteCode, setInviteCode] = useState(() => (searchParams.get('davet') ?? searchParams.get('invite') ?? '').toUpperCase())
-  const initialPlan = searchParams.get('plan') === 'student' ? 'student' : 'standard'
-  const [selectedPlan, setSelectedPlan] = useState<SignupPlanId>(initialPlan)
+  const [selectedPlan, setSelectedPlan] = useState<string>(searchParams.get('plan') ?? '')
   const [name, setName] = useState('')
   const [email, setEmail] = useState(() => searchParams.get('email') ?? '')
   const [password, setPassword] = useState('')
@@ -60,7 +57,7 @@ export function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [completed, setCompleted] = useState(false)
   const [pendingEmail, setPendingEmail] = useState('')
-  const [pendingPlan, setPendingPlan] = useState<SignupPlanId>('standard')
+  const [pendingPlan, setPendingPlan] = useState<string>('')
   const [devVerifyUrl, setDevVerifyUrl] = useState<string | null>(null)
   const [sendingCode, setSendingCode] = useState(false)
   const [acceptTerms, setAcceptTerms] = useState(false)
@@ -68,56 +65,44 @@ export function SignupPage() {
   const [acceptKvkk, setAcceptKvkk] = useState(false)
   const [legalModalSlug, setLegalModalSlug] = useState<LegalSlug | null>(null)
   const [billingPlansLoading, setBillingPlansLoading] = useState(true)
-  const [standardPrice, setStandardPrice] = useState(69)
-  const [studentPrice, setStudentPrice] = useState(49)
-  const [standardPlanName, setStandardPlanName] = useState('')
-  const [studentPlanName, setStudentPlanName] = useState('')
+  const [viewerPlans, setViewerPlans] = useState<BillingPlan[]>([])
 
   const legalAccepted = acceptTerms && acceptPrivacy && acceptKvkk
 
   useEffect(() => {
     fetchBillingPlans()
       .then(({ plans }) => {
-        const viewerPlans = plans.filter(
-          (plan) => plan.enabled !== false && plan.audience !== 'creator',
-        )
-        const standard = viewerPlans.find((plan) => plan.id === 'standard')
-        const student = viewerPlans.find((plan) => plan.id === 'student')
-        if (standard) {
-          setStandardPrice(standard.price)
-          setStandardPlanName(standard.name)
-        }
-        if (student) {
-          setStudentPrice(student.price)
-          setStudentPlanName(student.name)
-        }
+        setViewerPlans(plans.filter((plan) => plan.enabled !== false && plan.audience !== 'creator'))
       })
       .catch(() => {})
       .finally(() => setBillingPlansLoading(false))
   }, [])
 
+  // Admin panelindeki planlar birebir burada: ad, fiyat, periyot, rozet ve öğrenci kimliği kuralı
   const signupPlans = useMemo(
     () =>
-      [
-        {
-          id: 'standard' as const,
-          name: standardPlanName || t('standardPlan'),
-          price: standardPrice,
-          note: t('standardPlanNote'),
-        },
-        {
-          id: 'student' as const,
-          name: studentPlanName || t('studentPlan'),
-          price: studentPrice,
-          note: t('studentPlanNote'),
-          requiresStudentId: true,
-        },
-      ] as const,
-    [standardPlanName, standardPrice, studentPlanName, studentPrice, t],
+      viewerPlans.map((plan) => ({
+        id: plan.id,
+        name: plan.name,
+        price: plan.price,
+        interval: plan.interval,
+        badge: plan.popular && plan.badgeLabel ? plan.badgeLabel : plan.campaignLabel || '',
+        note: plan.requiresStudentId ? t('studentPlanNote') : plan.features[0] ?? t('standardPlanNote'),
+        requiresStudentId: Boolean(plan.requiresStudentId),
+      })),
+    [viewerPlans, t],
   )
 
-  const planLabel = (planId: SignupPlanId) =>
-    planId === 'student' ? t('planStudent') : t('planStandard')
+  useEffect(() => {
+    if (signupPlans.length === 0) return
+    if (!signupPlans.some((plan) => plan.id === selectedPlan)) setSelectedPlan(signupPlans[0].id)
+  }, [signupPlans, selectedPlan])
+
+  const selectedPlanDef = signupPlans.find((plan) => plan.id === selectedPlan) ?? null
+  const selectedRequiresStudentId = Boolean(selectedPlanDef?.requiresStudentId)
+  const planLabel = (planId: string) => signupPlans.find((plan) => plan.id === planId)?.name ?? planId
+  const intervalSuffix = (interval: BillingPlan['interval']) =>
+    interval === 'year' ? t('perYear') : interval === 'once' ? t('perOnce') : t('perMonth')
 
   if (user) {
     return <Navigate to={localizePath(postLoginPath(user))} replace />
@@ -153,7 +138,7 @@ export function SignupPage() {
       return
     }
 
-    if (selectedPlan === 'student' && !studentIdFile) {
+    if (selectedRequiresStudentId && !studentIdFile) {
       setError(t('studentIdRequiredSignup'))
       return
     }
@@ -171,7 +156,7 @@ export function SignupPage() {
     setLoading(true)
     try {
       let studentIdUrl: string | undefined
-      if (selectedPlan === 'student' && studentIdFile) {
+      if (selectedRequiresStudentId && studentIdFile) {
         studentIdUrl = await uploadStudentId(studentIdFile)
       }
 
@@ -184,7 +169,7 @@ export function SignupPage() {
         inviteCode: inviteCode.trim() || undefined,
       })
       setPendingEmail(result.email)
-      setPendingPlan((result.planId as SignupPlanId) ?? selectedPlan)
+      setPendingPlan(result.planId ?? selectedPlan)
       setDevVerifyUrl(result.devVerifyUrl ?? null)
       setCompleted(true)
       setInfo(result.message)
@@ -271,7 +256,7 @@ export function SignupPage() {
                     type="button"
                     onClick={() => {
                       setSelectedPlan(plan.id)
-                      if (plan.id !== 'student') setStudentIdFile(null)
+                      if (!plan.requiresStudentId) setStudentIdFile(null)
                     }}
                     className={`rounded-xl border px-4 py-3 text-left transition ${
                       active
@@ -279,10 +264,15 @@ export function SignupPage() {
                         : 'border-white/10 bg-white/[0.03] hover:border-white/20'
                     }`}
                   >
+                    {plan.badge && (
+                      <span className="mb-1 inline-block rounded-full bg-plooy-gold/15 px-2 py-0.5 text-[11px] font-semibold text-plooy-gold">
+                        {plan.badge}
+                      </span>
+                    )}
                     <p className="font-semibold text-white">{plan.name}</p>
                     <p className="mt-1 text-lg font-bold text-plooy-gold">
                       ₺{plan.price}
-                      <span className="text-xs font-normal text-plooy-muted">{t('perMonth')}</span>
+                      <span className="text-xs font-normal text-plooy-muted">{intervalSuffix(plan.interval)}</span>
                     </p>
                     <p className="mt-1 text-xs text-plooy-muted">{plan.note}</p>
                   </button>
@@ -292,7 +282,7 @@ export function SignupPage() {
             </div>
           </div>
 
-          {selectedPlan === 'student' && (
+          {selectedRequiresStudentId && (
             <label className="block">
               <span className="mb-1.5 block text-sm font-medium text-white/90">{t('studentId')}</span>
               <input
